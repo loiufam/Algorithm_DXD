@@ -1,0 +1,46 @@
+cmake_minimum_required(VERSION 3.10)
+
+project(AlgorithmDXD VERSION 1.0)
+
+
+# 设置 C++ 标准版本
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+# 设置使用 libc++
+set(CMAKE_CXX_STANDARD_LIBRARIES "-stdlib=libc++")
+
+# Add include directories
+include_directories(${PROJECT_SOURCE_DIR}/include)
+
+# 启用 AddressSanitizer（调试内存错误）
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+
+# Add source files
+set(SOURCES
+    src/main.cpp
+    src/ExactCoverMatrix.cpp
+    src/DNNF.cpp
+)
+set(TEST_SOURCES1
+    test/test1.cpp
+    src/ExactCoverMatrix.cpp
+    src/DNNF.cpp
+)
+set(TEST_SOURCES2
+    test/test2.cpp
+    src/ExactCoverMatrix.cpp
+    src/DNNF.cpp
+)
+set(TEST_SOURCES3
+    test/testUnionFind.cpp
+    src/ExactCoverMatrix.cpp
+    src/DNNF.cpp
+)
+# Add executable target
+# add_executable(main ${SOURCES})
+# 1 : DLX and DXZ 2 : singleDXD and MultiDXD 3 : UnionFind
+add_executable(test1 ${TEST_SOURCES1})
+add_executable(test2 ${TEST_SOURCES2})
+# add_executable(test ${TEST_SOURCES3})
