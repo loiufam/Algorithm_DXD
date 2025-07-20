@@ -8,17 +8,13 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/SDX/src/DNNF.cpp" "CMakeFiles/test1.dir/src/DNNF.cpp.o" "gcc" "CMakeFiles/test1.dir/src/DNNF.cpp.o.d"
-  "/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/SDX/src/ExactCoverMatrix.cpp" "CMakeFiles/test1.dir/src/ExactCoverMatrix.cpp.o" "gcc" "CMakeFiles/test1.dir/src/ExactCoverMatrix.cpp.o.d"
-  "/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/SDX/test/test1.cpp" "CMakeFiles/test1.dir/test/test1.cpp.o" "gcc" "CMakeFiles/test1.dir/test/test1.cpp.o.d"
+  "/home/experimenter/Desktop/lyh/Algorithm_DXD/src/DNNF.cpp" "CMakeFiles/test1.dir/src/DNNF.cpp.o" "gcc" "CMakeFiles/test1.dir/src/DNNF.cpp.o.d"
+  "/home/experimenter/Desktop/lyh/Algorithm_DXD/src/ExactCoverMatrix.cpp" "CMakeFiles/test1.dir/src/ExactCoverMatrix.cpp.o" "gcc" "CMakeFiles/test1.dir/src/ExactCoverMatrix.cpp.o.d"
+  "/home/experimenter/Desktop/lyh/Algorithm_DXD/test/test1.cpp" "CMakeFiles/test1.dir/test/test1.cpp.o" "gcc" "CMakeFiles/test1.dir/test/test1.cpp.o.d"
   )
 
-# Targets to which this target links which contain Fortran sources.
-set(CMAKE_Fortran_TARGET_LINKED_INFO_FILES
-  )
-
-# Targets to which this target links which contain Fortran sources.
-set(CMAKE_Fortran_TARGET_FORWARD_LINKED_INFO_FILES
+# Targets to which this target links.
+set(CMAKE_TARGET_LINKED_INFO_FILES
   )
 
 # Fortran module output directory.
