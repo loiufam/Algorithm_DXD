@@ -21,6 +21,7 @@
 #include <memory>
 #include <numeric>
 #include <functional>
+#include <climits>
 using namespace std;
 
 const int UNCHOOSEN = -10;

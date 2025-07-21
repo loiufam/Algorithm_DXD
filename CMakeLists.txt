@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # 设置使用 libc++
-set(CMAKE_CXX_STANDARD_LIBRARIES "-stdlib=libc++")
+# set(CMAKE_CXX_STANDARD_LIBRARIES "-stdlib=libc++")
 
 # Add include directories
 include_directories(${PROJECT_SOURCE_DIR}/include)
