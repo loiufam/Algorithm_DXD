@@ -136,6 +136,14 @@ string DancingMatrix::encodeBlockState(const unordered_set<int>& cols){
     return state;
 }
 
+size_t DancingMatrix::hashBlockState(const unordered_set<int>& cols) {
+    size_t hash = 0;
+    for(int col : cols) {
+        hash ^= std::hash<int>()(col) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+    }
+    return hash;
+}
+
 // 必须是经过并查集之后，出现多个行冲突分组才可分列
 vector<Block> DancingMatrix::spilitBlock(const Block& block){
     

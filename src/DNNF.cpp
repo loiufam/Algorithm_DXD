@@ -210,7 +210,8 @@ shared_ptr<DNNFNode> DancingMatrix::singleDXD(Block& block) {
     } 
 
     // 先查缓存
-    string state = encodeBlockState(block.cols);
+    // string state = encodeBlockState(block.cols);
+    size_t state = hashBlockState(block.cols); // 编码当前块状态
     if(C.find(state) != C.end()) {
         return C[state];
     }
@@ -310,10 +311,12 @@ shared_ptr<DNNFNode> DancingMatrix::parallelDXD(Block& block) {
         return T; 
     }
 
-    string stateHash = encodeBlockState(block.cols); // 编码当前块状态
+    // string stateHash = encodeBlockState(block.cols); // 编码当前块状态
+    size_t stateHash = hashBlockState(block.cols); // 编码当前块状态
 
     // 检查缓存
     auto cachedResult = getCachedResult(stateHash);
+    // auto cachedResult = getCachedResult(hashBlockState(block.cols));
     if (cachedResult) {
         return cachedResult;
     }

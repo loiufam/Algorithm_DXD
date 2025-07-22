@@ -220,6 +220,7 @@ class DancingMatrix
         void uncover( int c ); 
         string getColumnState() const;
         string encodeBlockState(const unordered_set<int>& cols);
+        size_t hashBlockState(const unordered_set<int>& cols);
      
         void batchCover(const std::vector<int>& columns);
         void batchUncover();
@@ -255,12 +256,12 @@ class DancingMatrix
         void printSolution(); 
 
         // 线程安全的缓存访问
-        std::shared_ptr<DNNFNode> getCachedResult(const std::string& key) {
+        std::shared_ptr<DNNFNode> getCachedResult(const size_t& key) {
             std::lock_guard<std::mutex> lock(cacheMutex);
             auto it = C_a.find(key);
             return (it != C_a.end()) ? it->second : nullptr;
         }
-        void setCachedResult(const std::string& key, std::shared_ptr<DNNFNode> node) {
+        void setCachedResult(const size_t& key, std::shared_ptr<DNNFNode> node) {
             std::lock_guard<std::mutex> lock(cacheMutex);
             C_a[key] = node;
         }
@@ -286,8 +287,8 @@ class DancingMatrix
 
         std::unordered_map<std::string, std::shared_ptr<ORNode>> Cache;
         // DNNF缓存
-        unordered_map<string, shared_ptr<DNNFNode>> C;  // 单线程
-        unordered_map<string, shared_ptr<DNNFNode>> C_a;  // 多线程
+        unordered_map<size_t, shared_ptr<DNNFNode>> C;  // 单线程
+        unordered_map<size_t, shared_ptr<DNNFNode>> C_a;  // 多线程
         unordered_map<int, shared_ptr<DNNFNode>> V_Table; // 变量节点缓存
 
         // Block缓存
