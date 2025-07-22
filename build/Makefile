@@ -57,10 +57,17 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
+<<<<<<< HEAD
 CMAKE_SOURCE_DIR = /home/experimenter/Desktop/lyh/Algorithm_DXD
 
 # The top-level build directory on which CMake was run.
 CMAKE_BINARY_DIR = /home/experimenter/Desktop/lyh/Algorithm_DXD/build
+=======
+CMAKE_SOURCE_DIR = /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD
+
+# The top-level build directory on which CMake was run.
+CMAKE_BINARY_DIR = /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/build
+>>>>>>> 1cc62de (new changes)
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +94,15 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
+<<<<<<< HEAD
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/experimenter/Desktop/lyh/Algorithm_DXD/build/CMakeFiles /home/experimenter/Desktop/lyh/Algorithm_DXD/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/experimenter/Desktop/lyh/Algorithm_DXD/build/CMakeFiles 0
+=======
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/build/CMakeFiles /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/build//CMakeFiles/progress.marks
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/build/CMakeFiles 0
+>>>>>>> 1cc62de (new changes)
 .PHONY : all
 
 # The main clean target
@@ -117,38 +130,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named test1
+# Target rules for targets named test
 
 # Build rule for target.
-test1: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test1
-.PHONY : test1
+test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test
+.PHONY : test
 
 # fast build rule for target.
-test1/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test1.dir/build.make CMakeFiles/test1.dir/build
-.PHONY : test1/fast
-
-#=============================================================================
-# Target rules for targets named test2
-
-# Build rule for target.
-test2: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test2
-.PHONY : test2
-
-# fast build rule for target.
-test2/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/build
-.PHONY : test2/fast
+test/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/build
+.PHONY : test/fast
 
 src/DNNF.o: src/DNNF.cpp.o
 .PHONY : src/DNNF.o
 
 # target to build an object file
 src/DNNF.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test1.dir/build.make CMakeFiles/test1.dir/src/DNNF.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/DNNF.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/DNNF.cpp.o
 .PHONY : src/DNNF.cpp.o
 
 src/DNNF.i: src/DNNF.cpp.i
@@ -156,8 +155,7 @@ src/DNNF.i: src/DNNF.cpp.i
 
 # target to preprocess a source file
 src/DNNF.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test1.dir/build.make CMakeFiles/test1.dir/src/DNNF.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/DNNF.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/DNNF.cpp.i
 .PHONY : src/DNNF.cpp.i
 
 src/DNNF.s: src/DNNF.cpp.s
@@ -165,8 +163,7 @@ src/DNNF.s: src/DNNF.cpp.s
 
 # target to generate assembly for a file
 src/DNNF.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test1.dir/build.make CMakeFiles/test1.dir/src/DNNF.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/DNNF.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/DNNF.cpp.s
 .PHONY : src/DNNF.cpp.s
 
 src/ExactCoverMatrix.o: src/ExactCoverMatrix.cpp.o
@@ -174,8 +171,7 @@ src/ExactCoverMatrix.o: src/ExactCoverMatrix.cpp.o
 
 # target to build an object file
 src/ExactCoverMatrix.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test1.dir/build.make CMakeFiles/test1.dir/src/ExactCoverMatrix.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/ExactCoverMatrix.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/ExactCoverMatrix.cpp.o
 .PHONY : src/ExactCoverMatrix.cpp.o
 
 src/ExactCoverMatrix.i: src/ExactCoverMatrix.cpp.i
@@ -183,8 +179,7 @@ src/ExactCoverMatrix.i: src/ExactCoverMatrix.cpp.i
 
 # target to preprocess a source file
 src/ExactCoverMatrix.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test1.dir/build.make CMakeFiles/test1.dir/src/ExactCoverMatrix.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/ExactCoverMatrix.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/ExactCoverMatrix.cpp.i
 .PHONY : src/ExactCoverMatrix.cpp.i
 
 src/ExactCoverMatrix.s: src/ExactCoverMatrix.cpp.s
@@ -192,57 +187,32 @@ src/ExactCoverMatrix.s: src/ExactCoverMatrix.cpp.s
 
 # target to generate assembly for a file
 src/ExactCoverMatrix.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test1.dir/build.make CMakeFiles/test1.dir/src/ExactCoverMatrix.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/ExactCoverMatrix.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/ExactCoverMatrix.cpp.s
 .PHONY : src/ExactCoverMatrix.cpp.s
 
-test/test1.o: test/test1.cpp.o
-.PHONY : test/test1.o
+test/testUnionFind.o: test/testUnionFind.cpp.o
+.PHONY : test/testUnionFind.o
 
 # target to build an object file
-test/test1.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test1.dir/build.make CMakeFiles/test1.dir/test/test1.cpp.o
-.PHONY : test/test1.cpp.o
+test/testUnionFind.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/test/testUnionFind.cpp.o
+.PHONY : test/testUnionFind.cpp.o
 
-test/test1.i: test/test1.cpp.i
-.PHONY : test/test1.i
-
-# target to preprocess a source file
-test/test1.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test1.dir/build.make CMakeFiles/test1.dir/test/test1.cpp.i
-.PHONY : test/test1.cpp.i
-
-test/test1.s: test/test1.cpp.s
-.PHONY : test/test1.s
-
-# target to generate assembly for a file
-test/test1.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test1.dir/build.make CMakeFiles/test1.dir/test/test1.cpp.s
-.PHONY : test/test1.cpp.s
-
-test/test2.o: test/test2.cpp.o
-.PHONY : test/test2.o
-
-# target to build an object file
-test/test2.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/test/test2.cpp.o
-.PHONY : test/test2.cpp.o
-
-test/test2.i: test/test2.cpp.i
-.PHONY : test/test2.i
+test/testUnionFind.i: test/testUnionFind.cpp.i
+.PHONY : test/testUnionFind.i
 
 # target to preprocess a source file
-test/test2.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/test/test2.cpp.i
-.PHONY : test/test2.cpp.i
+test/testUnionFind.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/test/testUnionFind.cpp.i
+.PHONY : test/testUnionFind.cpp.i
 
-test/test2.s: test/test2.cpp.s
-.PHONY : test/test2.s
+test/testUnionFind.s: test/testUnionFind.cpp.s
+.PHONY : test/testUnionFind.s
 
 # target to generate assembly for a file
-test/test2.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/test/test2.cpp.s
-.PHONY : test/test2.cpp.s
+test/testUnionFind.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/test/testUnionFind.cpp.s
+.PHONY : test/testUnionFind.cpp.s
 
 # Help Target
 help:
@@ -252,20 +222,16 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... test1"
-	@echo "... test2"
+	@echo "... test"
 	@echo "... src/DNNF.o"
 	@echo "... src/DNNF.i"
 	@echo "... src/DNNF.s"
 	@echo "... src/ExactCoverMatrix.o"
 	@echo "... src/ExactCoverMatrix.i"
 	@echo "... src/ExactCoverMatrix.s"
-	@echo "... test/test1.o"
-	@echo "... test/test1.i"
-	@echo "... test/test1.s"
-	@echo "... test/test2.o"
-	@echo "... test/test2.i"
-	@echo "... test/test2.s"
+	@echo "... test/testUnionFind.o"
+	@echo "... test/testUnionFind.i"
+	@echo "... test/testUnionFind.s"
 .PHONY : help
 
 

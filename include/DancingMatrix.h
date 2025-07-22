@@ -173,11 +173,11 @@ struct UnionFind {
     UnionFind(int n) : parent(n), rank(n, 0) {
         iota(parent.begin(), parent.end(), 0);
     }
+
     int find(int x) {
-        if (parent[x] != x)
-            parent[x] = find(parent[x]);
-        return parent[x];
+       return parent[x] == x ? x : parent[x] = find(parent[x]);
     }
+    
     void unite(int a, int b) {
         int pa = find(a), pb = find(b);
         if (pa == pb) return;

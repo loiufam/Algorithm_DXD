@@ -82,50 +82,64 @@ void DancingMatrix::initBlock(Block& block){
 
 void DancingMatrix::mergeIntersectingSets(vector<set<int>>& connectedRowSets, unordered_map<int, vector<int>>& rowToGroup){
     int n = connectedRowSets.size();
+    if(n == 0) return;
+
     UnionFind uf(n); // 初始化并查集
 
-    unordered_map<int, int> seen; // 元素 -> 所属集合索引
+    // 前缀优化：按最小元素排序
+    vector<pair<int, int>> sorted_indices;
+    sorted_indices.reserve(n); // 预分配内存
+    
     for (int i = 0; i < n; ++i) {
-        for (int x : connectedRowSets[i]) {
-            if (seen.count(x)) {
-                uf.unite(i, seen[x]);
-            } else {
-                seen[x] = i;
+        if (!connectedRowSets[i].empty())
+            sorted_indices.emplace_back(*connectedRowSets[i].begin(), i);
+    }
+    sort(sorted_indices.begin(), sorted_indices.end());
+
+    unordered_map<int, int> latest_seen; // 元素 -> 所属集合索引
+    // 合并相交的集合
+    for (auto [_, idx] : sorted_indices) {
+        for (int val : connectedRowSets[idx]) {
+            if (latest_seen.count(val)) {
+                uf.unite(idx, latest_seen[val]);
             }
+            latest_seen[val] = idx;
         }
     }
 
     // root -> 所有成员索引
     unordered_map<int, vector<int>> groupMembers;
     for (int i = 0; i < n; ++i) {
-        groupMembers[uf.find(i)].push_back(i);
-    }
-
-    // 合并所有成员的 set 到 root set 中，清空其他 set
-    for (const auto& [root, indices] : groupMembers) {
-        if (indices.size() <= 1) continue;
-        for (int i : indices) {
-            if (i != root) {
-                connectedRowSets[root].insert(connectedRowSets[i].begin(), connectedRowSets[i].end());
-                connectedRowSets[i].clear(); // 清空已合并的集合
-            }
+        if(!connectedRowSets[i].empty()){
+            groupMembers[uf.find(i)].push_back(i);
         }
     }
 
-    // 清除空集合
-    vector<set<int>> filtered;
-    for (const auto& s : connectedRowSets) {
-        if (!s.empty()) filtered.push_back(s);
-    }
-    connectedRowSets = std::move(filtered);
-
-    // 重新构建 rowToGroup
+    vector<set<int>> newSets;
+    newSets.reserve(groupMembers.size()); // 预分配
     rowToGroup.clear();
-    for (int i = 0; i < connectedRowSets.size(); ++i) {
-        for (int x : connectedRowSets[i]) {
-            rowToGroup[x].push_back(i);
+
+    for (auto& [root, indices] : groupMembers) {
+        if (indices.empty()) continue;
+        
+        // 直接移动第一个set，然后合并其他的
+        set<int> merged_set = std::move(connectedRowSets[indices[0]]);
+        
+        for (size_t j = 1; j < indices.size(); ++j) {
+            const auto& current_set = connectedRowSets[indices[j]];
+            merged_set.insert(current_set.begin(), current_set.end());
         }
+        
+        // 构建rowToGroup映射
+        int newIdx = newSets.size();
+        for (int val : merged_set) {
+            rowToGroup[val].push_back(newIdx);
+        }
+        
+        newSets.push_back(std::move(merged_set));
     }
+    
+    connectedRowSets = std::move(newSets);
 }
 
 string DancingMatrix::encodeBlockState(const unordered_set<int>& cols){

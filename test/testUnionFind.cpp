@@ -34,21 +34,21 @@ int main() {
 
     // dlm.printBlocks(blocks);
   
-    // cout << "Merged sets :" << endl;
-    // for (int i = 0; i < block.connectedRows.size(); ++i) {
-    //     if (!block.connectedRows[i].empty()) {
-    //         cout << "Set " << i << ": { ";
-    //         for (int x : block.connectedRows[i]) cout << x << " ";
-    //         cout << "}" << endl;
-    //     }
-    // }
+    cout << "Merged sets :" << endl;
+    for (int i = 0; i < block.connectedRows.size(); ++i) {
+        if (!block.connectedRows[i].empty()) {
+            cout << "Set " << i << ": { ";
+            for (int x : block.connectedRows[i]) cout << x << " ";
+            cout << "}" << endl;
+        }
+    }
 
-    // cout << "\nRow to Group Index Map:" << endl;
-    // for (const auto& [val, indices] : block.rowToRowsSet) {
-    //     cout << val << " -> [ ";
-    //     for (int idx : indices) cout << idx << " ";
-    //     cout << "]\n";
-    // }
+    cout << "\nRow to Group Index Map:" << endl;
+    for (const auto& [val, indices] : block.rowToRowsSet) {
+        cout << val << " -> [ ";
+        for (int idx : indices) cout << idx << " ";
+        cout << "]\n";
+    }
 
     return 0;
 }

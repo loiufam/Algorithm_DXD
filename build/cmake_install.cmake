@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # Install script for directory: /home/experimenter/Desktop/lyh/Algorithm_DXD
+=======
+# Install script for directory: /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD
+>>>>>>> 1cc62de (new changes)
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +54,9 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
+<<<<<<< HEAD
 file(WRITE "/home/experimenter/Desktop/lyh/Algorithm_DXD/build/${CMAKE_INSTALL_MANIFEST}"
+=======
+  file(WRITE "/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/build/${CMAKE_INSTALL_MANIFEST}"
+>>>>>>> 1cc62de (new changes)
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
