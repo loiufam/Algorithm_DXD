@@ -25,6 +25,7 @@ int main(){
     DancingMatrix dlm(rows, cols, matrix);
 
     // dlm.startSearch(true);
+    // dlm.startDLX();
     dlm.startSingleDXD();
     // dlm.startDXZ();
     

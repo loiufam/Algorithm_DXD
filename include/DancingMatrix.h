@@ -47,11 +47,20 @@ struct ColunmHeader : public Node
 {  
     int size;
     bool is_covered;  
-    ColunmHeader(){  
-        size = 0;  
-        is_covered = false;
+    ColunmHeader() : size(0), is_covered(false) {
+
     }  
 }; 
+
+struct RowNode : public Node
+{
+    int size;
+    bool isExist;
+    RowNode(){
+        size = 0;
+        isExist = false;
+    }
+};
 
 // ZDD相关
 struct ZDDNode {
@@ -66,16 +75,6 @@ struct ZDDNode {
     // 拷贝构造函数
     ZDDNode(const ZDDNode& other) : label(other.label), isTerminal(other.isTerminal), lo(other.lo), hi(other.hi) {}
 
-};
-
-struct RowNode : public Node
-{
-    int size;
-    bool isExist;
-    RowNode(){
-        size = 0;
-        isExist = false;
-    }
 };
 
 struct ORNode;  
@@ -167,6 +166,13 @@ struct Block {
         }
 };
 
+struct BatchOperation {
+        std::vector<int> columns;           // 被覆盖的列索引
+        Block oldBlock; 
+        std::vector<Node*> coveredNodes;
+        std::vector<std::pair<ColunmHeader*, ColunmHeader*>> columnLinks;
+};
+
 // 并查集结构
 struct UnionFind {
     vector<int> parent, rank;
@@ -193,7 +199,7 @@ class DancingMatrix
         int ROWS, COLS; 
         int MAX_P_COUNT = 5; // 最大并行搜索次数
         std::uint64_t count;  // 统计范围更大 
-        std::uint64_t DNNF_COUNT;
+        std::uint64_t ONE_COUNT = 0; // 统计矩阵中1的个数
         int p_count = 0; // 记录并行搜索的次数
         double searchTimeSeconds = 0.0;
         double countTimeSeconds = 0.0;
@@ -238,10 +244,13 @@ class DancingMatrix
         void startDXZ();
         // DNNF 相关方法
         ColunmHeader* selectCol();
+        ColunmHeader* selectColumnHeuristic(const unordered_set<int>& cols);
         // ColunmHeader* fastSelect();
 
         void coverInBlock(int c, Block& block);
         void uncoverInBlock(int c, Block& block);
+        void batchCoverInBlock(Node* curC, Block& block);
+        void batchUncoverInBlock(Block& block);
         std::shared_ptr<DNNFNode> singleDXD(Block& blocks);
         shared_ptr<DNNFNode> singleSearch(vector<Block>& blocks) ;
         shared_ptr<DNNFNode> parallelDXD(Block& blocks);
@@ -250,8 +259,7 @@ class DancingMatrix
         void startSingleDXD();
         void startMultiThreadDXD();
 
-        void printDNNF(std::shared_ptr<DNNFNode> root) const;
-        void getSolution(shared_ptr<ORNode> node, std::vector<int> solution);
+        void traverseDNNF(const std::shared_ptr<DNNFNode>& node, std::vector<int>& solution);
         void countSolutions(shared_ptr<ORNode> node);
         void printSolution(); 
 
@@ -301,6 +309,8 @@ class DancingMatrix
         std::mutex cacheMutex; // 缓存访问的互斥锁
         // 操作栈用于批量回溯
         std::stack<CoverOperation> operationStack;
+        // 如何保证线程安全？
+        std::stack<BatchOperation> batchOperationStack; // 用于批量操作的栈
         
 };
 

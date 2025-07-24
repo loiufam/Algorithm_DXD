@@ -2,7 +2,7 @@
 
 //构造函数
 DancingMatrix::DancingMatrix( int rows, int cols, int** matrix )  
-    : ROWS(rows), COLS(cols), count(0), DNNF_COUNT(0) {  
+    : ROWS(rows), COLS(cols), count(0) {  
     ColIndex = new ColunmHeader[cols+1];  
     RowIndex = new RowNode[rows];  
     root = &ColIndex[0];  
@@ -29,6 +29,7 @@ DancingMatrix::DancingMatrix( int rows, int cols, int** matrix )
         for( int j = 0; j < cols ; j++ ) {  
             if(matrix[i][j] == 1){
                 insert(  i , j+1 );  //行数与原矩阵相同，而列数加1
+                ONE_COUNT++; // 统计矩阵中1的个数
                 rowsSet.insert(i);
                 colsSet.insert(j+1); // 列数加1
             }
@@ -359,7 +360,6 @@ void DancingMatrix::insert( int r, int c )
 }
 
 
-
 void DancingMatrix::printMatrix() const
 {
     std::cout<< "Remain Matrix Nodes: " << std::endl;
@@ -501,6 +501,164 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
     if( it != block_cache.end()) {
         block = it->second; // 恢复块
     }
+}
+
+// 批量处理舞蹈链，并更新block状态
+void DancingMatrix::batchCoverInBlock(Node* curC, Block& block) 
+{
+    BatchOperation batchOp;
+    batchOp.oldBlock = block; // 保存当前块状态
+
+    Node* curNode = curC;
+    Node* startNode = curNode;
+    do {  // 遍历该行所有列
+        ColunmHeader* col = &ColIndex[curNode->col];
+        batchOp.columnLinks.push_back({(ColunmHeader*)col->left, (ColunmHeader*)col->right}); // 保存列的链接信息
+
+        // 从链表中移除列头
+        col->right->left = col->left;
+        col->left->right = col->right;
+        batchOp.columns.push_back(col->col);
+        block.cols.erase(col->col); // 从块中移除列
+
+        Node* rowNode = col->down, *curR;
+        while(rowNode != col){  // 遍历列中的行节点
+            Node* noteR = rowNode;
+            curR = noteR->right;
+            while(curR != noteR){
+                curR->down->up = curR->up;
+                curR->up->down = curR->down;
+                --ColIndex[curR->col].size;
+                batchOp.coveredNodes.push_back(curR);
+                curR = curR->right;
+            }
+
+            // 更新block信息
+            block.rows.erase(rowNode->row); // 从块中移除行 
+            vector<int> index = block.rowToRowsSet[rowNode->row];
+            for(int idx : index) {
+                block.connectedRows[idx].erase(rowNode->row); // 从连接行集合中移除列
+            }
+            block.rowToRowsSet.erase(rowNode->row); // 从行到连接行集合的映射中移除
+            
+            rowNode = rowNode->down;
+        }
+
+        curNode = curNode->right; // 移动到下一个列
+    }while(curNode != startNode);
+
+    mergeIntersectingSets(block.connectedRows, block.rowToRowsSet);
+    batchOperationStack.push(batchOp);
+}
+
+// 批量恢复舞蹈链和块
+void DancingMatrix::batchUncoverInBlock(Block& block)
+{ 
+    if(batchOperationStack.empty()) return;
+
+    BatchOperation batchOp = batchOperationStack.top();
+    batchOperationStack.pop();
+
+    for(auto it = batchOp.coveredNodes.rbegin(); 
+    it != batchOp.coveredNodes.rend(); ++it) {
+        Node* curR = *it;
+        ++ColIndex[curR->col].size;     // 恢复列的大小计数
+        curR->down->up = curR;          // 恢复下方节点的上指针
+        curR->up->down = curR;          // 恢复上方节点的下指针
+    }
+
+    for(int i = batchOp.columns.size() - 1; i >= 0; --i) {
+        int colIndex = batchOp.columns[i];
+        ColunmHeader* col = &ColIndex[colIndex];
+        
+        // 从保存的链接信息中恢复
+        ColunmHeader* leftCol = batchOp.columnLinks[i].first;
+        ColunmHeader* rightCol = batchOp.columnLinks[i].second;
+        
+        // 将当前列重新插入到列头链表中
+        leftCol->right = col;           // 左邻居指向当前列
+        rightCol->left = col;           // 右邻居指向当前列
+        col->left = leftCol;            // 当前列指向左邻居
+        col->right = rightCol;          // 当前列指向右邻居s
+    }
+
+    block = batchOp.oldBlock;
+}
+
+// 遍历Decision-DNNF，收集所有解（每个解是若干行号的集合）
+void DancingMatrix::traverseDNNF(const std::shared_ptr<DNNFNode>& node, std::vector<int>& currentSolution) {
+    if (!node || node->label == -2) return; // F 节点
+    if (node->label == -1) {
+        // T 节点，表示当前路径是一种完整解
+        solutions.push_back(currentSolution);
+        return;
+    }
+
+    switch (node->type) {
+        case NodeType::OR:
+            // OR节点：多个子分支，分别尝试
+            for (const auto& child : node->children) {
+                traverseDNNF(child, currentSolution);
+            }
+            break;
+        
+        case NodeType::Decision:
+            if (node->left && node->left->type == NodeType::Variable) {
+                currentSolution.push_back(node->left->label); // 加入当前变量（行号）
+                traverseDNNF(node->right, currentSolution); // 递归右子树
+                currentSolution.pop_back(); // 回溯
+            }
+            break;
+
+        case NodeType::Decomposed:
+            {
+                // Decomposed 是 AND 节点，所有子节点必须都满足
+                std::vector<std::vector<int>> partialResults(1);
+                for (const auto& child : node->children) {
+                    std::vector<std::vector<int>> temp;
+                    std::vector<int> empty;
+                    traverseDNNF(child, empty);
+
+                    std::vector<std::vector<int>> newResults;
+                    for (const auto& prefix : partialResults) {
+                        for (const auto& suffix : temp) {
+                            std::vector<int> merged = prefix;
+                            merged.insert(merged.end(), suffix.begin(), suffix.end());
+                            newResults.push_back(std::move(merged));
+                        }
+                    }
+                    partialResults = std::move(newResults);
+                }
+                for (auto& solution : partialResults) {
+                    solutions.push_back(std::move(solution));
+                }
+            }
+            break;
+
+        case NodeType::Variable:
+            currentSolution.push_back(node->label);
+            solutions.push_back(currentSolution);
+            currentSolution.pop_back();
+            break;
+
+        case NodeType::Terminal:
+            if (node->label == -1) solutions.push_back(currentSolution); // T
+            break;
+    }
+}
+
+ColunmHeader* DancingMatrix::selectColumnHeuristic(const unordered_set<int>& cols) {
+    ColunmHeader* chosen = nullptr;
+    int minSize = INT_MAX;
+    for (int col : cols) {
+        int sz = ColIndex[col].size;
+        if (sz == 1) return &ColIndex[col]; // 启发式剪枝
+        if (sz < minSize) {
+            minSize = sz;
+            chosen = &ColIndex[col];
+        }
+    }
+    return chosen;
 }
 
 ColunmHeader* DancingMatrix::selectCol()

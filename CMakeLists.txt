@@ -34,7 +34,7 @@ set(TEST_SOURCES2
     src/DNNF.cpp
 )
 set(TEST_SOURCES3
-    test/testUnionFind.cpp
+    test/test.cpp
     src/ExactCoverMatrix.cpp
     src/DNNF.cpp
 )
