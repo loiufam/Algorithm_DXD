@@ -1679,7 +1679,7 @@ CMakeFiles/test.dir/src/ExactCoverMatrix.cpp.o: /Users/luoyaohui/VSCodeProjects/
   /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/include/ThreadPool.h \
   /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/include/DancingMatrix.h
 
-CMakeFiles/test.dir/test/testUnionFind.cpp.o: /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/testUnionFind.cpp \
+CMakeFiles/test.dir/test/test.cpp.o: /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/test.cpp \
   /Library/Developer/CommandLineTools/SDKs/MacOSX14.2.sdk/usr/include/Availability.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX14.2.sdk/usr/include/AvailabilityInternal.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX14.2.sdk/usr/include/AvailabilityInternalLegacy.h \
@@ -2519,7 +2519,7 @@ CMakeFiles/test.dir/test/testUnionFind.cpp.o: /Users/luoyaohui/VSCodeProjects/co
   /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/include/DancingMatrix.h
 
 
-/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/testUnionFind.cpp:
+/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/test.cpp:
 
 /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/include/DancingMatrix.h:
 

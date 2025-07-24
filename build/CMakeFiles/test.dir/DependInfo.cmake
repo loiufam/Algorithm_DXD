@@ -10,7 +10,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/src/DNNF.cpp" "CMakeFiles/test.dir/src/DNNF.cpp.o" "gcc" "CMakeFiles/test.dir/src/DNNF.cpp.o.d"
   "/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/src/ExactCoverMatrix.cpp" "CMakeFiles/test.dir/src/ExactCoverMatrix.cpp.o" "gcc" "CMakeFiles/test.dir/src/ExactCoverMatrix.cpp.o.d"
-  "/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/testUnionFind.cpp" "CMakeFiles/test.dir/test/testUnionFind.cpp.o" "gcc" "CMakeFiles/test.dir/test/testUnionFind.cpp.o.d"
+  "/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/test.cpp" "CMakeFiles/test.dir/test/test.cpp.o" "gcc" "CMakeFiles/test.dir/test/test.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

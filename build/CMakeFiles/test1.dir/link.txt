@@ -1,1 +1,0 @@
-/usr/bin/c++  -fsanitize=address -g  -fsanitize=address CMakeFiles/test1.dir/test/test1.cpp.o CMakeFiles/test1.dir/src/ExactCoverMatrix.cpp.o CMakeFiles/test1.dir/src/DNNF.cpp.o -o test1 

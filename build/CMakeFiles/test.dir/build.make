@@ -69,19 +69,19 @@ include CMakeFiles/test.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/test.dir/flags.make
 
-CMakeFiles/test.dir/test/testUnionFind.cpp.o: CMakeFiles/test.dir/flags.make
-CMakeFiles/test.dir/test/testUnionFind.cpp.o: /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/testUnionFind.cpp
-CMakeFiles/test.dir/test/testUnionFind.cpp.o: CMakeFiles/test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/test.dir/test/testUnionFind.cpp.o"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/test.dir/test/testUnionFind.cpp.o -MF CMakeFiles/test.dir/test/testUnionFind.cpp.o.d -o CMakeFiles/test.dir/test/testUnionFind.cpp.o -c /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/testUnionFind.cpp
+CMakeFiles/test.dir/test/test.cpp.o: CMakeFiles/test.dir/flags.make
+CMakeFiles/test.dir/test/test.cpp.o: /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/test.cpp
+CMakeFiles/test.dir/test/test.cpp.o: CMakeFiles/test.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/test.dir/test/test.cpp.o"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/test.dir/test/test.cpp.o -MF CMakeFiles/test.dir/test/test.cpp.o.d -o CMakeFiles/test.dir/test/test.cpp.o -c /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/test.cpp
 
-CMakeFiles/test.dir/test/testUnionFind.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/test.dir/test/testUnionFind.cpp.i"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/testUnionFind.cpp > CMakeFiles/test.dir/test/testUnionFind.cpp.i
+CMakeFiles/test.dir/test/test.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/test.dir/test/test.cpp.i"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/test.cpp > CMakeFiles/test.dir/test/test.cpp.i
 
-CMakeFiles/test.dir/test/testUnionFind.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/test.dir/test/testUnionFind.cpp.s"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/testUnionFind.cpp -o CMakeFiles/test.dir/test/testUnionFind.cpp.s
+CMakeFiles/test.dir/test/test.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/test.dir/test/test.cpp.s"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/test.cpp -o CMakeFiles/test.dir/test/test.cpp.s
 
 CMakeFiles/test.dir/src/ExactCoverMatrix.cpp.o: CMakeFiles/test.dir/flags.make
 CMakeFiles/test.dir/src/ExactCoverMatrix.cpp.o: /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/src/ExactCoverMatrix.cpp
@@ -113,14 +113,14 @@ CMakeFiles/test.dir/src/DNNF.cpp.s: cmake_force
 
 # Object files for target test
 test_OBJECTS = \
-"CMakeFiles/test.dir/test/testUnionFind.cpp.o" \
+"CMakeFiles/test.dir/test/test.cpp.o" \
 "CMakeFiles/test.dir/src/ExactCoverMatrix.cpp.o" \
 "CMakeFiles/test.dir/src/DNNF.cpp.o"
 
 # External object files for target test
 test_EXTERNAL_OBJECTS =
 
-test: CMakeFiles/test.dir/test/testUnionFind.cpp.o
+test: CMakeFiles/test.dir/test/test.cpp.o
 test: CMakeFiles/test.dir/src/ExactCoverMatrix.cpp.o
 test: CMakeFiles/test.dir/src/DNNF.cpp.o
 test: CMakeFiles/test.dir/build.make
