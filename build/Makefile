@@ -117,24 +117,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named test
+# Target rules for targets named test2
 
 # Build rule for target.
-test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test
-.PHONY : test
+test2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test2
+.PHONY : test2
 
 # fast build rule for target.
-test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/build
-.PHONY : test/fast
+test2/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/build
+.PHONY : test2/fast
 
 src/DNNF.o: src/DNNF.cpp.o
 .PHONY : src/DNNF.o
 
 # target to build an object file
 src/DNNF.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/DNNF.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/DNNF.cpp.o
 .PHONY : src/DNNF.cpp.o
 
 src/DNNF.i: src/DNNF.cpp.i
@@ -142,7 +142,7 @@ src/DNNF.i: src/DNNF.cpp.i
 
 # target to preprocess a source file
 src/DNNF.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/DNNF.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/DNNF.cpp.i
 .PHONY : src/DNNF.cpp.i
 
 src/DNNF.s: src/DNNF.cpp.s
@@ -150,7 +150,7 @@ src/DNNF.s: src/DNNF.cpp.s
 
 # target to generate assembly for a file
 src/DNNF.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/DNNF.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/DNNF.cpp.s
 .PHONY : src/DNNF.cpp.s
 
 src/ExactCoverMatrix.o: src/ExactCoverMatrix.cpp.o
@@ -158,7 +158,7 @@ src/ExactCoverMatrix.o: src/ExactCoverMatrix.cpp.o
 
 # target to build an object file
 src/ExactCoverMatrix.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/ExactCoverMatrix.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/ExactCoverMatrix.cpp.o
 .PHONY : src/ExactCoverMatrix.cpp.o
 
 src/ExactCoverMatrix.i: src/ExactCoverMatrix.cpp.i
@@ -166,7 +166,7 @@ src/ExactCoverMatrix.i: src/ExactCoverMatrix.cpp.i
 
 # target to preprocess a source file
 src/ExactCoverMatrix.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/ExactCoverMatrix.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/ExactCoverMatrix.cpp.i
 .PHONY : src/ExactCoverMatrix.cpp.i
 
 src/ExactCoverMatrix.s: src/ExactCoverMatrix.cpp.s
@@ -174,32 +174,32 @@ src/ExactCoverMatrix.s: src/ExactCoverMatrix.cpp.s
 
 # target to generate assembly for a file
 src/ExactCoverMatrix.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/ExactCoverMatrix.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/ExactCoverMatrix.cpp.s
 .PHONY : src/ExactCoverMatrix.cpp.s
 
-test/test.o: test/test.cpp.o
-.PHONY : test/test.o
+test/test2.o: test/test2.cpp.o
+.PHONY : test/test2.o
 
 # target to build an object file
-test/test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/test/test.cpp.o
-.PHONY : test/test.cpp.o
+test/test2.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/test/test2.cpp.o
+.PHONY : test/test2.cpp.o
 
-test/test.i: test/test.cpp.i
-.PHONY : test/test.i
+test/test2.i: test/test2.cpp.i
+.PHONY : test/test2.i
 
 # target to preprocess a source file
-test/test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/test/test.cpp.i
-.PHONY : test/test.cpp.i
+test/test2.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/test/test2.cpp.i
+.PHONY : test/test2.cpp.i
 
-test/test.s: test/test.cpp.s
-.PHONY : test/test.s
+test/test2.s: test/test2.cpp.s
+.PHONY : test/test2.s
 
 # target to generate assembly for a file
-test/test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/test/test.cpp.s
-.PHONY : test/test.cpp.s
+test/test2.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/test/test2.cpp.s
+.PHONY : test/test2.cpp.s
 
 # Help Target
 help:
@@ -209,16 +209,16 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... test"
+	@echo "... test2"
 	@echo "... src/DNNF.o"
 	@echo "... src/DNNF.i"
 	@echo "... src/DNNF.s"
 	@echo "... src/ExactCoverMatrix.o"
 	@echo "... src/ExactCoverMatrix.i"
 	@echo "... src/ExactCoverMatrix.s"
-	@echo "... test/test.o"
-	@echo "... test/test.i"
-	@echo "... test/test.s"
+	@echo "... test/test2.o"
+	@echo "... test/test2.i"
+	@echo "... test/test2.s"
 .PHONY : help
 
 

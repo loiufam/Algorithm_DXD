@@ -25,6 +25,8 @@
 using namespace std;
 
 const int UNCHOOSEN = -10;
+const int MIN_BLOCK_COLS = 1;
+const int MAX_BLOCK_COLS = 100;
 
 struct Node  
 {  
@@ -152,18 +154,154 @@ struct SetIntHash {
     }
 };
 
+class FastBitSet {
+private:
+    std::vector<uint64_t> bits;
+    size_t bit_count;
+    
+public:
+    FastBitSet(size_t size = 0) : bit_count(size) {
+        bits.resize((size + 63) / 64, 0);
+    }
+    
+    void resize(size_t size) {
+        bit_count = size;
+        bits.resize((size + 63) / 64, 0);
+    }
+    
+    void set(size_t pos) {
+        if (pos < bit_count) {
+            bits[pos / 64] |= (1ULL << (pos % 64));
+        }
+    }
+    
+    bool test(size_t pos) const {
+        return pos < bit_count && (bits[pos / 64] & (1ULL << (pos % 64)));
+    }
+    
+    bool intersects(const FastBitSet& other) const {
+        size_t min_size = std::min(bits.size(), other.bits.size());
+        for (size_t i = 0; i < min_size; ++i) {
+            if (bits[i] & other.bits[i]) return true;
+        }
+        return false;
+    }
+    
+    void clear_all() {
+        std::fill(bits.begin(), bits.end(), 0);
+    }
+    
+    size_t count() const {
+        size_t result = 0;
+        for (uint64_t b : bits) {
+            result += __builtin_popcountll(b);
+        }
+        return result;
+    }
+    
+    std::vector<int> get_set_bits() const {
+        std::vector<int> result;
+        for (size_t i = 0; i < bit_count; ++i) {
+            if (test(i)) {
+                result.push_back(i);
+            }
+        }
+        return result;
+    }
+};
+
 struct Block {
         unordered_set<int> rows;  // 从0开始编号
-        unordered_set<int> cols;  // 从1开始编号
+        unordered_set<int> cols;  // 从1开始编号,对应舞蹈链列数id
         vector<set<int>> connectedRows; // 连接的行集合(set.size > 1)
         unordered_map<int, vector<int>> rowToRowsSet; // 行到连接行集合的映射
         
         Block() = default;
 
-        Block(const set<int>& r, const set<int>& c) {
+        Block(const unordered_set<int>& r, const unordered_set<int>& c) : rows(r), cols(c) {}
+
+        Block(const set<int>& r, const set<int>& c){
             rows.insert(r.begin(), r.end());
             cols.insert(c.begin(), c.end());
         }
+};
+
+struct DXD_Block {
+
+        // row id from 0, column id from 1
+        unordered_set<int> cols;  // 选择列
+        unordered_map<int, set<int>> rowToCols;  // 行→列的映射
+        unordered_map<int, set<int>> colToRows;  // 列→行的映射
+
+        DXD_Block(const unordered_set<int>& r, const unordered_map<int, set<int>>& rToC, const unordered_map<int, set<int>>& cToR) 
+            : cols(r), rowToCols(rToC), colToRows(cToR){}
+
+        void print(const string& name = "Block") const {
+            cout << "=== " << name << " ===" << endl;
+            cout << "Rows: " << rowToCols.size() << ", Cols: " << cols.size() << endl;
+            
+            // 打印列集合
+            vector<int> sortedCols(cols.begin(), cols.end());
+            sort(sortedCols.begin(), sortedCols.end());
+            cout << "Columns: ";
+            for (size_t i = 0; i < sortedCols.size(); ++i) {
+                cout << sortedCols[i];
+                if (i < sortedCols.size() - 1) cout << ",";
+            }
+            cout << endl;
+            
+            // 打印行→列映射
+            vector<int> sortedRows;
+            for (const auto& [row, _] : rowToCols) {
+                sortedRows.push_back(row);
+            }
+            sort(sortedRows.begin(), sortedRows.end());
+            
+            for (int row : sortedRows) {
+                cout << "R" << row << ": ";
+                const auto& colSet = rowToCols.at(row);
+                vector<int> rowCols(colSet.begin(), colSet.end());
+                sort(rowCols.begin(), rowCols.end());
+                for (size_t i = 0; i < rowCols.size(); ++i) {
+                    cout << rowCols[i];
+                    if (i < rowCols.size() - 1) cout << ",";
+                }
+                cout << endl;
+            }
+            cout << endl;
+        }
+};
+
+struct OptimizedBlock : public Block {
+    // 预计算的连通性信息
+    mutable std::vector<FastBitSet> col_row_bitsets;  // 每列的行BitSet
+    mutable bool connectivity_cached = false;
+    mutable std::chrono::steady_clock::time_point last_update;
+    
+    OptimizedBlock() : Block() {
+        last_update = std::chrono::steady_clock::now();
+    }
+    
+    OptimizedBlock(const std::set<int>& r, const std::set<int>& c) : Block(r, c) {
+        last_update = std::chrono::steady_clock::now();
+    }
+
+    OptimizedBlock(const std::unordered_set<int>& r, const std::unordered_set<int>& c) : Block(r, c) {
+        last_update = std::chrono::steady_clock::now();
+    }
+    
+    // 标记需要重新计算连通性
+    void invalidate_connectivity() const {
+        connectivity_cached = false;
+        last_update = std::chrono::steady_clock::now();
+    }
+    
+    // 检查连通性是否需要更新
+    bool needs_connectivity_update() const {
+        auto now = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_update);
+        return !connectivity_cached || duration.count() > 100; // 100ms缓存过期  
+    }
 };
 
 struct BatchOperation {
@@ -181,7 +319,10 @@ struct UnionFind {
     }
 
     int find(int x) {
-       return parent[x] == x ? x : parent[x] = find(parent[x]);
+        if (parent[x] != x) {
+            parent[x] = find(parent[x]);
+        }
+        return parent[x];
     }
     
     void unite(int a, int b) {
@@ -204,12 +345,16 @@ class DancingMatrix
         double searchTimeSeconds = 0.0;
         double countTimeSeconds = 0.0;
         std::vector<std::vector<int>> solutions; 
-        set<int> rowsSet;  // 原始矩阵行
-        set<int> colsSet;  // 原始矩阵列
+        unordered_set<int> rowsSet;  // 原始矩阵行
+        unordered_set<int> colsSet;  // 原始矩阵列
+        unordered_map<int, set<int>> rowToColsSet;
+        unordered_map<int, set<int>> colToRowsSet;
         bool isParallelSearch = false; // 是否已分解
         void initBlock(Block& block);
+        void fastInitBlock(OptimizedBlock& block);
         void mergeIntersectingSets(vector<set<int>>& connectedRowSets, unordered_map<int, vector<int>>& rowToGroup);
         vector<Block> spilitBlock(const Block& Block);
+        std::vector<OptimizedBlock> intelligentSplitBlock(const OptimizedBlock& block);
         void printBlocks(const vector<Block>& blocks);
         void printBlock(const Block& block);
 
@@ -218,7 +363,9 @@ class DancingMatrix
         DancingMatrix( int rows, int cols, int** matrix);  
         //释放内存  
         ~DancingMatrix();  
-        vector<Block> detectBlocks(const Block& currentBlock);
+        vector<DXD_Block> detectBlocks(const DXD_Block& currentBlock);
+        void build_mapping_from_cols(const unordered_set<int>& blockCols, unordered_map<int, set<int>>& rowToCols, unordered_map<int, set<int>>& colToRows);
+        std::vector<std::vector<int>> detect_components(const OptimizedBlock& block);
         //在行r列c的位置上插入一个元素  
         void insert( int r, int c );  
         void printMatrix() const; 
@@ -247,22 +394,36 @@ class DancingMatrix
         ColunmHeader* selectColumnHeuristic(const unordered_set<int>& cols);
         // ColunmHeader* fastSelect();
 
-        void coverInBlock(int c, Block& block);
-        void uncoverInBlock(int c, Block& block);
+        void coverInDXDBlock(int c, DXD_Block& block);
+        void uncoverInDXDBlock(int c, DXD_Block& block);
         void batchCoverInBlock(Node* curC, Block& block);
         void batchUncoverInBlock(Block& block);
-        std::shared_ptr<DNNFNode> singleDXD(Block& blocks);
-        shared_ptr<DNNFNode> singleSearch(vector<Block>& blocks) ;
-        shared_ptr<DNNFNode> parallelDXD(Block& blocks);
-        shared_ptr<DNNFNode> parallelSearch(vector<Block>& blocks);
+        std::shared_ptr<DNNFNode> singleDXD(DXD_Block& block);
+        shared_ptr<DNNFNode> singleSearch(vector<DXD_Block>& blocks);
+        std::shared_ptr<DNNFNode> serialSearch(std::vector<OptimizedBlock>& blocks);
+        shared_ptr<DNNFNode> parallelDXD(DXD_Block& blocks);
+        shared_ptr<DNNFNode> parallelSearch(vector<DXD_Block>& blocks);
+        std::shared_ptr<DNNFNode> adaptiveParallelSearch(std::vector<OptimizedBlock>& blocks);
+        std::shared_ptr<DNNFNode> optimizedDXD(OptimizedBlock& block);
         // 启动搜索函数
         void startSingleDXD();
         void startMultiThreadDXD();
+        void startOptimizedDXD();
 
         void traverseDNNF(const std::shared_ptr<DNNFNode>& node, std::vector<int>& solution);
         void countSolutions(shared_ptr<ORNode> node);
         void printSolution(); 
 
+        std::shared_ptr<DNNFNode> getInSingleCache(const size_t& key){
+            if(C.find(key) != C.end()){
+                return C[key];
+            }
+            return nullptr;
+        }
+        void setInSingleCache(const size_t& key, std::shared_ptr<DNNFNode> node){
+            C[key] = node;
+        }
+        
         // 线程安全的缓存访问
         std::shared_ptr<DNNFNode> getCachedResult(const size_t& key) {
             std::lock_guard<std::mutex> lock(cacheMutex);
@@ -274,16 +435,23 @@ class DancingMatrix
             C_a[key] = node;
         }
 
-
     private:  
         ColunmHeader* root;  
         ColunmHeader* ColIndex;  
         RowNode* RowIndex; 
+        friend class OptimizedDancingMatrix;
+        std::atomic<size_t> decomposition_count{0};
+        std::atomic<size_t> parallel_search_count{0};
+        
+        // 性能阈值
+        static constexpr size_t MIN_PARALLEL_BLOCKS = 3;
+        static constexpr size_t MIN_BLOCK_COMPLEXITY = 20;
+        static constexpr size_t MAX_SERIAL_DEPTH = 5;
         // DNNF相关
         std::shared_ptr<ORNode> rootOR;
         vector<string> cache_input_order; // 记录缓存的输入顺序，便于输出
         std::shared_ptr<DNNFNode> rootDNNF;
-        std::unordered_set<std::string> matrix_is_decomposed; // 用于记录已分解的矩阵状态
+        std::unordered_set<size_t> detect_records; // 用于记录无法分解的矩阵状态
         std::shared_ptr<DNNFNode> T = std::make_shared<DNNFNode>(NodeType::Terminal, -1, 1);
         std::shared_ptr<DNNFNode> F = std::make_shared<DNNFNode>(NodeType::Terminal, -2, 0);
           

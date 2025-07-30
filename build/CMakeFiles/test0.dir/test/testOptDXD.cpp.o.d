@@ -1,6 +1,6 @@
-CMakeFiles/test.dir/test/test.cpp.o: \
+CMakeFiles/test0.dir/test/testOptDXD.cpp.o: \
   /Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/share/asan_ignorelist.txt \
-  /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/test.cpp \
+  /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/testOptDXD.cpp \
   /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/../include/DancingMatrix.h \
   /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/include/ThreadPool.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX14.2.sdk/usr/include/c++/v1/thread \

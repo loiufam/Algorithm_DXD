@@ -18,8 +18,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
 
 # Add source files
-set(SOURCES
-    src/main.cpp
+set(SOURCES0
+    test/test.cpp
     src/ExactCoverMatrix.cpp
     src/DNNF.cpp
 )
@@ -39,8 +39,8 @@ set(TEST_SOURCES3
     src/DNNF.cpp
 )
 # Add executable target
-# add_executable(main ${SOURCES})
+# add_executable(test0 ${SOURCES0})
 # 1 : DLX and DXZ 2 : singleDXD and MultiDXD 3 : UnionFind
 # add_executable(test1 ${TEST_SOURCES1})
-# add_executable(test2 ${TEST_SOURCES2})
-add_executable(test ${TEST_SOURCES3})
+add_executable(test2 ${TEST_SOURCES2})
+# add_executable(test ${TEST_SOURCES3})
