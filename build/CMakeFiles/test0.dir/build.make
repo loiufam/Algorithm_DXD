@@ -69,63 +69,31 @@ include CMakeFiles/test0.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/test0.dir/flags.make
 
-CMakeFiles/test0.dir/test/test.cpp.o: CMakeFiles/test0.dir/flags.make
-CMakeFiles/test0.dir/test/test.cpp.o: /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/test.cpp
-CMakeFiles/test0.dir/test/test.cpp.o: CMakeFiles/test0.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/test0.dir/test/test.cpp.o"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/test0.dir/test/test.cpp.o -MF CMakeFiles/test0.dir/test/test.cpp.o.d -o CMakeFiles/test0.dir/test/test.cpp.o -c /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/test.cpp
+CMakeFiles/test0.dir/test/testUnionFind.cpp.o: CMakeFiles/test0.dir/flags.make
+CMakeFiles/test0.dir/test/testUnionFind.cpp.o: /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/testUnionFind.cpp
+CMakeFiles/test0.dir/test/testUnionFind.cpp.o: CMakeFiles/test0.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/test0.dir/test/testUnionFind.cpp.o"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/test0.dir/test/testUnionFind.cpp.o -MF CMakeFiles/test0.dir/test/testUnionFind.cpp.o.d -o CMakeFiles/test0.dir/test/testUnionFind.cpp.o -c /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/testUnionFind.cpp
 
-CMakeFiles/test0.dir/test/test.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/test0.dir/test/test.cpp.i"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/test.cpp > CMakeFiles/test0.dir/test/test.cpp.i
+CMakeFiles/test0.dir/test/testUnionFind.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/test0.dir/test/testUnionFind.cpp.i"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/testUnionFind.cpp > CMakeFiles/test0.dir/test/testUnionFind.cpp.i
 
-CMakeFiles/test0.dir/test/test.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/test0.dir/test/test.cpp.s"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/test.cpp -o CMakeFiles/test0.dir/test/test.cpp.s
-
-CMakeFiles/test0.dir/src/ExactCoverMatrix.cpp.o: CMakeFiles/test0.dir/flags.make
-CMakeFiles/test0.dir/src/ExactCoverMatrix.cpp.o: /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/src/ExactCoverMatrix.cpp
-CMakeFiles/test0.dir/src/ExactCoverMatrix.cpp.o: CMakeFiles/test0.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/test0.dir/src/ExactCoverMatrix.cpp.o"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/test0.dir/src/ExactCoverMatrix.cpp.o -MF CMakeFiles/test0.dir/src/ExactCoverMatrix.cpp.o.d -o CMakeFiles/test0.dir/src/ExactCoverMatrix.cpp.o -c /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/src/ExactCoverMatrix.cpp
-
-CMakeFiles/test0.dir/src/ExactCoverMatrix.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/test0.dir/src/ExactCoverMatrix.cpp.i"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/src/ExactCoverMatrix.cpp > CMakeFiles/test0.dir/src/ExactCoverMatrix.cpp.i
-
-CMakeFiles/test0.dir/src/ExactCoverMatrix.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/test0.dir/src/ExactCoverMatrix.cpp.s"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/src/ExactCoverMatrix.cpp -o CMakeFiles/test0.dir/src/ExactCoverMatrix.cpp.s
-
-CMakeFiles/test0.dir/src/DNNF.cpp.o: CMakeFiles/test0.dir/flags.make
-CMakeFiles/test0.dir/src/DNNF.cpp.o: /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/src/DNNF.cpp
-CMakeFiles/test0.dir/src/DNNF.cpp.o: CMakeFiles/test0.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/test0.dir/src/DNNF.cpp.o"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/test0.dir/src/DNNF.cpp.o -MF CMakeFiles/test0.dir/src/DNNF.cpp.o.d -o CMakeFiles/test0.dir/src/DNNF.cpp.o -c /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/src/DNNF.cpp
-
-CMakeFiles/test0.dir/src/DNNF.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/test0.dir/src/DNNF.cpp.i"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/src/DNNF.cpp > CMakeFiles/test0.dir/src/DNNF.cpp.i
-
-CMakeFiles/test0.dir/src/DNNF.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/test0.dir/src/DNNF.cpp.s"
-	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/src/DNNF.cpp -o CMakeFiles/test0.dir/src/DNNF.cpp.s
+CMakeFiles/test0.dir/test/testUnionFind.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/test0.dir/test/testUnionFind.cpp.s"
+	/Library/Developer/CommandLineTools/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/testUnionFind.cpp -o CMakeFiles/test0.dir/test/testUnionFind.cpp.s
 
 # Object files for target test0
 test0_OBJECTS = \
-"CMakeFiles/test0.dir/test/test.cpp.o" \
-"CMakeFiles/test0.dir/src/ExactCoverMatrix.cpp.o" \
-"CMakeFiles/test0.dir/src/DNNF.cpp.o"
+"CMakeFiles/test0.dir/test/testUnionFind.cpp.o"
 
 # External object files for target test0
 test0_EXTERNAL_OBJECTS =
 
-test0: CMakeFiles/test0.dir/test/test.cpp.o
-test0: CMakeFiles/test0.dir/src/ExactCoverMatrix.cpp.o
-test0: CMakeFiles/test0.dir/src/DNNF.cpp.o
+test0: CMakeFiles/test0.dir/test/testUnionFind.cpp.o
 test0: CMakeFiles/test0.dir/build.make
 test0: CMakeFiles/test0.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable test0"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable test0"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/test0.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

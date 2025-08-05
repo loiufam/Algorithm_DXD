@@ -19,9 +19,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
 
 # Add source files
 set(SOURCES0
-    test/test.cpp
-    src/ExactCoverMatrix.cpp
-    src/DNNF.cpp
+    test/testUnionFind.cpp
 )
 set(TEST_SOURCES1
     test/test1.cpp

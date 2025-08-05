@@ -1,10 +1,6 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/test0.dir/src/DNNF.cpp.o"
-  "CMakeFiles/test0.dir/src/DNNF.cpp.o.d"
-  "CMakeFiles/test0.dir/src/ExactCoverMatrix.cpp.o"
-  "CMakeFiles/test0.dir/src/ExactCoverMatrix.cpp.o.d"
-  "CMakeFiles/test0.dir/test/test.cpp.o"
-  "CMakeFiles/test0.dir/test/test.cpp.o.d"
+  "CMakeFiles/test0.dir/test/testUnionFind.cpp.o"
+  "CMakeFiles/test0.dir/test/testUnionFind.cpp.o.d"
   "test0"
   "test0.pdb"
 )

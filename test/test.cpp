@@ -23,27 +23,25 @@ int main(){
 
     std::cout << "rows: " << rows << ", cols: " << cols << std::endl;
     DancingMatrix dlm(rows, cols, matrix);
-
-    dlm.startSingleDXD();
-    // DXD_Block dxd_block(dlm.colsSet, dlm.rowToColsSet, dlm.colToRowsSet);
-    // vector<DXD_Block> blocks = dlm.detectBlocks(dxd_block);
-    // if(blocks.size() > 1){
-    //     for(int i = 0; i < blocks.size(); ++i){
-    //         string name = "Block" + to_string(i);
-    //         blocks[i].print(name);
-    //     }
-    // }
-    // dxd_block.print("DXD_Block");
-    // dlm.coverInDXDBlock(1, dxd_block);
-    // dxd_block.print("DXD_Block after cover(1)");
-    // dlm.coverInDXDBlock(2, dxd_block);
-    // dxd_block.print("DXD_Block after cover(2)");
-    // dlm.uncoverInDXDBlock(2, dxd_block);
-    // dxd_block.print("DXD_Block after uncover(2)");
-    // dlm.startSearch(true);
     // dlm.startDLX();
-    // dlm.startSingleDXD();
-    // dlm.startDXZ();
+
+    Block block(dlm.rowsSet, dlm.colsSet);
+
+    // vector<set<int>> row_sets = dlm.mergeRowSets(block);
+
+    // // 舞蹈链合并行集合
+    // for(auto row_set : row_sets) {
+    //     std::cout << "行集合: ";
+    //     for(auto row : row_set) {
+    //         std::cout << row << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }
+    // std::cout << std::endl;
+    // vector<Block> blocks = dlm.spilitBlockParallel(row_sets);
+    // dlm.printBlocks(blocks);
+    
+    dlm.startDXD();
     
     // dlm.printDetectedBlocks();
     // 释放二维数组内存

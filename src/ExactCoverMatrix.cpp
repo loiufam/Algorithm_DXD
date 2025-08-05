@@ -61,24 +61,6 @@ DancingMatrix::~DancingMatrix()
 }
 
 
-void DancingMatrix::initBlock(Block& block){
-
-    for(int col : block.cols){
-        ColunmHeader* cur = &ColIndex[col];
-        set<int> rows; // 用于存储连接的行
-        Node* node = cur->down;
-        while(node != cur) {
-            rows.insert(node->row);
-            node = node->down;
-        }
-        block.connectedRows.push_back(rows); // 将连接的行集合添加到块中
-    }
-
-    // 使用并查集合并交集
-    mergeIntersectingSets(block.connectedRows, block.rowToRowsSet);
-
-}
-
 void DancingMatrix::fastInitBlock(OptimizedBlock& block) {
         if (block.connectivity_cached) {   // && !block.needs_connectivity_update()
             return;
@@ -102,67 +84,48 @@ void DancingMatrix::fastInitBlock(OptimizedBlock& block) {
         block.connectivity_cached = true;
 }
 
-void DancingMatrix::mergeIntersectingSets(vector<set<int>>& connectedRowSets, unordered_map<int, vector<int>>& rowToGroup){
-    int n = connectedRowSets.size();
-    if(n == 0) return;
+void mergeSets(vector<set<int>>& merged_sets, const set<int>& new_set) {
+    vector<size_t> to_erase_indices;
+    set<int> merged = new_set;
 
-    UnionFind uf(n); // 初始化并查集
-
-    // 前缀优化：按最小元素排序
-    vector<pair<int, int>> sorted_indices;
-    sorted_indices.reserve(n); // 预分配内存
-    
-    for (int i = 0; i < n; ++i) {
-        if (!connectedRowSets[i].empty())
-            sorted_indices.emplace_back(*connectedRowSets[i].begin(), i);
-    }
-    sort(sorted_indices.begin(), sorted_indices.end());
-
-    unordered_map<int, int> latest_seen; // 元素 -> 所属集合索引
-    // 合并相交的集合
-    for (auto [_, idx] : sorted_indices) {
-        for (int val : connectedRowSets[idx]) {
-            if (latest_seen.count(val)) {
-                uf.unite(idx, latest_seen[val]);
-            }
-            latest_seen[val] = idx;
+    for (size_t i = 0; i < merged_sets.size(); ++i) {
+        set<int> intersection;
+        set_intersection(merged_sets[i].begin(), merged_sets[i].end(),
+                              new_set.begin(), new_set.end(),
+                              inserter(intersection, intersection.begin()));
+        if (!intersection.empty()) {
+            merged.insert(merged_sets[i].begin(), merged_sets[i].end());
+            to_erase_indices.push_back(i);
         }
     }
 
-    // root -> 所有成员索引
-    unordered_map<int, vector<int>> groupMembers;
-    for (int i = 0; i < n; ++i) {
-        if(!connectedRowSets[i].empty()){
-            groupMembers[uf.find(i)].push_back(i);
-        }
+    // 删除被合并的集合（从后往前删除避免下标混乱）
+    for (auto it = to_erase_indices.rbegin(); it != to_erase_indices.rend(); ++it) {
+        merged_sets.erase(merged_sets.begin() + *it);
     }
 
-    vector<set<int>> newSets;
-    newSets.reserve(groupMembers.size()); // 预分配
-    rowToGroup.clear();
-
-    for (auto& [root, indices] : groupMembers) {
-        if (indices.empty()) continue;
-        
-        // 直接移动第一个set，然后合并其他的
-        set<int> merged_set = std::move(connectedRowSets[indices[0]]);
-        
-        for (size_t j = 1; j < indices.size(); ++j) {
-            const auto& current_set = connectedRowSets[indices[j]];
-            merged_set.insert(current_set.begin(), current_set.end());
-        }
-        
-        // 构建rowToGroup映射
-        int newIdx = newSets.size();
-        for (int val : merged_set) {
-            rowToGroup[val].push_back(newIdx);
-        }
-        
-        newSets.push_back(std::move(merged_set));
-    }
-    
-    connectedRowSets = std::move(newSets);
+    merged_sets.push_back(std::move(merged));
 }
+
+// 合并相交的集合
+vector<set<int>> DancingMatrix::mergeRowSets(Block& block){
+    
+    vector<set<int>> merged_sets;
+
+    for(int col : block.cols){
+        ColunmHeader* colHead = &ColIndex[col];
+        
+        if(merged_sets.empty()){
+            merged_sets.push_back(colHead->rows);
+            continue;
+        }
+
+        mergeSets(merged_sets, colHead->rows);
+    }
+
+    return merged_sets;
+}
+
 
 string DancingMatrix::encodeBlockState(const unordered_set<int>& cols){
     string state(COLS, '0'); // 初始化为全0字符串
@@ -180,29 +143,77 @@ size_t DancingMatrix::hashBlockState(const unordered_set<int>& cols) {
     return hash;
 }
 
-// 必须是经过并查集之后，出现多个行冲突分组才可分列
-vector<Block> DancingMatrix::spilitBlock(const Block& block){
+vector<Block> DancingMatrix::spilitBlock(const vector<set<int>>& mergeRowSets){
     
-    int n = block.connectedRows.size();
-    vector<set<int>> coveredCols(n);
-
-    for(int col : block.cols) {
-        ColunmHeader* cur = &ColIndex[col];
-        int first_row_id = cur->down->row; // 获取第一个行节点的行号
-        vector<int> indexs = block.rowToRowsSet.find(first_row_id)->second; 
-        coveredCols[indexs[0]].insert(col); // 将列添加到对应行的集合中
-    }
-
     vector<Block> blocks;
-    for(int i = 0; i < n; ++i) {
-        Block newBlock(block.connectedRows[i], coveredCols[i]);
-        newBlock.connectedRows = {block.connectedRows[i]}; // 只包含当前行的集合
-        for(int row : block.connectedRows[i]) {
-            newBlock.rowToRowsSet[row] = {0}; 
+    for(int i = 0; i < mergeRowSets.size(); ++i) {
+        const set<int>& rows = mergeRowSets[i];
+        set<int> cols;
+        // 获取所有行涉及的列的并集
+        for(int row : rows) {
+            const RowNode* rowHead = &RowIndex[row];
+            cols.insert(rowHead->cols.begin(), rowHead->cols.end());
         }
+
+        // 过滤：只保留在当前行集合中实际存在的列
+        set<int> validCols;
+        for(int col : cols) {
+            const ColunmHeader* colHead = &ColIndex[col];
+            set<int> intersection;
+            set_intersection(rows.begin(), rows.end(),
+                           colHead->rows.begin(), colHead->rows.end(),
+                           inserter(intersection, intersection.begin()));
+            if(!intersection.empty()) {
+                validCols.insert(col);
+            }
+        }
+        Block newBlock(rows, cols);
         blocks.push_back(newBlock);
     }
     return blocks;
+}
+
+vector<Block> DancingMatrix::spilitBlockParallel(const vector<set<int>>& mergeRowSets) {
+   
+    vector<std::future<Block>> futures;
+    
+    // 创建异步任务
+    for(const auto& rows : mergeRowSets) {
+        futures.push_back(std::async(std::launch::async, [this, rows]() -> Block {
+            set<int> cols;
+            
+            // 获取所有行涉及的列的并集
+            for(int row : rows) {
+                const RowNode* rowHead = &RowIndex[row];
+                cols.insert(rowHead->cols.begin(), rowHead->cols.end());
+            }
+            
+            // 过滤：只保留在当前行集合中实际存在的列
+            set<int> validCols;
+            for(int col : cols) {
+                const ColunmHeader* colHead = &ColIndex[col];
+                set<int> intersection;
+                set_intersection(rows.begin(), rows.end(),
+                               colHead->rows.begin(), colHead->rows.end(),
+                               inserter(intersection, intersection.begin()));
+                if(!intersection.empty()) {
+                    validCols.insert(col);
+                }
+            }
+            
+            return Block(rows, validCols);
+        }));
+    }
+    
+    // 收集结果
+    vector<Block> blocks;
+    blocks.reserve(futures.size());
+    for(auto& future : futures) {
+        blocks.push_back(future.get());
+    }
+    
+    return blocks;
+
 }
 
 std::vector<OptimizedBlock> DancingMatrix::intelligentSplitBlock(const OptimizedBlock& block) {
@@ -244,7 +255,8 @@ std::vector<OptimizedBlock> DancingMatrix::intelligentSplitBlock(const Optimized
         return result;
 }
 
-vector<DXD_Block> DancingMatrix::detectBlocks(const DXD_Block& currentBlock) {
+vector<DXD_Block> DancingMatrix::detectBlocks(const DXD_Block& currentBlock) 
+{
 
         // 使用BFS找连通分量
         unordered_set<int> visitedRows;
@@ -312,7 +324,6 @@ vector<DXD_Block> DancingMatrix::detectBlocks(const DXD_Block& currentBlock) {
         return blocks;
 }
 
-
 void DancingMatrix::build_mapping_from_cols(const unordered_set<int>& blockCols, unordered_map<int, set<int>>& rowToCols, unordered_map<int, set<int>>& colToRows)
 {
     for (auto col : blockCols) {
@@ -327,7 +338,7 @@ void DancingMatrix::build_mapping_from_cols(const unordered_set<int>& blockCols,
 }
 
 std::vector<std::vector<int>> DancingMatrix::detect_components(const OptimizedBlock& block) {
-        if (block.rows.empty() || block.cols.empty()) {
+        if (block.cols.empty()) {
             return {};
         }
         
@@ -384,19 +395,30 @@ std::vector<std::vector<int>> DancingMatrix::detect_components(const OptimizedBl
 }
 
 // 串行处理每个子块，组合为 分解 节点
-shared_ptr<DNNFNode> DancingMatrix::singleSearch(vector<DXD_Block>& blocks) {
+shared_ptr<DNNFNode> DancingMatrix::dxdSearch(vector<Block>& blocks) {
 
-    // 收集结果并创建AND节点
+    std::vector<std::future<std::shared_ptr<DNNFNode>>> futures;
+
+    for (auto& block : blocks) {
+       futures.push_back(getThreadPool().enqueue([this](Block block) {
+            // 使用值传递避免引用问题
+            ThreadLocalBatchOp localOp;  // 每个线程独立的操作栈
+            return DXD(block, localOp);
+        }, block)); 
+    }
+
+    // 收集结果并创建Decomposed节点
     auto andNode = std::make_shared<DNNFNode>(NodeType::Decomposed, -1, 0);
     uint64_t totalCount = 1; 
 
-    for (auto& block : blocks) {
-        auto res_or_node = singleDXD(block);
-        if (res_or_node->label == -2) { 
-            return F; // 如果有一个子块返回F，直接返回F
+    
+    for (auto& future : futures) {
+        auto result = future.get();
+        if (result->label == -2) { 
+            return F;
         }
-        andNode->children.push_back(res_or_node);
-        totalCount *= res_or_node->count;
+        andNode->children.push_back(result);
+        totalCount *= result->count;
     }
     
     andNode->count = totalCount;
@@ -409,7 +431,8 @@ std::shared_ptr<DNNFNode> DancingMatrix::serialSearch(std::vector<OptimizedBlock
     uint64_t total_count = 1;
     
     for (auto& block : blocks) {
-        auto result = optimizedDXD(block);
+        ThreadLocalBatchOp localOp;
+        auto result = optimizedDXD(block, localOp);
         if (result->label == -2) {
             return F;
         }
@@ -422,7 +445,7 @@ std::shared_ptr<DNNFNode> DancingMatrix::serialSearch(std::vector<OptimizedBlock
 }
 
 // 并行处理每个子块，组合为 分解 节点
-shared_ptr<DNNFNode> DancingMatrix::parallelSearch(vector<DXD_Block>& blocks) {
+shared_ptr<DNNFNode> DancingMatrix::parallelSearch(vector<Block>& blocks) {
     isParallelSearch = true; // 标记为并行搜索
     
     std::vector<std::future<std::shared_ptr<DNNFNode>>> futures;
@@ -454,7 +477,7 @@ std::shared_ptr<DNNFNode> DancingMatrix::adaptiveParallelSearch(std::vector<Opti
         // 评估是否值得并行
         size_t total_complexity = 0;
         for (const auto& block : blocks) {
-            total_complexity += block.rows.size() * block.cols.size();
+            total_complexity += block.cols.size();
         }
         
         bool should_parallel = (blocks.size() >= MIN_PARALLEL_BLOCKS) && 
@@ -472,7 +495,8 @@ std::shared_ptr<DNNFNode> DancingMatrix::adaptiveParallelSearch(std::vector<Opti
         
         for (auto& block : blocks) {
             futures.push_back(getThreadPool().enqueue([this, block]() mutable {
-                return optimizedDXD(block);
+                ThreadLocalBatchOp localOp;
+                return optimizedDXD(block, localOp);
             }));
         }
         
@@ -493,7 +517,7 @@ std::shared_ptr<DNNFNode> DancingMatrix::adaptiveParallelSearch(std::vector<Opti
         return and_node;
 }
 
-std::shared_ptr<DNNFNode> DancingMatrix::optimizedDXD(OptimizedBlock& block) {
+std::shared_ptr<DNNFNode> DancingMatrix::optimizedDXD(OptimizedBlock& block, ThreadLocalBatchOp& localOp) {
         if (block.cols.empty()) {
             return T;
         }
@@ -506,16 +530,15 @@ std::shared_ptr<DNNFNode> DancingMatrix::optimizedDXD(OptimizedBlock& block) {
             return cached;
         }
         
-        // 快速连通性检测
-        fastInitBlock(block);
-        
-        // 检查是否可分解
-        if (block.connectedRows.size() > 1) {
-            auto sub_blocks = intelligentSplitBlock(block);
-            auto result = adaptiveParallelSearch(sub_blocks);
-            setCachedResult(state_hash, result);
-            return result;
-        }
+        // // 快速连通性检测
+        // fastInitBlock(block);
+        // // 检查是否可分解
+        // if (block.connectedRows.size() > 1) {
+        //     auto sub_blocks = intelligentSplitBlock(block);
+        //     auto result = adaptiveParallelSearch(sub_blocks);
+        //     setCachedResult(state_hash, result);
+        //     return result;
+        // }
         
         // 单块搜索
         ColunmHeader* selected_col = selectColumnHeuristic(block.cols);
@@ -529,9 +552,9 @@ std::shared_ptr<DNNFNode> DancingMatrix::optimizedDXD(OptimizedBlock& block) {
         Node* cur_node = selected_col->down;
         while (cur_node != selected_col) {
             // 使用父类的批量操作
-            batchCoverInBlock(cur_node, block);
+            batchCoverInBlock(cur_node, block, localOp);
             
-            auto sub_result = optimizedDXD(block);
+            auto sub_result = optimizedDXD(block, localOp);
             
             if (sub_result->label != -2) {
                 // 使用父类的变量表
@@ -550,7 +573,7 @@ std::shared_ptr<DNNFNode> DancingMatrix::optimizedDXD(OptimizedBlock& block) {
                 or_node->children.push_back(and_node);
             }
             
-            batchUncoverInBlock(block);
+            batchUncoverInBlock(block, localOp);
             cur_node = cur_node->down;
         }
         
@@ -595,6 +618,8 @@ void DancingMatrix::insert( int r, int c )
     Node* cur = &ColIndex[c];  
     ColIndex[c].size++;  
     RowIndex[r].size++;
+    ColIndex[c].rows.insert(r);
+    RowIndex[r].cols.insert(c);
     Node* newNode = new Node( r, c );  
     while( cur->down != &ColIndex[c] && cur->down->row < r )  
         cur = cur->down;  
@@ -695,7 +720,7 @@ void DancingMatrix::uncover( int c )
 
 }
 
-void DancingMatrix::coverInDXDBlock(int c, DXD_Block& block){
+void DancingMatrix::coverInBlock(int c, Block& block){
 
 
     ColunmHeader* col = &ColIndex[c];  
@@ -709,8 +734,6 @@ void DancingMatrix::coverInDXDBlock(int c, DXD_Block& block){
     curC = col->down;  
     while( curC != col )  
     {    
-        block.rowToCols[curC->row].erase(c);
-        block.colToRows[c].erase(curC->row);
 
         curR = curC->right;  
         while( curR != curC )  
@@ -719,15 +742,14 @@ void DancingMatrix::coverInDXDBlock(int c, DXD_Block& block){
             curR->up->down = curR->down;  
             --ColIndex[curR->col].size;  
 
-            block.rowToCols[curR->row].erase(curR->col);
-            block.colToRows[curR->col].erase(curR->row);
             curR = curR->right;  
         }  
+        // block.rows.erase(curC->row);
         curC = curC->down;  
     }  
 }
 
-void DancingMatrix::uncoverInDXDBlock(int c, DXD_Block& block){ 
+void DancingMatrix::uncoverInBlock(int c, Block& block){ 
     
     Node* curR, *curC;  
     ColunmHeader* col = &ColIndex[c];  
@@ -745,13 +767,10 @@ void DancingMatrix::uncoverInDXDBlock(int c, DXD_Block& block){
             curR->down->up = curR;  
             curR->up->down = curR;  
 
-            block.rowToCols[curR->row].insert(curR->col);
-            block.colToRows[curR->col].insert(curR->row);
+            
             curR = curR->left;  
         }  
-        
-        block.rowToCols[curC->row].insert(c);
-        block.colToRows[c].insert(curC->row);
+        // block.rows.insert(curC->row);
         curC = curC->up;  
     }  
 
@@ -762,7 +781,7 @@ void DancingMatrix::uncoverInDXDBlock(int c, DXD_Block& block){
 }
 
 // 批量处理舞蹈链，并更新block状态
-void DancingMatrix::batchCoverInBlock(Node* curC, Block& block) 
+void DancingMatrix::batchCoverInBlock(Node* curC, Block& block, ThreadLocalBatchOp& localOp) 
 {
     BatchOperation batchOp;
     batchOp.oldBlock = block; // 保存当前块状态
@@ -787,17 +806,17 @@ void DancingMatrix::batchCoverInBlock(Node* curC, Block& block)
                 curR->down->up = curR->up;
                 curR->up->down = curR->down;
                 --ColIndex[curR->col].size;
+
+                // 更新列头和行头的元素集合
+                ColIndex[curR->col].rows.erase(curR->row);  // 从列的行集合中移除该行
+                RowIndex[curR->row].cols.erase(curR->col);  // 从行的列集合中移除该列
+
                 batchOp.coveredNodes.push_back(curR);
                 curR = curR->right;
             }
 
             // 更新block信息
             block.rows.erase(rowNode->row); // 从块中移除行 
-            vector<int> index = block.rowToRowsSet[rowNode->row];
-            for(int idx : index) {
-                block.connectedRows[idx].erase(rowNode->row); // 从连接行集合中移除列
-            }
-            block.rowToRowsSet.erase(rowNode->row); // 从行到连接行集合的映射中移除
             
             rowNode = rowNode->down;
         }
@@ -805,17 +824,18 @@ void DancingMatrix::batchCoverInBlock(Node* curC, Block& block)
         curNode = curNode->right; // 移动到下一个列
     }while(curNode != startNode);
 
-    // mergeIntersectingSets(block.connectedRows, block.rowToRowsSet);
-    batchOperationStack.push(batchOp);
+    block.is_spilited = false;  // 重置块状态
+    // batchOperationStack.push(batchOp);
+    localOp.operationStack.push_back(batchOp);
 }
 
 // 批量恢复舞蹈链和块
-void DancingMatrix::batchUncoverInBlock(Block& block)
+void DancingMatrix::batchUncoverInBlock(Block& block, ThreadLocalBatchOp& localOp)
 { 
-    if(batchOperationStack.empty()) return;
+    if(localOp.operationStack.empty()) return;
 
-    BatchOperation batchOp = batchOperationStack.top();
-    batchOperationStack.pop();
+    BatchOperation batchOp = localOp.operationStack.back();
+    localOp.operationStack.pop_back();
 
     for(auto it = batchOp.coveredNodes.rbegin(); 
     it != batchOp.coveredNodes.rend(); ++it) {
@@ -823,6 +843,10 @@ void DancingMatrix::batchUncoverInBlock(Block& block)
         ++ColIndex[curR->col].size;     // 恢复列的大小计数
         curR->down->up = curR;          // 恢复下方节点的上指针
         curR->up->down = curR;          // 恢复上方节点的下指针
+
+        // 恢复列头和行头的元素集合
+        ColIndex[curR->col].rows.insert(curR->row);  // 恢复列的行集合
+        RowIndex[curR->row].cols.insert(curR->col);  // 恢复行的列集合
     }
 
     for(int i = batchOp.columns.size() - 1; i >= 0; --i) {

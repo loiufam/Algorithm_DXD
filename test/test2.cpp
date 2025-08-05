@@ -1,5 +1,5 @@
 #include "../include/DancingMatrix.h"
-// 专门测试DXD单线程与多线程
+// 专门测试DXD
 int main() { 
     try
     {
@@ -25,9 +25,9 @@ int main() {
                 // 创建 DancingMatrix 对象
                 DancingMatrix dmx(r, c, matrix);
 
-                dmx.startSingleDXD();
-
+                dmx.startOptimizedDXD();
                 dmx.startMultiThreadDXD();
+
                 // 释放内存
                 PreProccess::freeMatrix(matrix, r);
             }
@@ -51,7 +51,7 @@ int main() {
                 // 创建 DancingMatrix 对象
                 DancingMatrix dmx(r, c, matrix);
 
-                dmx.startSingleDXD();
+                dmx.startOptimizedDXD();
                 dmx.startMultiThreadDXD();
 
                 // 释放内存
@@ -75,7 +75,7 @@ int main() {
                 // 创建 DancingMatrix 对象
                 DancingMatrix dmx(r, c, matrix);
 
-                dmx.startSingleDXD();
+                dmx.startOptimizedDXD();
                 dmx.startMultiThreadDXD();
 
                 // 释放内存

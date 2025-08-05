@@ -160,14 +160,13 @@ void DancingMatrix::printSolution() {
 }
 
 // DXD单线程（要体现分解性）
-shared_ptr<DNNFNode> DancingMatrix::singleDXD(DXD_Block& block) {
+shared_ptr<DNNFNode> DancingMatrix::DXD(Block& block, ThreadLocalBatchOp& localOp) {
     
     if(block.cols.empty()) {
         return T; // 如果没有列，返回T
     } 
 
     // 先查缓存
-    // string state = encodeBlockState(block.cols);
     size_t state = hashBlockState(block.cols); // 编码当前块状态
     auto cacheResult = getInSingleCache(state);
     if(cacheResult) {
@@ -175,12 +174,15 @@ shared_ptr<DNNFNode> DancingMatrix::singleDXD(DXD_Block& block) {
     }
 
 
-    if(block.cols.size() < MAX_BLOCK_COLS && detect_records.find(state) == detect_records.end()) {
+    if(!block.is_spilited && detect_records.find(state) == detect_records.end()) {
 
-        vector<DXD_Block> blocks = detectBlocks(block);
+        vector<set<int>> row_sets = mergeRowSets(block);
 
-        if(blocks.size() > 1){
-            auto res_and_node = singleSearch(blocks); // 单线程实现不同块搜索
+        if(row_sets.size() > 1){
+            // 考虑并行拆分子矩阵
+            p_count++;
+            auto blocks = spilitBlockParallel(row_sets); 
+            auto res_and_node = dxdSearch(blocks); // 并行搜索
             setInSingleCache(state, res_and_node); // 缓存结果
             return res_and_node; // 返回分解节点
         }else{
@@ -197,44 +199,24 @@ shared_ptr<DNNFNode> DancingMatrix::singleDXD(DXD_Block& block) {
     // 将choose列下的行节点作为Decision节点加入children
     auto orNode = make_shared<DNNFNode>(NodeType::OR, choose->col, 0);
 
-    coverInDXDBlock(choose->col, block); 
     Node* curC = choose->down;
     while(curC != choose) {
-        // 递归处理每个Decision节点
-        Node* noteR = curC; 
-        Node* curR = noteR->right; 
-        while(curR != noteR) {
-            coverInDXDBlock(curR->col, block); 
-            curR = curR->right; 
-        }
-        // batchCoverInBlock(curC, block);
+        
+        batchCoverInBlock(curC, block, localOp);
  
-        auto node = singleDXD(block); // 递归左分支
+        auto node = DXD(block, localOp); // 递归左分支
 
         if(node->label != -2){
-            auto it = V_Table.find(curC->row);
-            shared_ptr<DNNFNode> var;
-            if (it != V_Table.end()) {
-                var = it->second;
-            } else {
-                var = make_shared<DNNFNode>(NodeType::Variable, curC->row + 1);
-                V_Table[curC->row] = var;
-            }
+            shared_ptr<DNNFNode> var = make_shared<DNNFNode>(NodeType::Variable, curC->row + 1);
             auto and_node = make_shared<DNNFNode>(NodeType::Decision, var, node);
             and_node->count = node->count;
             orNode->count += and_node->count; // 累加当前Decision节点的计数
             orNode->children.push_back(and_node);
         }
         
-        curR = noteR->left; 
-        while(curR != noteR) {
-            uncoverInDXDBlock(curR->col, block); 
-            curR = curR->left; 
-        }
-        // batchUncoverInBlock(block);
+        batchUncoverInBlock(block, localOp);
         curC = curC->down;
     }
-    uncoverInDXDBlock(choose->col, block); 
 
     if(orNode->children.empty()) {
         orNode = F;
@@ -245,58 +227,57 @@ shared_ptr<DNNFNode> DancingMatrix::singleDXD(DXD_Block& block) {
 }
 
 
-void DancingMatrix::startSingleDXD() {
+void DancingMatrix::startDXD() {
 
-    std::cout << "开始单线程DXD搜索..." << std::endl;
-    // Block block(rowsSet, colsSet);
-    // initBlock(block); // 初始化块 
+    std::cout << "开始DXD搜索..." << std::endl;
+    Block block(rowsSet, colsSet);
 
-    DXD_Block dxd_block(colsSet, rowToColsSet, colToRowsSet);
-
+    clearSingleCache();
     auto start = std::chrono::high_resolution_clock::now();
-    rootDNNF = singleDXD(dxd_block); // 执单线程DXD搜索
+    ThreadLocalBatchOp localOp;  // 每个线程独立的操作栈
+    rootDNNF = DXD(block, localOp); // 执单线程DXD搜索
     auto end = std::chrono::high_resolution_clock::now();
 
     std::cout << "搜索到的解个数: " << rootDNNF->count << std::endl;
     
     searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
-    std::cout << "单线程DXD搜索完成, 耗时: " << searchTimeSeconds << " 秒。" << std::endl;
+    std::cout << "DXD搜索完成, 耗时: " << searchTimeSeconds << " 秒。" << std::endl;
+    if( p_count > 0 ) {
+        std::cout << "本次搜索开启多线程, 分解次数为: " << p_count << std::endl;
+    } else {
+        std::cout << "本次搜索为单线程线程。" << std::endl;
+    }
     std::cout << std::endl; 
 
-    // vector<int> solution;
-    // traverseDNNF(rootDNNF, solution);
-    // printSolution();
 }
 
 // 主搜索函数(多线程版本)
-shared_ptr<DNNFNode> DancingMatrix::parallelDXD(DXD_Block& block) {
+shared_ptr<DNNFNode> DancingMatrix::parallelDXD(Block& block) {
     if (block.cols.empty()) {
         return T; 
     }
 
-    // string stateHash = encodeBlockState(block.cols); // 编码当前块状态
     size_t state = hashBlockState(block.cols); // 编码当前块状态
 
     // 检查缓存
     auto cachedResult = getCachedResult(state);
-    // auto cachedResult = getCachedResult(hashBlockState(block.cols));
     if (cachedResult) {
         return cachedResult;
     }
 
-    if(block.cols.size() < MAX_BLOCK_COLS && detect_records.find(state) == detect_records.end()) {
+    // if(block.cols.size() < MAX_BLOCK_COLS && detect_records.find(state) == detect_records.end()) {
 
-        vector<DXD_Block> blocks = detectBlocks(block);
+    //     vector<DXD_Block> blocks = detectBlocks(block);
 
-        if(blocks.size() > 1){
-            p_count++; // 分解成功次数
-            auto res_and_node = parallelSearch(blocks); // 多线程实现不同块搜索
-            setCachedResult(state, res_and_node); // 缓存结果
-            return res_and_node; // 返回分解节点
-        }else{
-            detect_records.insert(state);
-        }
-    }
+    //     if(blocks.size() > 1){
+    //         p_count++; // 分解成功次数
+    //         auto res_and_node = parallelSearch(blocks); // 多线程实现不同块搜索
+    //         setCachedResult(state, res_and_node); // 缓存结果
+    //         return res_and_node; // 返回分解节点
+    //     }else{
+    //         detect_records.insert(state);
+    //     }
+    // }
     
     ColunmHeader* selected_col = selectColumnHeuristic(block.cols);  
 
@@ -306,15 +287,14 @@ shared_ptr<DNNFNode> DancingMatrix::parallelDXD(DXD_Block& block) {
 
     auto orNode = make_shared<DNNFNode>(NodeType::OR, selected_col->col, 0);
 
-    coverInDXDBlock(selected_col->col, block); 
+    coverInBlock(selected_col->col, block); 
     Node* curC = selected_col->down;
     while(curC != selected_col) {
 
-        // batchCoverInBlock(curC, block);
         Node* noteR = curC; 
         Node* curR = noteR->right; 
         while(curR != noteR) {
-            coverInDXDBlock(curR->col, block); 
+            coverInBlock(curR->col, block); 
             curR = curR->right; 
         }
 
@@ -335,15 +315,15 @@ shared_ptr<DNNFNode> DancingMatrix::parallelDXD(DXD_Block& block) {
             orNode->children.push_back(and_node);
         }
         
-        // batchUncoverInBlock(block);
+        
         curR = noteR->left; 
         while(curR != noteR) {
-            uncoverInDXDBlock(curR->col, block); 
+            uncoverInBlock(curR->col, block); 
             curR = curR->left; 
         }
         curC = curC->down;
     }
-    uncoverInDXDBlock(selected_col->col, block);
+    uncoverInBlock(selected_col->col, block);
 
     if(orNode->children.empty()) {
         orNode = F;
@@ -357,41 +337,44 @@ shared_ptr<DNNFNode> DancingMatrix::parallelDXD(DXD_Block& block) {
 void DancingMatrix::startMultiThreadDXD() {
 
     std::cout << "开始多线程DXD搜索..." << std::endl;
-    // Block block(rowsSet, colsSet);
+    Block block(rowsSet, colsSet);
     // initBlock(block); // 初始化块 
 
-    DXD_Block dxd_block(colsSet, rowToColsSet, colToRowsSet);
-    
+    // DXD_Block dxd_block(colsSet, rowToColsSet, colToRowsSet);
+
+    clearCache();
     auto start = std::chrono::high_resolution_clock::now();
-    rootDNNF = parallelDXD(dxd_block); // 多线程DXD搜索
+    rootDNNF = parallelDXD(block); // 多线程DXD搜索
     auto end = std::chrono::high_resolution_clock::now();
 
     std::cout << "搜索到的解个数: " << rootDNNF->count << std::endl;
     
     searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
     std::cout << "多线程DXD搜索完成, 耗时: " << searchTimeSeconds << " 秒。" << std::endl;
-    if(isParallelSearch) {
-        std::cout << "并行搜索模式已启用。" << std::endl;
-        std::cout << "并行搜次数: " << p_count << std::endl;  
-    } else {
-        std::cout << "并行搜索模式未启用。" << std::endl;
-    }
+    // if(isParallelSearch) {
+    //     std::cout << "并行搜索模式已启用。" << std::endl;
+    //     std::cout << "并行搜次数: " << p_count << std::endl;  
+    // } else {
+    //     std::cout << "并行搜索模式未启用。" << std::endl;
+    // }
     std::cout << std::endl;
 }
 
 void DancingMatrix::startOptimizedDXD() {
-        std::cout << "开始优化版DXD搜索..." << std::endl;
+        std::cout << "开始优化版单线程DXD搜索..." << std::endl;
         
         OptimizedBlock initial_block(rowsSet, colsSet);
         
+        clearCache();
         auto start = std::chrono::high_resolution_clock::now();
-        rootDNNF = optimizedDXD(initial_block);
+        ThreadLocalBatchOp localOp;
+        rootDNNF = optimizedDXD(initial_block,localOp);
         auto end = std::chrono::high_resolution_clock::now();
         
         searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
         
         std::cout << "搜索到的解个数: " << rootDNNF->count << std::endl;
-        std::cout << "优化版DXD搜索完成, 耗时: " << searchTimeSeconds << " 秒" << std::endl;
+        std::cout << "优化版单线程DXD搜索完成, 耗时: " << searchTimeSeconds << " 秒" << std::endl;
         
         std::cout << std::endl;
 }

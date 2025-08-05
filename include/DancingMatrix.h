@@ -22,11 +22,12 @@
 #include <numeric>
 #include <functional>
 #include <climits>
+#include <execution>
 using namespace std;
 
 const int UNCHOOSEN = -10;
 const int MIN_BLOCK_COLS = 1;
-const int MAX_BLOCK_COLS = 100;
+const int MAX_BLOCK_COLS = 80;
 
 struct Node  
 {  
@@ -48,19 +49,16 @@ struct Node
 struct ColunmHeader : public Node  
 {  
     int size;
-    bool is_covered;  
-    ColunmHeader() : size(0), is_covered(false) {
-
+    set<int> rows;
+    ColunmHeader() : size(0) {
     }  
 }; 
 
 struct RowNode : public Node
 {
     int size;
-    bool isExist;
-    RowNode(){
-        size = 0;
-        isExist = false;
+    set<int> cols;
+    RowNode() : size(0) {
     }
 };
 
@@ -213,14 +211,15 @@ public:
 struct Block {
         unordered_set<int> rows;  // 从0开始编号
         unordered_set<int> cols;  // 从1开始编号,对应舞蹈链列数id
-        vector<set<int>> connectedRows; // 连接的行集合(set.size > 1)
-        unordered_map<int, vector<int>> rowToRowsSet; // 行到连接行集合的映射
+        // vector<set<int>> connectedRows; // 连接的行集合(set.size > 1)
+        // unordered_map<int, vector<int>> rowToRowsSet; // 行到连接行集合的映射
+        bool is_spilited = false;
         
         Block() = default;
 
-        Block(const unordered_set<int>& r, const unordered_set<int>& c) : rows(r), cols(c) {}
+        Block(const unordered_set<int>& r, const unordered_set<int>& c) :  rows(r), cols(c) {}
 
-        Block(const set<int>& r, const set<int>& c){
+        Block(const set<int>& r, const set<int>& c, bool is_spilited = true){
             rows.insert(r.begin(), r.end());
             cols.insert(c.begin(), c.end());
         }
@@ -277,6 +276,8 @@ struct OptimizedBlock : public Block {
     mutable std::vector<FastBitSet> col_row_bitsets;  // 每列的行BitSet
     mutable bool connectivity_cached = false;
     mutable std::chrono::steady_clock::time_point last_update;
+    vector<set<int>> connectedRows;
+    unordered_map<int, vector<int>> rowToRowsSet;
     
     OptimizedBlock() : Block() {
         last_update = std::chrono::steady_clock::now();
@@ -311,26 +312,34 @@ struct BatchOperation {
         std::vector<std::pair<ColunmHeader*, ColunmHeader*>> columnLinks;
 };
 
+struct ThreadLocalBatchOp {
+    vector<BatchOperation> operationStack;
+};
+
 // 并查集结构
 struct UnionFind {
-    vector<int> parent, rank;
-    UnionFind(int n) : parent(n), rank(n, 0) {
+    vector<int> parent, size;  
+    
+    UnionFind(int n) : parent(n), size(n, 1) {
         iota(parent.begin(), parent.end(), 0);
     }
-
+    
     int find(int x) {
         if (parent[x] != x) {
-            parent[x] = find(parent[x]);
+            parent[x] = find(parent[x]);  // 路径压缩
         }
         return parent[x];
     }
     
-    void unite(int a, int b) {
+    bool unite(int a, int b) {
         int pa = find(a), pb = find(b);
-        if (pa == pb) return;
-        if (rank[pa] < rank[pb]) swap(pa, pb);
+        if (pa == pb) return false;
+        
+        // 按size合并，保持树的平衡
+        if (size[pa] < size[pb]) swap(pa, pb);
         parent[pb] = pa;
-        if (rank[pa] == rank[pb]) rank[pa]++;
+        size[pa] += size[pb];
+        return true;
     }
 };
 
@@ -350,10 +359,10 @@ class DancingMatrix
         unordered_map<int, set<int>> rowToColsSet;
         unordered_map<int, set<int>> colToRowsSet;
         bool isParallelSearch = false; // 是否已分解
-        void initBlock(Block& block);
         void fastInitBlock(OptimizedBlock& block);
-        void mergeIntersectingSets(vector<set<int>>& connectedRowSets, unordered_map<int, vector<int>>& rowToGroup);
-        vector<Block> spilitBlock(const Block& Block);
+        vector<set<int>> mergeRowSets(Block& block);
+        vector<Block> spilitBlock(const vector<set<int>>& mergeRowSets);
+        vector<Block> spilitBlockParallel(const vector<set<int>>& mergeRowSets);
         std::vector<OptimizedBlock> intelligentSplitBlock(const OptimizedBlock& block);
         void printBlocks(const vector<Block>& blocks);
         void printBlock(const Block& block);
@@ -394,19 +403,19 @@ class DancingMatrix
         ColunmHeader* selectColumnHeuristic(const unordered_set<int>& cols);
         // ColunmHeader* fastSelect();
 
-        void coverInDXDBlock(int c, DXD_Block& block);
-        void uncoverInDXDBlock(int c, DXD_Block& block);
-        void batchCoverInBlock(Node* curC, Block& block);
-        void batchUncoverInBlock(Block& block);
-        std::shared_ptr<DNNFNode> singleDXD(DXD_Block& block);
-        shared_ptr<DNNFNode> singleSearch(vector<DXD_Block>& blocks);
+        void coverInBlock(int c, Block& block);
+        void uncoverInBlock(int c, Block& block);
+        void batchCoverInBlock(Node* curC, Block& block, ThreadLocalBatchOp& localOp);
+        void batchUncoverInBlock(Block& block, ThreadLocalBatchOp& localOp);
+        std::shared_ptr<DNNFNode> DXD(Block& block, ThreadLocalBatchOp& localOp);
+        shared_ptr<DNNFNode> dxdSearch(vector<Block>& blocks);
         std::shared_ptr<DNNFNode> serialSearch(std::vector<OptimizedBlock>& blocks);
-        shared_ptr<DNNFNode> parallelDXD(DXD_Block& blocks);
-        shared_ptr<DNNFNode> parallelSearch(vector<DXD_Block>& blocks);
+        shared_ptr<DNNFNode> parallelDXD(Block& blocks);
+        shared_ptr<DNNFNode> parallelSearch(vector<Block>& blocks);
         std::shared_ptr<DNNFNode> adaptiveParallelSearch(std::vector<OptimizedBlock>& blocks);
-        std::shared_ptr<DNNFNode> optimizedDXD(OptimizedBlock& block);
+        std::shared_ptr<DNNFNode> optimizedDXD(OptimizedBlock& block, ThreadLocalBatchOp& localOp);
         // 启动搜索函数
-        void startSingleDXD();
+        void startDXD();
         void startMultiThreadDXD();
         void startOptimizedDXD();
 
@@ -424,6 +433,9 @@ class DancingMatrix
             C[key] = node;
         }
         
+        void clearSingleCache(){
+            C.clear();
+        }
         // 线程安全的缓存访问
         std::shared_ptr<DNNFNode> getCachedResult(const size_t& key) {
             std::lock_guard<std::mutex> lock(cacheMutex);
@@ -433,6 +445,9 @@ class DancingMatrix
         void setCachedResult(const size_t& key, std::shared_ptr<DNNFNode> node) {
             std::lock_guard<std::mutex> lock(cacheMutex);
             C_a[key] = node;
+        }
+        void clearCache(){
+            C_a.clear();
         }
 
     private:  
@@ -477,8 +492,6 @@ class DancingMatrix
         std::mutex cacheMutex; // 缓存访问的互斥锁
         // 操作栈用于批量回溯
         std::stack<CoverOperation> operationStack;
-        // 如何保证线程安全？
-        std::stack<BatchOperation> batchOperationStack; // 用于批量操作的栈
         
 };
 
