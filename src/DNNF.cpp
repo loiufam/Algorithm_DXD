@@ -202,7 +202,7 @@ shared_ptr<DNNFNode> DancingMatrix::DXD(Block& block, ThreadLocalBatchOp& localO
     Node* curC = choose->down;
     while(curC != choose) {
         
-        batchCoverInBlock(curC, block, localOp);
+        // batchCoverInBlock(curC, block, localOp);
  
         auto node = DXD(block, localOp); // 递归左分支
 
@@ -214,7 +214,7 @@ shared_ptr<DNNFNode> DancingMatrix::DXD(Block& block, ThreadLocalBatchOp& localO
             orNode->children.push_back(and_node);
         }
         
-        batchUncoverInBlock(block, localOp);
+        // batchUncoverInBlock(block, localOp);
         curC = curC->down;
     }
 
@@ -367,8 +367,7 @@ void DancingMatrix::startOptimizedDXD() {
         
         clearCache();
         auto start = std::chrono::high_resolution_clock::now();
-        ThreadLocalBatchOp localOp;
-        rootDNNF = optimizedDXD(initial_block,localOp);
+        rootDNNF = optimizedDXD(initial_block);
         auto end = std::chrono::high_resolution_clock::now();
         
         searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();

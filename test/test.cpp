@@ -25,7 +25,6 @@ int main(){
     DancingMatrix dlm(rows, cols, matrix);
     // dlm.startDLX();
 
-    Block block(dlm.rowsSet, dlm.colsSet);
 
     // vector<set<int>> row_sets = dlm.mergeRowSets(block);
 
@@ -41,7 +40,10 @@ int main(){
     // vector<Block> blocks = dlm.spilitBlockParallel(row_sets);
     // dlm.printBlocks(blocks);
     
-    dlm.startDXD();
+    // dlm.startDXD();
+    dlm.startOptimizedDXD();
+
+    dlm.startMultiThreadDXD();
     
     // dlm.printDetectedBlocks();
     // 释放二维数组内存

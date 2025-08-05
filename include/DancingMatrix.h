@@ -223,6 +223,12 @@ struct Block {
             rows.insert(r.begin(), r.end());
             cols.insert(c.begin(), c.end());
         }
+
+        // 复制构造函数
+        Block(const Block& other) {
+            rows = other.rows;
+            cols = other.cols;
+        }
 };
 
 struct DXD_Block {
@@ -383,6 +389,7 @@ class DancingMatrix
         string getColumnState() const;
         string encodeBlockState(const unordered_set<int>& cols);
         size_t hashBlockState(const unordered_set<int>& cols);
+        size_t hashColState(unordered_set<int>& cols);
      
         void batchCover(const std::vector<int>& columns);
         void batchUncover();
@@ -405,15 +412,15 @@ class DancingMatrix
 
         void coverInBlock(int c, Block& block);
         void uncoverInBlock(int c, Block& block);
-        void batchCoverInBlock(Node* curC, Block& block, ThreadLocalBatchOp& localOp);
-        void batchUncoverInBlock(Block& block, ThreadLocalBatchOp& localOp);
+        void batchCoverInBlock(Node* curC, Block& block);
+        void batchUncoverInBlock(Block& block);
         std::shared_ptr<DNNFNode> DXD(Block& block, ThreadLocalBatchOp& localOp);
         shared_ptr<DNNFNode> dxdSearch(vector<Block>& blocks);
         std::shared_ptr<DNNFNode> serialSearch(std::vector<OptimizedBlock>& blocks);
         shared_ptr<DNNFNode> parallelDXD(Block& blocks);
         shared_ptr<DNNFNode> parallelSearch(vector<Block>& blocks);
         std::shared_ptr<DNNFNode> adaptiveParallelSearch(std::vector<OptimizedBlock>& blocks);
-        std::shared_ptr<DNNFNode> optimizedDXD(OptimizedBlock& block, ThreadLocalBatchOp& localOp);
+        std::shared_ptr<DNNFNode> optimizedDXD(Block& block);
         // 启动搜索函数
         void startDXD();
         void startMultiThreadDXD();
@@ -492,6 +499,7 @@ class DancingMatrix
         std::mutex cacheMutex; // 缓存访问的互斥锁
         // 操作栈用于批量回溯
         std::stack<CoverOperation> operationStack;
+        vector<BatchOperation> batchOpStack;
         
 };
 
