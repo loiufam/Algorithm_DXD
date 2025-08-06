@@ -553,17 +553,18 @@ std::shared_ptr<DNNFNode> DancingMatrix::optimizedDXD(Block& block) {
         // }
         
         // 单块搜索
-        vector<int> cols(block.cols.begin(), block.cols.end());
-        sort(cols.begin(), cols.end());
-        ColunmHeader* selected_col = nullptr;
-        int MIN_SIZE = INT_MAX;
-        for(auto it = cols.rbegin(); it != cols.rend(); ++it) {
-            ColunmHeader* curCol = &ColIndex[*it];
-            if (curCol->size < MIN_SIZE) {
-                selected_col = curCol;
-                MIN_SIZE = curCol->size;
-            }
-        }
+        // vector<int> cols(block.cols.begin(), block.cols.end());
+        // sort(cols.begin(), cols.end());
+        // ColunmHeader* selected_col = nullptr;
+        // int MIN_SIZE = INT_MAX;
+        // for(auto it = cols.rbegin(); it != cols.rend(); ++it) {
+        //     ColunmHeader* curCol = &ColIndex[*it];
+        //     if (curCol->size < MIN_SIZE) {
+        //         selected_col = curCol;
+        //         MIN_SIZE = curCol->size;
+        //     }
+        // }
+        ColunmHeader* selected_col = selectColumnHeuristic(block.cols);
         
         
         if (selected_col->size <= 0) {

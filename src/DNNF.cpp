@@ -336,12 +336,9 @@ shared_ptr<DNNFNode> DancingMatrix::parallelDXD(Block& block) {
 
 void DancingMatrix::startMultiThreadDXD() {
 
-    std::cout << "开始多线程DXD搜索..." << std::endl;
+    std::cout << "开始自适应多线程DXD搜索..." << std::endl;
     Block block(rowsSet, colsSet);
-    // initBlock(block); // 初始化块 
-
-    // DXD_Block dxd_block(colsSet, rowToColsSet, colToRowsSet);
-
+    
     clearCache();
     auto start = std::chrono::high_resolution_clock::now();
     rootDNNF = parallelDXD(block); // 多线程DXD搜索
@@ -350,7 +347,7 @@ void DancingMatrix::startMultiThreadDXD() {
     std::cout << "搜索到的解个数: " << rootDNNF->count << std::endl;
     
     searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
-    std::cout << "多线程DXD搜索完成, 耗时: " << searchTimeSeconds << " 秒。" << std::endl;
+    std::cout << "自适应多线程DXD搜索完成, 耗时: " << searchTimeSeconds << " 秒。" << std::endl;
     // if(isParallelSearch) {
     //     std::cout << "并行搜索模式已启用。" << std::endl;
     //     std::cout << "并行搜次数: " << p_count << std::endl;  
@@ -361,7 +358,7 @@ void DancingMatrix::startMultiThreadDXD() {
 }
 
 void DancingMatrix::startOptimizedDXD() {
-        std::cout << "开始优化版单线程DXD搜索..." << std::endl;
+        std::cout << "开始优化版单线程DXD搜索(快速连通性检测)..." << std::endl;
         
         OptimizedBlock initial_block(rowsSet, colsSet);
         
@@ -373,7 +370,7 @@ void DancingMatrix::startOptimizedDXD() {
         searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
         
         std::cout << "搜索到的解个数: " << rootDNNF->count << std::endl;
-        std::cout << "优化版单线程DXD搜索完成, 耗时: " << searchTimeSeconds << " 秒" << std::endl;
+        std::cout << "优化版DXD搜索完成, 耗时: " << searchTimeSeconds << " 秒" << std::endl;
         
         std::cout << std::endl;
 }
