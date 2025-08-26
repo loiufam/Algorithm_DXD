@@ -1,0 +1,279 @@
+#ifndef DXD_H
+#define DXD_H
+
+#include "../include/DancingMatrix.h"
+
+const int UNCHOOSEN = -10;
+const int MIN_BLOCK_COLS = 1;
+const int MAX_BLOCK_COLS = 80;
+
+struct ORNode;  
+
+struct ANDNode {
+    int row;
+    std::shared_ptr<ORNode> next;
+    ANDNode() : row(UNCHOOSEN), next(nullptr) {}
+    ANDNode(int row) : row(row), next(nullptr) {}
+};
+
+struct ORNode {
+    int label;  // -1代表T，-2代表F
+    std::shared_ptr<ANDNode> left;
+    std::shared_ptr<ANDNode> right;
+    
+    ORNode(int label) : label(label), left(nullptr), right(nullptr) {}
+    ORNode(int label, std::shared_ptr<ANDNode> left, std::shared_ptr<ANDNode> right)
+        : label(label), left(left), right(right) {}
+};
+
+// 操作记录用于批量回溯
+struct CoverOperation {
+    std::vector<int> columns;           // 被覆盖的列索引
+    std::vector<Node*> coveredNodes;
+    std::vector<std::pair<ColunmHeader*, ColunmHeader*>> columnLinks; // 列头的原始链接
+};
+
+enum class NodeType { OR, Decision, Decomposed, Variable, Terminal };  // 节点类型 AND node 分为Decision和Decomposed两种
+
+struct DNNFNode {
+    NodeType type;
+    int label; // -1 for T, -2 for F
+    uint64_t count;
+    vector<std::shared_ptr<DNNFNode>> children; // 记录行id
+    std::shared_ptr<DNNFNode> left;
+    std::shared_ptr<DNNFNode> right; 
+
+    DNNFNode(NodeType t, int l) : type(t), label(l) {} // 构建变量节点和终端节点
+    DNNFNode(NodeType t, int l, uint64_t c) : type(t), label(l), count(c) {} // 构造函数用于OR节点和 Decomposed类型的AND节点   
+    DNNFNode(NodeType t, shared_ptr<DNNFNode> l, shared_ptr<DNNFNode> r) : type(t), left(l), right(r) {} // 构建Decision类型的AND节点
+
+};
+
+// 生成block hash key
+struct SetIntHash {
+    std::size_t operator()(const std::pair<std::unordered_set<int>, int>& p) const {
+        const std::unordered_set<int>& s = p.first;
+        int val = p.second;
+
+        // 将 unordered_set 转为 vector 并排序，以确保哈希稳定性
+        std::vector<int> sorted(s.begin(), s.end());
+        std::sort(sorted.begin(), sorted.end());
+
+        // 使用组合哈希
+        std::size_t seed = 0;
+        for (int x : sorted) {
+            seed ^= std::hash<int>()(x) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        }
+
+        // 加上 int 值
+        seed ^= std::hash<int>()(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+
+        return seed;
+    }
+};
+
+
+struct Block {
+        unordered_set<int> rows;  // 从0开始编号
+        unordered_set<int> cols;  // 从1开始编号,对应舞蹈链列数id
+        // vector<set<int>> connectedRows; // 连接的行集合(set.size > 1)
+        // unordered_map<int, vector<int>> rowToRowsSet; // 行到连接行集合的映射
+        bool is_spilited = false;
+        
+        Block() = default;
+
+        Block(const unordered_set<int>& r, const unordered_set<int>& c) :  rows(r), cols(c) {}
+
+        Block(const set<int>& r, const set<int>& c, bool is_spilited = true){
+            rows.insert(r.begin(), r.end());
+            cols.insert(c.begin(), c.end());
+        }
+
+        // 复制构造函数
+        Block(const Block& other) {
+            rows = other.rows;
+            cols = other.cols;
+        }
+};
+
+struct DXD_Block {
+
+        // row id from 0, column id from 1
+        unordered_set<int> cols;  // 选择列
+        unordered_map<int, set<int>> rowToCols;  // 行→列的映射
+        unordered_map<int, set<int>> colToRows;  // 列→行的映射
+
+        DXD_Block(const unordered_set<int>& r, const unordered_map<int, set<int>>& rToC, const unordered_map<int, set<int>>& cToR) 
+            : cols(r), rowToCols(rToC), colToRows(cToR){}
+
+        void print(const string& name = "Block") const {
+            cout << "=== " << name << " ===" << endl;
+            cout << "Rows: " << rowToCols.size() << ", Cols: " << cols.size() << endl;
+            
+            // 打印列集合
+            vector<int> sortedCols(cols.begin(), cols.end());
+            sort(sortedCols.begin(), sortedCols.end());
+            cout << "Columns: ";
+            for (size_t i = 0; i < sortedCols.size(); ++i) {
+                cout << sortedCols[i];
+                if (i < sortedCols.size() - 1) cout << ",";
+            }
+            cout << endl;
+            
+            // 打印行→列映射
+            vector<int> sortedRows;
+            for (const auto& [row, _] : rowToCols) {
+                sortedRows.push_back(row);
+            }
+            sort(sortedRows.begin(), sortedRows.end());
+            
+            for (int row : sortedRows) {
+                cout << "R" << row << ": ";
+                const auto& colSet = rowToCols.at(row);
+                vector<int> rowCols(colSet.begin(), colSet.end());
+                sort(rowCols.begin(), rowCols.end());
+                for (size_t i = 0; i < rowCols.size(); ++i) {
+                    cout << rowCols[i];
+                    if (i < rowCols.size() - 1) cout << ",";
+                }
+                cout << endl;
+            }
+            cout << endl;
+        }
+};
+
+struct BatchOperation {
+        std::vector<int> columns;           // 被覆盖的列索引
+        Block oldBlock; 
+        std::vector<Node*> coveredNodes;
+        std::vector<std::pair<ColunmHeader*, ColunmHeader*>> columnLinks;
+};
+
+struct ThreadLocalBatchOp {
+    vector<BatchOperation> operationStack;
+};
+
+class DanceDNNF : DancingMatrix { 
+
+    public:
+        DanceDNNF(int rows, int cols, int** matrix) : DancingMatrix(rows, cols, matrix) {
+            root = getRoot();
+            ColIndex = getColIndex();
+            RowIndex = getRowIndex();
+            
+            rootOR = nullptr;
+            rootDNNF = nullptr;
+            ONE_COUNT = 0;
+            searchTimeSeconds = 0.0;
+            countTimeSeconds = 0.0;
+            p_count = 0;
+            isParallelSearch = false;
+        }
+        ~DanceDNNF() {
+            clearSingleCache();
+            clearCache();
+            Cache.clear();
+            V_Table.clear();
+            block_cache.clear();
+        }
+
+        int MAX_P_COUNT = 5; // 最大并行搜索次数   
+        int p_count = 0; // 记录并行搜索的次数
+        bool isParallelSearch = false; // 是否已分解
+
+        vector<set<int>> mergeRowSets(Block& block);
+        vector<Block> spilitBlock(const vector<set<int>>& mergeRowSets);
+        vector<Block> spilitBlockParallel(const vector<set<int>>& mergeRowSets);
+        void printBlocks(const vector<Block>& blocks);
+        void printBlock(const Block& block);
+
+        vector<DXD_Block> detectBlocks(const DXD_Block& currentBlock);
+
+        void batchCover(const std::vector<int>& columns);
+        void batchUncover();
+        std::shared_ptr<ORNode> make_node(int row);
+        std::shared_ptr<ORNode> Search(Node* curC);
+        void startSearch(bool verbose = false);
+
+        void coverInBlock(int c, Block& block);
+        void uncoverInBlock(int c, Block& block);
+        void batchCoverInBlock(Node* curC, Block& block);
+        void batchUncoverInBlock(Block& block);
+        std::shared_ptr<DNNFNode> DXD(Block& block, ThreadLocalBatchOp& localOp);
+        shared_ptr<DNNFNode> dxdSearch(vector<Block>& blocks);
+        shared_ptr<DNNFNode> parallelDXD(Block& blocks);
+        shared_ptr<DNNFNode> parallelSearch(vector<Block>& blocks);
+        std::shared_ptr<DNNFNode> optimizedDXD(Block& block);
+        // 启动搜索函数
+        void startDXD();
+        void startMultiThreadDXD();
+        void startOptimizedDXD();
+
+        void traverseDNNF(const std::shared_ptr<DNNFNode>& node, std::vector<int>& solution);
+        void countSolutions(shared_ptr<ORNode> node);
+
+                std::shared_ptr<DNNFNode> getInSingleCache(const size_t& key){
+            if(CacheST.find(key) != CacheST.end()){
+                return CacheST[key];
+            }
+            return nullptr;
+        }
+        void setInSingleCache(const size_t& key, std::shared_ptr<DNNFNode> node){
+            CacheST[key] = node;
+        }
+        
+        void clearSingleCache(){
+            CacheST.clear();
+        }
+        // 多线程安全的缓存访问
+        std::shared_ptr<DNNFNode> getCachedResult(const size_t& key) {
+            std::lock_guard<std::mutex> lock(cacheMutex);
+            auto it = CacheMT.find(key);
+            return (it != CacheMT.end()) ? it->second : nullptr;
+        }
+        void setCachedResult(const size_t& key, std::shared_ptr<DNNFNode> node) {
+            std::lock_guard<std::mutex> lock(cacheMutex);
+            CacheMT[key] = node;
+        }
+        void clearCache(){
+            CacheMT.clear();
+        }
+
+    private:
+        // 父类成员
+        ColunmHeader* root;  
+        ColunmHeader* ColIndex;  
+        RowNode* RowIndex; 
+        
+        // DNNF相关
+        std::shared_ptr<ORNode> rootOR;
+        vector<string> cache_input_order; // 记录缓存的输入顺序，便于输出
+        std::shared_ptr<DNNFNode> rootDNNF;
+        std::unordered_set<size_t> detect_records; // 用于记录无法分解的矩阵状态
+        std::shared_ptr<DNNFNode> T = std::make_shared<DNNFNode>(NodeType::Terminal, -1, 1);
+        std::shared_ptr<DNNFNode> F = std::make_shared<DNNFNode>(NodeType::Terminal, -2, 0);
+          
+        
+        std::unordered_map<std::string, std::shared_ptr<ORNode>> Cache;
+        // DNNF缓存
+        unordered_map<size_t, shared_ptr<DNNFNode>> CacheST;  // 单线程
+        unordered_map<size_t, shared_ptr<DNNFNode>> CacheMT;  // 多线程
+        unordered_map<int, shared_ptr<DNNFNode>> V_Table; // 变量节点缓存
+
+        // Block缓存
+        std::unordered_map<std::pair<std::unordered_set<int>, int>, Block, SetIntHash> block_cache;; // 用于存储Block的缓存，key为行集合和列数的组合，value为Block对象
+
+        // 使用单例模式获取线程池
+        static ThreadPool& getThreadPool() {
+            static ThreadPool instance; // 局部静态变量，线程安全
+            return instance;
+        }
+        std::mutex cacheMutex; // 缓存访问的互斥锁
+        // 操作栈用于批量回溯
+        std::stack<CoverOperation> operationStack;
+        vector<BatchOperation> batchOpStack;
+};
+
+
+
+#endif

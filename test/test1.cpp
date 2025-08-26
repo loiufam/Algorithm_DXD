@@ -1,4 +1,5 @@
 #include "../include/DancingMatrix.h"
+#include "../include/DXZ.h"
 
 
 // 专门测DLX和DXZ的代码
@@ -24,9 +25,9 @@ int main() {
                 int** matrix = PreProccess::processFileToMatrix1(filePath, r, c);
 
                 // 创建 DancingMatrix 对象
-                DancingMatrix dmx(r, c, matrix);
-                dmx.startDLX();
-                dmx.startDXZ();
+                DanceZDD dxzSolver(r, c, matrix);
+                dxzSolver.startDLX();
+                dxzSolver.startDXZ();
 
                 // 释放内存
                 PreProccess::freeMatrix(matrix, r);
@@ -49,9 +50,9 @@ int main() {
                 int** matrix = PreProccess::processFileToMatrix2(entry.path(), r, c);
 
                 // 创建 DancingMatrix 对象
-                DancingMatrix dmx(r, c, matrix);
-                dmx.startDLX();
-                dmx.startDXZ();
+                DanceZDD dxzSolver(r, c, matrix);
+                dxzSolver.startDLX();
+                dxzSolver.startDXZ();
 
                 // 释放内存
                 PreProccess::freeMatrix(matrix, r);
@@ -71,10 +72,10 @@ int main() {
                 int r, c; 
                 int** matrix = PreProccess::processFileToMatrix3(entry.path().string(), r, c);
 
-                // 创建 DancingMatrix 对象
-                DancingMatrix dmx(r, c, matrix);
-                dmx.startDLX();
-                dmx.startDXZ();
+                 // 创建 DancingMatrix 对象
+                DanceZDD dxzSolver(r, c, matrix);
+                dxzSolver.startDLX();
+                dxzSolver.startDXZ();
 
                 // 释放内存
                 PreProccess::freeMatrix(matrix, r);

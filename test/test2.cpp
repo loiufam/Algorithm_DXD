@@ -1,4 +1,5 @@
 #include "../include/DancingMatrix.h"
+#include "../include/DXD.h"
 // 专门测试DXD
 int main() { 
     try
@@ -22,11 +23,10 @@ int main() {
                 int r, c;
                 int** matrix = PreProccess::processFileToMatrix1(filePath, r, c);
 
-                // 创建 DancingMatrix 对象
-                DancingMatrix dmx(r, c, matrix);
+                DanceDNNF dxdSolver(r, c, matrix);
 
-                dmx.startOptimizedDXD();
-                dmx.startMultiThreadDXD();
+                dxdSolver.startOptimizedDXD();
+                dxdSolver.startMultiThreadDXD();
 
                 // 释放内存
                 PreProccess::freeMatrix(matrix, r);
@@ -48,11 +48,10 @@ int main() {
                 int r, c;
                 int** matrix = PreProccess::processFileToMatrix2(entry.path(), r, c);
 
-                // 创建 DancingMatrix 对象
-                DancingMatrix dmx(r, c, matrix);
+                DanceDNNF dxdSolver(r, c, matrix);
 
-                dmx.startOptimizedDXD();
-                dmx.startMultiThreadDXD();
+                dxdSolver.startOptimizedDXD();
+                dxdSolver.startMultiThreadDXD();
 
                 // 释放内存
                 PreProccess::freeMatrix(matrix, r);
@@ -72,11 +71,10 @@ int main() {
                 int r, c;
                 int** matrix = PreProccess::processFileToMatrix3(entry.path().string(), r, c);
 
-                // 创建 DancingMatrix 对象
-                DancingMatrix dmx(r, c, matrix);
+                DanceDNNF dxdSolver(r, c, matrix);
 
-                dmx.startOptimizedDXD();
-                dmx.startMultiThreadDXD();
+                dxdSolver.startOptimizedDXD();
+                dxdSolver.startMultiThreadDXD();
 
                 // 释放内存
                 PreProccess::freeMatrix(matrix, r);
