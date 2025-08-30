@@ -1,4 +1,5 @@
 #include "../include/DancingMatrix.h"
+#include "../include/DXD.h"
 
 int main(){
     std::vector<std::vector<int>> X = {
@@ -22,10 +23,16 @@ int main(){
     }
 
     std::cout << "rows: " << rows << ", cols: " << cols << std::endl;
-    DancingMatrix dlm(rows, cols, matrix);
+    DanceDNNF dxd(rows, cols, matrix);
     // dlm.startDLX();
-
-
+    // vector<vector<int>> components = dxd.getComponents();
+    // for(auto& comp : components) {
+    //     std::cout << "组件: ";
+    //     for(auto row : comp) {
+    //         std::cout << row << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }
     // vector<set<int>> row_sets = dlm.mergeRowSets(block);
 
     // // 舞蹈链合并行集合
@@ -40,10 +47,9 @@ int main(){
     // vector<Block> blocks = dlm.spilitBlockParallel(row_sets);
     // dlm.printBlocks(blocks);
     
-    // dlm.startDXD();
-    dlm.startOptimizedDXD();
+    dxd.startDXD();
 
-    dlm.startMultiThreadDXD();
+    // dxd.startMultiThreadDXD();
     
     // dlm.printDetectedBlocks();
     // 释放二维数组内存

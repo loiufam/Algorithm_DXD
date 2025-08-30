@@ -33,12 +33,13 @@ set(TEST_SOURCES2
 )
 set(TEST_SOURCES3
     test/test.cpp
-    src/ExactCoverMatrix.cpp
-    src/DNNF.cpp
+    src/DancingMatrix.cpp
+    src/DXDSolver.cpp
+    src/ConnectedGraph.cpp  
 )
 # Add executable target
 # add_executable(test0 ${SOURCES0})
 # 1 : DLX and DXZ 2 : singleDXD and MultiDXD 3 : UnionFind
 # add_executable(test1 ${TEST_SOURCES1})
-add_executable(test2 ${TEST_SOURCES2})
-# add_executable(test ${TEST_SOURCES3})
+# add_executable(test2 ${TEST_SOURCES2})
+add_executable(test ${TEST_SOURCES3})

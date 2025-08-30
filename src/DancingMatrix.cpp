@@ -39,7 +39,10 @@ DancingMatrix::DancingMatrix( int rows, int cols, int** matrix )
             }
         }
     }
+
+    initConnectedGraph();
     
+    cout<< "初始化舞蹈链完成." << endl;
 }
 
 //析构函数，在 DancingMatrix 对象被销毁时，释放所有动态分配的内存，避免内存泄漏
@@ -64,7 +67,8 @@ DancingMatrix::~DancingMatrix()
 }
 
 void DancingMatrix::initConnectedGraph() {
-    connectedGraph = std::make_unique<ConnectedGraph>(*this);
+    cout<< "初始化连通图..." << endl;
+    connectedGraph = std::make_shared<ConnectedGraph>(*this);
 }
 
 //插入元素到双向十字链表中
@@ -173,7 +177,7 @@ void DancingMatrix::cover( int c )
     ColunmHeader* col = &ColIndex[c];  
     col->right->left = col->left;  
     col->left->right = col->right; 
-    
+    colsSet.erase(c); // 从当前矩阵移除该列
     
     Node* curR, *curC;  
     curC = col->down;  
@@ -191,6 +195,7 @@ void DancingMatrix::cover( int c )
             RowIndex[noteR->row].cols.erase(curR->col);
             curR = curR->right;  
         }  
+        rowsSet.erase(curC->row);
         connectedGraph->remove(curC->row);
         EXIST_ROWS--;
         curC = curC->down;  
@@ -216,12 +221,14 @@ void DancingMatrix::uncover( int c )
             RowIndex[noteR->row].cols.insert(curR->col);
             curR = curR->left;  
         }  
+        rowsSet.insert(curC->row);
         connectedGraph->restore(curC->row);
         EXIST_ROWS++;
         curC = curC->up;  
     }  
     col->right->left = col;  
     col->left->right = col;  
+    colsSet.insert(col->col);
 
 }
 

@@ -1,4 +1,5 @@
 #include "../include/DXD.h"
+#include "../include/ConnectedGraph.h"
 
 void DanceDNNF::batchCover(const std::vector<int>& columns) {
     CoverOperation batchOp;
@@ -339,8 +340,7 @@ shared_ptr<DNNFNode> DanceDNNF::dxdSearch(vector<Block>& blocks) {
     for (auto& block : blocks) {
        futures.push_back(getThreadPool().enqueue([this](Block block) {
             // 使用值传递避免引用问题
-            ThreadLocalBatchOp localOp;  // 每个线程独立的操作栈
-            return DXD(block, localOp);
+            return DXD(block);
         }, block)); 
     }
 
@@ -514,8 +514,93 @@ void DanceDNNF::printBlock(const Block& block) {
         cout << "]\n\n"; 
 }
 
+vector<vector<int>> DanceDNNF::getComponents() {
+    return connectedGraph->getComponents(rowsSet);
+}
+
+void DanceDNNF::coverInBlock(int c, Block& block){
+
+    ColunmHeader* col = &ColIndex[c];  
+    col->right->left = col->left;  
+    col->left->right = col->right;  
+    
+    block.cols.erase(c); // 从块中移除列
+
+
+    Node* curR, *curC;  
+    curC = col->down;  
+    while( curC != col )  
+    {    
+        RowIndex[curC->row].cols.erase(curC->col); // 从行映射中移除该列
+        curR = curC->right;  
+        while( curR != curC )  
+        {  
+            curR->down->up = curR->up;  
+            curR->up->down = curR->down;  
+            --ColIndex[curR->col].size;  
+
+            RowIndex[curC->row].cols.erase(curR->col); // 从行映射中移除该列
+            curR = curR->right;  
+        }  
+        block.rows.erase(curC->row);
+        connectedGraph->remove(curC->row);
+        curC = curC->down;  
+    }  
+}
+
+void DanceDNNF::uncoverInBlock(int c, Block& block){ 
+    
+    Node* curR, *curC;  
+    ColunmHeader* col = &ColIndex[c];  
+
+    curC = col->up;  
+
+    while( curC != col )  
+    {  
+        Node* noteR = curC;  
+        RowIndex[curC->row].cols.insert(curC->col); // 恢复行映射中的该列
+        curR = curC->left;  
+
+        while( curR != noteR )  
+        {  
+            ++ColIndex[curR->col].size; 
+            curR->down->up = curR;  
+            curR->up->down = curR;  
+
+            RowIndex[curC->row].cols.insert(curR->col);
+            curR = curR->left;  
+        }  
+        block.rows.insert(curC->row);
+        connectedGraph->restore(curC->row);
+        curC = curC->up;  
+    }  
+
+    col->right->left = col;  
+    col->left->right = col;  
+
+    block.cols.insert(c);
+}
+
+vector<Block> DanceDNNF::spilit(const vector<vector<int>>& rows) {
+    vector<Block> blocks;
+    for(int i = 0; i < rows.size(); ++i) {
+        const vector<int>& rowVec = rows[i];
+        set<int> rowSet(rowVec.begin(), rowVec.end());
+        set<int> cols;
+        // 获取所有行涉及的列的并集
+        for(int row : rowSet) {
+            const RowNode* rowHead = &RowIndex[row];
+            cols.insert(rowHead->cols.begin(), rowHead->cols.end());
+        }
+
+        Block newBlock(rowSet, cols);
+        blocks.push_back(newBlock);
+    }
+    return blocks;
+}
+
 // DXD单线程（要体现分解性）
-shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block, ThreadLocalBatchOp& localOp) {
+shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
     
     if(block.cols.empty()) {
         return T; // 如果没有列，返回T
@@ -531,12 +616,14 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block, ThreadLocalBatchOp& localOp) {
 
     if(!block.is_spilited && detect_records.find(state) == detect_records.end()) {
 
-        vector<set<int>> row_sets = mergeRowSets(block);
+        // vector<set<int>> row_sets = mergeRowSets(block);
+        set<int> rows(block.rows.begin(), block.rows.end());
+        vector<vector<int>> components = connectedGraph->getComponents(rows);
 
-        if(row_sets.size() > 1){
-            // 考虑并行拆分子矩阵
+        if(components.size() > 1){
             p_count++;
-            auto blocks = spilitBlockParallel(row_sets); 
+            block.is_spilited = true; // 标记为已分解
+            auto blocks = spilit(components); // 分解为多个块
             auto res_and_node = dxdSearch(blocks); // 并行搜索
             setInSingleCache(state, res_and_node); // 缓存结果
             return res_and_node; // 返回分解节点
@@ -554,12 +641,18 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block, ThreadLocalBatchOp& localOp) {
     // 将choose列下的行节点作为Decision节点加入children
     auto orNode = make_shared<DNNFNode>(NodeType::OR, choose->col, 0);
 
+    coverInBlock(choose->col, block);
     Node* curC = choose->down;
     while(curC != choose) {
         
         // batchCoverInBlock(curC, block, localOp);
+        Node* curR = curC->right;
+        while (curR != curC) {
+            coverInBlock(curR->col, block);
+            curR = curR->right;
+        }
  
-        auto node = DXD(block, localOp); // 递归左分支
+        auto node = DXD(block); // 递归左分支
 
         if(node->label != -2){
             shared_ptr<DNNFNode> var = make_shared<DNNFNode>(NodeType::Variable, curC->row + 1);
@@ -570,8 +663,14 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block, ThreadLocalBatchOp& localOp) {
         }
         
         // batchUncoverInBlock(block, localOp);
+        curR = curC->left;
+        while (curR != curC) {
+            uncoverInBlock(curR->col, block);
+            curR = curR->left;
+        }
         curC = curC->down;
     }
+    uncoverInBlock(choose->col, block);
 
     if(orNode->children.empty()) {
         orNode = F;
@@ -589,8 +688,7 @@ void DanceDNNF::startDXD() {
 
     clearSingleCache();
     auto start = std::chrono::high_resolution_clock::now();
-    ThreadLocalBatchOp localOp;  // 每个线程独立的操作栈
-    rootDNNF = DXD(block, localOp); // 执单线程DXD搜索
+    rootDNNF = DXD(block); // 执单线程DXD搜索
     auto end = std::chrono::high_resolution_clock::now();
 
     std::cout << "搜索到的解个数: " << rootDNNF->count << std::endl;
@@ -711,82 +809,20 @@ void DanceDNNF::startMultiThreadDXD() {
     // }
     std::cout << std::endl;
 }
-
-void DanceDNNF::coverInBlock(int c, Block& block){
-
-    ColunmHeader* col = &ColIndex[c];  
-    col->right->left = col->left;  
-    col->left->right = col->right;  
-    
-    block.cols.erase(c); // 从块中移除列
-
-
-    Node* curR, *curC;  
-    curC = col->down;  
-    while( curC != col )  
-    {    
-
-        curR = curC->right;  
-        while( curR != curC )  
-        {  
-            curR->down->up = curR->up;  
-            curR->up->down = curR->down;  
-            --ColIndex[curR->col].size;  
-
-            curR = curR->right;  
-        }  
-        // block.rows.erase(curC->row);
-        curC = curC->down;  
-    }  
-}
-
-void DanceDNNF::uncoverInBlock(int c, Block& block){ 
-    
-    Node* curR, *curC;  
-    ColunmHeader* col = &ColIndex[c];  
-
-    curC = col->up;  
-
-    while( curC != col )  
-    {  
-        Node* noteR = curC;  
-        curR = curC->left;  
-
-        while( curR != noteR )  
-        {  
-            ++ColIndex[curR->col].size; 
-            curR->down->up = curR;  
-            curR->up->down = curR;  
-
-            
-            curR = curR->left;  
-        }  
-        // block.rows.insert(curC->row);
-        curC = curC->up;  
-    }  
-
-    col->right->left = col;  
-    col->left->right = col;  
-
-    block.cols.insert(c);
-}
-
 // 批量处理舞蹈链，并更新block状态
 void DanceDNNF::batchCoverInBlock(Node* curC, Block& block) 
 {
     BatchOperation batchOp;
-    batchOp.oldBlock = block; // 保存当前块状态
 
     Node* curNode = curC;
     Node* startNode = curNode;
     do {  // 遍历该行所有列
         ColunmHeader* col = &ColIndex[curNode->col];
-        batchOp.columnLinks.push_back({(ColunmHeader*)col->left, (ColunmHeader*)col->right}); // 保存列的链接信息
-
+        
         // 从链表中移除列头
         col->right->left = col->left;
         col->left->right = col->right;
-        batchOp.columns.push_back(col->col);
+
         block.cols.erase(col->col); // 从块中移除列
 
         Node* rowNode = col->down, *curR;
@@ -802,7 +838,6 @@ void DanceDNNF::batchCoverInBlock(Node* curC, Block& block)
                 // ColIndex[curR->col].rows.erase(curR->row);  // 从列的行集合中移除该行
                 // RowIndex[curR->row].cols.erase(curR->col);  // 从行的列集合中移除该列
 
-                batchOp.coveredNodes.push_back(curR);
                 curR = curR->right;
             }
 
@@ -828,9 +863,9 @@ void DanceDNNF::batchUncoverInBlock(Block& block)
     BatchOperation batchOp = batchOpStack.back();
     batchOpStack.pop_back();
 
-    for(auto it = batchOp.coveredNodes.rbegin(); 
-    it != batchOp.coveredNodes.rend(); ++it) {
-        Node* curR = *it;
+    for(auto it = batchOp.coveredRows.rbegin(); 
+    it != batchOp.coveredRows.rend(); ++it) {
+        Node* curR = &RowIndex[*it];
         ++ColIndex[curR->col].size;     // 恢复列的大小计数
         curR->down->up = curR;          // 恢复下方节点的上指针
         curR->up->down = curR;          // 恢复上方节点的下指针
@@ -840,22 +875,16 @@ void DanceDNNF::batchUncoverInBlock(Block& block)
         // RowIndex[curR->row].cols.insert(curR->col);  // 恢复行的列集合
     }
 
-    for(int i = batchOp.columns.size() - 1; i >= 0; --i) {
-        int colIndex = batchOp.columns[i];
+    for(int i = batchOp.coveredCols.size() - 1; i >= 0; --i) {
+        int colIndex = batchOp.coveredCols[i];
         ColunmHeader* col = &ColIndex[colIndex];
         
-        // 从保存的链接信息中恢复
-        ColunmHeader* leftCol = batchOp.columnLinks[i].first;
-        ColunmHeader* rightCol = batchOp.columnLinks[i].second;
         
         // 将当前列重新插入到列头链表中
-        leftCol->right = col;           // 左邻居指向当前列
-        rightCol->left = col;           // 右邻居指向当前列
-        col->left = leftCol;            // 当前列指向左邻居
-        col->right = rightCol;          // 当前列指向右邻居s
+        col->left->right = col;           // 左邻居指向当前列
+        col->right->left = col;           // 右邻居指向当前列
     }
 
-    block = batchOp.oldBlock;
 }
 
 // 遍历Decision-DNNF，收集所有解（每个解是若干行号的集合）

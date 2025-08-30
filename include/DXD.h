@@ -74,10 +74,8 @@ struct SetIntHash {
 
 
 struct Block {
-        unordered_set<int> rows;  // 从0开始编号
+        unordered_set<int> rows;  // 舞蹈链行id集合 
         unordered_set<int> cols;  // 从1开始编号,对应舞蹈链列数id
-        // vector<set<int>> connectedRows; // 连接的行集合(set.size > 1)
-        // unordered_map<int, vector<int>> rowToRowsSet; // 行到连接行集合的映射
         bool is_spilited = false;
         
         Block() = default;
@@ -89,11 +87,6 @@ struct Block {
             cols.insert(c.begin(), c.end());
         }
 
-        // 复制构造函数
-        Block(const Block& other) {
-            rows = other.rows;
-            cols = other.cols;
-        }
 };
 
 struct DXD_Block {
@@ -143,14 +136,39 @@ struct DXD_Block {
 };
 
 struct BatchOperation {
-        std::vector<int> columns;           // 被覆盖的列索引
-        Block oldBlock; 
-        std::vector<Node*> coveredNodes;
-        std::vector<std::pair<ColunmHeader*, ColunmHeader*>> columnLinks;
+    // size_t state;            // 覆盖前的矩阵状态哈希值
+    vector<int> coveredRows;           // 被覆盖的列索引   
+    vector<int> coveredCols;       // 被覆盖的列索引  
+
+    BatchOperation() = default;
 };
 
 struct ThreadLocalBatchOp {
     vector<BatchOperation> operationStack;
+};
+
+// 设计线程安全的栈
+class ThreadSafeStack {
+
+public:
+    ThreadSafeStack() = default;
+
+    void push(const BatchOperation& operation) {
+        operationStack.push_back(operation);
+    }
+
+    BatchOperation pop() {
+        BatchOperation operation = operationStack.back();
+        operationStack.pop_back();
+        return operation;
+    }
+
+    bool empty() const {
+        return operationStack.empty();
+    }
+
+private:
+    thread_local static vector<BatchOperation> operationStack;
 };
 
 class DanceDNNF : DancingMatrix { 
@@ -160,6 +178,7 @@ class DanceDNNF : DancingMatrix {
             root = getRoot();
             ColIndex = getColIndex();
             RowIndex = getRowIndex();
+            connectedGraph = getConnectedGraph();
             
             rootOR = nullptr;
             rootDNNF = nullptr;
@@ -168,6 +187,8 @@ class DanceDNNF : DancingMatrix {
             countTimeSeconds = 0.0;
             p_count = 0;
             isParallelSearch = false;
+
+            cout<< "初始化DanceDNNF完成." << endl;
         }
         ~DanceDNNF() {
             clearSingleCache();
@@ -177,6 +198,7 @@ class DanceDNNF : DancingMatrix {
             block_cache.clear();
         }
 
+        shared_ptr<ConnectedGraph> connectedGraph;
         int MAX_P_COUNT = 5; // 最大并行搜索次数   
         int p_count = 0; // 记录并行搜索的次数
         bool isParallelSearch = false; // 是否已分解
@@ -184,11 +206,12 @@ class DanceDNNF : DancingMatrix {
         vector<set<int>> mergeRowSets(Block& block);
         vector<Block> spilitBlock(const vector<set<int>>& mergeRowSets);
         vector<Block> spilitBlockParallel(const vector<set<int>>& mergeRowSets);
+        vector<Block> spilit(const vector<vector<int>>& rows);
         void printBlocks(const vector<Block>& blocks);
         void printBlock(const Block& block);
 
         vector<DXD_Block> detectBlocks(const DXD_Block& currentBlock);
-
+        vector<vector<int>> getComponents();
         void batchCover(const std::vector<int>& columns);
         void batchUncover();
         std::shared_ptr<ORNode> make_node(int row);
@@ -199,7 +222,7 @@ class DanceDNNF : DancingMatrix {
         void uncoverInBlock(int c, Block& block);
         void batchCoverInBlock(Node* curC, Block& block);
         void batchUncoverInBlock(Block& block);
-        std::shared_ptr<DNNFNode> DXD(Block& block, ThreadLocalBatchOp& localOp);
+        std::shared_ptr<DNNFNode> DXD(Block& block);
         shared_ptr<DNNFNode> dxdSearch(vector<Block>& blocks);
         shared_ptr<DNNFNode> parallelDXD(Block& blocks);
         shared_ptr<DNNFNode> parallelSearch(vector<Block>& blocks);
@@ -207,7 +230,6 @@ class DanceDNNF : DancingMatrix {
         // 启动搜索函数
         void startDXD();
         void startMultiThreadDXD();
-        void startOptimizedDXD();
 
         void traverseDNNF(const std::shared_ptr<DNNFNode>& node, std::vector<int>& solution);
         void countSolutions(shared_ptr<ORNode> node);

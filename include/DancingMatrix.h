@@ -100,6 +100,7 @@ class ConnectedGraph;
 class DancingMatrix 
 {  
     public:  
+        shared_ptr<ConnectedGraph> connectedGraph;
         int ROWS, COLS; 
         int EXIST_ROWS;
         
@@ -109,8 +110,8 @@ class DancingMatrix
         double searchTimeSeconds = 0.0;
         double countTimeSeconds = 0.0;
         std::vector<std::vector<int>> solutions; 
-        unordered_set<int> rowsSet;  // 原始矩阵行
-        unordered_set<int> colsSet;  // 原始矩阵列
+        set<int> rowsSet;  // 舞蹈链行id
+        set<int> colsSet;  // 原始矩阵列
         unordered_map<int, set<int>> rowToColsSet;
         unordered_map<int, set<int>> colToRowsSet;
         
@@ -148,12 +149,16 @@ class DancingMatrix
             return RowIndex;
         }
 
+        shared_ptr<ConnectedGraph> getConnectedGraph() const {
+            return connectedGraph;
+        }
+
+
 
     private:  
         ColunmHeader* root;  
         ColunmHeader* ColIndex;  
         RowNode* RowIndex; 
-        unique_ptr<ConnectedGraph> connectedGraph;
         
 };
 

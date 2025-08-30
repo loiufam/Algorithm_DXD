@@ -135,6 +135,7 @@ vector<vector<int>> ConnectedGraph::getComponents(set<int> existRowSet) {
         if(!visited.count(i)) {
             vector<int> component;
             component.push_back(i);
+            components.push_back(component);
             visited.insert(i);
             rowToComponent[i] = curIndex++;
         }
@@ -149,6 +150,7 @@ vector<vector<int>> ConnectedGraph::getComponents(set<int> existRowSet) {
                     visited.insert(cur->value);
                     rowToComponent[cur->value] = rowToComponent[i];
                 }
+                cur = cur->right;
             }
         }
 
