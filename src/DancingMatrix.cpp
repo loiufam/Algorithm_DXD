@@ -235,7 +235,9 @@ void DancingMatrix::uncover( int c )
 ColunmHeader* DancingMatrix::selectColumnHeuristic(const unordered_set<int>& cols) {
     ColunmHeader* chosen = nullptr;
     int minSize = INT_MAX;
-    for (int col : cols) {
+    vector<int> colVec(cols.begin(), cols.end());
+    sort(colVec.begin(), colVec.end()); // 对列进行排序，确保每次选择的顺序一致
+    for (int col : colVec) {
         int sz = ColIndex[col].size;
         if (sz == 1) return &ColIndex[col]; // 启发式剪枝
         if (sz < minSize) {

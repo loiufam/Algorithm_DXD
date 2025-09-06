@@ -2,10 +2,12 @@
 #define DXD_H
 
 #include "../include/DancingMatrix.h"
+#include "../include/DXDTime.h"
 
 const int UNCHOOSEN = -10;
-const int MIN_BLOCK_COLS = 1;
-const int MAX_BLOCK_COLS = 80;
+const int MIN_BLOCK_ROWS = 5;
+const int MAX_BLOCK_ROWS = 80;
+const int TIME_LIMIT_SECONDS = 1000; 
 
 struct ORNode;  
 
@@ -171,14 +173,17 @@ private:
     thread_local static vector<BatchOperation> operationStack;
 };
 
+
 class DanceDNNF : DancingMatrix { 
 
     public:
-        DanceDNNF(int rows, int cols, int** matrix) : DancingMatrix(rows, cols, matrix) {
+        explicit DanceDNNF(int rows, int cols, int** matrix, int maxThreads = std::thread::hardware_concurrency()) 
+            : DancingMatrix(rows, cols, matrix), pool(maxThreads) {
             root = getRoot();
             ColIndex = getColIndex();
             RowIndex = getRowIndex();
             connectedGraph = getConnectedGraph();
+            timer.setTimeBound(TIME_LIMIT_SECONDS);
             
             rootOR = nullptr;
             rootDNNF = nullptr;
@@ -199,8 +204,11 @@ class DanceDNNF : DancingMatrix {
         }
 
         shared_ptr<ConnectedGraph> connectedGraph;
-        int MAX_P_COUNT = 5; // 最大并行搜索次数   
+        CStopWatch timer;   // 计时器
+
+        int MAX_P_COUNT = 2; // 最大并行搜索次数   
         int p_count = 0; // 记录并行搜索的次数
+        size_t MAX_B_COUNT = 1;
         bool isParallelSearch = false; // 是否已分解
 
         vector<set<int>> mergeRowSets(Block& block);
@@ -211,7 +219,6 @@ class DanceDNNF : DancingMatrix {
         void printBlock(const Block& block);
 
         vector<DXD_Block> detectBlocks(const DXD_Block& currentBlock);
-        vector<vector<int>> getComponents();
         void batchCover(const std::vector<int>& columns);
         void batchUncover();
         std::shared_ptr<ORNode> make_node(int row);
@@ -222,7 +229,8 @@ class DanceDNNF : DancingMatrix {
         void uncoverInBlock(int c, Block& block);
         void batchCoverInBlock(Node* curC, Block& block);
         void batchUncoverInBlock(Block& block);
-        std::shared_ptr<DNNFNode> DXD(Block& block);
+        shared_ptr<DNNFNode> DXD(Block& block);
+        shared_ptr<DNNFNode> serialSearch(vector<Block>& blocks);
         shared_ptr<DNNFNode> dxdSearch(vector<Block>& blocks);
         shared_ptr<DNNFNode> parallelDXD(Block& blocks);
         shared_ptr<DNNFNode> parallelSearch(vector<Block>& blocks);
@@ -234,7 +242,12 @@ class DanceDNNF : DancingMatrix {
         void traverseDNNF(const std::shared_ptr<DNNFNode>& node, std::vector<int>& solution);
         void countSolutions(shared_ptr<ORNode> node);
 
-                std::shared_ptr<DNNFNode> getInSingleCache(const size_t& key){
+        Block getBlock() {
+            Block fullBlock(rowsSet, colsSet);
+            return fullBlock;
+        };
+
+        std::shared_ptr<DNNFNode> getInSingleCache(const size_t& key){
             if(CacheST.find(key) != CacheST.end()){
                 return CacheST[key];
             }
@@ -261,11 +274,21 @@ class DanceDNNF : DancingMatrix {
             CacheMT.clear();
         }
 
+        bool shouldDecompose(const Block& block) const {
+            return block.rows.size() >= MIN_BLOCK_ROWS && block.rows.size() <= MAX_BLOCK_ROWS && p_count < MAX_P_COUNT;
+        }
+
+        void incrementPCount() {
+            std::lock_guard<std::mutex> lock(countMutex);
+            p_count += 1;
+        }
+
     private:
         // 父类成员
         ColunmHeader* root;  
         ColunmHeader* ColIndex;  
         RowNode* RowIndex; 
+        ThreadPool pool;
         
         // DNNF相关
         std::shared_ptr<ORNode> rootOR;
@@ -285,17 +308,12 @@ class DanceDNNF : DancingMatrix {
         // Block缓存
         std::unordered_map<std::pair<std::unordered_set<int>, int>, Block, SetIntHash> block_cache;; // 用于存储Block的缓存，key为行集合和列数的组合，value为Block对象
 
-        // 使用单例模式获取线程池
-        static ThreadPool& getThreadPool() {
-            static ThreadPool instance; // 局部静态变量，线程安全
-            return instance;
-        }
         std::mutex cacheMutex; // 缓存访问的互斥锁
+        std::mutex countMutex; // 计数的互斥锁
         // 操作栈用于批量回溯
         std::stack<CoverOperation> operationStack;
         vector<BatchOperation> batchOpStack;
 };
-
 
 
 #endif

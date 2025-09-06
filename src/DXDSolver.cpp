@@ -315,7 +315,7 @@ vector<DXD_Block> DanceDNNF::detectBlocks(const DXD_Block& currentBlock) {
                 }
             }
 
-            if (blockCols.size() >= MIN_BLOCK_COLS) {
+            if (blockCols.size() >= 1) {
                 tmp_blocks.push_back(blockCols);
             }
         }
@@ -333,12 +333,38 @@ vector<DXD_Block> DanceDNNF::detectBlocks(const DXD_Block& currentBlock) {
 }
 
 // 串行处理每个子块，组合为 分解 节点
+shared_ptr<DNNFNode> DanceDNNF::serialSearch(vector<Block>& blocks) {
+
+    auto andNode = std::make_shared<DNNFNode>(NodeType::Decomposed, -1, 0);
+    uint64_t totalCount = 1; 
+
+    for (auto& block : blocks) {
+        auto result = DXD(block);
+        if (result->label == -2) { 
+            return F;
+        }
+        andNode->children.push_back(result);
+        totalCount *= result->count;
+    }
+    
+    andNode->count = totalCount;
+    return andNode;
+}
+
+
 shared_ptr<DNNFNode> DanceDNNF::dxdSearch(vector<Block>& blocks) {
+
+    if (!isParallelSearch) {
+        return serialSearch(blocks);
+    }
+
+    timer.markStopTime();
+
 
     std::vector<std::future<std::shared_ptr<DNNFNode>>> futures;
 
     for (auto& block : blocks) {
-       futures.push_back(getThreadPool().enqueue([this](Block block) {
+       futures.push_back(pool.enqueue([this](Block block) {
             // 使用值传递避免引用问题
             return DXD(block);
         }, block)); 
@@ -359,6 +385,7 @@ shared_ptr<DNNFNode> DanceDNNF::dxdSearch(vector<Block>& blocks) {
     }
     
     andNode->count = totalCount;
+    timer.markStartTime();
     return andNode;
 }
 
@@ -370,7 +397,7 @@ shared_ptr<DNNFNode> DanceDNNF::parallelSearch(vector<Block>& blocks) {
     std::vector<std::future<std::shared_ptr<DNNFNode>>> futures;
         
     for (auto& block : blocks) {
-        futures.push_back(getThreadPool().enqueue([this, block]() mutable {
+        futures.push_back(pool.enqueue([this, block]() mutable {
             return parallelDXD(block);
         }));
     }
@@ -514,10 +541,6 @@ void DanceDNNF::printBlock(const Block& block) {
         cout << "]\n\n"; 
 }
 
-vector<vector<int>> DanceDNNF::getComponents() {
-    return connectedGraph->getComponents(rowsSet);
-}
-
 void DanceDNNF::coverInBlock(int c, Block& block){
 
     ColunmHeader* col = &ColIndex[c];  
@@ -531,7 +554,8 @@ void DanceDNNF::coverInBlock(int c, Block& block){
     curC = col->down;  
     while( curC != col )  
     {    
-        RowIndex[curC->row].cols.erase(curC->col); // 从行映射中移除该列
+        // RowIndex[curC->row].cols.erase(curC->col); // 从行映射中移除该列
+        removeCol(curC->row, curC->col);
         curR = curC->right;  
         while( curR != curC )  
         {  
@@ -539,11 +563,12 @@ void DanceDNNF::coverInBlock(int c, Block& block){
             curR->up->down = curR->down;  
             --ColIndex[curR->col].size;  
 
-            RowIndex[curC->row].cols.erase(curR->col); // 从行映射中移除该列
+            // RowIndex[curC->row].cols.erase(curR->col); // 从行映射中移除该列
+            removeCol(curR->row, curR->col);
             curR = curR->right;  
         }  
         block.rows.erase(curC->row);
-        connectedGraph->remove(curC->row);
+        // connectedGraph->remove(curC->row);
         curC = curC->down;  
     }  
 }
@@ -558,7 +583,8 @@ void DanceDNNF::uncoverInBlock(int c, Block& block){
     while( curC != col )  
     {  
         Node* noteR = curC;  
-        RowIndex[curC->row].cols.insert(curC->col); // 恢复行映射中的该列
+        // RowIndex[curC->row].cols.insert(curC->col); // 恢复行映射中的该列
+        restoreCol(curC->row, curC->col);
         curR = curC->left;  
 
         while( curR != noteR )  
@@ -567,11 +593,12 @@ void DanceDNNF::uncoverInBlock(int c, Block& block){
             curR->down->up = curR;  
             curR->up->down = curR;  
 
-            RowIndex[curC->row].cols.insert(curR->col);
+            // RowIndex[curC->row].cols.insert(curR->col);
+            restoreCol(curR->row, curR->col);
             curR = curR->left;  
         }  
         block.rows.insert(curC->row);
-        connectedGraph->restore(curC->row);
+        // connectedGraph->restore(curC->row);
         curC = curC->up;  
     }  
 
@@ -608,26 +635,32 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
 
     // 先查缓存
     size_t state = hashBlockState(block.cols); // 编码当前块状态
-    auto cacheResult = getInSingleCache(state);
+    auto cacheResult = getCachedResult(state);
     if(cacheResult) {
         return cacheResult;
     }
 
-
-    if(!block.is_spilited && detect_records.find(state) == detect_records.end()) {
+    //shouldDecompose(block) 
+    if(block.rows.size() >= MIN_BLOCK_ROWS && detect_records.find(state) == detect_records.end()) {
 
         // vector<set<int>> row_sets = mergeRowSets(block);
+        timer.markStopTime();
         set<int> rows(block.rows.begin(), block.rows.end());
         vector<vector<int>> components = connectedGraph->getComponents(rows);
 
         if(components.size() > 1){
-            p_count++;
-            block.is_spilited = true; // 标记为已分解
+             
+            // cout<< "块分解成功，块数: " << components.size() << endl;
+            //incrementPCount(); 
+            MAX_B_COUNT = max(MAX_B_COUNT, components.size());
+            // block.is_spilited = true; // 标记为已分解
             auto blocks = spilit(components); // 分解为多个块
             auto res_and_node = dxdSearch(blocks); // 并行搜索
-            setInSingleCache(state, res_and_node); // 缓存结果
+            setCachedResult(state, res_and_node); // 缓存结果
+            timer.markStartTime(); // 继续计时
             return res_and_node; // 返回分解节点
         }else{
+            timer.markStartTime(); // 继续计时
             detect_records.insert(state);
         }
     }
@@ -676,7 +709,7 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
         orNode = F;
     }   
     // 插入缓存
-    setInSingleCache(state, orNode);
+    setCachedResult(state, orNode);
     return orNode; 
 }
 
@@ -686,22 +719,19 @@ void DanceDNNF::startDXD() {
     std::cout << "开始DXD搜索..." << std::endl;
     Block block(rowsSet, colsSet);
 
-    clearSingleCache();
+    clearCache();
     auto start = std::chrono::high_resolution_clock::now();
-    rootDNNF = DXD(block); // 执单线程DXD搜索
+    timer.markStartTime();
+    rootDNNF = DXD(block);  // 先单线程DXD搜索
+    timer.markStopTime();
     auto end = std::chrono::high_resolution_clock::now();
 
     std::cout << "搜索到的解个数: " << rootDNNF->count << std::endl;
     
     searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
     std::cout << "DXD搜索完成, 耗时: " << searchTimeSeconds << " 秒。" << std::endl;
-    if( p_count > 0 ) {
-        std::cout << "本次搜索开启多线程, 分解次数为: " << p_count << std::endl;
-    } else {
-        std::cout << "本次搜索为单线程线程。" << std::endl;
-    }
+    
     std::cout << std::endl; 
-
 }
 
 // 主搜索函数(多线程版本)
@@ -789,24 +819,25 @@ shared_ptr<DNNFNode> DanceDNNF::parallelDXD(Block& block) {
 
 void DanceDNNF::startMultiThreadDXD() {
 
-    std::cout << "开始自适应多线程DXD搜索..." << std::endl;
+    std::cout << "多线程DXD搜索..." << std::endl;
     Block block(rowsSet, colsSet);
     
     clearCache();
-    auto start = std::chrono::high_resolution_clock::now();
-    rootDNNF = parallelDXD(block); // 多线程DXD搜索
-    auto end = std::chrono::high_resolution_clock::now();
+    isParallelSearch = true;  // 开启多线程搜索标志
 
-    std::cout << "搜索到的解个数: " << rootDNNF->count << std::endl;
-    
-    searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
-    std::cout << "自适应多线程DXD搜索完成, 耗时: " << searchTimeSeconds << " 秒。" << std::endl;
-    // if(isParallelSearch) {
-    //     std::cout << "并行搜索模式已启用。" << std::endl;
-    //     std::cout << "并行搜次数: " << p_count << std::endl;  
-    // } else {
-    //     std::cout << "并行搜索模式未启用。" << std::endl;
-    // }
+    timer.reset();
+    timer.markStartTime();
+    rootDNNF = DXD(block);  // 多线程DXD搜索
+    timer.markStopTime();
+
+    cout<< "多线程算法计时: " << timer.getElapsedTime() << " 秒。" << endl;
+
+    cout << "多线程DXD搜索解个数: " << rootDNNF->count << endl;
+    if( MAX_B_COUNT > 1 ) {
+        std::cout << "本次搜索开启多线程并行搜索, 最大分块数为: " << MAX_B_COUNT << std::endl;
+    } else {
+        std::cout << "本次搜索为串行搜索。" << std::endl;
+    }
     std::cout << std::endl;
 }
 // 批量处理舞蹈链，并更新block状态

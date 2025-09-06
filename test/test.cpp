@@ -1,9 +1,10 @@
 #include "../include/DancingMatrix.h"
 #include "../include/DXD.h"
+#include "../include/ConnectedGraph.h"
 
 int main(){
     std::vector<std::vector<int>> X = {
-            {1, 1, 1, 0, 1, 0},
+            {1, 1, 0, 0, 0, 0},
             {1, 1, 0, 0, 0, 0},    
             {0, 0, 0, 1, 0, 1},
             {0, 0, 0, 1, 0, 1},
@@ -23,9 +24,15 @@ int main(){
     }
 
     std::cout << "rows: " << rows << ", cols: " << cols << std::endl;
+    {
     DanceDNNF dxd(rows, cols, matrix);
-    // dlm.startDLX();
-    // vector<vector<int>> components = dxd.getComponents();
+    // Block initBlock = dxd.getBlock();
+
+    // dxd.coverInBlock(3, initBlock);
+    // dxd.coverInBlock(5, initBlock);
+    // set<int> existRowSet(initBlock.rows.begin(), initBlock.rows.end());
+    // vector<vector<int>> components = dxd.connectedGraph->getComponents(existRowSet);
+    
     // for(auto& comp : components) {
     //     std::cout << "组件: ";
     //     for(auto row : comp) {
@@ -33,7 +40,9 @@ int main(){
     //     }
     //     std::cout << std::endl;
     // }
-    // vector<set<int>> row_sets = dlm.mergeRowSets(block);
+
+    // dxd.printBlocks(dxd.spilit(components));
+
 
     // // 舞蹈链合并行集合
     // for(auto row_set : row_sets) {
@@ -47,10 +56,10 @@ int main(){
     // vector<Block> blocks = dlm.spilitBlockParallel(row_sets);
     // dlm.printBlocks(blocks);
     
-    dxd.startDXD();
+    // dxd.startDXD();
 
-    // dxd.startMultiThreadDXD();
-    
+    dxd.startMultiThreadDXD();
+    }
     // dlm.printDetectedBlocks();
     // 释放二维数组内存
     for (int i = 0; i < rows; ++i) {

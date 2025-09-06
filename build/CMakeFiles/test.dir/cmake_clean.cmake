@@ -3,6 +3,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/test.dir/src/ConnectedGraph.cpp.o.d"
   "CMakeFiles/test.dir/src/DXDSolver.cpp.o"
   "CMakeFiles/test.dir/src/DXDSolver.cpp.o.d"
+  "CMakeFiles/test.dir/src/DXDTime.cpp.o"
+  "CMakeFiles/test.dir/src/DXDTime.cpp.o.d"
   "CMakeFiles/test.dir/src/DancingMatrix.cpp.o"
   "CMakeFiles/test.dir/src/DancingMatrix.cpp.o.d"
   "CMakeFiles/test.dir/test/test.cpp.o"

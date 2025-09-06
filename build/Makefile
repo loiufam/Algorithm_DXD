@@ -177,6 +177,30 @@ src/DXDSolver.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/DXDSolver.cpp.s
 .PHONY : src/DXDSolver.cpp.s
 
+src/DXDTime.o: src/DXDTime.cpp.o
+.PHONY : src/DXDTime.o
+
+# target to build an object file
+src/DXDTime.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/DXDTime.cpp.o
+.PHONY : src/DXDTime.cpp.o
+
+src/DXDTime.i: src/DXDTime.cpp.i
+.PHONY : src/DXDTime.i
+
+# target to preprocess a source file
+src/DXDTime.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/DXDTime.cpp.i
+.PHONY : src/DXDTime.cpp.i
+
+src/DXDTime.s: src/DXDTime.cpp.s
+.PHONY : src/DXDTime.s
+
+# target to generate assembly for a file
+src/DXDTime.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/DXDTime.cpp.s
+.PHONY : src/DXDTime.cpp.s
+
 src/DancingMatrix.o: src/DancingMatrix.cpp.o
 .PHONY : src/DancingMatrix.o
 
@@ -240,6 +264,9 @@ help:
 	@echo "... src/DXDSolver.o"
 	@echo "... src/DXDSolver.i"
 	@echo "... src/DXDSolver.s"
+	@echo "... src/DXDTime.o"
+	@echo "... src/DXDTime.i"
+	@echo "... src/DXDTime.s"
 	@echo "... src/DancingMatrix.o"
 	@echo "... src/DancingMatrix.i"
 	@echo "... src/DancingMatrix.s"

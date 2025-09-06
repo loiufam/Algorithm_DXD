@@ -23,19 +23,24 @@ set(SOURCES0
 )
 set(TEST_SOURCES1
     test/test1.cpp
-    src/ExactCoverMatrix.cpp
-    src/DNNF.cpp
+    src/DancingMatrix.cpp
+    src/DXZSolver.cpp
+    src/ConnectedGraph.cpp  
+    src/DXDTime.cpp
 )
 set(TEST_SOURCES2
     test/test2.cpp
-    src/ExactCoverMatrix.cpp
-    src/DNNF.cpp
+    src/DancingMatrix.cpp
+    src/DXDSolver.cpp
+    src/ConnectedGraph.cpp  
+    src/DXDTime.cpp
 )
 set(TEST_SOURCES3
     test/test.cpp
     src/DancingMatrix.cpp
     src/DXDSolver.cpp
     src/ConnectedGraph.cpp  
+    src/DXDTime.cpp
 )
 # Add executable target
 # add_executable(test0 ${SOURCES0})
@@ -43,3 +48,5 @@ set(TEST_SOURCES3
 # add_executable(test1 ${TEST_SOURCES1})
 # add_executable(test2 ${TEST_SOURCES2})
 add_executable(test ${TEST_SOURCES3})
+# find_package(Threads REQUIRED)
+# target_link_libraries(test PRIVATE Threads::Threads)

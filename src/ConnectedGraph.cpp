@@ -97,6 +97,7 @@ void ConnectedGraph::remove(int i) {
     if (curHead->tail == curHead) {
         return; // 没有边，直接返回
     }
+    // lock_guard<mutex> lock(graphMutex);
 
     vertexNode* curE = curHead->down;
     while(curE != NULL) { 
@@ -110,6 +111,7 @@ void ConnectedGraph::remove(int i) {
 
 void ConnectedGraph::restore(int i) {
 
+    // lock_guard<mutex> lock(graphMutex);
     vertexNode* curHead = &rowHeaderE[i];
 
     vertexNode* curE = curHead->down;
@@ -133,9 +135,7 @@ vector<vector<int>> ConnectedGraph::getComponents(set<int> existRowSet) {
     for(auto i : existRowSet) { 
 
         if(!visited.count(i)) {
-            vector<int> component;
-            component.push_back(i);
-            components.push_back(component);
+            components.push_back({i});
             visited.insert(i);
             rowToComponent[i] = curIndex++;
         }
@@ -144,17 +144,18 @@ vector<vector<int>> ConnectedGraph::getComponents(set<int> existRowSet) {
         if (curHead->right != curHead) {
             vertexNode* cur = curHead->right;
 
+            int index = rowToComponent[i];
             while(cur != curHead) { 
-                if (!visited.count(cur->value)) {
-                    components[rowToComponent[i]].push_back(cur->value);
+                if (!visited.count(cur->value) && existRowSet.count(cur->value)) {
+                    components[index].push_back(cur->value);
                     visited.insert(cur->value);
-                    rowToComponent[cur->value] = rowToComponent[i];
+                    rowToComponent[cur->value] = index;
                 }
                 cur = cur->right;
             }
         }
 
-        if (components.size() == existRowSet.size()) {
+        if (visited.size() == existRowSet.size()) {
             break; // 所有节点都已访问，提前退出
         }
 

@@ -12,7 +12,7 @@ int main() {
         // 遍历文件夹
         for (const auto& entry : fs::directory_iterator(folderPath1))
         {
-            // break;
+            break;
             if (entry.is_regular_file() && entry.path().extension() == ".txt")
             {
                 // 文件路径
@@ -25,7 +25,8 @@ int main() {
 
                 DanceDNNF dxdSolver(r, c, matrix);
 
-                dxdSolver.startOptimizedDXD();
+                dxdSolver.startDXD();
+
                 dxdSolver.startMultiThreadDXD();
 
                 // 释放内存
@@ -50,7 +51,7 @@ int main() {
 
                 DanceDNNF dxdSolver(r, c, matrix);
 
-                dxdSolver.startOptimizedDXD();
+                dxdSolver.startDXD();
                 dxdSolver.startMultiThreadDXD();
 
                 // 释放内存
@@ -73,7 +74,7 @@ int main() {
 
                 DanceDNNF dxdSolver(r, c, matrix);
 
-                dxdSolver.startOptimizedDXD();
+                dxdSolver.startDXD();
                 dxdSolver.startMultiThreadDXD();
 
                 // 释放内存

@@ -2,27 +2,17 @@
 #define DANCINGMATRIX_H
 
 #include "ThreadPool.h"
-#include <iostream>
-#include <vector>
 #include <string>
 #include <set>
-#include <queue>
 #include <bitset>
 #include <filesystem>
-#include <fstream>
-#include <sstream>
-#include <chrono>
-#include <cstdint>
 #include <unordered_map>
 #include <unordered_set>
 #include <deque>
 #include <stack>
 #include <algorithm>
-#include <memory>
 #include <numeric>
-#include <functional>
-#include <climits>
-#include <execution>
+
 using namespace std;
 
 struct Node  
@@ -136,6 +126,25 @@ class DancingMatrix
         ColunmHeader* selectColumnHeuristic(const unordered_set<int>& cols);
         // ColunmHeader* fastSelect();
         void printSolution(); 
+
+        std::mutex rowIndexMutex; // 保护 RowIndex 的互斥锁
+        void removeCol(int r, int c) {
+            set<int> colSet = RowIndex[r].cols;
+            if(colSet.find(c) == colSet.end()) {
+                return;
+            }
+            lock_guard<mutex> lock(rowIndexMutex);
+            RowIndex[r].cols.erase(c);
+        }
+
+        void restoreCol(int r, int c) {
+            set<int> colSet = RowIndex[r].cols;
+            if(colSet.find(c) != colSet.end()) {
+                return;
+            }
+            lock_guard<mutex> lock(rowIndexMutex);
+            RowIndex[r].cols.insert(c);
+        }
 
         ColunmHeader* getRoot() const {
             return root;

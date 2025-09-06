@@ -10,6 +10,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/src/ConnectedGraph.cpp" "CMakeFiles/test.dir/src/ConnectedGraph.cpp.o" "gcc" "CMakeFiles/test.dir/src/ConnectedGraph.cpp.o.d"
   "/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/src/DXDSolver.cpp" "CMakeFiles/test.dir/src/DXDSolver.cpp.o" "gcc" "CMakeFiles/test.dir/src/DXDSolver.cpp.o.d"
+  "/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/src/DXDTime.cpp" "CMakeFiles/test.dir/src/DXDTime.cpp.o" "gcc" "CMakeFiles/test.dir/src/DXDTime.cpp.o.d"
   "/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/src/DancingMatrix.cpp" "CMakeFiles/test.dir/src/DancingMatrix.cpp.o" "gcc" "CMakeFiles/test.dir/src/DancingMatrix.cpp.o.d"
   "/Users/luoyaohui/VSCodeProjects/code_projects/algorithmLab/DXD/test/test.cpp" "CMakeFiles/test.dir/test/test.cpp.o" "gcc" "CMakeFiles/test.dir/test/test.cpp.o.d"
   )

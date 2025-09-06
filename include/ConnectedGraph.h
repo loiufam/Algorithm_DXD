@@ -34,6 +34,7 @@ class ConnectedGraph {
             return false;
         };
 
+        std::mutex graphMutex; // 保护图操作的互斥锁
         void remove(int i);
         void restore(int i);
         vector<vector<int>> getComponents(set<int> existRowSet);
