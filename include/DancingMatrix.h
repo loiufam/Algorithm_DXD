@@ -14,6 +14,8 @@
 #include <numeric>
 
 using namespace std;
+namespace fs = std::filesystem;
+
 
 struct Node  
 {  
@@ -90,11 +92,10 @@ class ConnectedGraph;
 class DancingMatrix 
 {  
     public:  
-        shared_ptr<ConnectedGraph> connectedGraph;
         int ROWS, COLS; 
         int EXIST_ROWS;
         
-        std::uint64_t count;  // 统计精确覆盖解
+        std::uint64_t count = 0;  // 统计精确覆盖解
         std::uint64_t ONE_COUNT = 0; // 统计矩阵中1的个数
         
         double searchTimeSeconds = 0.0;
@@ -108,16 +109,17 @@ class DancingMatrix
         
         //接收矩阵其及维度  
         DancingMatrix( int rows, int cols, int** matrix);  
+        DancingMatrix( const string& file_path, int from );
         //释放内存  
         ~DancingMatrix();  
-        void initConnectedGraph();
         
         void build_mapping_from_cols(const unordered_set<int>& blockCols, unordered_map<int, set<int>>& rowToCols, unordered_map<int, set<int>>& colToRows);
         void insert( int r, int c );  
         void printMatrix() const; 
         void cover( int c );  
         void uncover( int c ); 
-        string getColumnState() const;
+        size_t getColumnState() const;
+        shared_ptr<ConnectedGraph> getConnectedGraph();
         string encodeBlockState(const unordered_set<int>& cols);
         size_t hashBlockState(const unordered_set<int>& cols);
         size_t hashColState(unordered_set<int>& cols);
@@ -125,7 +127,6 @@ class DancingMatrix
         ColunmHeader* selectCol();
         ColunmHeader* selectColumnHeuristic(const unordered_set<int>& cols);
         // ColunmHeader* fastSelect();
-        void printSolution(); 
 
         std::mutex rowIndexMutex; // 保护 RowIndex 的互斥锁
         void removeCol(int r, int c) {
@@ -134,16 +135,16 @@ class DancingMatrix
                 return;
             }
             lock_guard<mutex> lock(rowIndexMutex);
-            RowIndex[r].cols.erase(c);
+            colSet.erase(c);
         }
 
         void restoreCol(int r, int c) {
             set<int> colSet = RowIndex[r].cols;
-            if(colSet.find(c) != colSet.end()) {
-                return;
-            }
-            lock_guard<mutex> lock(rowIndexMutex);
-            RowIndex[r].cols.insert(c);
+            // if(colSet.find(c) != colSet.end()) {
+            //     return;
+            // }
+            // lock_guard<mutex> lock(rowIndexMutex);
+            colSet.insert(c);
         }
 
         ColunmHeader* getRoot() const {
@@ -158,12 +159,6 @@ class DancingMatrix
             return RowIndex;
         }
 
-        shared_ptr<ConnectedGraph> getConnectedGraph() const {
-            return connectedGraph;
-        }
-
-
-
     private:  
         ColunmHeader* root;  
         ColunmHeader* ColIndex;  
@@ -171,8 +166,6 @@ class DancingMatrix
         
 };
 
-
-namespace fs = std::filesystem;
 
 class PreProccess
 {

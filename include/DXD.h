@@ -177,24 +177,29 @@ private:
 class DanceDNNF : DancingMatrix { 
 
     public:
-        explicit DanceDNNF(int rows, int cols, int** matrix, int maxThreads = std::thread::hardware_concurrency()) 
+        DanceDNNF(int rows, int cols, int** matrix, int maxThreads = std::thread::hardware_concurrency()) 
             : DancingMatrix(rows, cols, matrix), pool(maxThreads) {
             root = getRoot();
             ColIndex = getColIndex();
             RowIndex = getRowIndex();
             connectedGraph = getConnectedGraph();
             timer.setTimeBound(TIME_LIMIT_SECONDS);
-            
-            rootOR = nullptr;
-            rootDNNF = nullptr;
-            ONE_COUNT = 0;
-            searchTimeSeconds = 0.0;
-            countTimeSeconds = 0.0;
-            p_count = 0;
-            isParallelSearch = false;
 
             cout<< "初始化DanceDNNF完成." << endl;
         }
+
+        DanceDNNF(const string& file_path, int from, int maxThreads = std::thread::hardware_concurrency())
+            : DancingMatrix(file_path, from), pool(maxThreads) {
+            root = getRoot();
+            ColIndex = getColIndex();
+            RowIndex = getRowIndex();
+            connectedGraph = getConnectedGraph();
+            timer.setTimeBound(TIME_LIMIT_SECONDS);
+
+            cout<< "线程池最大线程数: " << maxThreads << endl;
+            cout<< "初始化DanceDNNF完成." << endl;
+        }
+
         ~DanceDNNF() {
             clearSingleCache();
             clearCache();
@@ -262,7 +267,7 @@ class DanceDNNF : DancingMatrix {
         }
         // 多线程安全的缓存访问
         std::shared_ptr<DNNFNode> getCachedResult(const size_t& key) {
-            std::lock_guard<std::mutex> lock(cacheMutex);
+            // std::lock_guard<std::mutex> lock(cacheMutex);
             auto it = CacheMT.find(key);
             return (it != CacheMT.end()) ? it->second : nullptr;
         }
@@ -299,7 +304,7 @@ class DanceDNNF : DancingMatrix {
         std::shared_ptr<DNNFNode> F = std::make_shared<DNNFNode>(NodeType::Terminal, -2, 0);
           
         
-        std::unordered_map<std::string, std::shared_ptr<ORNode>> Cache;
+        std::unordered_map<size_t, std::shared_ptr<ORNode>> Cache;
         // DNNF缓存
         unordered_map<size_t, shared_ptr<DNNFNode>> CacheST;  // 单线程
         unordered_map<size_t, shared_ptr<DNNFNode>> CacheMT;  // 多线程

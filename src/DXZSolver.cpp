@@ -99,45 +99,22 @@ shared_ptr<ZDDNode> DanceZDD::unique(int r, shared_ptr<ZDDNode> x, shared_ptr<ZD
         return x;
     }
 
-    std::size_t key = hashFunction(r, x.get(), y.get());
-    if (Z.find(key) != Z.end()) {
-        return Z[key];
+    NodeKey key{r, x, y};
+    auto it = node_table.find(key);
+    if (it != node_table.end()) {
+        return it->second;
     }
 
-    Z[key] = make_shared<ZDDNode>(r, x, y); 
-    // if (Z.find(key) == Z.end()) {  //如果没有找到解
-    //     shared_ptr<ZDDNode> lo = x;
-    //     shared_ptr<ZDDNode> hi = y;
-
-    //     //先检查下x和y是否都为终端节点
-    //     if(x->isTerminal && y->isTerminal){
-    //        Z[key] = make_shared<ZDDNode>(r, lo, hi); 
-    //        return Z[key];
-    //     }
-
-    //     //如果x，y都为分支节点,x指向的是已找到的解, 并且x，y都存在Z中
-    //     if(!x->isTerminal && !y->isTerminal){
-    //         //如果y存在缓存, 说明也存在Z中（DXZ）
-    //         if (Z_a.find(getColumnState()) != Z_a.end()) {
-    //             hi = Z_a[getColumnState()];    
-    //         }
-
-            
-    //        Z[key] = make_shared<ZDDNode>(r, lo, hi); 
-    //        return Z[key]; 
-    //     }
-        
-    //     // 如果x或y是终端节点，尝试在另一个节点中找到匹配的终端节点
-    //     if (x->isTerminal) {
-    //         lo = F_ZDD;
-    //     } else if (y->isTerminal) { // 此时说明r覆盖了当前矩阵的所有列
-    //         hi = T_ZDD;
-    //     }
-
-    //     // 创建新的ZDDNode
-    //     Z[key] = make_shared<ZDDNode>(r, lo, hi);
+    // std::size_t key = hashFunction(r, x.get(), y.get());
+    // if (Z.find(key) != Z.end()) {
+    //     return Z[key];
     // }
-    return Z[key];
+
+    // Z[key] = make_shared<ZDDNode>(r, x, y);
+    
+    auto node = std::make_shared<ZDDNode>(r, x, y);
+    node_table[key] = node;
+    return node;
 }
 
 shared_ptr<ZDDNode> DanceZDD::DXZ()
@@ -146,10 +123,10 @@ shared_ptr<ZDDNode> DanceZDD::DXZ()
         return T_ZDD;
     }
 
-    std::string columnState = getColumnState();
+    size_t columnState = getColumnState();
     // 查找缓存
-    if (Z_a.find(columnState) != Z_a.end()) {
-        return Z_a[columnState]; 
+    if (memo_cache.find(columnState) != memo_cache.end()) {
+        return memo_cache[columnState]; 
     }
 
     ColunmHeader* choose = (ColunmHeader*)root->right;  
@@ -164,6 +141,7 @@ shared_ptr<ZDDNode> DanceZDD::DXZ()
     if( choose->size <= 0 ){
         return F_ZDD;  
     } 
+
     shared_ptr<ZDDNode> x = F_ZDD;
 
 
@@ -179,6 +157,7 @@ shared_ptr<ZDDNode> DanceZDD::DXZ()
             cover( curR->col );  
             curR = curR->right;  
         }
+
         shared_ptr<ZDDNode> y = DXZ();
         if(y->label != -2){
             x = unique(curC->row, x, y);
@@ -195,7 +174,7 @@ shared_ptr<ZDDNode> DanceZDD::DXZ()
         curC = curC->up;
     }
     uncover(choose->col);  //回溯
-    Z_a[columnState] = x; // 结果存入缓存，实际上在Z中
+    memo_cache[columnState] = x; 
     return x;
 }
 
@@ -218,11 +197,16 @@ void DanceZDD::startDXZ(){
 
     std::cout << "DXZ开始搜索..." << std::endl;
     auto startDXZ = std::chrono::high_resolution_clock::now();
-    shared_ptr<ZDDNode> result = DXZ();
+    shared_ptr<ZDDNode> root = DXZ();
     auto endDXZ = std::chrono::high_resolution_clock::now();
     searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(endDXZ - startDXZ).count();
-    std::cout << "搜索完成，找到 " << count << " 个解。" << std::endl;
+    // std::cout << "搜索完成，找到 " << count << " 个解。" << std::endl;
     std::cout << "DXZ搜索完成, 耗时: " << searchTimeSeconds << " 秒。" << std::endl;
+    auto solutions = get_all_solutions(root);
+    auto zdd_size = get_zdd_size(root);
+        
+    std::cout << "解的数量: " << solutions.size() << std::endl;
+    std::cout << "ZDD节点数: " << zdd_size << std::endl;
     std::cout << std::endl;
 
 }

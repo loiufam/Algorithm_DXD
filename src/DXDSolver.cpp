@@ -84,7 +84,7 @@ std::shared_ptr<ORNode> DanceDNNF::Search(Node* curC) {
         return std::make_shared<ORNode>(-2);
     }
     
-    string state = getColumnState();
+    size_t state = getColumnState();
     // vector<Block> blocks = detectBlocks();
     // if(blocks.size() > 1){
     //     matrix_is_decomposed.insert({state, true});
@@ -358,7 +358,7 @@ shared_ptr<DNNFNode> DanceDNNF::dxdSearch(vector<Block>& blocks) {
         return serialSearch(blocks);
     }
 
-    timer.markStopTime();
+    timer.markStartTime();
 
 
     std::vector<std::future<std::shared_ptr<DNNFNode>>> futures;
@@ -385,7 +385,7 @@ shared_ptr<DNNFNode> DanceDNNF::dxdSearch(vector<Block>& blocks) {
     }
     
     andNode->count = totalCount;
-    timer.markStartTime();
+    timer.markStopTime();
     return andNode;
 }
 
@@ -609,6 +609,7 @@ void DanceDNNF::uncoverInBlock(int c, Block& block){
 }
 
 vector<Block> DanceDNNF::spilit(const vector<vector<int>>& rows) {
+    timer.markStartTime();
     vector<Block> blocks;
     for(int i = 0; i < rows.size(); ++i) {
         const vector<int>& rowVec = rows[i];
@@ -623,6 +624,7 @@ vector<Block> DanceDNNF::spilit(const vector<vector<int>>& rows) {
         Block newBlock(rowSet, cols);
         blocks.push_back(newBlock);
     }
+    timer.markStopTime();
     return blocks;
 }
 
@@ -644,7 +646,6 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
     if(block.rows.size() >= MIN_BLOCK_ROWS && detect_records.find(state) == detect_records.end()) {
 
         // vector<set<int>> row_sets = mergeRowSets(block);
-        timer.markStopTime();
         set<int> rows(block.rows.begin(), block.rows.end());
         vector<vector<int>> components = connectedGraph->getComponents(rows);
 
@@ -657,10 +658,8 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
             auto blocks = spilit(components); // 分解为多个块
             auto res_and_node = dxdSearch(blocks); // 并行搜索
             setCachedResult(state, res_and_node); // 缓存结果
-            timer.markStartTime(); // 继续计时
             return res_and_node; // 返回分解节点
         }else{
-            timer.markStartTime(); // 继续计时
             detect_records.insert(state);
         }
     }
@@ -690,8 +689,8 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
         if(node->label != -2){
             shared_ptr<DNNFNode> var = make_shared<DNNFNode>(NodeType::Variable, curC->row + 1);
             auto and_node = make_shared<DNNFNode>(NodeType::Decision, var, node);
-            and_node->count = node->count;
-            orNode->count += and_node->count; // 累加当前Decision节点的计数
+            // and_node->count = node->count;
+            orNode->count += node->count; // 累加当前Decision节点的计数
             orNode->children.push_back(and_node);
         }
         
@@ -721,9 +720,7 @@ void DanceDNNF::startDXD() {
 
     clearCache();
     auto start = std::chrono::high_resolution_clock::now();
-    timer.markStartTime();
     rootDNNF = DXD(block);  // 先单线程DXD搜索
-    timer.markStopTime();
     auto end = std::chrono::high_resolution_clock::now();
 
     std::cout << "搜索到的解个数: " << rootDNNF->count << std::endl;
@@ -826,11 +823,12 @@ void DanceDNNF::startMultiThreadDXD() {
     isParallelSearch = true;  // 开启多线程搜索标志
 
     timer.reset();
-    timer.markStartTime();
+    auto start = std::chrono::high_resolution_clock::now();
     rootDNNF = DXD(block);  // 多线程DXD搜索
-    timer.markStopTime();
+    auto end = std::chrono::high_resolution_clock::now();
 
-    cout<< "多线程算法计时: " << timer.getElapsedTime() << " 秒。" << endl;
+    searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
+    cout<< "多线程算法计时: " << searchTimeSeconds - timer.getElapsedTime() << " 秒。" << endl;
 
     cout << "多线程DXD搜索解个数: " << rootDNNF->count << endl;
     if( MAX_B_COUNT > 1 ) {

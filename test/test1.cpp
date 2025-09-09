@@ -16,21 +16,20 @@ int main() {
             // break;
             if (entry.is_regular_file() && entry.path().extension() == ".txt")
             {
-                // 文件路径
-                const std::string filePath = entry.path().string();
-                std::cout << "文件名: " << entry.path().filename().string() << std::endl;
+                std::cout << "文件名: " << entry.path().filename() << std::endl;
 
                 // 从文件中提取 n 和 m 的值
-                int r, c;
-                int** matrix = PreProccess::processFileToMatrix1(filePath, r, c);
+                // int r, c;
+                // int** matrix = PreProccess::processFileToMatrix1(filePath, r, c);
 
                 // 创建 DancingMatrix 对象
-                DanceZDD dxzSolver(r, c, matrix);
+                // DanceZDD dxzSolver(r, c, matrix);
+                DanceZDD dxzSolver(entry.path().string(), 1);
                 dxzSolver.startDLX();
                 dxzSolver.startDXZ();
 
                 // 释放内存
-                PreProccess::freeMatrix(matrix, r);
+                // PreProccess::freeMatrix(matrix, r);
             }
         }
         std::cout << "exact_cover_benchmark 文件夹处理完毕" << std::endl;
@@ -43,19 +42,20 @@ int main() {
             if (entry.is_regular_file() && entry.path().extension() == ".txt")
             {
                 // 文件路径
-                std::cout << "文件名: " << entry.path().filename().string() << std::endl;
+                std::cout << "文件名: " << entry.path().filename() << std::endl;
 
                 // 从文件中提取 n 和 m 的值
-                int r, c;
-                int** matrix = PreProccess::processFileToMatrix2(entry.path(), r, c);
+                // int r, c;
+                // int** matrix = PreProccess::processFileToMatrix2(entry.path(), r, c);
 
                 // 创建 DancingMatrix 对象
-                DanceZDD dxzSolver(r, c, matrix);
+                // DanceZDD dxzSolver(r, c, matrix);
+                DanceZDD dxzSolver(entry.path().string(), 2);
                 dxzSolver.startDLX();
                 dxzSolver.startDXZ();
 
                 // 释放内存
-                PreProccess::freeMatrix(matrix, r);
+                // PreProccess::freeMatrix(matrix, r);
             }
         }
         std::cout << "set_partitioning_benchmarks 文件夹处理完毕" << std::endl;
@@ -63,22 +63,24 @@ int main() {
         std::cout << "d3x数据集处理开始" << std::endl;
         for(const auto& entry : fs::directory_iterator(filePath_d3x))
         {
+            // break;
             if (entry.is_regular_file() && entry.path().extension() == ".txt")
             {
                 // 文件路径
-                std::cout << "文件名: " << entry.path().filename().string() << std::endl;
+                std::cout << "文件名: " << entry.path().filename() << std::endl;
 
                 // 从文件中提取 n 和 m 的值
-                int r, c; 
-                int** matrix = PreProccess::processFileToMatrix3(entry.path().string(), r, c);
+                // int r, c; 
+                // int** matrix = PreProccess::processFileToMatrix3(entry.path().string(), r, c);
 
                  // 创建 DancingMatrix 对象
-                DanceZDD dxzSolver(r, c, matrix);
+                // DanceZDD dxzSolver(r, c, matrix);
+                DanceZDD dxzSolver(entry.path().string(), 3);
                 dxzSolver.startDLX();
                 dxzSolver.startDXZ();
 
                 // 释放内存
-                PreProccess::freeMatrix(matrix, r);
+                // PreProccess::freeMatrix(matrix, r);
             }
         }
         std::cout << "d3x数据集处理完毕" << std::endl;

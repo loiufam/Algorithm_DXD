@@ -3,7 +3,7 @@
 
 //构造函数
 DancingMatrix::DancingMatrix( int rows, int cols, int** matrix )  
-    : ROWS(rows), COLS(cols), count(0) {
+    : ROWS(rows), COLS(cols) {
     EXIST_ROWS = rows;  
     ColIndex = new ColunmHeader[cols+1];  
     RowIndex = new RowNode[rows];  
@@ -40,9 +40,86 @@ DancingMatrix::DancingMatrix( int rows, int cols, int** matrix )
         }
     }
 
-    initConnectedGraph();
-    
     cout<< "初始化舞蹈链完成." << endl;
+}
+
+// 从文件构造舞蹈链矩阵
+DancingMatrix::DancingMatrix( const string& file_path, int from )
+{
+    ifstream file(file_path);
+    if (!file.is_open()) {
+        cerr << "无法打开文件: " << file_path << endl;
+        exit(1);
+    }
+
+    string line;
+    getline(file, line);  // 读取第一行 
+
+    int rows, cols;
+    if( from == 1 ) {
+        PreProccess::extractNM( line, cols, rows );
+        getline(file, line); 
+    } else {
+        istringstream iss(line);
+        iss >> cols >> rows;
+    }
+
+    ROWS = rows;
+    COLS = cols;
+
+    cout << "矩阵维度: " << rows << " 行, " << cols << " 列." << endl;
+
+    ColIndex = new ColunmHeader[cols+1];  
+    RowIndex = new RowNode[rows];  
+    root = &ColIndex[0];  
+    ColIndex[0].left = &ColIndex[COLS];  
+    ColIndex[0].right = &ColIndex[1];  
+    ColIndex[COLS].right = &ColIndex[0];  
+    ColIndex[COLS].left = &ColIndex[COLS-1];  
+    for( int i=1; i<cols; i++ )  
+    {  
+        ColIndex[i].left = &ColIndex[i-1];  
+        ColIndex[i].right = &ColIndex[i+1];  
+    }  
+
+    for ( int i=0; i<=cols; i++ )  
+    {  
+        ColIndex[i].up = &ColIndex[i];  
+        ColIndex[i].down = &ColIndex[i];  
+        ColIndex[i].col = i;  
+    }  
+    ColIndex[0].down = &RowIndex[0]; 
+
+    int currentRow = 0;
+    while (getline(file, line)) {
+        if (line.empty()) continue; // 跳过空行
+        istringstream iss(line);
+
+        string token;
+        if (from == 1 || from == 3) {
+            iss >> token;
+        } else if (from == 2) {
+            iss >> token;
+            iss >> token;
+        }
+
+        int currentCol; // 列索引从1开始
+        while(iss >> currentCol) {
+            if (currentCol < 1 || currentCol > cols) {
+                cerr << "无效的列索引: " << currentCol << " 在行 " << currentRow + 1 << endl;
+                exit(1);
+            }
+            insert(currentRow, currentCol); // 插入节点
+            ONE_COUNT++; // 统计矩阵中1的个数
+            rowsSet.insert(currentRow);
+            colsSet.insert(currentCol); 
+        }
+        currentRow++;
+        if (currentRow >= rows) break; // 防止超过预期行数
+    }
+
+    cout<< "初始化舞蹈链完成." << endl;
+    file.close();
 }
 
 //析构函数，在 DancingMatrix 对象被销毁时，释放所有动态分配的内存，避免内存泄漏
@@ -64,11 +141,6 @@ DancingMatrix::~DancingMatrix()
     ColIndex = nullptr;
     RowIndex = nullptr;
 
-}
-
-void DancingMatrix::initConnectedGraph() {
-    cout<< "初始化连通图..." << endl;
-    connectedGraph = std::make_shared<ConnectedGraph>(*this);
 }
 
 //插入元素到双向十字链表中
@@ -105,6 +177,10 @@ void DancingMatrix::insert( int r, int c )
     }   
 }
 
+shared_ptr<ConnectedGraph> DancingMatrix::getConnectedGraph() {
+    cout<< "初始化连通图..." << endl;
+    return std::make_shared<ConnectedGraph>(*this);
+}
 
 string DancingMatrix::encodeBlockState(const unordered_set<int>& cols){
     string state(COLS, '0'); // 初始化为全0字符串
@@ -131,6 +207,17 @@ size_t DancingMatrix::hashColState(unordered_set<int>& cols) {
         hash ^= std::hash<int>()(col) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
         cols.insert(col);
         curCol = (ColunmHeader *)curCol->right;
+    }
+    return hash;
+}
+
+//获取当前列的状态
+size_t DancingMatrix::getColumnState() const {
+    size_t hash = 0;
+    ColunmHeader* cur = (ColunmHeader*)root->right;
+    while (cur != root) {
+        hash ^= std::hash<int>()(cur->col) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+        cur = (ColunmHeader*)cur->right;
     }
     return hash;
 }
@@ -184,7 +271,8 @@ void DancingMatrix::cover( int c )
     while( curC != col )  
     {   
         Node* noteR = curC;  
-        RowIndex[noteR->row].cols.erase(noteR->col);
+        // RowIndex[noteR->row].cols.erase(noteR->col);
+        removeCol(noteR->row, noteR->col);
         curR = noteR->right;  
         while( curR != noteR )  
         {  
@@ -192,12 +280,12 @@ void DancingMatrix::cover( int c )
             curR->up->down = curR->down;  
             --ColIndex[curR->col].size;  
 
-            RowIndex[noteR->row].cols.erase(curR->col);
+            // RowIndex[noteR->row].cols.erase(curR->col);
+            removeCol(noteR->row, curR->col);
             curR = curR->right;  
         }  
         rowsSet.erase(curC->row);
-        connectedGraph->remove(curC->row);
-        EXIST_ROWS--;
+        // connectedGraph->remove(curC->row);
         curC = curC->down;  
     }  
 }
@@ -210,7 +298,8 @@ void DancingMatrix::uncover( int c )
     while( curC != col )  
     {  
         Node* noteR = curC;  
-        RowIndex[noteR->row].cols.insert(noteR->col);
+        // RowIndex[noteR->row].cols.insert(noteR->col);
+        restoreCol(noteR->row, noteR->col);
         curR = curC->left;  
         while( curR != noteR )  
         {  
@@ -218,12 +307,12 @@ void DancingMatrix::uncover( int c )
             curR->down->up = curR;  
             curR->up->down = curR;  
 
-            RowIndex[noteR->row].cols.insert(curR->col);
+            // RowIndex[noteR->row].cols.insert(curR->col);
+            restoreCol(noteR->row, curR->col);
             curR = curR->left;  
         }  
         rowsSet.insert(curC->row);
-        connectedGraph->restore(curC->row);
-        EXIST_ROWS++;
+        // connectedGraph->restore(curC->row);
         curC = curC->up;  
     }  
     col->right->left = col;  
@@ -258,17 +347,6 @@ ColunmHeader* DancingMatrix::selectCol()
         cur = (ColunmHeader*)cur->right;  
     } 
     return choose;
-}
-
-//获取当前列的状态
-std::string DancingMatrix::getColumnState() const {
-    std::string columnState(COLS, '0'); // 初始化为全0字符串
-    ColunmHeader* cur = (ColunmHeader*)root->right;
-    while (cur != root) {
-        columnState[cur->col - 1] = '1'; // 将能遍历到的列设置为1
-        cur = (ColunmHeader*)cur->right;
-    }
-    return columnState;
 }
 
 void PreProccess::extractNM(const std::string& line, int& n, int& m) {
