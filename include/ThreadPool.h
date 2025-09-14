@@ -24,79 +24,67 @@
 // 无锁环形队列实现
 // ========================
 template<typename T>
-class LockFreeQueue {
+class ThreadSafeQueue {
 private:
-    struct Node {
-        std::atomic<T*> data{nullptr};
-        std::atomic<Node*> next{nullptr};
-    };
-    
-    std::atomic<Node*> head;
-    std::atomic<Node*> tail;
-    std::atomic<size_t> size_{0};
-    const size_t capacity_;
-    
+    mutable std::mutex mutex_;
+    std::queue<T> queue_;
+    std::condition_variable condition_;
+    std::atomic<bool> shutdown_{false};
+    const size_t max_size_;
+
 public:
-    explicit LockFreeQueue(size_t capacity = 1024) : capacity_(capacity) {
-        Node* dummy = new Node;
-        head.store(dummy);
-        tail.store(dummy);
-    }
-    
-    ~LockFreeQueue() {
-        while (Node* old_head = head.load()) {
-            head.store(old_head->next.load());
-            if (old_head->data.load()) {
-                delete old_head->data.load();
-            }
-            delete old_head;
-        }
-    }
+    explicit ThreadSafeQueue(size_t max_size = 1024) : max_size_(max_size) {}
     
     bool push(T item) {
-        if (size_.load() >= capacity_) {
-            return false; // 队列满
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (shutdown_.load() || queue_.size() >= max_size_) {
+            return false;
         }
-        
-        Node* new_node = new Node;
-        T* data = new T(std::move(item));
-        new_node->data.store(data);
-        
-        Node* prev_tail = tail.exchange(new_node);
-        prev_tail->next.store(new_node);
-        size_.fetch_add(1);
+        queue_.push(std::move(item));
+        condition_.notify_one();
         return true;
     }
     
     bool pop(T& result) {
-        Node* head_node = head.load();
-        Node* next = head_node->next.load();
+        std::unique_lock<std::mutex> lock(mutex_);
+        condition_.wait(lock, [this] { return !queue_.empty() || shutdown_.load(); });
         
-        if (next == nullptr) {
-            return false; // 队列空
-        }
-        
-        T* data = next->data.exchange(nullptr);
-        if (data == nullptr) {
+        if (shutdown_.load() && queue_.empty()) {
             return false;
         }
         
-        result = std::move(*data);
-        delete data;
-        
-        if (head.compare_exchange_weak(head_node, next)) {
-            delete head_node;
-            size_.fetch_sub(1);
+        if (!queue_.empty()) {
+            result = std::move(queue_.front());
+            queue_.pop();
             return true;
         }
-        
-        // CAS失败，回滚
-        next->data.store(new T(std::move(result)));
         return false;
     }
     
-    size_t size() const { return size_.load(); }
-    bool empty() const { return size() == 0; }
+    bool try_pop(T& result) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (queue_.empty()) {
+            return false;
+        }
+        result = std::move(queue_.front());
+        queue_.pop();
+        return true;
+    }
+    
+    void shutdown() {
+        shutdown_.store(true);
+        condition_.notify_all();
+    }
+    
+    size_t size() const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return queue_.size();
+    }
+    
+    bool empty() const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return queue_.empty();
+    }
 };
 
 // ========================
@@ -104,107 +92,214 @@ public:
 // ========================
 class ThreadPool {
 public:
-    explicit ThreadPool(size_t max_threads = std::thread::hardware_concurrency(), 
-                       size_t queue_capacity = 1024)
-        : stop(false), queue(queue_capacity) {
+    // 构造函数，指定线程数量
+    explicit ThreadPool(size_t threads = std::thread::hardware_concurrency()) 
+        : stop(false) {
+        if (threads == 0) {
+            threads = std::thread::hardware_concurrency();
+        }
         
-        for (size_t i = 0; i < max_threads; ++i) {
-            workers.emplace_back([this, i] {
-                while (!stop.load()) {
-                    std::function<void()> task;
-                    
-                    if (queue.pop(task)) {
-                        if (task) {
-                            try {
-                                task();
-                            } catch (const std::exception& e) {
-                                std::cerr << "[ThreadPool Worker " << i << "] exception: " 
-                                         << e.what() << std::endl;
-                            } catch (...) {
-                                std::cerr << "[ThreadPool Worker " << i << "] unknown exception" 
-                                         << std::endl;
-                            }
-                        }
-                    } else {
-                        std::this_thread::sleep_for(std::chrono::microseconds(100));
-                    }
-                }
-                
-                // 处理剩余任务
-                std::function<void()> task;
-                while (queue.pop(task)) {
-                    if (task) {
-                        try {
-                            task();
-                        } catch (...) {}
-                    }
-                }
+        // 预分配线程向量空间，避免重分配
+        workers.reserve(threads);
+        
+        // 创建工作线程
+        for (size_t i = 0; i < threads; ++i) {
+            workers.emplace_back([this] {
+                this->worker_thread();
             });
         }
     }
-    
+
+    // 禁用拷贝构造和赋值
+    ThreadPool(const ThreadPool&) = delete;
+    ThreadPool& operator=(const ThreadPool&) = delete;
+
+    // 允许移动构造和赋值
+    // ThreadPool(ThreadPool&&) = default;
+    // ThreadPool& operator=(ThreadPool&&) = default;
+
+    // 析构函数，确保所有资源正确释放
     ~ThreadPool() {
         shutdown();
     }
-    
-    // 禁用拷贝和移动
-    ThreadPool(const ThreadPool&) = delete;
-    ThreadPool& operator=(const ThreadPool&) = delete;
-    ThreadPool(ThreadPool&&) = delete;
-    ThreadPool& operator=(ThreadPool&&) = delete;
-    
-    template <class F, class... Args>
-    auto enqueue(F&& f, Args&&... args) -> std::future<std::invoke_result_t<F, Args...>> {
-        using return_type = std::invoke_result_t<F, Args...>;
+
+    // 提交任务到线程池
+    template<class F, class... Args>
+    auto enqueue(F&& f, Args&&... args) 
+        -> std::future<typename std::invoke_result_t<F, Args...>> {
         
-        if (stop.load()) {
-            throw std::runtime_error("ThreadPool is shutting down");
-        }
-        
-        auto task_ptr = std::make_shared<std::packaged_task<return_type()>>(
-            std::bind(std::forward<F>(f), std::forward<Args>(args)...)
+        using return_type = typename std::invoke_result_t<F, Args...>;
+
+        // 创建打包任务
+        auto task = std::make_shared<std::packaged_task<return_type()>>(
+                [f = std::forward<F>(f), args = std::make_tuple(std::forward<Args>(args)...)]() mutable -> return_type {
+                    return std::apply(std::move(f), std::move(args));
+            }
         );
-        
-        std::future<return_type> res = task_ptr->get_future();
-        
-        auto wrapper = std::make_shared<std::function<void()>>([task_ptr]() {
-            try {
-                (*task_ptr)();
-            } catch (const std::future_error& e) {
-                std::cerr << "[ThreadPool] future_error: " << e.what() << std::endl;
-            } catch (const std::exception& e) {
-                std::cerr << "[ThreadPool] exception: " << e.what() << std::endl;
-            } catch (...) {
-                std::cerr << "[ThreadPool] unknown exception caught" << std::endl;
-            }
-        });
-        
-        while (!queue.push([wrapper]() { (*wrapper)(); })) {
+
+        std::future<return_type> res = task->get_future();
+
+        // 线程池已停止，抛出异常
+        if (stop.load()) {
+            throw std::runtime_error("enqueue on stopped ThreadPool");
+        }
+
+        // 将任务添加到队列
+        {
+            std::unique_lock<std::mutex> lock(queue_mutex);
+            
+            // 再次检查停止状态（双重检查）
             if (stop.load()) {
-                throw std::runtime_error("ThreadPool is shutting down");
+                throw std::runtime_error("enqueue on stopped ThreadPool");
             }
-            std::this_thread::yield();
+            
+            tasks.emplace([task]() { (*task)(); });
         }
         
+        condition.notify_one();
         return res;
     }
-    
+
+    // 获取当前队列中任务数量
+    size_t pending_tasks() const {
+        std::unique_lock<std::mutex> lock(queue_mutex);
+        return tasks.size();
+    }
+
+    // 获取线程池大小
+    size_t size() const {
+        return workers.size();
+    }
+
+    // 等待所有任务完成
+    void wait_for_tasks() {
+        std::unique_lock<std::mutex> lock(queue_mutex);
+        finished_condition.wait(lock, [this] {
+            return tasks.empty() && (active_threads == 0);
+        });
+    }
+
+    // 优雅关闭线程池
     void shutdown() {
-        stop.store(true);
-        for (auto& worker : workers) {
+        {
+            std::unique_lock<std::mutex> lock(queue_mutex);
+            if (stop.load()) {
+                return; // 已经关闭
+            }
+            stop = true;
+        }
+        
+        condition.notify_all();
+        
+        // 等待所有工作线程结束
+        for (std::thread& worker : workers) {
             if (worker.joinable()) {
                 worker.join();
             }
         }
+        
+        workers.clear();
     }
-    
-    size_t queue_size() const { return queue.size(); }
-    bool is_stopping() const { return stop.load(); }
+
+    // 立即停止（不等待当前任务完成）
+    void force_shutdown() {
+        {
+            std::unique_lock<std::mutex> lock(queue_mutex);
+            stop = true;
+            // 清空任务队列
+            std::queue<std::function<void()>> empty;
+            tasks.swap(empty);
+        }
+        
+        condition.notify_all();
+        
+        for (std::thread& worker : workers) {
+            if (worker.joinable()) {
+                worker.join();
+            }
+        }
+        
+        workers.clear();
+    }
 
 private:
+    // 工作线程函数
+    void worker_thread() {
+        while (true) {
+            std::function<void()> task;
+            
+            {
+                std::unique_lock<std::mutex> lock(queue_mutex);
+                
+                condition.wait(lock, [this] {
+                    return stop.load() || !tasks.empty();
+                });
+                
+                if (stop.load() && tasks.empty()) {
+                    return;
+                }
+                
+                if (!tasks.empty()) {
+                    task = std::move(tasks.front());
+                    tasks.pop();
+                    ++active_threads;
+                }
+            }
+            
+            if (task) {
+                try {
+                    task(); // 执行任务
+                } catch (...) {
+                    // 捕获并忽略任务执行中的异常，避免线程终止
+                    // 实际应用中可能需要日志记录
+                }
+                
+                {
+                    std::unique_lock<std::mutex> lock(queue_mutex);
+                    --active_threads;
+                }
+                finished_condition.notify_all();
+            }
+        }
+    }
+
+    // 线程向量
     std::vector<std::thread> workers;
-    LockFreeQueue<std::function<void()>> queue;
+    
+    // 任务队列
+    std::queue<std::function<void()>> tasks;
+    
+    // 同步原语
+    mutable std::mutex queue_mutex;
+    std::condition_variable condition;
+    std::condition_variable finished_condition;
+    
+    // 停止标志
     std::atomic<bool> stop;
+    
+    // 活跃线程计数
+    std::atomic<size_t> active_threads{0};
 };
+
+class ThreadPoolManager {
+public:
+    static ThreadPool& get_instance(size_t threads = 0) {
+        static ThreadPool instance(threads == 0 ? std::thread::hardware_concurrency() : threads);
+        return instance;
+    }
+
+private:
+    ThreadPoolManager() = default;
+};
+
+// 便利函数：异步执行任务
+template<class F, class... Args>
+auto async_execute(F&& f, Args&&... args) 
+    -> std::future<typename std::invoke_result_t<F, Args...>> {
+    return ThreadPoolManager::get_instance().enqueue(
+        std::forward<F>(f), 
+        std::forward<Args>(args)...
+    );
+}
 
 #endif

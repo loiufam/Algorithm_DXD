@@ -4,6 +4,7 @@
 #include "ThreadPool.h"
 #include <string>
 #include <set>
+#include <map>
 #include <bitset>
 #include <filesystem>
 #include <unordered_map>
@@ -12,8 +13,12 @@
 #include <stack>
 #include <algorithm>
 #include <numeric>
+#include <cmath>
 
 using namespace std;
+using col_id = int;
+using row_id = int;
+
 namespace fs = std::filesystem;
 
 
@@ -50,6 +55,25 @@ struct RowNode : public Node
     }
 };
 
+struct Component{ 
+    vector<int> rows; 
+    vector<int> cols; 
+
+    Component() = default;
+
+    void printComponent() {
+        cout<< "row_id: ";
+        for(auto& r : rows) {
+            cout<< r << " ";
+        }
+        cout << endl;
+        cout << "col_id: ";
+        for(auto& c : cols) {
+            cout<< c << " ";
+        }
+        cout << endl; 
+    }
+};
 
 struct ColumnComparator {
     bool operator()(const std::pair<int, ColunmHeader*>& a, const std::pair<int, ColunmHeader*>& b) const {
@@ -110,6 +134,10 @@ class DancingMatrix
         //接收矩阵其及维度  
         DancingMatrix( int rows, int cols, int** matrix);  
         DancingMatrix( const string& file_path, int from );
+
+        // 复制函数
+        DancingMatrix(const DancingMatrix& other) 
+            : root(other.root), ColIndex(other.ColIndex), RowIndex(other.RowIndex) {};
         //释放内存  
         ~DancingMatrix();  
         
@@ -119,13 +147,16 @@ class DancingMatrix
         void cover( int c );  
         void uncover( int c ); 
         size_t getColumnState() const;
-        shared_ptr<ConnectedGraph> getConnectedGraph();
+        shared_ptr<ConnectedGraph> getConnectedGraph(){
+            return graph;
+        };
         string encodeBlockState(const unordered_set<int>& cols);
         size_t hashBlockState(const unordered_set<int>& cols);
         size_t hashColState(unordered_set<int>& cols);
      
         ColunmHeader* selectCol();
         ColunmHeader* selectColumnHeuristic(const unordered_set<int>& cols);
+        col_id getClosedSizeCol(const int expected_size);
         // ColunmHeader* fastSelect();
 
         std::mutex rowIndexMutex; // 保护 RowIndex 的互斥锁
@@ -163,6 +194,7 @@ class DancingMatrix
         ColunmHeader* root;  
         ColunmHeader* ColIndex;  
         RowNode* RowIndex; 
+        shared_ptr<ConnectedGraph> graph;
         
 };
 

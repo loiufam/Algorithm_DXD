@@ -25,10 +25,15 @@ int main() {
 
                 // DanceDNNF dxdSolver(r, c, matrix);
 
-                DanceDNNF dxdSolver(entry.path().string(), 1);
-                dxdSolver.startDXD();
-
-                dxdSolver.startMultiThreadDXD();
+                {
+                    DanceDNNF dxdSolver(entry.path().string(), 1);
+                    dxdSolver.startDXD();
+                }
+                
+                {
+                    ExactCoverSolver ecSolver(entry.path().string(), 1);
+                    ecSolver.searchEC();
+                }
 
                 // 释放内存
                 // PreProccess::freeMatrix(matrix, r);
@@ -51,10 +56,15 @@ int main() {
                 // int** matrix = PreProccess::processFileToMatrix2(entry.path(), r, c);
 
                 // DanceDNNF dxdSolver(r, c, matrix);
-                DanceDNNF dxdSolver(entry.path().string(), 2);
-
-                dxdSolver.startDXD();
-                dxdSolver.startMultiThreadDXD();
+                {
+                    DanceDNNF dxdSolver(entry.path().string(), 2);
+                    dxdSolver.startDXD();
+                }
+                
+                {
+                    ExactCoverSolver ecSolver(entry.path().string(), 2);
+                    ecSolver.searchEC();
+                }
 
                 // 释放内存
                 // PreProccess::freeMatrix(matrix, r);
@@ -75,10 +85,15 @@ int main() {
                 // int** matrix = PreProccess::processFileToMatrix3(entry.path().string(), r, c);
 
                 // DanceDNNF dxdSolver(r, c, matrix);
-                DanceDNNF dxdSolver(entry.path().string(), 3);
-
-                dxdSolver.startDXD();
-                dxdSolver.startMultiThreadDXD();
+                {
+                    DanceDNNF dxdSolver(entry.path().string(), 3);
+                    dxdSolver.startDXD();
+                }
+                
+                {
+                    ExactCoverSolver ecSolver(entry.path().string(), 3);
+                    ecSolver.searchEC();
+                }
 
                 // 释放内存
                 // PreProccess::freeMatrix(matrix, r);

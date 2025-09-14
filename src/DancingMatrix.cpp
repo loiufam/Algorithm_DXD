@@ -27,6 +27,7 @@ DancingMatrix::DancingMatrix( int rows, int cols, int** matrix )
     ColIndex[0].down = &RowIndex[0];  
     
 
+    graph = std::make_shared<ConnectedGraph>(ROWS, COLS);
     for( int i = 0; i < rows; i++ ){
         for( int j = 0; j < cols ; j++ ) {  
             if(matrix[i][j] == 1){
@@ -66,8 +67,9 @@ DancingMatrix::DancingMatrix( const string& file_path, int from )
 
     ROWS = rows;
     COLS = cols;
+    graph = std::make_shared<ConnectedGraph>(ROWS, COLS); // 初始化连通图
 
-    cout << "矩阵维度: " << rows << " 行, " << cols << " 列." << endl;
+    // cout << "矩阵维度: " << rows << " 行, " << cols << " 列." << endl;
 
     ColIndex = new ColunmHeader[cols+1];  
     RowIndex = new RowNode[rows];  
@@ -118,7 +120,7 @@ DancingMatrix::DancingMatrix( const string& file_path, int from )
         if (currentRow >= rows) break; // 防止超过预期行数
     }
 
-    cout<< "初始化舞蹈链完成." << endl;
+    // cout<< "初始化舞蹈链完成." << endl;
     file.close();
 }
 
@@ -174,12 +176,8 @@ void DancingMatrix::insert( int r, int c )
         newNode->left = cur;  
         cur->right->left = newNode;  
         cur->right = newNode;  
-    }   
-}
-
-shared_ptr<ConnectedGraph> DancingMatrix::getConnectedGraph() {
-    cout<< "初始化连通图..." << endl;
-    return std::make_shared<ConnectedGraph>(*this);
+    }  
+    graph->insertEdge(r, c-1); 
 }
 
 string DancingMatrix::encodeBlockState(const unordered_set<int>& cols){
@@ -264,7 +262,7 @@ void DancingMatrix::cover( int c )
     ColunmHeader* col = &ColIndex[c];  
     col->right->left = col->left;  
     col->left->right = col->right; 
-    colsSet.erase(c); // 从当前矩阵移除该列
+    // colsSet.erase(c); // 从当前矩阵移除该列
     
     Node* curR, *curC;  
     curC = col->down;  
@@ -272,7 +270,7 @@ void DancingMatrix::cover( int c )
     {   
         Node* noteR = curC;  
         // RowIndex[noteR->row].cols.erase(noteR->col);
-        removeCol(noteR->row, noteR->col);
+        // removeCol(noteR->row, noteR->col);
         curR = noteR->right;  
         while( curR != noteR )  
         {  
@@ -281,10 +279,10 @@ void DancingMatrix::cover( int c )
             --ColIndex[curR->col].size;  
 
             // RowIndex[noteR->row].cols.erase(curR->col);
-            removeCol(noteR->row, curR->col);
+            // removeCol(noteR->row, curR->col);
             curR = curR->right;  
         }  
-        rowsSet.erase(curC->row);
+        // rowsSet.erase(curC->row);
         // connectedGraph->remove(curC->row);
         curC = curC->down;  
     }  
@@ -299,7 +297,7 @@ void DancingMatrix::uncover( int c )
     {  
         Node* noteR = curC;  
         // RowIndex[noteR->row].cols.insert(noteR->col);
-        restoreCol(noteR->row, noteR->col);
+        // restoreCol(noteR->row, noteR->col);
         curR = curC->left;  
         while( curR != noteR )  
         {  
@@ -308,16 +306,16 @@ void DancingMatrix::uncover( int c )
             curR->up->down = curR;  
 
             // RowIndex[noteR->row].cols.insert(curR->col);
-            restoreCol(noteR->row, curR->col);
+            // restoreCol(noteR->row, curR->col);
             curR = curR->left;  
         }  
-        rowsSet.insert(curC->row);
+        // rowsSet.insert(curC->row);
         // connectedGraph->restore(curC->row);
         curC = curC->up;  
     }  
     col->right->left = col;  
     col->left->right = col;  
-    colsSet.insert(col->col);
+    // colsSet.insert(col->col);
 
 }
 
@@ -347,6 +345,17 @@ ColunmHeader* DancingMatrix::selectCol()
         cur = (ColunmHeader*)cur->right;  
     } 
     return choose;
+}
+
+col_id DancingMatrix::getClosedSizeCol(const int expected_size) {
+    ColunmHeader* choose = (ColunmHeader*)root->right, *cur=choose;  
+    while( cur != root )  
+    {   //选择接近预期大小的列
+        if( abs(choose->size - expected_size) > abs(cur->size - expected_size) )  
+            choose = cur;  
+        cur = (ColunmHeader*)cur->right;  
+    } 
+    return choose->col;
 }
 
 void PreProccess::extractNM(const std::string& line, int& n, int& m) {

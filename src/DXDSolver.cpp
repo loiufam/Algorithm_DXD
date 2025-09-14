@@ -332,18 +332,44 @@ vector<DXD_Block> DanceDNNF::detectBlocks(const DXD_Block& currentBlock) {
         return blocks;
 }
 
+shared_ptr<DNNFNode> DanceDNNF::serialSearch_iterative(const std::vector<Component>& components) {
+
+    auto andNode = make_shared<DNNFNode>(NodeType::Decomposed, -1, 0);
+    andNode->children.reserve(components.size());
+    uint64_t totalCount = 1;
+    for (const auto& comp : components) {
+        Block childBlock(comp.rows, comp.cols);
+        
+        auto childRes = DXD_iterative(std::move(childBlock));
+
+        if(!childRes || childRes->label == -2 ) {
+            return F;
+        }
+        andNode->children.push_back(childRes);
+        totalCount *= childRes->count;
+    }
+
+    andNode->count = totalCount;
+    return andNode;
+}
+
 // 串行处理每个子块，组合为 分解 节点
-shared_ptr<DNNFNode> DanceDNNF::serialSearch(vector<Block>& blocks) {
+shared_ptr<DNNFNode> DanceDNNF::serialSearch(vector<Component>& components) {
 
     auto andNode = std::make_shared<DNNFNode>(NodeType::Decomposed, -1, 0);
-    uint64_t totalCount = 1; 
+    uint64_t totalCount = 1;
+    
+    andNode->children.reserve(components.size());
 
-    for (auto& block : blocks) {
+    for (auto& comp : components) {
+        Block block(comp.rows, comp.cols);
         auto result = DXD(block);
+
         if (result->label == -2) { 
             return F;
         }
-        andNode->children.push_back(result);
+
+        andNode->children.emplace_back(std::move(result));
         totalCount *= result->count;
     }
     
@@ -353,13 +379,6 @@ shared_ptr<DNNFNode> DanceDNNF::serialSearch(vector<Block>& blocks) {
 
 
 shared_ptr<DNNFNode> DanceDNNF::dxdSearch(vector<Block>& blocks) {
-
-    if (!isParallelSearch) {
-        return serialSearch(blocks);
-    }
-
-    timer.markStartTime();
-
 
     std::vector<std::future<std::shared_ptr<DNNFNode>>> futures;
 
@@ -385,7 +404,6 @@ shared_ptr<DNNFNode> DanceDNNF::dxdSearch(vector<Block>& blocks) {
     }
     
     andNode->count = totalCount;
-    timer.markStopTime();
     return andNode;
 }
 
@@ -418,101 +436,6 @@ shared_ptr<DNNFNode> DanceDNNF::parallelSearch(vector<Block>& blocks) {
     andNode->count = totalCount;
     return andNode;
 }
-
-std::shared_ptr<DNNFNode> DanceDNNF::optimizedDXD(Block& block) {
-        if (root->right == root) {
-            return T;
-        }
-        
-        size_t state_hash = hashColState(block.cols);
-        
-        // 使用智能缓存
-        auto cached = getCachedResult(state_hash);
-        if (cached) {
-            return cached;
-        }
-        
-        // // 快速连通性检测
-        // fastInitBlock(block);
-        // // 检查是否可分解
-        // if (block.connectedRows.size() > 1) {
-        //     auto sub_blocks = intelligentSplitBlock(block);
-        //     auto result = adaptiveParallelSearch(sub_blocks);
-        //     setCachedResult(state_hash, result);
-        //     return result;
-        // }
-        
-        // 单块搜索
-        // vector<int> cols(block.cols.begin(), block.cols.end());
-        // sort(cols.begin(), cols.end());
-        // ColunmHeader* selected_col = nullptr;
-        // int MIN_SIZE = INT_MAX;
-        // for(auto it = cols.rbegin(); it != cols.rend(); ++it) {
-        //     ColunmHeader* curCol = &ColIndex[*it];
-        //     if (curCol->size < MIN_SIZE) {
-        //         selected_col = curCol;
-        //         MIN_SIZE = curCol->size;
-        //     }
-        // }
-        ColunmHeader* selected_col = selectColumnHeuristic(block.cols);
-        
-        
-        if (selected_col->size <= 0) {
-            setCachedResult(state_hash, F);
-            return F;
-        }
-        
-        auto or_node = std::make_shared<DNNFNode>(NodeType::OR, selected_col->col, 0);
-
-
-        Node* cur_node = selected_col->down;
-        cover(selected_col->col);
-        while (cur_node != selected_col) { // 遍历不同行
-            
-            // batchCoverInBlock(cur_node, block);
-            Node* curRow = cur_node->right;
-            while(curRow != cur_node){
-                cover(curRow->col);
-                curRow = curRow->right;
-            }
-            
-            auto sub_result = optimizedDXD(block);
-            
-            if (sub_result->label != -2) {
-                // 使用父类的变量表
-                auto var_it = V_Table.find(cur_node->row);
-                std::shared_ptr<DNNFNode> var;
-                if (var_it != V_Table.end()) {
-                    var = var_it->second;
-                } else {
-                    var = std::make_shared<DNNFNode>(NodeType::Variable, cur_node->row + 1);
-                    V_Table[cur_node->row] = var;
-                }
-                
-                auto and_node = std::make_shared<DNNFNode>(NodeType::Decision, var, sub_result);
-                and_node->count = sub_result->count;
-                or_node->count += and_node->count;
-                or_node->children.push_back(and_node);
-            }
-            
-            // batchUncoverInBlock(block);
-            curRow = cur_node->left;
-            while(curRow != cur_node) {
-                uncover(curRow->col);
-                curRow = curRow->left;
-            }
-            cur_node = cur_node->down;
-        }
-        uncover(selected_col->col);
-        
-        if (or_node->children.empty()) {
-            or_node = F;
-        }
-        
-        setCachedResult(state_hash, or_node);
-        return or_node;
-}
-
 
 void DanceDNNF::printBlocks(const vector<Block>& blocks) {
         cout << "找到 " << blocks.size() << " 个独立块:\n";
@@ -555,16 +478,18 @@ void DanceDNNF::coverInBlock(int c, Block& block){
     while( curC != col )  
     {    
         // RowIndex[curC->row].cols.erase(curC->col); // 从行映射中移除该列
-        removeCol(curC->row, curC->col);
+        // removeCol(curC->row, curC->col);
         curR = curC->right;  
         while( curR != curC )  
-        {  
+        {          
+            connectedGraph->removeEdge(curC->row, curR->col-1);
+
             curR->down->up = curR->up;  
             curR->up->down = curR->down;  
             --ColIndex[curR->col].size;  
 
             // RowIndex[curC->row].cols.erase(curR->col); // 从行映射中移除该列
-            removeCol(curR->row, curR->col);
+            // removeCol(curR->row, curR->col);
             curR = curR->right;  
         }  
         block.rows.erase(curC->row);
@@ -579,12 +504,11 @@ void DanceDNNF::uncoverInBlock(int c, Block& block){
     ColunmHeader* col = &ColIndex[c];  
 
     curC = col->up;  
-
     while( curC != col )  
     {  
         Node* noteR = curC;  
         // RowIndex[curC->row].cols.insert(curC->col); // 恢复行映射中的该列
-        restoreCol(curC->row, curC->col);
+        // restoreCol(curC->row, curC->col);
         curR = curC->left;  
 
         while( curR != noteR )  
@@ -594,7 +518,8 @@ void DanceDNNF::uncoverInBlock(int c, Block& block){
             curR->up->down = curR;  
 
             // RowIndex[curC->row].cols.insert(curR->col);
-            restoreCol(curR->row, curR->col);
+            // restoreCol(curR->row, curR->col);
+            connectedGraph->insertEdge(curC->row, curR->col-1);
             curR = curR->left;  
         }  
         block.rows.insert(curC->row);
@@ -609,7 +534,6 @@ void DanceDNNF::uncoverInBlock(int c, Block& block){
 }
 
 vector<Block> DanceDNNF::spilit(const vector<vector<int>>& rows) {
-    timer.markStartTime();
     vector<Block> blocks;
     for(int i = 0; i < rows.size(); ++i) {
         const vector<int>& rowVec = rows[i];
@@ -624,8 +548,189 @@ vector<Block> DanceDNNF::spilit(const vector<vector<int>>& rows) {
         Block newBlock(rowSet, cols);
         blocks.push_back(newBlock);
     }
-    timer.markStopTime();
+
     return blocks;
+}
+
+vector<int> DanceDNNF::collectColsInRow(int row, const Block &block){
+    vector<int> cols;
+    cols.reserve(block.cols.size());
+
+    Node* rowHead = RowIndex[row].right;
+    if(!rowHead) return cols;
+    Node* cur = rowHead;
+    do {
+        if(block.cols.count(cur->col)){
+            cols.push_back(cur->col);
+        }
+        cur = cur->right;
+    } while(cur != rowHead);
+
+    return cols;
+}
+
+vector<int> DanceDNNF::collectRowsUnderColumn(int col, const Block &block) {
+    vector<int> rows;
+    rows.reserve(block.rows.size());
+
+    ColunmHeader* colHeader = &ColIndex[col];
+
+    Node* cur = colHeader->down;
+    while(cur != colHeader){
+        if(block.rows.count(cur->row)){
+            rows.push_back(cur->row);
+        }
+        cur = cur->down;
+    }
+    return rows;
+}
+
+shared_ptr<DNNFNode> DanceDNNF::DXD_iterative(Block&& rootBlock) {
+    // Work stack of frames
+    vector<DXDFrame> stack;
+    stack.emplace_back(rootBlock);
+
+
+    shared_ptr<DNNFNode> lastResult = nullptr;
+
+    while(!stack.empty()) {
+        DXDFrame &frame = stack.back();
+
+        switch(frame.stage) {
+            case DXDFrame::START: {
+                // base-case: empty cols
+                if(frame.block.cols.empty()){
+                     lastResult = T; 
+                     stack.pop_back(); 
+                     break; 
+                }
+
+                // try cache
+                frame.stateHash = hashBlockState(frame.block.cols);
+                frame.cachedResult = getCachedResult(frame.stateHash);
+                if(frame.cachedResult) {
+                     lastResult = frame.cachedResult; 
+                     stack.pop_back(); 
+                     break; 
+                }
+
+                // try decomposition if within thresholds
+                if(frame.block.rows.size() >= (size_t)MIN_BLOCK_ROWS && frame.block.rows.size() <= (size_t)MAX_BLOCK_ROWS){
+                    frame.comps = connectedGraph->getComponents();
+                    if(frame.comps.size() > 1){
+                        MAX_B_COUNT = max(MAX_B_COUNT, frame.comps.size());
+                        // handle decomposition inline by calling serialSearch_iterative
+                        auto decompositionNode = serialSearch_iterative(frame.comps);
+                        setCachedResult(frame.stateHash, decompositionNode);
+                        lastResult = decompositionNode;
+                        stack.pop_back();
+                        break;
+                    }
+                }
+
+                // no decomposition: select column
+                frame.choose = selectColumnHeuristic(frame.block.cols);
+                if(!frame.choose || frame.choose->size <= 0){ 
+                    lastResult = F; 
+                    stack.pop_back(); 
+                    break; 
+                }
+
+                // create OR node and prepare to iterate rows under choose
+                frame.orNode = make_shared<DNNFNode>(NodeType::OR, frame.choose->col, 0);
+                frame.rowsUnderChoose = collectRowsUnderColumn(frame.choose->col, frame.block);
+                frame.rowCursor = 0;
+
+
+                // mark that we go into ITER_ROWS processing
+                frame.stage = DXDFrame::ITER_ROWS;
+                break;
+            }
+
+            case DXDFrame::ITER_ROWS: {
+                // If all rows processed, finalize OR node
+                if(frame.rowCursor >= frame.rowsUnderChoose.size()) {
+                    // cleanup: no columns remain specifically to uncover here because
+                    // each child frame does its own cover/uncover on its Block copy.
+                    if(frame.orNode->children.empty()){
+                        lastResult = F;
+                    } else {
+                        setCachedResult(frame.stateHash, frame.orNode);
+                        lastResult = frame.orNode;
+                    }
+                    stack.pop_back();
+                    break;
+                }
+
+                // Process the next row: snapshot row id
+                int rowId = frame.rowsUnderChoose[frame.rowCursor];
+
+                // For this child we need to produce reduced block:
+                // Copy the frame.block into childBlock, then perform the coverings
+                Block childBlock = frame.block; 
+
+                // cover the chosen column in childBlock
+                // coverInBlock(frame.choose->col, childBlock);
+                                
+                auto colsInRow = collectColsInRow(rowId, childBlock);
+                for(int cc : colsInRow) coverInBlock(cc, childBlock);
+
+                // push a continuation frame (AFTER_CHILD) with current cursor state
+                DXDFrame cont(frame.block);
+                cont.stage = DXDFrame::AFTER_CHILD;
+                cont.choose = frame.choose;
+                cont.orNode = frame.orNode;
+                cont.stateHash = frame.stateHash;
+                cont.rowsUnderChoose = frame.rowsUnderChoose;
+                cont.rowCursor = frame.rowCursor; // the current child index
+                // push cont
+                stack.push_back(std::move(cont));
+
+                // push child frame (ENTRY) to compute DXD on childBlock
+                stack.emplace_back(std::move(childBlock));
+                break;
+            }
+
+            case DXDFrame::AFTER_CHILD: {
+                // result of child computation is in lastResult
+                auto childRes = lastResult;
+                // restore lastResult to null for next child
+                lastResult = nullptr;
+
+                // If childRes exists and is not F, append Decision node under OR
+                if(childRes && childRes->label != -2){
+                    // create variable node and decision AND node
+                    auto varNode = make_shared<DNNFNode>(NodeType::Variable, frame.rowsUnderChoose[frame.rowCursor]);
+                    auto decisionNode = make_shared<DNNFNode>(NodeType::Decision, varNode, childRes);
+                    frame.orNode->children.push_back(decisionNode);
+                    frame.orNode->count += childRes->count;
+                }
+
+                // advance cursor in the parent frame (which is below this frame on stack)
+                if(!stack.empty()){
+                    // pop the AFTER_CHILD frame (current frame)
+                    stack.pop_back();
+                    // parent frame is now at stack.back(); we need to increment its cursor
+                    if(!stack.empty()){
+                        DXDFrame &parent = stack.back();
+                        // parent is the frame that set this AFTER_CHILD; increment its rowCursor
+                        parent.rowCursor = parent.rowCursor + 1;
+                        // ensure parent's orNode is updated (shared_ptr remains valid)
+                        parent.orNode = frame.orNode;
+                        // do not set lastResult here; continue processing parent in next loop
+                    }
+                }
+                break;
+            }
+
+            default:
+                // fallthrough safe-guard
+                stack.pop_back();
+                break;
+        }
+    }
+    if(lastResult) return lastResult;
+    return F; // fallback
 }
 
 // DXD单线程（要体现分解性）
@@ -643,24 +748,22 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
     }
 
     //shouldDecompose(block) 
-    if(block.rows.size() >= MIN_BLOCK_ROWS && detect_records.find(state) == detect_records.end()) {
+    if(block.rows.size() >= MIN_BLOCK_ROWS && block.rows.size() <= MAX_BLOCK_ROWS) {
 
-        // vector<set<int>> row_sets = mergeRowSets(block);
-        set<int> rows(block.rows.begin(), block.rows.end());
-        vector<vector<int>> components = connectedGraph->getComponents(rows);
+        // set<int> rows(block.rows.begin(), block.rows.end());
+        // vector<vector<int>> components = connectedGraph->getComponents(rows);
 
-        if(components.size() > 1){
-             
+        vector<Component> comps = connectedGraph->getComponents();
+        if(comps.size() > 1){
+                
             // cout<< "块分解成功，块数: " << components.size() << endl;
             //incrementPCount(); 
-            MAX_B_COUNT = max(MAX_B_COUNT, components.size());
-            // block.is_spilited = true; // 标记为已分解
-            auto blocks = spilit(components); // 分解为多个块
-            auto res_and_node = dxdSearch(blocks); // 并行搜索
+            MAX_B_COUNT = max(MAX_B_COUNT, comps.size());
+
+            // auto blocks = spilit(components); // 分解为多个块
+            auto res_and_node = serialSearch(comps); 
             setCachedResult(state, res_and_node); // 缓存结果
             return res_and_node; // 返回分解节点
-        }else{
-            detect_records.insert(state);
         }
     }
 
@@ -715,20 +818,147 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
 
 void DanceDNNF::startDXD() {
 
-    std::cout << "开始DXD搜索..." << std::endl;
+    std::cout << "开始单线程DXD搜索..." << std::endl;
     Block block(rowsSet, colsSet);
 
-    clearCache();
+    // clearCache();
     auto start = std::chrono::high_resolution_clock::now();
-    rootDNNF = DXD(block);  // 先单线程DXD搜索
+    shared_ptr<DNNFNode> rootDNNF = DXD_iterative(std::move(block));  
     auto end = std::chrono::high_resolution_clock::now();
 
     std::cout << "搜索到的解个数: " << rootDNNF->count << std::endl;
     
     searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
-    std::cout << "DXD搜索完成, 耗时: " << searchTimeSeconds << " 秒。" << std::endl;
+    std::cout << "单线程DXD搜索完成, 耗时: " << searchTimeSeconds << " 秒。" << std::endl;
+   
+    if( MAX_B_COUNT > 1 ) {
+        std::cout << "本次搜索最大分块数为: " << MAX_B_COUNT << std::endl;
+    }
+    cout << endl; 
+}
+
+shared_ptr<DNNFNode> DecisionDNNF::solveSingle(DancingMatrix& matrix, unordered_map<size_t, shared_ptr<DNNFNode>>& localCache)
+{
+    if (matrix.getRoot()->right == matrix.getRoot()) {
+        return T; // 所有列都被覆盖，找到一个解
+    }
+
+    size_t state = matrix.getColumnState();
+    auto cacheIt = localCache.find(state);
+    if (cacheIt != localCache.end()) {
+        return cacheIt->second; 
+    }
+
+    ColunmHeader* chosenCol = matrix.selectCol();
+
+    if (chosenCol->size <= 0) {
+        return F; // 没有可选列，返回F
+    }
+
+    auto orNode = make_shared<DNNFNode>(NodeType::OR, chosenCol->col, 0);
+
+    matrix.cover(chosenCol->col);
+    Node* curC = chosenCol->down;
+    while (curC != chosenCol) {
+        Node* curR = curC->right;
+        while (curR != curC) {
+            matrix.cover(curR->col);
+            curR = curR->right;
+        }
+
+        auto node = solveSingle(matrix, localCache); // 递归左分支
+
+        if (node->label != -2) {
+            auto var = make_shared<DNNFNode>(NodeType::Variable, curC->row + 1);
+            auto and_node = make_shared<DNNFNode>(NodeType::Decision, var, node);
+            orNode->count += node->count; // 累加当前Decision节点的计数
+            orNode->children.push_back(and_node);
+        }
+
+        curR = curC->left;
+        while (curR != curC) {
+            matrix.uncover(curR->col);
+            curR = curR->left;     
+        }
+
+        curC = curC->down;
+    }
+    matrix.uncover(chosenCol->col);
+
+    if (orNode->children.empty()) {
+        orNode = F;
+    }
+
+    localCache[state] = orNode; // 缓存结果
+    return orNode;
+}
+
+// 多线程并发搜索独立子矩阵
+shared_ptr<DNNFNode> DecisionDNNF::solve() {
+
+    vector<std::future<shared_ptr<DNNFNode>>> futures;
+    futures.reserve(matrices.size());
+
+    for (auto& matrixPtr : matrices) {
+        // 使用move避免拷贝，每个线程获得独立所有权
+        futures.push_back(pool.enqueue([this](unique_ptr<DancingMatrix> matrix) {
+            unordered_map<size_t, shared_ptr<DNNFNode>> localCache;
+            return solveSingle(*matrix, localCache);
+        }, std::move(matrixPtr)));
+    }
+
+    auto rootNode = make_shared<DNNFNode>();
+    rootNode->count = 0;
+
+    for (auto& future : futures) {
+        auto result = future.get();
+        rootNode->children.push_back(result);
+        rootNode->count += result->count;
+    }
+
+    return rootNode;
+}
+
+void ExactCoverSolver::searchEC() {
+    DancingMatrix dm(input_file, from);
+    int maxThreads = std::thread::hardware_concurrency();
+    cout << "检测到 " << maxThreads << " 个CPU核心, 启用 "<< maxThreads << " 线程进行搜索。" << endl;
+
+    col_id selectCol = dm.getClosedSizeCol(maxThreads);
+    ColunmHeader* colHead = &dm.getColIndex()[selectCol];
+
+    cout << "选择列: " << selectCol << " size: " << colHead->size << endl;
+
+    vector<unique_ptr<DancingMatrix>> subMatrices;
+    subMatrices.reserve(colHead->size);
     
-    std::cout << std::endl; 
+    Node* curR = colHead->down;
+    while (curR != colHead) {
+        auto subMatrix = make_unique<DancingMatrix>(input_file, from);
+        
+        RowNode* rowHead = &subMatrix->getRowIndex()[curR->row];
+        Node* startNode = rowHead->right;
+        subMatrix->cover(startNode->col);
+
+        Node* curC = startNode->right;
+        while (curC != startNode) {
+            subMatrix->cover(curC->col);
+            curC = curC->right;
+        }
+        subMatrices.push_back(std::move(subMatrix));
+        curR = curR->down;
+    }  
+
+    DecisionDNNF solver(std::move(subMatrices));
+
+    auto start = std::chrono::high_resolution_clock::now();
+    shared_ptr<DNNFNode> result = solver.solve();
+    auto end = std::chrono::high_resolution_clock::now();
+
+    double elapsedSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
+    cout << "搜索完成，耗时: " << elapsedSeconds << " 秒。" << endl;
+    cout << "搜索到的解个数: " << result->count << endl;
+    cout << endl;
 }
 
 // 主搜索函数(多线程版本)

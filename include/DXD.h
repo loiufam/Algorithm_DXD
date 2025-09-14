@@ -6,7 +6,7 @@
 
 const int UNCHOOSEN = -10;
 const int MIN_BLOCK_ROWS = 5;
-const int MAX_BLOCK_ROWS = 80;
+const int MAX_BLOCK_ROWS = 150;
 const int TIME_LIMIT_SECONDS = 1000; 
 
 struct ORNode;  
@@ -43,8 +43,9 @@ struct DNNFNode {
     uint64_t count;
     vector<std::shared_ptr<DNNFNode>> children; // 记录行id
     std::shared_ptr<DNNFNode> left;
-    std::shared_ptr<DNNFNode> right; 
+    std::shared_ptr<DNNFNode> right;
 
+    DNNFNode() = default;
     DNNFNode(NodeType t, int l) : type(t), label(l) {} // 构建变量节点和终端节点
     DNNFNode(NodeType t, int l, uint64_t c) : type(t), label(l), count(c) {} // 构造函数用于OR节点和 Decomposed类型的AND节点   
     DNNFNode(NodeType t, shared_ptr<DNNFNode> l, shared_ptr<DNNFNode> r) : type(t), left(l), right(r) {} // 构建Decision类型的AND节点
@@ -85,6 +86,11 @@ struct Block {
         Block(const unordered_set<int>& r, const unordered_set<int>& c) :  rows(r), cols(c) {}
 
         Block(const set<int>& r, const set<int>& c, bool is_spilited = true){
+            rows.insert(r.begin(), r.end());
+            cols.insert(c.begin(), c.end());
+        }
+
+        Block(const vector<int>& r, const vector<int>& c){
             rows.insert(r.begin(), r.end());
             cols.insert(c.begin(), c.end());
         }
@@ -145,8 +151,34 @@ struct BatchOperation {
     BatchOperation() = default;
 };
 
-struct ThreadLocalBatchOp {
-    vector<BatchOperation> operationStack;
+struct DXDFrame {
+    enum Stage { START, DECOMPOSED_HANDLED, CHOOSE_ASSIGNED, ITER_ROWS, AFTER_CHILD, FINISH } stage;
+    Block block; // local copy of the Block for this frame
+    size_t stateHash = 0; // cached state hash
+    std::shared_ptr<DNNFNode> cachedResult = nullptr; // if looked up from cache
+
+
+    // for decomposition handling
+    std::vector<Component> comps; // if decomposition is found
+    std::vector<std::shared_ptr<DNNFNode>> collectedChildren; // for serialSearch
+
+
+    // for normal choose/OR processing
+    ColunmHeader* choose = nullptr;
+    std::shared_ptr<DNNFNode> orNode = nullptr;
+    // iteration cursor over rows under chosen column
+    ColunmHeader* choosePtr = nullptr; 
+
+
+    std::vector<int> rowsUnderChoose; // snapshot of row ids under choose at time of selection
+    size_t rowCursor = 0; // next row to process
+
+
+    // after child returns, childResult will be placed here by the driver
+    std::shared_ptr<DNNFNode> childResult;
+
+
+    DXDFrame(const Block &b): stage(START), block(b) {}
 };
 
 // 设计线程安全的栈
@@ -173,12 +205,11 @@ private:
     thread_local static vector<BatchOperation> operationStack;
 };
 
-
 class DanceDNNF : DancingMatrix { 
 
     public:
-        DanceDNNF(int rows, int cols, int** matrix, int maxThreads = std::thread::hardware_concurrency()) 
-            : DancingMatrix(rows, cols, matrix), pool(maxThreads) {
+        DanceDNNF(int rows, int cols, int** matrix) 
+            : DancingMatrix(rows, cols, matrix) {
             root = getRoot();
             ColIndex = getColIndex();
             RowIndex = getRowIndex();
@@ -188,15 +219,14 @@ class DanceDNNF : DancingMatrix {
             cout<< "初始化DanceDNNF完成." << endl;
         }
 
-        DanceDNNF(const string& file_path, int from, int maxThreads = std::thread::hardware_concurrency())
-            : DancingMatrix(file_path, from), pool(maxThreads) {
+        DanceDNNF(const string& file_path, int from, bool useMultiThread = false)
+            : DancingMatrix(file_path, from) {
             root = getRoot();
             ColIndex = getColIndex();
             RowIndex = getRowIndex();
             connectedGraph = getConnectedGraph();
-            timer.setTimeBound(TIME_LIMIT_SECONDS);
+            // timer.setTimeBound(TIME_LIMIT_SECONDS);
 
-            cout<< "线程池最大线程数: " << maxThreads << endl;
             cout<< "初始化DanceDNNF完成." << endl;
         }
 
@@ -234,12 +264,16 @@ class DanceDNNF : DancingMatrix {
         void uncoverInBlock(int c, Block& block);
         void batchCoverInBlock(Node* curC, Block& block);
         void batchUncoverInBlock(Block& block);
+        vector<int> collectColsInRow(int row, const Block &block);
+        vector<int> collectRowsUnderColumn(int col, const Block &block);
         shared_ptr<DNNFNode> DXD(Block& block);
-        shared_ptr<DNNFNode> serialSearch(vector<Block>& blocks);
+        shared_ptr<DNNFNode> DXD_iterative(Block&& rootBlock);
+        shared_ptr<DNNFNode> serialSearch(vector<Component>& components);
+        shared_ptr<DNNFNode> serialSearch_iterative(const vector<Component>& components);
         shared_ptr<DNNFNode> dxdSearch(vector<Block>& blocks);
         shared_ptr<DNNFNode> parallelDXD(Block& blocks);
         shared_ptr<DNNFNode> parallelSearch(vector<Block>& blocks);
-        std::shared_ptr<DNNFNode> optimizedDXD(Block& block);
+
         // 启动搜索函数
         void startDXD();
         void startMultiThreadDXD();
@@ -272,7 +306,7 @@ class DanceDNNF : DancingMatrix {
             return (it != CacheMT.end()) ? it->second : nullptr;
         }
         void setCachedResult(const size_t& key, std::shared_ptr<DNNFNode> node) {
-            std::lock_guard<std::mutex> lock(cacheMutex);
+            // std::lock_guard<std::mutex> lock(cacheMutex);
             CacheMT[key] = node;
         }
         void clearCache(){
@@ -320,5 +354,47 @@ class DanceDNNF : DancingMatrix {
         vector<BatchOperation> batchOpStack;
 };
 
+class DecisionDNNF {
+    private:
+        vector<unique_ptr<DancingMatrix>> matrices;
+        ThreadPool& pool;
+
+    public:
+        DecisionDNNF(vector<unique_ptr<DancingMatrix>>&& matrices)
+            : matrices(std::move(matrices)), pool(getThreadPool()) {
+            
+            cout<< "初始化DecisionDNNF完成." << endl;
+        }
+
+        ~DecisionDNNF() {
+            matrices.clear();
+        }
+
+        shared_ptr<DNNFNode> solveSingle(DancingMatrix& matrix, unordered_map<size_t, shared_ptr<DNNFNode>>& localCache);
+        shared_ptr<DNNFNode> solve();
+
+        shared_ptr<DNNFNode> T = std::make_shared<DNNFNode>(NodeType::Terminal, -1, 1);
+        shared_ptr<DNNFNode> F = std::make_shared<DNNFNode>(NodeType::Terminal, -2, 0);
+
+
+    private:
+
+        ThreadPool& getThreadPool(int maxTheads = thread::hardware_concurrency()) {
+            return ThreadPoolManager::get_instance(maxTheads);
+        }
+
+};
+
+class ExactCoverSolver {
+    public:
+        ExactCoverSolver(const string& input_file, int from) : input_file(input_file), from(from) {}
+        ~ExactCoverSolver() = default;
+
+        void searchEC();
+    
+    private:
+        string input_file;
+        int from;
+};
 
 #endif

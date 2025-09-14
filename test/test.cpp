@@ -32,17 +32,19 @@ int main(){
     // dxd.coverInBlock(5, initBlock);
     // set<int> existRowSet(initBlock.rows.begin(), initBlock.rows.end());
     // vector<vector<int>> components = dxd.connectedGraph->getComponents(existRowSet);
-    
-    // for(auto& comp : components) {
-    //     std::cout << "组件: ";
-    //     for(auto row : comp) {
-    //         std::cout << row << " ";
-    //     }
-    //     std::cout << std::endl;
-    // }
+    vector<Component> components = dxd.connectedGraph->getComponents();
+
+    int i = 1;
+    for(auto& comp : components) {
+        std::cout << "组件: " << i++ << std::endl;
+        comp.printComponent();
+        std::cout << std::endl;
+    }
 
     // dxd.printBlocks(dxd.spilit(components));
+    // shared_ptr<DNNFNode> res = dxd.serialSearch(components);
 
+    // cout << "DNNF: " << res->count << endl;
 
     // // 舞蹈链合并行集合
     // for(auto row_set : row_sets) {
@@ -56,9 +58,9 @@ int main(){
     // vector<Block> blocks = dlm.spilitBlockParallel(row_sets);
     // dlm.printBlocks(blocks);
     
-    // dxd.startDXD();
+    dxd.startDXD();
 
-    dxd.startMultiThreadDXD();
+    // dxd.startMultiThreadDXD();
     }
     // dlm.printDetectedBlocks();
     // 释放二维数组内存

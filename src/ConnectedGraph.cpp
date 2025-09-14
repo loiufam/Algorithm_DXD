@@ -76,19 +76,29 @@ ConnectedGraph::ConnectedGraph(const DancingMatrix& matrix){
     cout << "ConnectedGraph has constructed." << endl;
 }
 
-ConnectedGraph::~ConnectedGraph() {
+// 旧版析构函数
+// ConnectedGraph::~ConnectedGraph() {
 
-    for(int i = 0; i < N; ++i) {
-        vertexNode* curV = &rowHeaderV[i];
-        vertexNode* curE = curV->right;
-        while(curE != curV) {
-            vertexNode* nextE = curE->right;
-            delete curE;
-            curE = nextE;
-        }
-    }
-    delete[] rowHeaderV;
-    delete[] rowHeaderE;
+//     for(int i = 0; i < N; ++i) {
+//         vertexNode* curV = &rowHeaderV[i];
+//         vertexNode* curE = curV->right;
+//         while(curE != curV) {
+//             vertexNode* nextE = curE->right;
+//             delete curE;
+//             curE = nextE;
+//         }
+//     }
+//     delete[] rowHeaderV;
+//     delete[] rowHeaderE;
+// }
+
+ConnectedGraph::~ConnectedGraph() {
+    // ETForest 的析构函数会自动释放 Treap 节点
+    edgeCount.clear();
+    isTreeEdge.clear();
+    incidentNonTree.clear();
+    mark.clear();
+    trav_stack.clear();
 }
 
 void ConnectedGraph::remove(int i) {
