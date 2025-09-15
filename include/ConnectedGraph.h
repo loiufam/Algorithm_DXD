@@ -198,9 +198,29 @@ class ConnectedGraph {
             : R(rows), C(cols), N(rows+cols), etf(rows+cols){
             incidentNonTree.assign(N,{});
             mark.assign(N,0);
+            nodeActive.assign(N, true);  // 初始时所有节点都是活跃的
             trav_stack.reserve(1024); // initial reserve
         }
         ~ConnectedGraph();
+
+        // 标记行节点为不活跃
+        void deactivateRow(int row) {
+            if (row >= 0 && row < R) {
+                nodeActive[row] = false;
+            }
+        }
+        
+        // 恢复行节点为活跃
+        void activateRow(int row) {
+            if (row >= 0 && row < R) {
+                nodeActive[row] = true;
+            }
+        }
+        
+        // 检查节点是否活跃
+        bool isNodeActive(int node) const {
+            return node >= 0 && node < N && nodeActive[node];
+        }
 
         std::mutex graphMutex; // 保护图操作的互斥锁
         void remove(int i);
@@ -276,7 +296,8 @@ class ConnectedGraph {
                 fill(mark.begin(), mark.end(), 0);
 
             for(int v = 0; v < N; ++v){ 
-                if(mark[v]) continue; 
+                if(!nodeActive[v] || mark[v]) continue;  // 跳过不活跃的节点
+
                 Treap* Rroot = rootOf(etf.enter[v]);
                 if(!Rroot) continue;
                 
@@ -286,20 +307,28 @@ class ConnectedGraph {
 
                 Treap* cur = Rroot;
                 trav_stack.clear();
-                trav_stack.reserve(max((size_t)trav_stack.capacity(), (size_t)min(sz(Rroot), (int)1e6)));
+                trav_stack.reserve(max((size_t)trav_stack.capacity(), 
+                    (size_t)min(sz(Rroot), (int)1e6)));
+                
                 while(cur || !trav_stack.empty()){
-                    while(cur){ trav_stack.push_back(cur); cur = cur->l; }
-                    cur = trav_stack.back(); trav_stack.pop_back();
-                    if(cur->v >= 0 && !mark[cur->v]){
+                    while(cur){ 
+                        trav_stack.push_back(cur); 
+                        cur = cur->l; 
+                    }
+                    cur = trav_stack.back(); 
+                    trav_stack.pop_back();
+
+                    if(cur->v >= 0 && !mark[cur->v] && nodeActive[cur->v]){
                         mark[cur->v] = 1;
                         if(cur->v < R) 
                             comp.rows.push_back(cur->v);
                         else 
-                            comp.cols.push_back(cur->v - R);
+                            comp.cols.push_back(cur->v - R + 1);
                     }
                     cur = cur->r;
                 }
-                if(!comp.rows.empty() || !comp.cols.empty())
+
+                if(!comp.rows.empty() && !comp.cols.empty())
                     res.push_back(std::move(comp));
             }
             return res;
@@ -308,6 +337,7 @@ class ConnectedGraph {
     private:
         vertexNode* rowHeaderV;
         vertexNode* rowHeaderE;
+        vector<bool> nodeActive;  // 跟踪节点是否活跃
 
 };
 

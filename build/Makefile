@@ -117,24 +117,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named test
+# Target rules for targets named test2
 
 # Build rule for target.
-test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test
-.PHONY : test
+test2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test2
+.PHONY : test2
 
 # fast build rule for target.
-test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/build
-.PHONY : test/fast
+test2/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/build
+.PHONY : test2/fast
 
 src/ConnectedGraph.o: src/ConnectedGraph.cpp.o
 .PHONY : src/ConnectedGraph.o
 
 # target to build an object file
 src/ConnectedGraph.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/ConnectedGraph.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/ConnectedGraph.cpp.o
 .PHONY : src/ConnectedGraph.cpp.o
 
 src/ConnectedGraph.i: src/ConnectedGraph.cpp.i
@@ -142,7 +142,7 @@ src/ConnectedGraph.i: src/ConnectedGraph.cpp.i
 
 # target to preprocess a source file
 src/ConnectedGraph.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/ConnectedGraph.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/ConnectedGraph.cpp.i
 .PHONY : src/ConnectedGraph.cpp.i
 
 src/ConnectedGraph.s: src/ConnectedGraph.cpp.s
@@ -150,7 +150,7 @@ src/ConnectedGraph.s: src/ConnectedGraph.cpp.s
 
 # target to generate assembly for a file
 src/ConnectedGraph.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/ConnectedGraph.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/ConnectedGraph.cpp.s
 .PHONY : src/ConnectedGraph.cpp.s
 
 src/DXDSolver.o: src/DXDSolver.cpp.o
@@ -158,7 +158,7 @@ src/DXDSolver.o: src/DXDSolver.cpp.o
 
 # target to build an object file
 src/DXDSolver.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/DXDSolver.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/DXDSolver.cpp.o
 .PHONY : src/DXDSolver.cpp.o
 
 src/DXDSolver.i: src/DXDSolver.cpp.i
@@ -166,7 +166,7 @@ src/DXDSolver.i: src/DXDSolver.cpp.i
 
 # target to preprocess a source file
 src/DXDSolver.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/DXDSolver.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/DXDSolver.cpp.i
 .PHONY : src/DXDSolver.cpp.i
 
 src/DXDSolver.s: src/DXDSolver.cpp.s
@@ -174,7 +174,7 @@ src/DXDSolver.s: src/DXDSolver.cpp.s
 
 # target to generate assembly for a file
 src/DXDSolver.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/DXDSolver.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/DXDSolver.cpp.s
 .PHONY : src/DXDSolver.cpp.s
 
 src/DXDTime.o: src/DXDTime.cpp.o
@@ -182,7 +182,7 @@ src/DXDTime.o: src/DXDTime.cpp.o
 
 # target to build an object file
 src/DXDTime.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/DXDTime.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/DXDTime.cpp.o
 .PHONY : src/DXDTime.cpp.o
 
 src/DXDTime.i: src/DXDTime.cpp.i
@@ -190,7 +190,7 @@ src/DXDTime.i: src/DXDTime.cpp.i
 
 # target to preprocess a source file
 src/DXDTime.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/DXDTime.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/DXDTime.cpp.i
 .PHONY : src/DXDTime.cpp.i
 
 src/DXDTime.s: src/DXDTime.cpp.s
@@ -198,7 +198,7 @@ src/DXDTime.s: src/DXDTime.cpp.s
 
 # target to generate assembly for a file
 src/DXDTime.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/DXDTime.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/DXDTime.cpp.s
 .PHONY : src/DXDTime.cpp.s
 
 src/DancingMatrix.o: src/DancingMatrix.cpp.o
@@ -206,7 +206,7 @@ src/DancingMatrix.o: src/DancingMatrix.cpp.o
 
 # target to build an object file
 src/DancingMatrix.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/DancingMatrix.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/DancingMatrix.cpp.o
 .PHONY : src/DancingMatrix.cpp.o
 
 src/DancingMatrix.i: src/DancingMatrix.cpp.i
@@ -214,7 +214,7 @@ src/DancingMatrix.i: src/DancingMatrix.cpp.i
 
 # target to preprocess a source file
 src/DancingMatrix.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/DancingMatrix.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/DancingMatrix.cpp.i
 .PHONY : src/DancingMatrix.cpp.i
 
 src/DancingMatrix.s: src/DancingMatrix.cpp.s
@@ -222,32 +222,32 @@ src/DancingMatrix.s: src/DancingMatrix.cpp.s
 
 # target to generate assembly for a file
 src/DancingMatrix.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/src/DancingMatrix.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/src/DancingMatrix.cpp.s
 .PHONY : src/DancingMatrix.cpp.s
 
-test/test.o: test/test.cpp.o
-.PHONY : test/test.o
+test/test2.o: test/test2.cpp.o
+.PHONY : test/test2.o
 
 # target to build an object file
-test/test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/test/test.cpp.o
-.PHONY : test/test.cpp.o
+test/test2.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/test/test2.cpp.o
+.PHONY : test/test2.cpp.o
 
-test/test.i: test/test.cpp.i
-.PHONY : test/test.i
+test/test2.i: test/test2.cpp.i
+.PHONY : test/test2.i
 
 # target to preprocess a source file
-test/test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/test/test.cpp.i
-.PHONY : test/test.cpp.i
+test/test2.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/test/test2.cpp.i
+.PHONY : test/test2.cpp.i
 
-test/test.s: test/test.cpp.s
-.PHONY : test/test.s
+test/test2.s: test/test2.cpp.s
+.PHONY : test/test2.s
 
 # target to generate assembly for a file
-test/test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/test/test.cpp.s
-.PHONY : test/test.cpp.s
+test/test2.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test2.dir/build.make CMakeFiles/test2.dir/test/test2.cpp.s
+.PHONY : test/test2.cpp.s
 
 # Help Target
 help:
@@ -257,7 +257,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... test"
+	@echo "... test2"
 	@echo "... src/ConnectedGraph.o"
 	@echo "... src/ConnectedGraph.i"
 	@echo "... src/ConnectedGraph.s"
@@ -270,9 +270,9 @@ help:
 	@echo "... src/DancingMatrix.o"
 	@echo "... src/DancingMatrix.i"
 	@echo "... src/DancingMatrix.s"
-	@echo "... test/test.o"
-	@echo "... test/test.i"
-	@echo "... test/test.s"
+	@echo "... test/test2.o"
+	@echo "... test/test2.i"
+	@echo "... test/test2.s"
 .PHONY : help
 
 

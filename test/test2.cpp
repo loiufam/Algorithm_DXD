@@ -26,7 +26,7 @@ int main() {
                 // DanceDNNF dxdSolver(r, c, matrix);
 
                 {
-                    DanceDNNF dxdSolver(entry.path().string(), 1);
+                    DanceDNNF dxdSolver(entry.path().string(), 1, true);
                     dxdSolver.startDXD();
                 }
                 
@@ -57,7 +57,7 @@ int main() {
 
                 // DanceDNNF dxdSolver(r, c, matrix);
                 {
-                    DanceDNNF dxdSolver(entry.path().string(), 2);
+                    DanceDNNF dxdSolver(entry.path().string(), 2, true);
                     dxdSolver.startDXD();
                 }
                 
@@ -86,7 +86,7 @@ int main() {
 
                 // DanceDNNF dxdSolver(r, c, matrix);
                 {
-                    DanceDNNF dxdSolver(entry.path().string(), 3);
+                    DanceDNNF dxdSolver(entry.path().string(), 3, true);
                     dxdSolver.startDXD();
                 }
                 

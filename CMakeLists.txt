@@ -45,7 +45,7 @@ set(TEST_SOURCES3
 # add_executable(test0 ${SOURCES0})
 # 1 : DLX and DXZ 2 : singleDXD and MultiDXD 3 : UnionFind
 # add_executable(test1 ${TEST_SOURCES1})
-# add_executable(test2 ${TEST_SOURCES2})
-add_executable(test ${TEST_SOURCES3})
+add_executable(test2 ${TEST_SOURCES2})
+# add_executable(test ${TEST_SOURCES3})
 # find_package(Threads REQUIRED)
 # target_link_libraries(test PRIVATE Threads::Threads)

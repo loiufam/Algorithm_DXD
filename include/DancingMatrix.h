@@ -133,7 +133,7 @@ class DancingMatrix
         
         //接收矩阵其及维度  
         DancingMatrix( int rows, int cols, int** matrix);  
-        DancingMatrix( const string& file_path, int from );
+        DancingMatrix( const string& file_path, int from, bool verbose = false );
 
         // 复制函数
         DancingMatrix(const DancingMatrix& other) 

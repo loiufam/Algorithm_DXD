@@ -30,16 +30,18 @@ int main(){
 
     // dxd.coverInBlock(3, initBlock);
     // dxd.coverInBlock(5, initBlock);
+    // dxd.uncoverInBlock(5, initBlock);
+    // dxd.uncoverInBlock(3, initBlock);
     // set<int> existRowSet(initBlock.rows.begin(), initBlock.rows.end());
     // vector<vector<int>> components = dxd.connectedGraph->getComponents(existRowSet);
-    vector<Component> components = dxd.connectedGraph->getComponents();
+    // vector<Component> components = dxd.connectedGraph->getComponents();
 
-    int i = 1;
-    for(auto& comp : components) {
-        std::cout << "组件: " << i++ << std::endl;
-        comp.printComponent();
-        std::cout << std::endl;
-    }
+    // int i = 1;
+    // for(auto& comp : components) {
+    //     std::cout << "组件: " << i++ << std::endl;
+    //     comp.printComponent();
+    //     std::cout << std::endl;
+    // }
 
     // dxd.printBlocks(dxd.spilit(components));
     // shared_ptr<DNNFNode> res = dxd.serialSearch(components);

@@ -27,7 +27,7 @@ DancingMatrix::DancingMatrix( int rows, int cols, int** matrix )
     ColIndex[0].down = &RowIndex[0];  
     
 
-    graph = std::make_shared<ConnectedGraph>(ROWS, COLS);
+    // graph = std::make_shared<ConnectedGraph>(ROWS, COLS);
     for( int i = 0; i < rows; i++ ){
         for( int j = 0; j < cols ; j++ ) {  
             if(matrix[i][j] == 1){
@@ -45,7 +45,7 @@ DancingMatrix::DancingMatrix( int rows, int cols, int** matrix )
 }
 
 // 从文件构造舞蹈链矩阵
-DancingMatrix::DancingMatrix( const string& file_path, int from )
+DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose )
 {
     ifstream file(file_path);
     if (!file.is_open()) {
@@ -67,7 +67,7 @@ DancingMatrix::DancingMatrix( const string& file_path, int from )
 
     ROWS = rows;
     COLS = cols;
-    graph = std::make_shared<ConnectedGraph>(ROWS, COLS); // 初始化连通图
+    // graph = std::make_shared<ConnectedGraph>(ROWS, COLS); 
 
     // cout << "矩阵维度: " << rows << " 行, " << cols << " 列." << endl;
 
@@ -121,6 +121,7 @@ DancingMatrix::DancingMatrix( const string& file_path, int from )
     }
 
     // cout<< "初始化舞蹈链完成." << endl;
+    if(verbose) graph = make_shared<ConnectedGraph>(*this);
     file.close();
 }
 
@@ -177,7 +178,7 @@ void DancingMatrix::insert( int r, int c )
         cur->right->left = newNode;  
         cur->right = newNode;  
     }  
-    graph->insertEdge(r, c-1); 
+    // graph->insertEdge(r, c-1); 
 }
 
 string DancingMatrix::encodeBlockState(const unordered_set<int>& cols){
@@ -322,9 +323,9 @@ void DancingMatrix::uncover( int c )
 ColunmHeader* DancingMatrix::selectColumnHeuristic(const unordered_set<int>& cols) {
     ColunmHeader* chosen = nullptr;
     int minSize = INT_MAX;
-    vector<int> colVec(cols.begin(), cols.end());
-    sort(colVec.begin(), colVec.end()); // 对列进行排序，确保每次选择的顺序一致
-    for (int col : colVec) {
+    // vector<int> colVec(cols.begin(), cols.end());
+    // sort(colVec.begin(), colVec.end()); // 对列进行排序，确保每次选择的顺序一致
+    for (int col : cols) {
         int sz = ColIndex[col].size;
         if (sz == 1) return &ColIndex[col]; // 启发式剪枝
         if (sz < minSize) {

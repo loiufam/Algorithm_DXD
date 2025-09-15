@@ -354,26 +354,25 @@ shared_ptr<DNNFNode> DanceDNNF::serialSearch_iterative(const std::vector<Compone
 }
 
 // 串行处理每个子块，组合为 分解 节点
-shared_ptr<DNNFNode> DanceDNNF::serialSearch(vector<Component>& components) {
+shared_ptr<DNNFNode> DanceDNNF::serialSearch(vector<Block>& blocks) {
 
-    auto andNode = std::make_shared<DNNFNode>(NodeType::Decomposed, -1, 0);
-    uint64_t totalCount = 1;
+    auto andNode = std::make_shared<DNNFNode>(NodeType::Decomposed, -1, 1);
     
-    andNode->children.reserve(components.size());
+    andNode->children.reserve(blocks.size());
 
-    for (auto& comp : components) {
-        Block block(comp.rows, comp.cols);
+    for (auto& block : blocks) {
+    
         auto result = DXD(block);
 
-        if (result->label == -2) { 
+        if (!result || result->label == -2) { 
             return F;
         }
 
-        andNode->children.emplace_back(std::move(result));
-        totalCount *= result->count;
+        andNode->children.push_back(result);
+        // cout << "分解节点子分支解计数: " << result->count << endl;
+        andNode->count *= result->count;
     }
     
-    andNode->count = totalCount;
     return andNode;
 }
 
@@ -477,23 +476,22 @@ void DanceDNNF::coverInBlock(int c, Block& block){
     curC = col->down;  
     while( curC != col )  
     {    
-        // RowIndex[curC->row].cols.erase(curC->col); // 从行映射中移除该列
-        // removeCol(curC->row, curC->col);
+        // RowIndex[curC->row].cols.clear();
+        connectedGraph->remove(curC->row);
+        block.rows.erase(curC->row);
+
         curR = curC->right;  
         while( curR != curC )  
         {          
-            connectedGraph->removeEdge(curC->row, curR->col-1);
 
             curR->down->up = curR->up;  
             curR->up->down = curR->down;  
             --ColIndex[curR->col].size;  
+            // RowIndex[curR->row].cols.erase(curR->col);
 
-            // RowIndex[curC->row].cols.erase(curR->col); // 从行映射中移除该列
-            // removeCol(curR->row, curR->col);
             curR = curR->right;  
         }  
-        block.rows.erase(curC->row);
-        // connectedGraph->remove(curC->row);
+
         curC = curC->down;  
     }  
 }
@@ -507,23 +505,22 @@ void DanceDNNF::uncoverInBlock(int c, Block& block){
     while( curC != col )  
     {  
         Node* noteR = curC;  
-        // RowIndex[curC->row].cols.insert(curC->col); // 恢复行映射中的该列
-        // restoreCol(curC->row, curC->col);
         curR = curC->left;  
 
         while( curR != noteR )  
         {  
+            // RowIndex[curR->row].cols.insert(curR->col);
             ++ColIndex[curR->col].size; 
             curR->down->up = curR;  
             curR->up->down = curR;  
 
-            // RowIndex[curC->row].cols.insert(curR->col);
-            // restoreCol(curR->row, curR->col);
-            connectedGraph->insertEdge(curC->row, curR->col-1);
+            
             curR = curR->left;  
         }  
+        // RowIndex[curC->row].cols.insert(curC->col);
         block.rows.insert(curC->row);
-        // connectedGraph->restore(curC->row);
+        connectedGraph->restore(curC->row);
+        
         curC = curC->up;  
     }  
 
@@ -748,23 +745,21 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
     }
 
     //shouldDecompose(block) 
-    if(block.rows.size() >= MIN_BLOCK_ROWS && block.rows.size() <= MAX_BLOCK_ROWS) {
+    if(block.rows.size() >= MIN_BLOCK_ROWS ) {
 
-        // set<int> rows(block.rows.begin(), block.rows.end());
-        // vector<vector<int>> components = connectedGraph->getComponents(rows);
+        set<int> rows(block.rows.begin(), block.rows.end());
+        vector<vector<int>> comps = connectedGraph->getComponents(rows);
 
-        vector<Component> comps = connectedGraph->getComponents();
-        if(comps.size() > 1){
+        MAX_B_COUNT = max(MAX_B_COUNT, comps.size());
+
+        // vector<Component> comps = connectedGraph->getComponents();
+        // if(comps.size() > 1){
                 
-            // cout<< "块分解成功，块数: " << components.size() << endl;
-            //incrementPCount(); 
-            MAX_B_COUNT = max(MAX_B_COUNT, comps.size());
-
-            // auto blocks = spilit(components); // 分解为多个块
-            auto res_and_node = serialSearch(comps); 
-            setCachedResult(state, res_and_node); // 缓存结果
-            return res_and_node; // 返回分解节点
-        }
+        //     auto blocks = spilit(comps); // 分解为多个块
+        //     auto res_and_node = serialSearch(blocks); 
+        //     setCachedResult(state, res_and_node); // 缓存结果
+        //     return res_and_node; // 返回分解节点
+        // }
     }
 
     ColunmHeader* choose = selectColumnHeuristic(block.cols);  
@@ -792,7 +787,7 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
         if(node->label != -2){
             shared_ptr<DNNFNode> var = make_shared<DNNFNode>(NodeType::Variable, curC->row + 1);
             auto and_node = make_shared<DNNFNode>(NodeType::Decision, var, node);
-            // and_node->count = node->count;
+            and_node->count = node->count;
             orNode->count += node->count; // 累加当前Decision节点的计数
             orNode->children.push_back(and_node);
         }
@@ -823,7 +818,7 @@ void DanceDNNF::startDXD() {
 
     // clearCache();
     auto start = std::chrono::high_resolution_clock::now();
-    shared_ptr<DNNFNode> rootDNNF = DXD_iterative(std::move(block));  
+    shared_ptr<DNNFNode> rootDNNF = DXD(block);  
     auto end = std::chrono::high_resolution_clock::now();
 
     std::cout << "搜索到的解个数: " << rootDNNF->count << std::endl;

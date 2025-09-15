@@ -5,7 +5,7 @@
 #include "../include/DXDTime.h"
 
 const int UNCHOOSEN = -10;
-const int MIN_BLOCK_ROWS = 5;
+const int MIN_BLOCK_ROWS = 2;
 const int MAX_BLOCK_ROWS = 150;
 const int TIME_LIMIT_SECONDS = 1000; 
 
@@ -93,6 +93,19 @@ struct Block {
         Block(const vector<int>& r, const vector<int>& c){
             rows.insert(r.begin(), r.end());
             cols.insert(c.begin(), c.end());
+        }
+
+        void printBlock() {
+            cout<< "cols: " << endl;
+            for(int c : cols){
+                cout << c << " ";
+            }
+            cout<<endl;
+            cout<< "rows: " << endl;
+            for(int r : rows){
+                cout<< r << " ";
+            }
+            cout<<endl; 
         }
 
 };
@@ -219,12 +232,12 @@ class DanceDNNF : DancingMatrix {
             cout<< "初始化DanceDNNF完成." << endl;
         }
 
-        DanceDNNF(const string& file_path, int from, bool useMultiThread = false)
-            : DancingMatrix(file_path, from) {
+        DanceDNNF(const string& file_path, int from, bool verbose = false)
+            : DancingMatrix(file_path, from, verbose) {
             root = getRoot();
             ColIndex = getColIndex();
             RowIndex = getRowIndex();
-            connectedGraph = getConnectedGraph();
+            if(verbose) connectedGraph = getConnectedGraph();
             // timer.setTimeBound(TIME_LIMIT_SECONDS);
 
             cout<< "初始化DanceDNNF完成." << endl;
@@ -268,7 +281,7 @@ class DanceDNNF : DancingMatrix {
         vector<int> collectRowsUnderColumn(int col, const Block &block);
         shared_ptr<DNNFNode> DXD(Block& block);
         shared_ptr<DNNFNode> DXD_iterative(Block&& rootBlock);
-        shared_ptr<DNNFNode> serialSearch(vector<Component>& components);
+        shared_ptr<DNNFNode> serialSearch(vector<Block>& blocks);
         shared_ptr<DNNFNode> serialSearch_iterative(const vector<Component>& components);
         shared_ptr<DNNFNode> dxdSearch(vector<Block>& blocks);
         shared_ptr<DNNFNode> parallelDXD(Block& blocks);
