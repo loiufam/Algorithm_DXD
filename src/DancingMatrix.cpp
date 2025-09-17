@@ -67,6 +67,10 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose )
 
     ROWS = rows;
     COLS = cols;
+    // 初始化列哈希表
+    for(int col = 1; col <= COLS; col++){
+        colHash[col] = std::hash<int>()(col);
+    }
     // graph = std::make_shared<ConnectedGraph>(ROWS, COLS); 
 
     // cout << "矩阵维度: " << rows << " 行, " << cols << " 列." << endl;
@@ -121,6 +125,7 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose )
     }
 
     // cout<< "初始化舞蹈链完成." << endl;
+    computeInitialHash();
     if(verbose) graph = make_shared<ConnectedGraph>(*this);
     file.close();
 }
@@ -264,6 +269,7 @@ void DancingMatrix::cover( int c )
     col->right->left = col->left;  
     col->left->right = col->right; 
     // colsSet.erase(c); // 从当前矩阵移除该列
+    currentColState ^= colHash[c];
     
     Node* curR, *curC;  
     curC = col->down;  
@@ -283,7 +289,7 @@ void DancingMatrix::cover( int c )
             // removeCol(noteR->row, curR->col);
             curR = curR->right;  
         }  
-        // rowsSet.erase(curC->row);
+        rowsSet.erase(curC->row);
         // connectedGraph->remove(curC->row);
         curC = curC->down;  
     }  
@@ -310,12 +316,13 @@ void DancingMatrix::uncover( int c )
             // restoreCol(noteR->row, curR->col);
             curR = curR->left;  
         }  
-        // rowsSet.insert(curC->row);
+        rowsSet.insert(curC->row);
         // connectedGraph->restore(curC->row);
         curC = curC->up;  
     }  
     col->right->left = col;  
     col->left->right = col;  
+    currentColState ^= colHash[c];
     // colsSet.insert(col->col);
 
 }

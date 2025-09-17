@@ -1,5 +1,7 @@
 #include "../include/DancingMatrix.h"
 #include "../include/DXD.h"
+
+static Logger logger("../dxd_exp_log.txt");  // 全局日志
 // 专门测试DXD
 int main() { 
     try
@@ -16,8 +18,9 @@ int main() {
             if (entry.is_regular_file() && entry.path().extension() == ".txt")
             {
                 // 文件路径
-                const std::string filePath = entry.path().string();
-                std::cout << "文件名: " << entry.path().filename().string() << std::endl;
+                // const std::string filePath = entry.path().string();
+                // std::cout << "文件名: " << entry.path().filename().string() << std::endl;
+                logger.logLine("文件名: " + entry.path().filename().string());
 
                 // 从文件中提取 n 和 m 的值
                 // int r, c;
@@ -26,12 +29,12 @@ int main() {
                 // DanceDNNF dxdSolver(r, c, matrix);
 
                 {
-                    DanceDNNF dxdSolver(entry.path().string(), 1, true);
+                    DanceDNNF dxdSolver(entry.path().string(), 1, logger, true);
                     dxdSolver.startDXD();
                 }
                 
                 {
-                    ExactCoverSolver ecSolver(entry.path().string(), 1);
+                    ExactCoverSolver ecSolver(entry.path().string(), 1, logger);
                     ecSolver.searchEC();
                 }
 
@@ -49,7 +52,8 @@ int main() {
             if (entry.is_regular_file() && entry.path().extension() == ".txt")
             {
                 // 文件路径
-                std::cout << "文件名: " << entry.path().filename().string() << std::endl;
+                // std::cout << "文件名: " << entry.path().filename().string() << std::endl;
+                logger.logLine("文件名: " + entry.path().filename().string());
 
                 // 从文件中提取 n 和 m 的值
                 // int r, c;
@@ -57,12 +61,12 @@ int main() {
 
                 // DanceDNNF dxdSolver(r, c, matrix);
                 {
-                    DanceDNNF dxdSolver(entry.path().string(), 2, true);
+                    DanceDNNF dxdSolver(entry.path().string(), 2, logger, true);
                     dxdSolver.startDXD();
                 }
                 
                 {
-                    ExactCoverSolver ecSolver(entry.path().string(), 2);
+                    ExactCoverSolver ecSolver(entry.path().string(), 2, logger);
                     ecSolver.searchEC();
                 }
 
@@ -78,7 +82,8 @@ int main() {
             if (entry.is_regular_file() && entry.path().extension() == ".txt")
             {
                 // 文件路径
-                std::cout << "文件名: " << entry.path().filename().string() << std::endl;
+                // std::cout << "文件名: " << entry.path().filename().string() << std::endl;
+                logger.logLine("文件名: " + entry.path().filename().string());
 
                 // 从文件中提取 n 和 m 的值
                 // int r, c;
@@ -86,12 +91,12 @@ int main() {
 
                 // DanceDNNF dxdSolver(r, c, matrix);
                 {
-                    DanceDNNF dxdSolver(entry.path().string(), 3, true);
+                    DanceDNNF dxdSolver(entry.path().string(), 3, logger, true);
                     dxdSolver.startDXD();
                 }
                 
                 {
-                    ExactCoverSolver ecSolver(entry.path().string(), 3);
+                    ExactCoverSolver ecSolver(entry.path().string(), 3, logger);
                     ecSolver.searchEC();
                 }
 

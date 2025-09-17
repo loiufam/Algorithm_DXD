@@ -8,6 +8,7 @@ const int UNCHOOSEN = -10;
 const int MIN_BLOCK_ROWS = 2;
 const int MAX_BLOCK_ROWS = 150;
 const int TIME_LIMIT_SECONDS = 1000; 
+using namespace std;
 
 struct ORNode;  
 
@@ -49,6 +50,7 @@ struct DNNFNode {
     DNNFNode(NodeType t, int l) : type(t), label(l) {} // 构建变量节点和终端节点
     DNNFNode(NodeType t, int l, uint64_t c) : type(t), label(l), count(c) {} // 构造函数用于OR节点和 Decomposed类型的AND节点   
     DNNFNode(NodeType t, shared_ptr<DNNFNode> l, shared_ptr<DNNFNode> r) : type(t), left(l), right(r) {} // 构建Decision类型的AND节点
+    DNNFNode(int l, shared_ptr<DNNFNode> r, uint64_t c)  : type(NodeType::Decision), label(l), right(r), count(c) {} // 简化版决策节点
 
 };
 
@@ -221,8 +223,8 @@ private:
 class DanceDNNF : DancingMatrix { 
 
     public:
-        DanceDNNF(int rows, int cols, int** matrix) 
-            : DancingMatrix(rows, cols, matrix) {
+        DanceDNNF(int rows, int cols, int** matrix, Logger& l) 
+            : DancingMatrix(rows, cols, matrix), logger(l) {
             root = getRoot();
             ColIndex = getColIndex();
             RowIndex = getRowIndex();
@@ -232,8 +234,8 @@ class DanceDNNF : DancingMatrix {
             cout<< "初始化DanceDNNF完成." << endl;
         }
 
-        DanceDNNF(const string& file_path, int from, bool verbose = false)
-            : DancingMatrix(file_path, from, verbose) {
+        DanceDNNF(const string& file_path, int from, Logger& l, bool verbose = false)
+            : DancingMatrix(file_path, from, verbose), logger(l) {
             root = getRoot();
             ColIndex = getColIndex();
             RowIndex = getRowIndex();
@@ -341,6 +343,7 @@ class DanceDNNF : DancingMatrix {
         ColunmHeader* ColIndex;  
         RowNode* RowIndex; 
         ThreadPool pool;
+        Logger& logger;
         
         // DNNF相关
         std::shared_ptr<ORNode> rootOR;
@@ -400,7 +403,8 @@ class DecisionDNNF {
 
 class ExactCoverSolver {
     public:
-        ExactCoverSolver(const string& input_file, int from) : input_file(input_file), from(from) {}
+        ExactCoverSolver(const string& input_file, int from, Logger& l, int p = thread::hardware_concurrency()) 
+            : input_file(input_file), from(from), logger(l), poolSize(p) {}
         ~ExactCoverSolver() = default;
 
         void searchEC();
@@ -408,6 +412,8 @@ class ExactCoverSolver {
     private:
         string input_file;
         int from;
+        int poolSize;
+        Logger& logger;
 };
 
 #endif

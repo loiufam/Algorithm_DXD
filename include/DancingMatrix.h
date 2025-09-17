@@ -129,7 +129,25 @@ class DancingMatrix
         set<int> colsSet;  // 原始矩阵列
         unordered_map<int, set<int>> rowToColsSet;
         unordered_map<int, set<int>> colToRowsSet;
+        // 列状态
+        size_t currentColState = 0;
+        unordered_map<int, size_t> colHash; // 每个列的固定哈希值
+        size_t getColumnState() const;
         
+        // 获取当前哈希
+        size_t getCurColState() const {
+            return currentColState;
+        }
+        
+        // 初始计算一次 hash
+        void computeInitialHash() {
+
+            ColunmHeader* cur = (ColunmHeader*)root->right;
+            while (cur != root) {
+                currentColState ^= colHash[cur->col];
+                cur = (ColunmHeader*)cur->right;
+            }
+        }
         
         //接收矩阵其及维度  
         DancingMatrix( int rows, int cols, int** matrix);  
@@ -146,7 +164,6 @@ class DancingMatrix
         void printMatrix() const; 
         void cover( int c );  
         void uncover( int c ); 
-        size_t getColumnState() const;
         shared_ptr<ConnectedGraph> getConnectedGraph(){
             return graph;
         };
@@ -198,6 +215,89 @@ class DancingMatrix
         
 };
 
+class Logger 
+{
+    private:
+        std::ofstream logFile;
+        bool enableConsole;
+    
+    public:
+        Logger(const std::string& filename, bool console = true) 
+            : enableConsole(console) {
+            logFile.open(filename, std::ios::out | std::ios::trunc);
+        }
+        
+        ~Logger() {
+            if (logFile.is_open()) {
+                logFile.close();
+            }
+        }
+        
+        template<typename T>
+        void log(const T& message) {
+            if (logFile.is_open()) {
+                logFile << message;
+                logFile.flush();
+            }
+            if (enableConsole) {
+                std::cout << message;
+            }
+        }
+        
+        template<typename T>
+        void logLine(const T& message) {
+            log(message);
+            if (logFile.is_open()) {
+                logFile << std::endl;
+            }
+            if (enableConsole) {
+                std::cout << std::endl;
+            }
+        }
+        
+        void enableConsoleOutput(bool enable) {
+            enableConsole = enable;
+        }
+};
+
+// 自定义超时异常
+class TimeoutException : public std::exception {
+private:
+    std::string message;
+    
+public:
+    explicit TimeoutException(const std::string& msg) : message(msg) {}
+    const char* what() const noexcept override {
+        return message.c_str();
+    }
+};
+
+template<typename Func, typename... Args>
+auto executeWithTimeout(std::chrono::milliseconds timeout, Func&& func, Args&&... args) 
+    -> std::invoke_result_t<Func, Args...> {
+    
+    // 使用 std::async 异步执行函数，采用完美转发
+    auto future = std::async(std::launch::async, 
+                            std::forward<Func>(func), 
+                            std::forward<Args>(args)...);
+    
+    // 等待指定的超时时间
+    if (future.wait_for(timeout) == std::future_status::timeout) {
+        throw TimeoutException("Function execution timeout after " + 
+                              std::to_string(timeout.count()) + " milliseconds");
+    }
+    
+    return future.get();
+}
+
+template<typename Func, typename... Args>
+auto executeWithTimeoutSeconds(int seconds, Func&& func, Args&&... args) 
+    -> std::invoke_result_t<Func, Args...> {
+    
+    return executeWithTimeout(std::chrono::seconds(seconds), 
+                             std::forward<Func>(func), 
+                             std::forward<Args>(args)...);
+}
 
 class PreProccess
 {

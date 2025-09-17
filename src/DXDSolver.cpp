@@ -520,7 +520,7 @@ void DanceDNNF::uncoverInBlock(int c, Block& block){
         // RowIndex[curC->row].cols.insert(curC->col);
         block.rows.insert(curC->row);
         connectedGraph->restore(curC->row);
-        
+
         curC = curC->up;  
     }  
 
@@ -738,10 +738,9 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
     } 
 
     // 先查缓存
-    size_t state = hashBlockState(block.cols); // 编码当前块状态
-    auto cacheResult = getCachedResult(state);
-    if(cacheResult) {
-        return cacheResult;
+    size_t state = hashBlockState(block.cols); 
+    if(CacheST.find(state) != CacheST.end()){
+        return CacheST[state];
     }
 
     //shouldDecompose(block) 
@@ -757,7 +756,7 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
                 
         //     auto blocks = spilit(comps); // 分解为多个块
         //     auto res_and_node = serialSearch(blocks); 
-        //     setCachedResult(state, res_and_node); // 缓存结果
+        //     cacheST[state] = res_and_node; // 缓存结果
         //     return res_and_node; // 返回分解节点
         // }
     }
@@ -772,6 +771,7 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
     auto orNode = make_shared<DNNFNode>(NodeType::OR, choose->col, 0);
 
     coverInBlock(choose->col, block);
+    // cover( choose->col );
     Node* curC = choose->down;
     while(curC != choose) {
         
@@ -779,15 +779,16 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
         Node* curR = curC->right;
         while (curR != curC) {
             coverInBlock(curR->col, block);
+            // cover(curR->col);
             curR = curR->right;
         }
  
         auto node = DXD(block); // 递归左分支
 
         if(node->label != -2){
-            shared_ptr<DNNFNode> var = make_shared<DNNFNode>(NodeType::Variable, curC->row + 1);
-            auto and_node = make_shared<DNNFNode>(NodeType::Decision, var, node);
-            and_node->count = node->count;
+            // shared_ptr<DNNFNode> var = make_shared<DNNFNode>(NodeType::Variable, curC->row + 1);
+            auto and_node = make_shared<DNNFNode>(curC->row + 1, node, node->count);
+            // and_node->count = node->count;
             orNode->count += node->count; // 累加当前Decision节点的计数
             orNode->children.push_back(and_node);
         }
@@ -796,24 +797,28 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
         curR = curC->left;
         while (curR != curC) {
             uncoverInBlock(curR->col, block);
+            // cover(curR->col);
             curR = curR->left;
         }
         curC = curC->down;
     }
     uncoverInBlock(choose->col, block);
+    // uncover(choose->col);
 
     if(orNode->children.empty()) {
         orNode = F;
     }   
     // 插入缓存
-    setCachedResult(state, orNode);
+    // setCachedResult(state, orNode);
+    CacheST[state] = orNode;
     return orNode; 
 }
 
 
 void DanceDNNF::startDXD() {
 
-    std::cout << "开始单线程DXD搜索..." << std::endl;
+    // std::cout << "开始单线程DXD搜索..." << std::endl;
+    logger.logLine("开始单线程DXD搜索...");
     Block block(rowsSet, colsSet);
 
     // clearCache();
@@ -821,13 +826,16 @@ void DanceDNNF::startDXD() {
     shared_ptr<DNNFNode> rootDNNF = DXD(block);  
     auto end = std::chrono::high_resolution_clock::now();
 
-    std::cout << "搜索到的解个数: " << rootDNNF->count << std::endl;
+    // std::cout << "搜索到的解个数: " << rootDNNF->count << std::endl;
+    logger.logLine("搜索到的解个数: " + std::to_string(rootDNNF->count));
     
     searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
-    std::cout << "单线程DXD搜索完成, 耗时: " << searchTimeSeconds << " 秒。" << std::endl;
+    // std::cout << "单线程DXD搜索完成, 耗时: " << searchTimeSeconds << " 秒。" << std::endl;
+    logger.logLine("单线程DXD搜索完成, 耗时: " + std::to_string(searchTimeSeconds) + " 秒。");
    
     if( MAX_B_COUNT > 1 ) {
-        std::cout << "本次搜索最大分块数为: " << MAX_B_COUNT << std::endl;
+        // std::cout << "本次搜索最大分块数为: " << MAX_B_COUNT << std::endl;
+        logger.logLine("本次搜索最大分块数为: " + std::to_string(MAX_B_COUNT));
     }
     cout << endl; 
 }
@@ -864,8 +872,8 @@ shared_ptr<DNNFNode> DecisionDNNF::solveSingle(DancingMatrix& matrix, unordered_
         auto node = solveSingle(matrix, localCache); // 递归左分支
 
         if (node->label != -2) {
-            auto var = make_shared<DNNFNode>(NodeType::Variable, curC->row + 1);
-            auto and_node = make_shared<DNNFNode>(NodeType::Decision, var, node);
+            // auto var = make_shared<DNNFNode>(NodeType::Variable, curC->row + 1);
+            auto and_node = make_shared<DNNFNode>(curC->row + 1, node, node->count);
             orNode->count += node->count; // 累加当前Decision节点的计数
             orNode->children.push_back(and_node);
         }
@@ -916,10 +924,11 @@ shared_ptr<DNNFNode> DecisionDNNF::solve() {
 
 void ExactCoverSolver::searchEC() {
     DancingMatrix dm(input_file, from);
-    int maxThreads = std::thread::hardware_concurrency();
-    cout << "检测到 " << maxThreads << " 个CPU核心, 启用 "<< maxThreads << " 线程进行搜索。" << endl;
 
-    col_id selectCol = dm.getClosedSizeCol(maxThreads);
+    // cout << "最大线程数: " << poolSize << endl;
+    logger.logLine("最大线程数: " + to_string(poolSize));
+
+    col_id selectCol = dm.getClosedSizeCol(poolSize);
     ColunmHeader* colHead = &dm.getColIndex()[selectCol];
 
     cout << "选择列: " << selectCol << " size: " << colHead->size << endl;
@@ -951,8 +960,10 @@ void ExactCoverSolver::searchEC() {
     auto end = std::chrono::high_resolution_clock::now();
 
     double elapsedSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
-    cout << "搜索完成，耗时: " << elapsedSeconds << " 秒。" << endl;
-    cout << "搜索到的解个数: " << result->count << endl;
+    // cout << "搜索完成，耗时: " << elapsedSeconds << " 秒。" << endl;
+    logger.logLine("多线程DXD搜索完成, 耗时: " + to_string(elapsedSeconds) + " 秒。");
+    // cout << "搜索到的解个数: " << result->count << endl;
+    logger.logLine("搜索到的解个数: " + to_string(result->count));
     cout << endl;
 }
 
