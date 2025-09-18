@@ -45,7 +45,7 @@ public:
     // 开始或继续计时
     bool markStartTime()
     {
-        std::lock_guard<std::mutex> lock(mtx);
+        // std::lock_guard<std::mutex> lock(mtx);
         if (!running) {
             gettimeofday(&timeStart, nullptr);
             running = true;
@@ -56,7 +56,7 @@ public:
     // 暂停计时
     bool markStopTime()
     {
-        std::lock_guard<std::mutex> lock(mtx);
+        // std::lock_guard<std::mutex> lock(mtx);
         if (running) {
             timeval now, r;
             gettimeofday(&now, nullptr);
@@ -69,33 +69,33 @@ public:
 
     void reset()
     {
-        std::lock_guard<std::mutex> lock(mtx);
+        // std::lock_guard<std::mutex> lock(mtx);
         elapsedAccum = 0;
         running = false;
     }
 
     void setTimeBound(long int seconds)
     {
-        std::lock_guard<std::mutex> lock(mtx);
+        // std::lock_guard<std::mutex> lock(mtx);
         timeBound = seconds;
     }
 
     long int getTimeBound()
     {
-        std::lock_guard<std::mutex> lock(mtx);
+        // std::lock_guard<std::mutex> lock(mtx);
         return timeBound;
     }
 
     bool timeBoundBroken()
     {
-        std::lock_guard<std::mutex> lock(mtx);
+        // std::lock_guard<std::mutex> lock(mtx);
         return getElapsedTime() > (double)timeBound;
     }
 
     // 获取累计秒数
     double getElapsedTime() const
     {
-        std::lock_guard<std::mutex> lock(mtx);
+        // std::lock_guard<std::mutex> lock(mtx);
         long long total = elapsedAccum;
         if (running) {
             timeval now, r;

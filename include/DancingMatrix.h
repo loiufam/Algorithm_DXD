@@ -260,45 +260,6 @@ class Logger
         }
 };
 
-// 自定义超时异常
-class TimeoutException : public std::exception {
-private:
-    std::string message;
-    
-public:
-    explicit TimeoutException(const std::string& msg) : message(msg) {}
-    const char* what() const noexcept override {
-        return message.c_str();
-    }
-};
-
-template<typename Func, typename... Args>
-auto executeWithTimeout(std::chrono::milliseconds timeout, Func&& func, Args&&... args) 
-    -> std::invoke_result_t<Func, Args...> {
-    
-    // 使用 std::async 异步执行函数，采用完美转发
-    auto future = std::async(std::launch::async, 
-                            std::forward<Func>(func), 
-                            std::forward<Args>(args)...);
-    
-    // 等待指定的超时时间
-    if (future.wait_for(timeout) == std::future_status::timeout) {
-        throw TimeoutException("Function execution timeout after " + 
-                              std::to_string(timeout.count()) + " milliseconds");
-    }
-    
-    return future.get();
-}
-
-template<typename Func, typename... Args>
-auto executeWithTimeoutSeconds(int seconds, Func&& func, Args&&... args) 
-    -> std::invoke_result_t<Func, Args...> {
-    
-    return executeWithTimeout(std::chrono::seconds(seconds), 
-                             std::forward<Func>(func), 
-                             std::forward<Args>(args)...);
-}
-
 class PreProccess
 {
     public:

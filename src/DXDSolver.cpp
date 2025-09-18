@@ -737,6 +737,10 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
         return T; // 如果没有列，返回T
     } 
 
+    if(timer.timeBoundBroken()) {
+        throw std::runtime_error("Time bound broken");
+    }
+
     // 先查缓存
     size_t state = hashBlockState(block.cols); 
     if(CacheST.find(state) != CacheST.end()){
@@ -819,25 +823,32 @@ void DanceDNNF::startDXD() {
 
     // std::cout << "开始单线程DXD搜索..." << std::endl;
     logger.logLine("开始单线程DXD搜索...");
-    Block block(rowsSet, colsSet);
+    try{
 
-    // clearCache();
-    auto start = std::chrono::high_resolution_clock::now();
-    shared_ptr<DNNFNode> rootDNNF = DXD(block);  
-    auto end = std::chrono::high_resolution_clock::now();
+        // clearCache();
+        Block block(rowsSet, colsSet);
 
-    // std::cout << "搜索到的解个数: " << rootDNNF->count << std::endl;
-    logger.logLine("搜索到的解个数: " + std::to_string(rootDNNF->count));
+        timer.markStartTime();
+        auto start = std::chrono::high_resolution_clock::now();
+        shared_ptr<DNNFNode> rootDNNF = DXD(block);  
+        auto end = std::chrono::high_resolution_clock::now();
+
+        // std::cout << "搜索到的解个数: " << rootDNNF->count << std::endl;
+        logger.logLine("搜索到的解个数: " + std::to_string(rootDNNF->count));
+        
+        searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
+        // std::cout << "单线程DXD搜索完成, 耗时: " << searchTimeSeconds << " 秒。" << std::endl;
+        logger.logLine("单线程DXD搜索完成, 耗时: " + std::to_string(searchTimeSeconds) + " 秒。");
     
-    searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
-    // std::cout << "单线程DXD搜索完成, 耗时: " << searchTimeSeconds << " 秒。" << std::endl;
-    logger.logLine("单线程DXD搜索完成, 耗时: " + std::to_string(searchTimeSeconds) + " 秒。");
-   
-    if( MAX_B_COUNT > 1 ) {
-        // std::cout << "本次搜索最大分块数为: " << MAX_B_COUNT << std::endl;
-        logger.logLine("本次搜索最大分块数为: " + std::to_string(MAX_B_COUNT));
+        if( MAX_B_COUNT > 1 ) {
+            // std::cout << "本次搜索最大分块数为: " << MAX_B_COUNT << std::endl;
+            logger.logLine("本次搜索最大分块数为: " + std::to_string(MAX_B_COUNT));
+        }
+        std::cout << std::endl; 
+    } catch (std::runtime_error &e) {
+        logger.logLine("DXD搜索超时: " + std::string(e.what()));
     }
-    cout << endl; 
+
 }
 
 shared_ptr<DNNFNode> DecisionDNNF::solveSingle(DancingMatrix& matrix, unordered_map<size_t, shared_ptr<DNNFNode>>& localCache)

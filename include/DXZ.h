@@ -2,6 +2,7 @@
 #define DXZ_H
 
 #include "DancingMatrix.h"
+#include "DXDTime.h"
 
 using label_t = uint32_t;
 
@@ -30,6 +31,7 @@ class DanceZDD : DancingMatrix{
         DanceZDD(int rows, int cols, int** matrix, Logger& l) 
             : DancingMatrix(rows, cols, matrix), logger(l) {
             root = getRoot();
+            timer.setTimeBound(1200);
            
             T_ZDD = make_shared<ZDDNode>(-1, nullptr, nullptr, true); // ZDD的T节点
             F_ZDD = make_shared<ZDDNode>(-2, nullptr, nullptr, true); // ZDD的F节点
@@ -38,6 +40,7 @@ class DanceZDD : DancingMatrix{
         DanceZDD(const string& file_path, int from, Logger& l) 
         : DancingMatrix(file_path, from), logger(l) {
             root = getRoot();
+            timer.setTimeBound(1200);  // 20 minutes
            
             T_ZDD = make_shared<ZDDNode>(-1, nullptr, nullptr, true); // ZDD的T节点
             F_ZDD = make_shared<ZDDNode>(-2, nullptr, nullptr, true); // ZDD的F节点
@@ -53,6 +56,7 @@ class DanceZDD : DancingMatrix{
         shared_ptr<ZDDNode> T_ZDD; // ZDD的T节点
         shared_ptr<ZDDNode> F_ZDD; // ZDD的F节点
         vector<vector<label_t>> sols;
+        CStopWatch timer;
 
         // ZDD 相关方法
         size_t hashFunction(int r, ZDDNode* x, ZDDNode* y);

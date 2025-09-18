@@ -7,7 +7,7 @@
 const int UNCHOOSEN = -10;
 const int MIN_BLOCK_ROWS = 2;
 const int MAX_BLOCK_ROWS = 150;
-const int TIME_LIMIT_SECONDS = 1000; 
+const int TIME_LIMIT_SECONDS = 1200; 
 using namespace std;
 
 struct ORNode;  
@@ -231,7 +231,7 @@ class DanceDNNF : DancingMatrix {
             connectedGraph = getConnectedGraph();
             timer.setTimeBound(TIME_LIMIT_SECONDS);
 
-            cout<< "初始化DanceDNNF完成." << endl;
+            std::cout<< "初始化DanceDNNF完成." << endl;
         }
 
         DanceDNNF(const string& file_path, int from, Logger& l, bool verbose = false)
@@ -240,9 +240,9 @@ class DanceDNNF : DancingMatrix {
             ColIndex = getColIndex();
             RowIndex = getRowIndex();
             if(verbose) connectedGraph = getConnectedGraph();
-            // timer.setTimeBound(TIME_LIMIT_SECONDS);
+            timer.setTimeBound(TIME_LIMIT_SECONDS);
 
-            cout<< "初始化DanceDNNF完成." << endl;
+            std::cout<< "初始化DanceDNNF完成." << endl;
         }
 
         ~DanceDNNF() {
@@ -379,7 +379,7 @@ class DecisionDNNF {
         DecisionDNNF(vector<unique_ptr<DancingMatrix>>&& matrices)
             : matrices(std::move(matrices)), pool(getThreadPool()) {
             
-            cout<< "初始化DecisionDNNF完成." << endl;
+            std::cout<< "初始化DecisionDNNF完成." << endl;
         }
 
         ~DecisionDNNF() {

@@ -13,6 +13,10 @@ void DanceZDD::DLX(std::vector<label_t>& solution)
         return;  
     }
 
+    if( timer.timeBoundBroken() ){
+        throw std::runtime_error("Time bound broken");
+    }
+
     cover( choose->col );
     Node* curC = choose->down;  
     while( curC != choose )  // curC遍历选中列非零行
@@ -125,6 +129,10 @@ shared_ptr<ZDDNode> DanceZDD::DXZ()
         return T_ZDD;
     }
 
+    if (timer.timeBoundBroken()) {
+        throw std::runtime_error("Time bound broken");
+    }
+
     size_t columnState = getColumnState();
     // 查找缓存
     if (memo_cache.find(columnState) != memo_cache.end()) {
@@ -183,37 +191,34 @@ shared_ptr<ZDDNode> DanceZDD::DXZ()
 void DanceZDD::startDLX(){
 
     logger.logLine("DLX开始搜索...");
+    // uint64_t sol = 0;
     try{
-        // uint64_t sol = 0;
         vector<label_t> solution;
         auto start = std::chrono::high_resolution_clock::now();
         // X(sol);
-        executeWithTimeoutSeconds(1000, [this, &solution]() {
-                // X(sol);
-                DLX(solution);
-        });
+        timer.markStartTime();
+        DLX(solution);
         auto end = std::chrono::high_resolution_clock::now();
         searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
         logger.logLine("DLX搜索完成, 找到的解个数: " + std::to_string(count));
 
         // count = sol; // 更新计数
         logger.logLine("DLX搜索耗时(s): " + std::to_string(searchTimeSeconds));
-        std::cout<<std::endl;
-    } catch (const TimeoutException& e) {
+        std::cout << std::endl;
+    } catch (std::runtime_error& e) {
         logger.logLine("DLX搜索超时: " + std::string(e.what()));
-        return;
     }
 }
+
 
 void DanceZDD::startDXZ(){
 
     logger.logLine("DXZ开始搜索...");
     try{
         auto startDXZ = std::chrono::high_resolution_clock::now();
-        // shared_ptr<ZDDNode> root = DXZ();
-        auto root = executeWithTimeoutSeconds(1000 , [this]() { 
-            return DXZ();
-        });
+        // shared_ptr<ZDDNode> root = DXZ()
+        timer.markStartTime();
+        auto root = DXZ();
         auto endDXZ = std::chrono::high_resolution_clock::now();
         searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(endDXZ - startDXZ).count();
         // std::cout << "搜索完成，找到 " << count << " 个解。" << std::endl;
@@ -227,9 +232,8 @@ void DanceZDD::startDXZ(){
         // std::cout << "ZDD节点数: " << zdd_size << std::endl;
         logger.logLine("ZDD节点数: " + std::to_string(zdd_size));
         std::cout << std::endl;
-    }catch (const TimeoutException& e) {
+    } catch (std::runtime_error &e) {
         logger.logLine("DXZ搜索超时: " + std::string(e.what()));
-        return;
     }
 
 }

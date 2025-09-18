@@ -2,42 +2,64 @@ exact_cover_benchmark 文件夹处理开始
 文件名: kts15-ptpt-0020.txt
 DLX开始搜索...
 DLX搜索完成, 找到的解个数: 8
-DLX搜索耗时(s): 0.024464
+DLX搜索耗时(s): 0.084779
 DXZ开始搜索...
-DXZ搜索完成, 耗时: 0.002365 秒。
+DXZ搜索完成, 耗时: 0.088417 秒。
 解的数量: 8
-ZDD节点数: 1
+ZDD节点数: 116
 文件名: kts15-ptpt-0021.txt
 DLX开始搜索...
 DLX搜索完成, 找到的解个数: 72
-DLX搜索耗时(s): 0.024171
+DLX搜索耗时(s): 0.082515
 DXZ开始搜索...
-DXZ搜索完成, 耗时: 0.001566 秒。
+DXZ搜索完成, 耗时: 0.086341 秒。
 解的数量: 72
-ZDD节点数: 1
+ZDD节点数: 240
 文件名: latin7-blk-00008.txt
 DLX开始搜索...
 DLX搜索完成, 找到的解个数: 27072
-DLX搜索耗时(s): 0.477783
+DLX搜索耗时(s): 0.874565
 DXZ开始搜索...
-DXZ搜索完成, 耗时: 0.000949 秒。
+DXZ搜索完成, 耗时: 0.615604 秒。
 解的数量: 27072
-ZDD节点数: 105
+ZDD节点数: 51
 文件名: latin7-blk-00009.txt
 DLX开始搜索...
 DLX搜索完成, 找到的解个数: 27776
-DLX搜索耗时(s): 0.487317
+DLX搜索耗时(s): 0.874402
 DXZ开始搜索...
-DXZ搜索完成, 耗时: 0.000740 秒。
+DXZ搜索完成, 耗时: 0.602748 秒。
 解的数量: 27776
-ZDD节点数: 104
+ZDD节点数: 28
 文件名: bell-10.txt
 DLX开始搜索...
 DLX搜索完成, 找到的解个数: 115975
-DLX搜索耗时(s): 0.290543
+DLX搜索耗时(s): 1.273849
 DXZ开始搜索...
-DXZ搜索完成, 耗时: 0.036340 秒。
+DXZ搜索完成, 耗时: 0.583543 秒。
 解的数量: 115975
-ZDD节点数: 154
+ZDD节点数: 95
 文件名: doublefact-19.txt
+DLX开始搜索...
+DLX搜索超时: Time bound broken
+DXZ开始搜索...
+DXZ搜索超时: Time bound broken
+文件名: doublefact-17.txt
+DLX开始搜索...
+DLX搜索超时: Time bound broken
+DXZ开始搜索...
+DXZ搜索超时: Time bound broken
+文件名: bell-09.txt
+DLX开始搜索...
+DLX搜索完成, 找到的解个数: 21147
+DLX搜索耗时(s): 0.244525
+DXZ开始搜索...
+DXZ搜索完成, 耗时: 0.121254 秒。
+解的数量: 21147
+ZDD节点数: 81
+exact_cover_benchmark 文件夹处理完毕
+DLX开始搜索...
+DLX搜索超时: Time bound broken
+DXZ开始搜索...
+DXZ搜索超时: Time bound broken
 DLX开始搜索...
