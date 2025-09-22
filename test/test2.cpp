@@ -9,7 +9,7 @@ int main() {
         // 文件夹路径
         const std::string folderPath1 = "../data/exact_cover_benchmark";
         const std::string folderPath2 = "../data/set_partitioning_benchmarks";
-        const std::string filePath_d3x = "../data/dataset_d3x";
+        const std::string folderPath3 = "../data/graph_dataset";
         std::cout << "exact_cover_benchmark 文件夹处理开始" << std::endl;
         // 遍历文件夹
         for (const auto& entry : fs::directory_iterator(folderPath1))
@@ -77,7 +77,7 @@ int main() {
         std::cout << "set_partitioning_benchmarks 文件夹处理完毕" << std::endl;
 
         std::cout << "d3x数据集处理开始" << std::endl;
-        for(const auto& entry : fs::directory_iterator(filePath_d3x))
+        for(const auto& entry : fs::directory_iterator(folderPath3))
         {
             if (entry.is_regular_file() && entry.path().extension() == ".txt")
             {

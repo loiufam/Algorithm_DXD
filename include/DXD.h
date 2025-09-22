@@ -7,7 +7,7 @@
 const int UNCHOOSEN = -10;
 const int MIN_BLOCK_ROWS = 2;
 const int MAX_BLOCK_ROWS = 150;
-const int TIME_LIMIT_SECONDS = 1200; 
+const int TIME_LIMIT_SECONDS = 2400; 
 using namespace std;
 
 struct ORNode;  
