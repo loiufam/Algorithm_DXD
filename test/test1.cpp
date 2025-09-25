@@ -23,8 +23,8 @@ int main() {
         std::string folderPath1 = "../data/exact_cover_benchmark&1";
         std::string folderPath2 = "../data/set_partitioning_benchmarks&2";
         std::string folderPath3 = "../data/graph_dataset&3";
-        std::string folderPath4 = "../data/exrta_matrix&1";
-        filePaths.insert(filePaths.end(), {folderPath3, folderPath4});
+        std::string folderPath4 = "../data/extra_matrix&1";
+        filePaths.insert(filePaths.end(), {folderPath4});
         char delimiter = '&';
 
         for (auto& fp : filePaths) {
@@ -40,7 +40,7 @@ int main() {
                 {
                     // 文件路径          
                     if (entry.path().filename().string() == ".DS_Store") continue;     
-                    logger.logLine("文件名: " + entry.path().filename().string());
+                    logger.logLine("文件名: " + entry.path().stem().string());
 
                     try {
                         DanceZDD dxzSolver(entry.path().string(), read_mode, logger);
