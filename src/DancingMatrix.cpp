@@ -370,6 +370,17 @@ col_id DancingMatrix::getClosedSizeCol(const int expected_size) {
     return choose->col;
 }
 
+col_id DancingMatrix::getSmallestSizeCol() {
+    ColunmHeader* choose = (ColunmHeader*)root->right, *cur=choose;  
+    while( cur != root )  
+    {   //选择元素最少的列
+        if( choose->size > cur->size )  
+            choose = cur;  
+        cur = (ColunmHeader*)cur->right;  
+    } 
+    return choose->col;
+}
+
 void PreProccess::extractNM(const std::string& line, int& n, int& m) {
     std::istringstream iss(line);
     std::string token;

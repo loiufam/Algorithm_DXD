@@ -7,7 +7,8 @@
 const int UNCHOOSEN = -10;
 const int MIN_BLOCK_ROWS = 2;
 const int MAX_BLOCK_ROWS = 150;
-const int TIME_LIMIT_SECONDS = 2400; 
+const int TIME_LIMIT_SECONDS = 600; 
+const int TIME_LIMIT_BUILDING_SECONDS = 900;
 using namespace std;
 
 struct ORNode;  
@@ -404,7 +405,12 @@ class DecisionDNNF {
 class ExactCoverSolver {
     public:
         ExactCoverSolver(const string& input_file, int from, Logger& l, int p = thread::hardware_concurrency()) 
-            : input_file(input_file), from(from), logger(l), poolSize(p) {}
+            : input_file(input_file), from(from), logger(l) {
+                timer.setTimeBound(TIME_LIMIT_BUILDING_SECONDS);
+                if (p > std::thread::hardware_concurrency()) {
+                    poolSize = std::thread::hardware_concurrency();
+                } 
+            }
         ~ExactCoverSolver() = default;
 
         void searchEC();
@@ -414,6 +420,7 @@ class ExactCoverSolver {
         int from;
         int poolSize;
         Logger& logger;
+        CStopWatch timer;   // 计时器
 };
 
 #endif

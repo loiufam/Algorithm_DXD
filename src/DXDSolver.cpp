@@ -846,6 +846,7 @@ void DanceDNNF::startDXD() {
         std::cout << std::endl; 
     } catch (std::runtime_error &e) {
         logger.logLine("DXD搜索超时: " + std::string(e.what()));
+        logger.logLine("");
     }
 
 }
@@ -938,7 +939,8 @@ void ExactCoverSolver::searchEC() {
              // cout << "最大线程数: " << poolSize << endl;
         logger.logLine("最大线程数: " + to_string(poolSize));
 
-        col_id selectCol = dm.getClosedSizeCol(poolSize);
+        // getClosedSizeCol(poolSize)
+        col_id selectCol = dm.getSmallestSizeCol();
         ColunmHeader* colHead = &dm.getColIndex()[selectCol];
 
         cout << "选择列: " << selectCol << " size: " << colHead->size << endl;
@@ -946,8 +948,13 @@ void ExactCoverSolver::searchEC() {
         vector<unique_ptr<DancingMatrix>> subMatrices;
         subMatrices.reserve(colHead->size);
         
+        timer.markStartTime();
         Node* curR = colHead->down;
         while (curR != colHead) {
+            if (timer.timeBoundBroken()) {
+                throw std::runtime_error("Time bound broken");
+            }
+
             auto subMatrix = make_unique<DancingMatrix>(input_file, from);
             
             RowNode* rowHead = &subMatrix->getRowIndex()[curR->row];
@@ -960,6 +967,7 @@ void ExactCoverSolver::searchEC() {
                 curC = curC->right;
             }
             subMatrices.push_back(std::move(subMatrix));
+
             curR = curR->down;
         }  
 
@@ -977,7 +985,7 @@ void ExactCoverSolver::searchEC() {
         cout << endl;
     } catch (const std::exception& e) {
         logger.logLine(string(e.what()));
-        return;
+        logger.logLine("");
     }
 
 }

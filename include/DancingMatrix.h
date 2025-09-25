@@ -175,6 +175,7 @@ class DancingMatrix
         ColunmHeader* selectCol();
         ColunmHeader* selectColumnHeuristic(const unordered_set<int>& cols);
         col_id getClosedSizeCol(const int expected_size);
+        col_id getSmallestSizeCol();
         // ColunmHeader* fastSelect();
 
         std::mutex rowIndexMutex; // 保护 RowIndex 的互斥锁
