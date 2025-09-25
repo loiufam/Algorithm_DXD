@@ -824,7 +824,6 @@ void DanceDNNF::startDXD() {
     // std::cout << "开始单线程DXD搜索..." << std::endl;
     logger.logLine("开始单线程DXD搜索...");
     try{
-
         // clearCache();
         Block block(rowsSet, colsSet);
 
@@ -934,48 +933,53 @@ shared_ptr<DNNFNode> DecisionDNNF::solve() {
 }
 
 void ExactCoverSolver::searchEC() {
-    DancingMatrix dm(input_file, from);
+    try{
+        DancingMatrix dm(input_file, from);
+             // cout << "最大线程数: " << poolSize << endl;
+        logger.logLine("最大线程数: " + to_string(poolSize));
 
-    // cout << "最大线程数: " << poolSize << endl;
-    logger.logLine("最大线程数: " + to_string(poolSize));
+        col_id selectCol = dm.getClosedSizeCol(poolSize);
+        ColunmHeader* colHead = &dm.getColIndex()[selectCol];
 
-    col_id selectCol = dm.getClosedSizeCol(poolSize);
-    ColunmHeader* colHead = &dm.getColIndex()[selectCol];
+        cout << "选择列: " << selectCol << " size: " << colHead->size << endl;
 
-    cout << "选择列: " << selectCol << " size: " << colHead->size << endl;
-
-    vector<unique_ptr<DancingMatrix>> subMatrices;
-    subMatrices.reserve(colHead->size);
-    
-    Node* curR = colHead->down;
-    while (curR != colHead) {
-        auto subMatrix = make_unique<DancingMatrix>(input_file, from);
+        vector<unique_ptr<DancingMatrix>> subMatrices;
+        subMatrices.reserve(colHead->size);
         
-        RowNode* rowHead = &subMatrix->getRowIndex()[curR->row];
-        Node* startNode = rowHead->right;
-        subMatrix->cover(startNode->col);
+        Node* curR = colHead->down;
+        while (curR != colHead) {
+            auto subMatrix = make_unique<DancingMatrix>(input_file, from);
+            
+            RowNode* rowHead = &subMatrix->getRowIndex()[curR->row];
+            Node* startNode = rowHead->right;
+            subMatrix->cover(startNode->col);
 
-        Node* curC = startNode->right;
-        while (curC != startNode) {
-            subMatrix->cover(curC->col);
-            curC = curC->right;
-        }
-        subMatrices.push_back(std::move(subMatrix));
-        curR = curR->down;
-    }  
+            Node* curC = startNode->right;
+            while (curC != startNode) {
+                subMatrix->cover(curC->col);
+                curC = curC->right;
+            }
+            subMatrices.push_back(std::move(subMatrix));
+            curR = curR->down;
+        }  
 
-    DecisionDNNF solver(std::move(subMatrices));
+        DecisionDNNF solver(std::move(subMatrices));
 
-    auto start = std::chrono::high_resolution_clock::now();
-    shared_ptr<DNNFNode> result = solver.solve();
-    auto end = std::chrono::high_resolution_clock::now();
+        auto start = std::chrono::high_resolution_clock::now();
+        shared_ptr<DNNFNode> result = solver.solve();
+        auto end = std::chrono::high_resolution_clock::now();
 
-    double elapsedSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
-    // cout << "搜索完成，耗时: " << elapsedSeconds << " 秒。" << endl;
-    logger.logLine("多线程DXD搜索完成, 耗时: " + to_string(elapsedSeconds) + " 秒。");
-    // cout << "搜索到的解个数: " << result->count << endl;
-    logger.logLine("搜索到的解个数: " + to_string(result->count));
-    cout << endl;
+        double elapsedSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
+        // cout << "搜索完成，耗时: " << elapsedSeconds << " 秒。" << endl;
+        logger.logLine("多线程DXD搜索完成, 耗时: " + to_string(elapsedSeconds) + " 秒。");
+        // cout << "搜索到的解个数: " << result->count << endl;
+        logger.logLine("搜索到的解个数: " + to_string(result->count));
+        cout << endl;
+    } catch (const std::exception& e) {
+        throw new std::runtime_error(string(e.what()));
+        return;
+    }
+
 }
 
 // 主搜索函数(多线程版本)

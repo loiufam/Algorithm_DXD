@@ -40,7 +40,7 @@ class DanceZDD : DancingMatrix{
         DanceZDD(const string& file_path, int from, Logger& l) 
         : DancingMatrix(file_path, from), logger(l) {
             root = getRoot();
-            timer.setTimeBound(2400);  // 20 minutes
+            timer.setTimeBound(2400);  
            
             T_ZDD = make_shared<ZDDNode>(-1, nullptr, nullptr, true); // ZDD的T节点
             F_ZDD = make_shared<ZDDNode>(-2, nullptr, nullptr, true); // ZDD的F节点
@@ -133,11 +133,9 @@ class DanceZDD : DancingMatrix{
         Logger& logger;
         ColunmHeader* root;
 
-
         // ZDD
         std::unordered_map<size_t, shared_ptr<ZDDNode>> Z; // ZDD缓存
         std::unordered_map<std::string, shared_ptr<ZDDNode>> Z_; // ZDD缓存（线程安全）
-
 
         // 备忘录缓存：活跃列集合 -> ZDD节点
         std::unordered_map<size_t, std::shared_ptr<ZDDNode>> memo_cache;

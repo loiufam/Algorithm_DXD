@@ -21,6 +21,7 @@ using row_id = int;
 
 namespace fs = std::filesystem;
 
+const unsigned int MAX_ROW = 200000;
 
 struct Node  
 {  
