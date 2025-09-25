@@ -409,7 +409,9 @@ class ExactCoverSolver {
                 timer.setTimeBound(TIME_LIMIT_BUILDING_SECONDS);
                 if (p > std::thread::hardware_concurrency()) {
                     poolSize = std::thread::hardware_concurrency();
-                } 
+                } else {
+                    poolSize = p;
+                }
             }
         ~ExactCoverSolver() = default;
 
