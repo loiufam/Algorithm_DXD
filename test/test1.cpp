@@ -38,7 +38,8 @@ int main() {
             {
                 if (entry.is_regular_file())
                 {
-                    // 文件路径               
+                    // 文件路径          
+                    if (entry.path().filename().string() == ".DS_Store") continue;     
                     logger.logLine("文件名: " + entry.path().filename().string());
 
                     try {

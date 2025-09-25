@@ -474,8 +474,8 @@ int main(int argc, char *argv[]) {
     std::string inputFolder4 = "./exrta_matrix";
     std::string outputFolder = "../../d3x/data";
 
-    // converter.batchConvert(inputFolder1, outputFolder, 1);
-    // converter.batchConvert(inputFolder2, outputFolder, 2);
+    converter.batchConvert(inputFolder1, outputFolder, 1);
+    converter.batchConvert(inputFolder2, outputFolder, 2);
     converter.batchConvert(inputFolder3, outputFolder, 3);
     converter.batchConvert(inputFolder4, outputFolder, 1);
 

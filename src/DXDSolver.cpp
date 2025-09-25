@@ -976,7 +976,7 @@ void ExactCoverSolver::searchEC() {
         logger.logLine("搜索到的解个数: " + to_string(result->count));
         cout << endl;
     } catch (const std::exception& e) {
-        throw new std::runtime_error(string(e.what()));
+        logger.logLine(string(e.what()));
         return;
     }
 
