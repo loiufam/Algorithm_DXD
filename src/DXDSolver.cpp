@@ -911,42 +911,73 @@ shared_ptr<DNNFNode> DecisionDNNF::solveSingle(DancingMatrix& matrix, unordered_
 shared_ptr<DNNFNode> DecisionDNNF::solve() {
 
     vector<std::future<shared_ptr<DNNFNode>>> futures;
-    futures.reserve(matrices.size());
+    // futures.reserve(matrices.size());
 
-    for (auto& matrixPtr : matrices) {
-        // 使用move避免拷贝，每个线程获得独立所有权
-        futures.push_back(pool.enqueue([this](unique_ptr<DancingMatrix> matrix) {
-            unordered_map<size_t, shared_ptr<DNNFNode>> localCache;
-            return solveSingle(*matrix, localCache);
-        }, std::move(matrixPtr)));
+    // for (auto& matrixPtr : matrices) {
+    //     // 使用move避免拷贝，每个线程获得独立所有权
+    //     futures.push_back(pool.enqueue([this](unique_ptr<DancingMatrix> matrix) {
+    //         unordered_map<size_t, shared_ptr<DNNFNode>> localCache;
+    //         return solveSingle(*matrix, localCache);
+    //     }, std::move(matrixPtr)));
+    // }
+
+    // auto rootNode = make_shared<DNNFNode>();
+    // rootNode->count = 0;
+
+    // for (auto& future : futures) {
+    //     auto result = future.get();
+    //     rootNode->children.push_back(result);
+    //     rootNode->count += result->count;
+    // }
+
+    Semaphore semaphore(maxConcurrentMatrices);  // 控制并发数
+        
+    for (const auto& task : tasks) {
+        auto future = pool.enqueue([this, task, &semaphore]() -> shared_ptr<DNNFNode> {
+            semaphore.acquire();  // 获取资源
+            
+            try {
+                // 按需创建矩阵
+                auto matrix = make_unique<DancingMatrix>(task.input_file, task.from);
+                
+                // 应用行选择和列覆盖
+                applyRowSelection(*matrix, task.selectedRow);
+                
+                unordered_map<size_t, shared_ptr<DNNFNode>> localCache;
+                auto result = solveSingle(*matrix, localCache);
+                
+                // 矩阵使用完立即释放
+                matrix.reset();
+                
+                semaphore.release();  // 释放资源
+                return result;
+            } catch (...) {
+                semaphore.release();
+                throw;
+            }
+        });
+        futures.push_back(std::move(future));
     }
-
-    auto rootNode = make_shared<DNNFNode>();
-    rootNode->count = 0;
-
-    for (auto& future : futures) {
-        auto result = future.get();
-        rootNode->children.push_back(result);
-        rootNode->count += result->count;
-    }
-
-    return rootNode;
+    
+    // 合并结果
+    return mergeResults(futures);
 }
 
 void ExactCoverSolver::searchEC() {
     try{
         DancingMatrix dm(input_file, from);
-             // cout << "最大线程数: " << poolSize << endl;
+
         logger.logLine("最大线程数: " + to_string(poolSize));
 
         // getClosedSizeCol(poolSize)
         col_id selectCol = dm.getSmallestSizeCol();
         ColunmHeader* colHead = &dm.getColIndex()[selectCol];
-
         cout << "选择列: " << selectCol << " size: " << colHead->size << endl;
 
-        vector<unique_ptr<DancingMatrix>> subMatrices;
-        subMatrices.reserve(colHead->size);
+        // vector<unique_ptr<DancingMatrix>> subMatrices;
+        // subMatrices.reserve(colHead->size);
+        vector<SubMatrixTask> tasks;
+        tasks.reserve(colHead->size);
         
         timer.markStartTime();
         Node* curR = colHead->down;
@@ -955,23 +986,27 @@ void ExactCoverSolver::searchEC() {
                 throw std::runtime_error("Time bound broken");
             }
 
-            auto subMatrix = make_unique<DancingMatrix>(input_file, from);
+            // auto subMatrix = make_unique<DancingMatrix>(input_file, from);
             
-            RowNode* rowHead = &subMatrix->getRowIndex()[curR->row];
-            Node* startNode = rowHead->right;
-            subMatrix->cover(startNode->col);
+            // RowNode* rowHead = &subMatrix->getRowIndex()[curR->row];
+            // Node* startNode = rowHead->right;
+            // subMatrix->cover(startNode->col);
 
-            Node* curC = startNode->right;
-            while (curC != startNode) {
-                subMatrix->cover(curC->col);
-                curC = curC->right;
-            }
-            subMatrices.push_back(std::move(subMatrix));
-
+            // Node* curC = startNode->right;
+            // while (curC != startNode) {
+            //     subMatrix->cover(curC->col);
+            //     curC = curC->right;
+            // }
+            // subMatrices.push_back(std::move(subMatrix));
+            // 只记录任务信息，不创建矩阵
+            tasks.emplace_back(curR->row, input_file, from);
+            
             curR = curR->down;
         }  
 
-        DecisionDNNF solver(std::move(subMatrices));
+        int maxConcurrent = std::min(poolSize, 8);  // 最多同时4个矩阵
+        // DecisionDNNF solver(std::move(subMatrices));
+        DecisionDNNF solver(std::move(tasks), maxConcurrent);
 
         auto start = std::chrono::high_resolution_clock::now();
         shared_ptr<DNNFNode> result = solver.solve();

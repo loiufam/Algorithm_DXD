@@ -371,10 +371,21 @@ class DanceDNNF : DancingMatrix {
         vector<BatchOperation> batchOpStack;
 };
 
+struct SubMatrixTask {
+        row_id selectedRow;
+        string input_file;
+        int from;
+        
+        SubMatrixTask(row_id row, const string& file, int f) 
+            : selectedRow(row), input_file(file), from(f) {}
+};
+
 class DecisionDNNF {
     private:
         vector<unique_ptr<DancingMatrix>> matrices;
+        vector<SubMatrixTask> tasks;
         ThreadPool& pool;
+        int maxConcurrentMatrices;  // 限制同时存在的矩阵数量
 
     public:
         DecisionDNNF(vector<unique_ptr<DancingMatrix>>&& matrices)
@@ -383,8 +394,14 @@ class DecisionDNNF {
             std::cout<< "初始化DecisionDNNF完成." << endl;
         }
 
+        DecisionDNNF(vector<SubMatrixTask>&& tasks, int maxConcurrent = 4)
+            : tasks(std::move(tasks)), pool(getThreadPool()), maxConcurrentMatrices(maxConcurrent) {
+            cout << "初始化DecisionDNNF完成, 任务数: " << this->tasks.size() << endl;
+        }
+
         ~DecisionDNNF() {
             matrices.clear();
+            tasks.clear();
         }
 
         shared_ptr<DNNFNode> solveSingle(DancingMatrix& matrix, unordered_map<size_t, shared_ptr<DNNFNode>>& localCache);
@@ -395,6 +412,37 @@ class DecisionDNNF {
 
 
     private:
+        void applyRowSelection(DancingMatrix& matrix, row_id selectedRow) {
+            // 根据选中的行应用覆盖操作
+            RowNode* rowHead = &matrix.getRowIndex()[selectedRow];
+            Node* startNode = rowHead->right;
+            matrix.cover(startNode->col);
+            Node* curC = startNode->right;
+            while (curC != startNode) {
+                matrix.cover(curC->col);
+                curC = curC->right;
+            }
+        }
+
+        shared_ptr<DNNFNode> mergeResults(vector<future<shared_ptr<DNNFNode>>>& futures) {
+
+            if (futures.empty()) return F;
+
+            auto merged = std::make_shared<DNNFNode>(NodeType::OR, -1, 0);
+            
+            for (auto& future : futures) {
+                try {
+                    auto result = future.get();
+                    merged->count += result->count;
+                    merged->children.push_back(result);
+                } catch (const std::exception& e) {
+                    // 处理异常
+                    cout << "子任务异常: " << e.what() << endl;
+                }
+            }
+            
+            return merged;
+        }
 
         ThreadPool& getThreadPool(int maxTheads = thread::hardware_concurrency()) {
             return ThreadPoolManager::get_instance(maxTheads);
@@ -423,6 +471,29 @@ class ExactCoverSolver {
         int poolSize;
         Logger& logger;
         CStopWatch timer;   // 计时器
+};
+
+// 信号量类，用于控制并发数
+class Semaphore {
+    private:
+        std::mutex mtx;
+        std::condition_variable cv;
+        int count;
+        
+    public:
+        explicit Semaphore(int count) : count(count) {}
+        
+        void acquire() {
+            std::unique_lock<std::mutex> lock(mtx);
+            cv.wait(lock, [this] { return count > 0; });
+            --count;
+        }
+        
+        void release() {
+            std::unique_lock<std::mutex> lock(mtx);
+            ++count;
+            cv.notify_one();
+        }
 };
 
 #endif

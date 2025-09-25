@@ -24,7 +24,7 @@ int main() {
         const std::string folderPath2 = "../data/set_partitioning_benchmarks&2";
         const std::string folderPath3 = "../data/graph_dataset&3";
         const std::string folderPath4 = "../data/extra_matrix&1";
-        filePaths.insert(filePaths.end(), {folderPath1, folderPath2, folderPath3, folderPath4});
+        filePaths.insert(filePaths.end(), {folderPath1, folderPath2, folderPath4});
         char delimiter = '&'; 
 
         for (auto& fp : filePaths) {
@@ -40,7 +40,7 @@ int main() {
                 {
                     // 文件路径  
                     if (entry.path().filename().string() == ".DS_Store") continue;          
-                    logger.logLine("文件名: " + entry.path().filename().string());
+                    logger.logLine("文件名: " + entry.path().stem().string());
 
                     try {
                         DanceDNNF dxdSolver(entry.path().string(), read_mode, logger, true);
