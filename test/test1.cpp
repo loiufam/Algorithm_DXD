@@ -1,5 +1,6 @@
 #include "../include/DancingMatrix.h"
 #include "../include/DXZ.h"
+#include "../utils/ResProcessor.h"
 
 static Logger logger("../dxz_exp_log.txt");  // 全局日志
 
@@ -22,10 +23,12 @@ int main() {
         std::vector<std::string> filePaths;
         std::string folderPath1 = "../data/exact_cover_benchmark&1";
         std::string folderPath2 = "../data/set_partitioning_benchmarks&2";
-        std::string folderPath3 = "../data/graph_dataset&3";
-        std::string folderPath4 = "../data/exrta_matrix&1";
-        filePaths.insert(filePaths.end(), {folderPath3, folderPath4});
+        std::string folderPath3 = "../data/graph_matrix&3";
+        filePaths.insert(filePaths.end(), {folderPath1, folderPath2, folderPath3});
         char delimiter = '&';
+        string table_file = "../exp_results.csv"; // 结果表格文件
+        ExperimentProcessor processor; // 结果处理器
+        processor.loadTable(table_file);
 
         for (auto& fp : filePaths) {
             std::vector<std::string> result = split(fp, delimiter);
@@ -38,14 +41,18 @@ int main() {
             {
                 if (entry.is_regular_file())
                 {
-                    // 文件路径          
-                    if (entry.path().filename().string() == ".DS_Store") continue;     
-                    logger.logLine("文件名: " + entry.path().filename().string());
+                    // 文件路径  
+                    std::string file_name = entry.path().stem().string();        
+                    if (file_name == ".DS_Store") continue;     
+                    logger.logLine("文件名: " + file_name);
 
                     try {
                         DanceZDD dxzSolver(entry.path().string(), read_mode, logger);
-                        dxzSolver.startDLX();
-                        dxzSolver.startDXZ();
+                        dxzSolver.cur_instance = file_name;
+                        shared_ptr<ExperimentResult> res = dxzSolver.startDLX();
+                        processor.processResultFile(res, AlgorithmType::DLX);
+                        shared_ptr<ExperimentResult> resDXZ = dxzSolver.startDXZ();
+                        processor.processResultFile(resDXZ, AlgorithmType::DXZ);
                     } catch (const std::exception& e) {
                         logger.logLine(std::string("处理文件时出错: ") + e.what());
                     }
@@ -54,6 +61,7 @@ int main() {
             }
             logger.logLine("处理文件夹完毕: " + fileFolderName);
         }
+        processor.saveTable(table_file);
         std::cout << "所有文件处理完毕" << std::endl;
     return 0;
 }
