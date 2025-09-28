@@ -1,3 +1,0 @@
-/home/experimenter/Desktop/lyh/Alg_DXD/Algorithm_DXD/build/CMakeFiles/test1.dir
-/home/experimenter/Desktop/lyh/Alg_DXD/Algorithm_DXD/build/CMakeFiles/edit_cache.dir
-/home/experimenter/Desktop/lyh/Alg_DXD/Algorithm_DXD/build/CMakeFiles/rebuild_cache.dir

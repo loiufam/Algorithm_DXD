@@ -1,1 +1,0 @@
-/usr/bin/c++  -fsanitize=address -g  -fsanitize=address CMakeFiles/test1.dir/test/test1.cpp.o CMakeFiles/test1.dir/src/DancingMatrix.cpp.o CMakeFiles/test1.dir/src/DXZSolver.cpp.o CMakeFiles/test1.dir/src/ConnectedGraph.cpp.o CMakeFiles/test1.dir/src/DXDTime.cpp.o -o test1 

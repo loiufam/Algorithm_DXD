@@ -44,7 +44,8 @@ int main() {
                     if(entry.path().stem().extension() == ".in") continue; // 跳过.in文件
 
                     // 文件路径  
-                    logger.logLine("文件名: " + fileName);
+                    if (entry.path().filename().string() == ".DS_Store") continue;          
+                    logger.logLine("文件名: " + entry.path().stem().string());
 
                     try {
                         DanceDNNF dxdSolver(entry.path().string(), read_mode, logger, true);
