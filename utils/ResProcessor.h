@@ -168,7 +168,7 @@ public:
         
         // 验证解数一致性
         if (result.solution_count >= 0) {
-            if (row.solution_count != result.solution_count) {
+            if (row.solution_count != result.solution_count && row.solution_count != -1) {
                 row.solution_failed = true;
                 std::cerr << "Warning: Solution count mismatch for " << instance_name 
                          << " (existing: " << row.solution_count 
@@ -214,6 +214,16 @@ public:
     }
     
 private:
+    std::string trim(const std::string& str) {
+        if (str.empty()) return str;
+        
+        size_t start = str.find_first_not_of(" \t\r\n");
+        if (start == std::string::npos) return "";
+        
+        size_t end = str.find_last_not_of(" \t\r\n");
+        return str.substr(start, end - start + 1);
+    }
+
     // 解析CSV行
     TableRow parseCSVLine(const std::string& line) {
         TableRow row;
@@ -222,19 +232,22 @@ private:
         int col = 0;
         
         while (std::getline(ss, field, ',')) {
-            // 去除空格
-            field.erase(0, field.find_first_not_of(" \t"));
-            field.erase(field.find_last_not_of(" \t") + 1);
+            if (col > 9) break; // 多余列忽略
             
+            // 安全地去除空格
+            field = trim(field);
+
+            // std::cout << "Field: '" << field << "'" << std::endl;
+    
             switch (col) {
                 case 0: row.instance = field; break;
                 case 1: if (!field.empty()) row.cols = std::stoi(field); break;
                 case 2: if (!field.empty()) row.rows = std::stoi(field); break;
-                case 3: if (!field.empty()) row.dlx_time = std::stod(field); break;
-                case 4: if (!field.empty()) row.dxz_time = std::stod(field); break;
-                case 5: if (!field.empty()) row.d3x_time = std::stod(field); break;
-                case 6: if (!field.empty()) row.dxd_s_time = std::stod(field); break;
-                case 7: if (!field.empty()) row.dxd_m_time = std::stod(field); break;
+                case 3: if (!field.empty()) row.dlx_time = field; break;
+                case 4: if (!field.empty()) row.dxz_time = field; break;
+                case 5: if (!field.empty()) row.d3x_time = field; break;
+                case 6: if (!field.empty()) row.dxd_s_time = field; break;
+                case 7: if (!field.empty()) row.dxd_m_time = field; break;
                 case 8: 
                     if (field == "failed") {
                         row.solution_failed = true;
@@ -246,6 +259,7 @@ private:
             }
             col++;
         }
+        // std::cout << "Parsed ended " << std::endl;
         
         return row;
     }

@@ -51,8 +51,10 @@ int main() {
                         dxzSolver.cur_instance = file_name;
                         shared_ptr<ExperimentResult> res = dxzSolver.startDLX();
                         processor.processResultFile(res, AlgorithmType::DLX);
+                        std::cout << std::endl;
                         shared_ptr<ExperimentResult> resDXZ = dxzSolver.startDXZ();
                         processor.processResultFile(resDXZ, AlgorithmType::DXZ);
+                        std::cout << std::endl;
                     } catch (const std::exception& e) {
                         logger.logLine(std::string("处理文件时出错: ") + e.what());
                     }

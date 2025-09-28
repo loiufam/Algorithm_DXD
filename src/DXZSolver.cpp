@@ -206,7 +206,7 @@ shared_ptr<ExperimentResult> DanceZDD::startDLX(){
         // count = sol; // 更新计数
         logger.logLine("DLX搜索耗时(s): " + std::to_string(searchTimeSeconds));
         cur_result->runtime = std::to_string(searchTimeSeconds);
-        std::cout << std::endl;
+
         return cur_result;
     } catch (std::runtime_error& e) {
         cur_result->runtime = "timeout";
@@ -239,7 +239,7 @@ shared_ptr<ExperimentResult> DanceZDD::startDXZ(){
         logger.logLine("解的数量: " + std::to_string(count));
         // std::cout << "ZDD节点数: " << zdd_size << std::endl;
         // logger.logLine("ZDD节点数: " + std::to_string(zdd_size));
-        std::cout << std::endl;
+
         return cur_result;
     } catch (std::runtime_error &e) {
         cur_result->runtime = "timeout";
