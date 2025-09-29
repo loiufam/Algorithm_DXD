@@ -1,6 +1,6 @@
 #include "../include/DancingMatrix.h"
 #include "../include/DXD.h"
-#include <string>
+#include "../utils/ResProcessor.h"
 
 static Logger logger("../dxd_exp_log.txt");  // 全局日志
 
@@ -23,10 +23,12 @@ int main() {
         std::vector<std::string> filePaths;
         const std::string folderPath1 = "../data/exact_cover_benchmark&1";
         const std::string folderPath2 = "../data/set_partitioning_benchmarks&2";
-        const std::string folderPath3 = "../data/graph_dataset&3";
-        const std::string folderPath4 = "../data/extra_matrix&1";
-        filePaths.insert(filePaths.end(), {folderPath4});
+        const std::string folderPath3 = "../data/graph_matrix&3";
+        filePaths.insert(filePaths.end(), {folderPath1, folderPath2, folderPath3});
         char delimiter = '&'; 
+        string table_file = "../exp_results.csv"; // 结果表格文件
+        ExperimentProcessor processor; // 结果处理器
+        processor.loadTable(table_file);
 
         for (auto& fp : filePaths) {
             std::vector<std::string> result = split(fp, delimiter);
@@ -44,19 +46,24 @@ int main() {
                     if(entry.path().stem().extension() == ".in") continue; // 跳过.in文件
 
                     // 文件路径  
-                    if (entry.path().filename().string() == ".DS_Store") continue;          
-                    logger.logLine("文件名: " + entry.path().stem().string());
+                    std::string file_name = entry.path().stem().string();
+                    if (file_name == ".DS_Store") continue;          
+                    logger.logLine("文件名: " + file_name);
 
                     try {
                         DanceDNNF dxdSolver(entry.path().string(), read_mode, logger, true);
-                        dxdSolver.startDXD();
+                        dxdSolver.cur_instance = file_name;
+                        shared_ptr<DXDResult> res = dxdSolver.startDXD();
+                        processor.processResultFile(res, AlgorithmType::DXD_S);
                     } catch (const std::exception& e) {
                         logger.logLine(std::string("处理文件时出错: ") + e.what());
                     }
 
                     try{
                         ExactCoverSolver ecSolver(entry.path().string(), read_mode, logger, 16);
-                        ecSolver.searchEC();
+                        ecSolver.cur_instance = file_name;
+                        shared_ptr<ExperimentResult> res = ecSolver.searchEC();
+                        processor.processResultFile(res, AlgorithmType::DXD_M);
                     } catch (const std::exception& e) {
                         logger.logLine(std::string("处理文件时出错: ") + e.what());
                     }
@@ -65,6 +72,7 @@ int main() {
             }
             logger.logLine("处理文件夹完毕: " + fileFolderName);
         }
+        processor.saveTable(table_file);
 
         logger.logLine("所有文件处理完毕");
     return 0;

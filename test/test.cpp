@@ -25,7 +25,7 @@ int main(){
 
     std::cout << "rows: " << rows << ", cols: " << cols << std::endl;
     {
-    DanceDNNF dxd(rows, cols, matrix);
+    // DanceDNNF dxd(rows, cols, matrix);
     // Block initBlock = dxd.getBlock();
 
     // dxd.coverInBlock(3, initBlock);
@@ -60,7 +60,7 @@ int main(){
     // vector<Block> blocks = dlm.spilitBlockParallel(row_sets);
     // dlm.printBlocks(blocks);
     
-    dxd.startDXD();
+    // dxd.startDXD();
 
     // dxd.startMultiThreadDXD();
     }

@@ -819,10 +819,11 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
 }
 
 
-void DanceDNNF::startDXD() {
+shared_ptr<DXDResult> DanceDNNF::startDXD() {
 
     // std::cout << "开始单线程DXD搜索..." << std::endl;
     logger.logLine("开始单线程DXD搜索...");
+    cur_result->instance_name = cur_instance;
     try{
         // clearCache();
         Block block(rowsSet, colsSet);
@@ -834,19 +835,25 @@ void DanceDNNF::startDXD() {
 
         // std::cout << "搜索到的解个数: " << rootDNNF->count << std::endl;
         logger.logLine("搜索到的解个数: " + std::to_string(rootDNNF->count));
+        cur_result->solution_count = rootDNNF->count;
         
         searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
         // std::cout << "单线程DXD搜索完成, 耗时: " << searchTimeSeconds << " 秒。" << std::endl;
         logger.logLine("单线程DXD搜索完成, 耗时: " + std::to_string(searchTimeSeconds) + " 秒。");
+        cur_result->runtime = std::to_string(searchTimeSeconds);
     
         if( MAX_B_COUNT > 1 ) {
             // std::cout << "本次搜索最大分块数为: " << MAX_B_COUNT << std::endl;
             logger.logLine("本次搜索最大分块数为: " + std::to_string(MAX_B_COUNT));
         }
+        cur_result->max_blocks = MAX_B_COUNT;
         std::cout << std::endl; 
+        return cur_result;
     } catch (std::runtime_error &e) {
         logger.logLine("DXD搜索超时: " + std::string(e.what()));
         logger.logLine("");
+        cur_result->runtime = "timeout";
+        return cur_result;
     }
 
 }
@@ -963,7 +970,9 @@ shared_ptr<DNNFNode> DecisionDNNF::solve() {
     return mergeResults(futures);
 }
 
-void ExactCoverSolver::searchEC() {
+shared_ptr<ExperimentResult> ExactCoverSolver::searchEC() {
+    cur_result->instance_name = cur_instance;
+    
     try{
         DancingMatrix dm(input_file, from);
 
@@ -972,7 +981,7 @@ void ExactCoverSolver::searchEC() {
         // getClosedSizeCol(poolSize)
         col_id selectCol = dm.getSmallestSizeCol();
         ColunmHeader* colHead = &dm.getColIndex()[selectCol];
-        cout << "选择列: " << selectCol << " size: " << colHead->size << endl;
+        std::cout << "选择列: " << selectCol << " size: " << colHead->size << std::endl;
 
         // vector<unique_ptr<DancingMatrix>> subMatrices;
         // subMatrices.reserve(colHead->size);
@@ -1015,12 +1024,17 @@ void ExactCoverSolver::searchEC() {
         double elapsedSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
         // cout << "搜索完成，耗时: " << elapsedSeconds << " 秒。" << endl;
         logger.logLine("多线程DXD搜索完成, 耗时: " + to_string(elapsedSeconds) + " 秒。");
+        cur_result->runtime = to_string(elapsedSeconds);
         // cout << "搜索到的解个数: " << result->count << endl;
         logger.logLine("搜索到的解个数: " + to_string(result->count));
-        cout << endl;
+        cur_result->solution_count = result->count;
+        std::cout << std::endl;
+        return cur_result;
     } catch (const std::exception& e) {
+        cur_result->runtime = "fialed";
         logger.logLine(string(e.what()));
         logger.logLine("");
+        return cur_result;
     }
 
 }

@@ -2,6 +2,7 @@
 #define DANCINGMATRIX_H
 
 #include "ThreadPool.h"
+#include "../utils/ResProcessor.h"
 #include <string>
 #include <set>
 #include <map>

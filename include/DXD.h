@@ -256,10 +256,12 @@ class DanceDNNF : DancingMatrix {
 
         shared_ptr<ConnectedGraph> connectedGraph;
         CStopWatch timer;   // 计时器
+        shared_ptr<DXDResult> cur_result; // 当前实例结果
 
         int MAX_P_COUNT = 2; // 最大并行搜索次数   
         int p_count = 0; // 记录并行搜索的次数
         size_t MAX_B_COUNT = 1;
+        string cur_instance = ""; // 当前处理的实例名
         bool isParallelSearch = false; // 是否已分解
 
         vector<set<int>> mergeRowSets(Block& block);
@@ -291,7 +293,7 @@ class DanceDNNF : DancingMatrix {
         shared_ptr<DNNFNode> parallelSearch(vector<Block>& blocks);
 
         // 启动搜索函数
-        void startDXD();
+        shared_ptr<DXDResult> startDXD();
         void startMultiThreadDXD();
 
         void traverseDNNF(const std::shared_ptr<DNNFNode>& node, std::vector<int>& solution);
@@ -462,8 +464,9 @@ class ExactCoverSolver {
                 }
             }
         ~ExactCoverSolver() = default;
+        string cur_instance = ""; // 当前处理的实例名
 
-        void searchEC();
+        shared_ptr<ExperimentResult> searchEC();
     
     private:
         string input_file;
@@ -471,6 +474,7 @@ class ExactCoverSolver {
         int poolSize;
         Logger& logger;
         CStopWatch timer;   // 计时器
+        shared_ptr<ExperimentResult> cur_result; // 当前实例结果
 };
 
 // 信号量类，用于控制并发数
