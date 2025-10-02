@@ -41,6 +41,10 @@ int main() {
             {
                 if (entry.is_regular_file())
                 {
+                    std::string fileName = entry.path().stem().string();
+                    if (fileName == ".DS_Store") continue;
+                    if(entry.path().stem().extension() == ".in") continue; // 跳过.in文件
+
                     // 文件路径  
                     std::string file_name = entry.path().stem().string();
                     if (file_name == ".DS_Store") continue;          

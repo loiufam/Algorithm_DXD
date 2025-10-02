@@ -398,7 +398,8 @@ public:
         std::vector<int> path;
         enumeratePaths(rootZDD, path);
     }
-    
+
+
     void batchConvert(const std::string& input_folder, const std::string& output_folder, int read_mode) {
         
         std::ofstream compile_time_file("zdd_compile_time.txt", std::ios::app);
@@ -407,14 +408,21 @@ public:
         for (const auto& entry : fs::directory_iterator(input_folder)) { 
             if (entry.is_regular_file()) {
                 std::string input_file = entry.path().string();
-                std::string output_file = output_folder + "/" + entry.path().stem().string() + ".zdd";
+                fs::path p = entry.path().filename();
+                p = p.stem(); // 去掉扩展名
+                if (read_mode == 3) {
+                    p = p.stem(); // 再去掉一次扩展名
+                }
+                std::string output_file_name = p.string();
+                if (output_file_name == ".DS_Store") continue; // 跳过系统文件
+                std::string output_file = output_folder + "/" + output_file_name + ".zdd";
                          
                 auto start = std::chrono::high_resolution_clock::now();
                 convertMatrixToZDD(input_file, read_mode);
                 outputZDD(output_file);
                 auto end = std::chrono::high_resolution_clock::now();
                 double elapsedSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
-                compile_time_file << entry.path().stem().string() << ": " << elapsedSeconds << std::endl;
+                compile_time_file << output_file_name << ": " << elapsedSeconds << std::endl;
             }
             count++;
         }
@@ -471,12 +479,12 @@ int main(int argc, char *argv[]) {
     std::string inputFolder1 = "./exact_cover_benchmark";
     std::string inputFolder2 = "./set_partitioning_benchmarks";
     std::string inputFolder3 = "./graph_dataset";
-    std::string inputFolder4 = "./exrta_matrix";
-    std::string outputFolder = "../../d3x/data";
+    std::string inputFolder4 = "./extra_matrix";
+    std::string outputFolder = "../../D3X/data";
 
-    converter.batchConvert(inputFolder1, outputFolder, 1);
-    converter.batchConvert(inputFolder2, outputFolder, 2);
-    converter.batchConvert(inputFolder3, outputFolder, 3);
+    // converter.batchConvert(inputFolder1, outputFolder, 1);
+    // converter.batchConvert(inputFolder2, outputFolder, 2);
+    // converter.batchConvert(inputFolder3, outputFolder, 3);
     converter.batchConvert(inputFolder4, outputFolder, 1);
 
     std::cout << "\n=== ZDD输出完成 ===\n"; 
