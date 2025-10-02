@@ -24,7 +24,7 @@ int main() {
         std::string folderPath1 = "../data/exact_cover_benchmark&1";
         std::string folderPath2 = "../data/set_partitioning_benchmarks&2";
         std::string folderPath3 = "../data/graph_matrix&3";
-        filePaths.insert(filePaths.end(), {folderPath1, folderPath2, folderPath3});
+        filePaths.insert(filePaths.end(), {folderPath3});
         char delimiter = '&';
         string table_file = "../exp_results.csv"; // 结果表格文件
         ExperimentProcessor processor; // 结果处理器
@@ -52,6 +52,7 @@ int main() {
                         shared_ptr<ExperimentResult> res = dxzSolver.startDLX();
                         processor.processResultFile(res, AlgorithmType::DLX);
                         std::cout << std::endl;
+                        
                         shared_ptr<ExperimentResult> resDXZ = dxzSolver.startDXZ();
                         processor.processResultFile(resDXZ, AlgorithmType::DXZ);
                         std::cout << std::endl;

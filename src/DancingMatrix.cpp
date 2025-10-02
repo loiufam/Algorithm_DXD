@@ -67,10 +67,10 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose )
 
     ROWS = rows;
     COLS = cols;
-    if (ROWS > MAX_ROW) {
-        cerr << "矩阵行数过大，无法处理: " << ROWS << " 行." << endl;
-        throw runtime_error("矩阵行数过大");
-    }
+    // if (ROWS > MAX_ROW) {
+    //     cerr << "矩阵行数过大，无法处理: " << ROWS << " 行." << endl;
+    //     throw runtime_error("矩阵行数过大");
+    // }
     // 初始化列哈希表
     for(int col = 1; col <= COLS; col++){
         colHash[col] = std::hash<int>()(col);
