@@ -62,8 +62,8 @@ int main() {
                 }
             }
             logger.logLine("处理文件夹完毕: " + fileFolderName);
+            processor.saveTable(table_file);
         }
-        processor.saveTable(table_file);
         std::cout << "所有文件处理完毕" << std::endl;
     return 0;
 }

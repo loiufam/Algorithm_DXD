@@ -129,7 +129,7 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose )
     }
 
     // cout<< "初始化舞蹈链完成." << endl;
-    computeInitialHash();
+    // computeInitialHash();
     if(verbose) graph = make_shared<ConnectedGraph>(*this);
     file.close();
 }

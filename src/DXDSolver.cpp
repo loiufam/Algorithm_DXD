@@ -988,12 +988,9 @@ shared_ptr<ExperimentResult> ExactCoverSolver::searchEC() {
         vector<SubMatrixTask> tasks;
         tasks.reserve(colHead->size);
         
-        timer.markStartTime();
+
         Node* curR = colHead->down;
         while (curR != colHead) {
-            if (timer.timeBoundBroken()) {
-                throw std::runtime_error("Time bound broken");
-            }
 
             // auto subMatrix = make_unique<DancingMatrix>(input_file, from);
             

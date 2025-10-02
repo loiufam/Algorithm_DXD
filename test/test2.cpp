@@ -67,8 +67,8 @@ int main() {
                 }
             }
             logger.logLine("处理文件夹完毕: " + fileFolderName);
+            processor.saveTable(table_file);
         }
-        processor.saveTable(table_file);
 
         logger.logLine("所有文件处理完毕");
     return 0;
