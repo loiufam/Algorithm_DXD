@@ -335,6 +335,7 @@ public:
 
     void outputZDD(const std::string& output_file) {
         std::unordered_set<std::string> visited;
+        orderZddTable.clear();
         traverseZDD(rootZDD, visited);
 
         if(orderZddTable.size() == 0){
@@ -408,12 +409,8 @@ public:
         for (const auto& entry : fs::directory_iterator(input_folder)) { 
             if (entry.is_regular_file()) {
                 std::string input_file = entry.path().string();
-                fs::path p = entry.path().filename();
-                p = p.stem(); // 去掉扩展名
-                if (read_mode == 3) {
-                    p = p.stem(); // 再去掉一次扩展名
-                }
-                std::string output_file_name = p.string();
+ 
+                std::string output_file_name = entry.path().stem().string();
                 if (output_file_name == ".DS_Store") continue; // 跳过系统文件
                 std::string output_file = output_folder + "/" + output_file_name + ".zdd";
                          
@@ -431,39 +428,6 @@ public:
     }
 };
 
-int test() {
-    std::vector<std::vector<int>> matrix = {
-        {1, 1, 0, 0, 0, 0},  // 行1: a, b
-        {1, 1, 1, 0, 1, 0},  // 行2: a, b, c, e  
-        {0, 0, 0, 1, 0, 1},  // 行3: d, f
-        {0, 0, 1, 1, 0, 1},  // 行4: c, d, f
-        {0, 0, 1, 0, 1, 0}   // 行5: c, e
-    };
-    
-    std::cout << "输入矩阵:\n";
-    std::cout << "   a b c d e f\n";
-    for (size_t i = 0; i < matrix.size(); i++) {
-        std::cout << i+1 << " (";
-        for (size_t j = 0; j < matrix[i].size(); j++) {
-            std::cout << matrix[i][j];
-            if (j < matrix[i].size() - 1) std::cout << " ";
-        }
-        std::cout << ")\n";
-    }
-    std::cout << "\n";
-
-    ZDDConverter converter;
-
-    std::cout << "ZDD节点数: " << converter.getZddNodes() << "\n";
-
-    std::cout << "\nZDD structure:\n";
-    converter.printZDDByBFS();
-
-    std::cout << "\nZDD paths:\n"; 
-    converter.enumInterface();
-
-    return 0;
-}
 
 // 本项目作为矩阵转换ZDD工具，为D3X提供数据集
 int main(int argc, char *argv[]) {
@@ -478,36 +442,18 @@ int main(int argc, char *argv[]) {
 
     std::string inputFolder1 = "./exact_cover_benchmark";
     std::string inputFolder2 = "./set_partitioning_benchmarks";
-    std::string inputFolder3 = "./graph_dataset";
-    std::string inputFolder4 = "./extra_matrix";
+    std::string inputFolder3 = "./graph_matrix";
     std::string outputFolder = "../../D3X/data";
+    converter.convertMatrixToZDD(inputFolder3 + "/Missouri.txt", 3);
+    converter.outputZDD("output.zdd");
 
     // converter.batchConvert(inputFolder1, outputFolder, 1);
     // converter.batchConvert(inputFolder2, outputFolder, 2);
     // converter.batchConvert(inputFolder3, outputFolder, 3);
-    converter.batchConvert(inputFolder4, outputFolder, 1);
 
     std::cout << "\n=== ZDD输出完成 ===\n"; 
 
-    std::cout << "Total files converted: " << converter.fileCounter << std::endl;
-    // if (std::string(argv[1]) == "-b") {
-
-    //     std::string input_folder = argv[2];
-    //     std::string output_folder = argv[3];
-    //     // 检查输入文件夹是否存在
-    //     if (!fs::exists(input_folder) || !fs::is_directory(input_folder)) {
-    //         std::cout << "输入文件夹不存在或不是目录: " << input_folder << std::endl;
-    //         return 1;
-    //     }
-
-    //     converter.batchConvert(input_folder, output_folder, std::stoi(argv[4]));
-    //     std::cout << "\n=== 批量转换ZDD完成 ===\n";
-    // } else if(std::string(argv[1]) == "-s") {
-    //     converter.convertMatrixToZDD(argv[2], std::stoi(argv[4]));
-    //     std::cout << "\n=== ZDD构建完成 ===\n";
-    //     converter.outputZDD(argv[3]);
-    //     std::cout << "\n=== ZDD输出完成 ===\n";
-    // }
+    // std::cout << "Total files converted: " << converter.fileCounter << std::endl;
     
     return 0;
 }

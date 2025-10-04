@@ -15,4 +15,4 @@ matrix_to_zdd.o: matrix_to_zdd.cpp
 	$(CC) $(OPT) -c matrix_to_zdd.cpp
 
 clean:
-	rm -f $(OBJ) $(PRG)
+	rm -f $(OBJ) 
