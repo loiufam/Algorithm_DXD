@@ -86,7 +86,7 @@ public:
                 iss >> count;
             }
             
-            if (count <= 0) continue; 
+            if (read_mode > 1 && count <= 0) continue; 
 
             std::set<int> colSet;
             int col;

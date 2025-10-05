@@ -1,109 +1,293 @@
-Batch conversion started at 2025年 10月 05日 星期日 11:02:42 CST
+Batch conversion started at 2025年 10月 05日 星期日 11:56:52 CST
 
-Processing: att48
-Compilation time: 0.0185675 seconds
-ZDD written to output/att48.zdd
+Processing: bell-03
+Compilation time: 6.823e-06 seconds
+ZDD written to output/bell-03.zdd
 ===========================================
-Processing: burma14
-Compilation time: 0.0109744 seconds
-ZDD written to output/burma14.zdd
+Processing: bell-04
+Compilation time: 1.3375e-05 seconds
+ZDD written to output/bell-04.zdd
 ===========================================
-Processing: Darkstrand
-Compilation time: 0.508601 seconds
-ZDD written to output/Darkstrand.zdd
+Processing: bell-05
+Compilation time: 1.6161e-05 seconds
+ZDD written to output/bell-05.zdd
 ===========================================
-Processing: Deltacom
-Compilation time: 3.75741 seconds
-ZDD written to output/Deltacom.zdd
+Processing: bell-06
+Compilation time: 2.7682e-05 seconds
+ZDD written to output/bell-06.zdd
 ===========================================
-Processing: eil51
-Compilation time: 0.0325598 seconds
-ZDD written to output/eil51.zdd
+Processing: bell-07
+Compilation time: 6.2087e-05 seconds
+ZDD written to output/bell-07.zdd
 ===========================================
-Processing: Funet
-Compilation time: 0.061921 seconds
-ZDD written to output/Funet.zdd
+Processing: bell-08
+Compilation time: 0.000129974 seconds
+ZDD written to output/bell-08.zdd
 ===========================================
-Processing: grafo117.20
-Compilation time: 0.0155485 seconds
-ZDD written to output/grafo117.20.zdd
+Processing: bell-09
+Compilation time: 0.00024413 seconds
+ZDD written to output/bell-09.zdd
 ===========================================
-Processing: grafo121.20
-Compilation time: 0.0803237 seconds
-ZDD written to output/grafo121.20.zdd
+Processing: bell-10
+Compilation time: 0.000789206 seconds
+ZDD written to output/bell-10.zdd
 ===========================================
-Processing: grafo190.20
-Compilation time: 0.115539 seconds
-ZDD written to output/grafo190.20.zdd
+Processing: bell-11
+Compilation time: 0.00166893 seconds
+ZDD written to output/bell-11.zdd
 ===========================================
-Processing: grafo215.20
-Compilation time: 0.0155149 seconds
-ZDD written to output/grafo215.20.zdd
+Processing: bell-12
+Compilation time: 0.00355014 seconds
+ZDD written to output/bell-12.zdd
 ===========================================
-Processing: grafo244.20
-Compilation time: 0.052116 seconds
-ZDD written to output/grafo244.20.zdd
+Processing: doublefact-01
+Compilation time: 6.181e-06 seconds
+ZDD written to output/doublefact-01.zdd
 ===========================================
-Processing: grafo251.20
-Compilation time: 0.0781125 seconds
-ZDD written to output/grafo251.20.zdd
+Processing: doublefact-03
+Compilation time: 1.2684e-05 seconds
+ZDD written to output/doublefact-03.zdd
 ===========================================
-Processing: grafo7785.100
-Compilation time: 0.0577148 seconds
-ZDD written to output/grafo7785.100.zdd
+Processing: doublefact-05
+Compilation time: 1.0379e-05 seconds
+ZDD written to output/doublefact-05.zdd
 ===========================================
-Processing: grafo8224.100
-Compilation time: 0.290255 seconds
-ZDD written to output/grafo8224.100.zdd
+Processing: doublefact-07
+Compilation time: 3.208e-05 seconds
+ZDD written to output/doublefact-07.zdd
 ===========================================
-Processing: grafo8373.100
-Compilation time: 3.60194 seconds
-ZDD written to output/grafo8373.100.zdd
+Processing: doublefact-09
+Compilation time: 2.9195e-05 seconds
+ZDD written to output/doublefact-09.zdd
 ===========================================
-Processing: grafo8513.100
-Compilation time: 0.457153 seconds
-ZDD written to output/grafo8513.100.zdd
+Processing: doublefact-11
+Compilation time: 3.6629e-05 seconds
+ZDD written to output/doublefact-11.zdd
 ===========================================
-Processing: grafo8564.100
-Compilation time: 0.0752395 seconds
-ZDD written to output/grafo8564.100.zdd
+Processing: doublefact-13
+Compilation time: 4.742e-05 seconds
+ZDD written to output/doublefact-13.zdd
 ===========================================
-Processing: grafo8674.100
-Compilation time: 3.07666 seconds
-ZDD written to output/grafo8674.100.zdd
+Processing: doublefact-15
+Compilation time: 8.3607e-05 seconds
+ZDD written to output/doublefact-15.zdd
 ===========================================
-Processing: grid33
-Compilation time: 0.0183801 seconds
-ZDD written to output/grid33.zdd
+Processing: doublefact-17
+Compilation time: 9.2725e-05 seconds
+ZDD written to output/doublefact-17.zdd
 ===========================================
-Processing: Interoute
-Compilation time: 0.232311 seconds
-ZDD written to output/Interoute.zdd
+Processing: doublefact-19
+Compilation time: 0.000161294 seconds
+ZDD written to output/doublefact-19.zdd
 ===========================================
-Processing: Ion
-Compilation time: 0.00651579 seconds
-ZDD written to output/Ion.zdd
+Processing: doublefact-21
+Compilation time: 0.000155313 seconds
+ZDD written to output/doublefact-21.zdd
 ===========================================
-Processing: Missouri
-Compilation time: 0.000305165 seconds
-ZDD written to output/Missouri.zdd
+Processing: doublefact-23
+Compilation time: 0.000266612 seconds
+ZDD written to output/doublefact-23.zdd
 ===========================================
-Processing: ulysses16
-Compilation time: 0.0460052 seconds
-ZDD written to output/ulysses16.zdd
+Processing: doublefact-25
+Compilation time: 0.000431372 seconds
+ZDD written to output/doublefact-25.zdd
 ===========================================
-Processing: UsCarrier
-Compilation time: 0.0491669 seconds
-ZDD written to output/UsCarrier.zdd
+Processing: doublefact-27
+Compilation time: 0.000342795 seconds
+ZDD written to output/doublefact-27.zdd
 ===========================================
-Processing: UsSignal
-Compilation time: 0.000614047 seconds
-ZDD written to output/UsSignal.zdd
+Processing: doublefact-29
+Compilation time: 0.000423999 seconds
+ZDD written to output/doublefact-29.zdd
 ===========================================
-Processing: VisionNet
-Compilation time: 0.0112605 seconds
-ZDD written to output/VisionNet.zdd
+Processing: kts15-ptpt-0001
+Compilation time: 0.00240113 seconds
+ZDD written to output/kts15-ptpt-0001.zdd
+===========================================
+Processing: kts15-ptpt-0002
+Compilation time: 0.00274837 seconds
+ZDD written to output/kts15-ptpt-0002.zdd
+===========================================
+Processing: kts15-ptpt-0003
+Compilation time: 0.00251553 seconds
+ZDD written to output/kts15-ptpt-0003.zdd
+===========================================
+Processing: kts15-ptpt-0004
+Compilation time: 0.00266747 seconds
+ZDD written to output/kts15-ptpt-0004.zdd
+===========================================
+Processing: kts15-ptpt-0005
+Compilation time: 0.0026188 seconds
+ZDD written to output/kts15-ptpt-0005.zdd
+===========================================
+Processing: kts15-ptpt-0006
+Compilation time: 0.00322972 seconds
+ZDD written to output/kts15-ptpt-0006.zdd
+===========================================
+Processing: kts15-ptpt-0007
+Compilation time: 0.00274945 seconds
+ZDD written to output/kts15-ptpt-0007.zdd
+===========================================
+Processing: kts15-ptpt-0008
+Compilation time: 0.00297679 seconds
+ZDD written to output/kts15-ptpt-0008.zdd
+===========================================
+Processing: kts15-ptpt-0009
+Compilation time: 0.00279376 seconds
+ZDD written to output/kts15-ptpt-0009.zdd
+===========================================
+Processing: kts15-ptpt-0010
+Compilation time: 0.00283617 seconds
+ZDD written to output/kts15-ptpt-0010.zdd
+===========================================
+Processing: kts15-ptpt-0011
+Compilation time: 0.00285276 seconds
+ZDD written to output/kts15-ptpt-0011.zdd
+===========================================
+Processing: kts15-ptpt-0012
+Compilation time: 0.00241489 seconds
+ZDD written to output/kts15-ptpt-0012.zdd
+===========================================
+Processing: kts15-ptpt-0013
+Compilation time: 0.00283333 seconds
+ZDD written to output/kts15-ptpt-0013.zdd
+===========================================
+Processing: kts15-ptpt-0014
+Compilation time: 0.00258961 seconds
+ZDD written to output/kts15-ptpt-0014.zdd
+===========================================
+Processing: kts15-ptpt-0020
+Compilation time: 0.00306039 seconds
+ZDD written to output/kts15-ptpt-0020.zdd
+===========================================
+Processing: kts15-ptpt-0021
+Compilation time: 0.00292785 seconds
+ZDD written to output/kts15-ptpt-0021.zdd
+===========================================
+Processing: latin6-blk-00001
+Compilation time: 0.000173807 seconds
+ZDD written to output/latin6-blk-00001.zdd
+===========================================
+Processing: latin6-blk-00002
+Compilation time: 0.000177104 seconds
+ZDD written to output/latin6-blk-00002.zdd
+===========================================
+Processing: latin6-blk-00003
+Compilation time: 0.00017507 seconds
+ZDD written to output/latin6-blk-00003.zdd
+===========================================
+Processing: latin6-blk-00004
+Compilation time: 0.000153159 seconds
+ZDD written to output/latin6-blk-00004.zdd
+===========================================
+Processing: latin6-blk-00005
+Compilation time: 0.000177324 seconds
+ZDD written to output/latin6-blk-00005.zdd
+===========================================
+Processing: latin6-blk-00006
+Compilation time: 0.000190188 seconds
+ZDD written to output/latin6-blk-00006.zdd
+===========================================
+Processing: latin6-blk-00007
+Compilation time: 0.000201379 seconds
+ZDD written to output/latin6-blk-00007.zdd
+===========================================
+Processing: latin7-blk-00001
+Compilation time: 0.000618084 seconds
+ZDD written to output/latin7-blk-00001.zdd
+===========================================
+Processing: latin7-blk-00002
+Compilation time: 0.000406455 seconds
+ZDD written to output/latin7-blk-00002.zdd
+===========================================
+Processing: latin7-blk-00003
+Compilation time: 0.000550096 seconds
+ZDD written to output/latin7-blk-00003.zdd
+===========================================
+Processing: latin7-blk-00004
+Compilation time: 0.000425061 seconds
+ZDD written to output/latin7-blk-00004.zdd
+===========================================
+Processing: latin7-blk-00005
+Compilation time: 0.000497737 seconds
+ZDD written to output/latin7-blk-00005.zdd
+===========================================
+Processing: latin7-blk-00006
+Compilation time: 0.000465707 seconds
+ZDD written to output/latin7-blk-00006.zdd
+===========================================
+Processing: latin7-blk-00007
+Compilation time: 0.000532493 seconds
+ZDD written to output/latin7-blk-00007.zdd
+===========================================
+Processing: latin7-blk-00008
+Compilation time: 0.000434638 seconds
+ZDD written to output/latin7-blk-00008.zdd
+===========================================
+Processing: latin7-blk-00009
+Compilation time: 0.000415503 seconds
+ZDD written to output/latin7-blk-00009.zdd
+===========================================
+Processing: latin8-blk-00001
+Compilation time: 0.000906608 seconds
+ZDD written to output/latin8-blk-00001.zdd
+===========================================
+Processing: latin8-blk-00002
+Compilation time: 0.00095096 seconds
+ZDD written to output/latin8-blk-00002.zdd
+===========================================
+Processing: latin8-blk-00003
+Compilation time: 0.00108688 seconds
+ZDD written to output/latin8-blk-00003.zdd
+===========================================
+Processing: latin8-blk-00004
+Compilation time: 0.000987209 seconds
+ZDD written to output/latin8-blk-00004.zdd
+===========================================
+Processing: latin8-blk-00005
+Compilation time: 0.00132737 seconds
+ZDD written to output/latin8-blk-00005.zdd
+===========================================
+Processing: latin8-blk-00006
+Compilation time: 0.00106014 seconds
+ZDD written to output/latin8-blk-00006.zdd
+===========================================
+Processing: latin8-blk-00007
+Compilation time: 0.00103237 seconds
+ZDD written to output/latin8-blk-00007.zdd
+===========================================
+Processing: latin8-blk-00008
+Compilation time: 0.000931815 seconds
+ZDD written to output/latin8-blk-00008.zdd
+===========================================
+Processing: latin8-blk-00009
+Compilation time: 0.000907238 seconds
+ZDD written to output/latin8-blk-00009.zdd
+===========================================
+Processing: latin8-blk-00010
+Compilation time: 0.0011413 seconds
+ZDD written to output/latin8-blk-00010.zdd
+===========================================
+Processing: sts15-blk-00005
+Compilation time: 0.000214223 seconds
+ZDD written to output/sts15-blk-00005.zdd
+===========================================
+Processing: sts15-blk-00006
+Compilation time: 0.000260099 seconds
+ZDD written to output/sts15-blk-00006.zdd
+===========================================
+Processing: sts15-blk-00007
+Compilation time: 0.000189386 seconds
+ZDD written to output/sts15-blk-00007.zdd
+===========================================
+Processing: sts15-blk-00008
+Compilation time: 0.000260531 seconds
+ZDD written to output/sts15-blk-00008.zdd
+===========================================
+Processing: sts15-blk-00009
+Compilation time: 0.000173537 seconds
+ZDD written to output/sts15-blk-00009.zdd
 ===========================================
 
-Conversion completed at 2025年 10月 05日 星期日 11:02:59 CST
-Total files: 26, Success: 26, Failed: 0
+Conversion completed at 2025年 10月 05日 星期日 11:56:52 CST
+Total files: 72, Success: 72, Failed: 0
