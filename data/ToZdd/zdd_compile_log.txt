@@ -1,109 +1,109 @@
-Batch conversion started at 2025年10月 4日 星期六 17时53分15秒 CST
+Batch conversion started at 2025年 10月 05日 星期日 11:02:42 CST
 
-Processing: Darkstrand
-Compilation time: 0.576138 seconds
-ZDD written to output/Darkstrand.zdd
-===========================================
-Processing: Deltacom
-Compilation time: 4.28335 seconds
-ZDD written to output/Deltacom.zdd
-===========================================
-Processing: Funet
-Compilation time: 0.077332 seconds
-ZDD written to output/Funet.zdd
-===========================================
-Processing: Interoute
-Compilation time: 0.312069 seconds
-ZDD written to output/Interoute.zdd
-===========================================
-Processing: Ion
-Compilation time: 0.00864654 seconds
-ZDD written to output/Ion.zdd
-===========================================
-Processing: Missouri
-Compilation time: 0.000389625 seconds
-ZDD written to output/Missouri.zdd
-===========================================
-Processing: UsCarrier
-Compilation time: 0.0627153 seconds
-ZDD written to output/UsCarrier.zdd
-===========================================
-Processing: UsSignal
-Compilation time: 0.000832041 seconds
-ZDD written to output/UsSignal.zdd
-===========================================
-Processing: VisionNet
-Compilation time: 0.0135785 seconds
-ZDD written to output/VisionNet.zdd
-===========================================
 Processing: att48
-Compilation time: 0.0214137 seconds
+Compilation time: 0.0185675 seconds
 ZDD written to output/att48.zdd
 ===========================================
 Processing: burma14
-Compilation time: 0.0145384 seconds
+Compilation time: 0.0109744 seconds
 ZDD written to output/burma14.zdd
 ===========================================
+Processing: Darkstrand
+Compilation time: 0.508601 seconds
+ZDD written to output/Darkstrand.zdd
+===========================================
+Processing: Deltacom
+Compilation time: 3.75741 seconds
+ZDD written to output/Deltacom.zdd
+===========================================
 Processing: eil51
-Compilation time: 0.0439468 seconds
+Compilation time: 0.0325598 seconds
 ZDD written to output/eil51.zdd
 ===========================================
+Processing: Funet
+Compilation time: 0.061921 seconds
+ZDD written to output/Funet.zdd
+===========================================
 Processing: grafo117.20
-Compilation time: 0.0174792 seconds
+Compilation time: 0.0155485 seconds
 ZDD written to output/grafo117.20.zdd
 ===========================================
 Processing: grafo121.20
-Compilation time: 0.106865 seconds
+Compilation time: 0.0803237 seconds
 ZDD written to output/grafo121.20.zdd
 ===========================================
 Processing: grafo190.20
-Compilation time: 0.149925 seconds
+Compilation time: 0.115539 seconds
 ZDD written to output/grafo190.20.zdd
 ===========================================
 Processing: grafo215.20
-Compilation time: 0.0209685 seconds
+Compilation time: 0.0155149 seconds
 ZDD written to output/grafo215.20.zdd
 ===========================================
 Processing: grafo244.20
-Compilation time: 0.0635019 seconds
+Compilation time: 0.052116 seconds
 ZDD written to output/grafo244.20.zdd
 ===========================================
 Processing: grafo251.20
-Compilation time: 0.0971905 seconds
+Compilation time: 0.0781125 seconds
 ZDD written to output/grafo251.20.zdd
 ===========================================
 Processing: grafo7785.100
-Compilation time: 0.0711329 seconds
+Compilation time: 0.0577148 seconds
 ZDD written to output/grafo7785.100.zdd
 ===========================================
 Processing: grafo8224.100
-Compilation time: 0.367019 seconds
+Compilation time: 0.290255 seconds
 ZDD written to output/grafo8224.100.zdd
 ===========================================
 Processing: grafo8373.100
-Compilation time: 4.2267 seconds
+Compilation time: 3.60194 seconds
 ZDD written to output/grafo8373.100.zdd
 ===========================================
 Processing: grafo8513.100
-Compilation time: 0.636106 seconds
+Compilation time: 0.457153 seconds
 ZDD written to output/grafo8513.100.zdd
 ===========================================
 Processing: grafo8564.100
-Compilation time: 0.0926284 seconds
+Compilation time: 0.0752395 seconds
 ZDD written to output/grafo8564.100.zdd
 ===========================================
 Processing: grafo8674.100
-Compilation time: 3.74402 seconds
+Compilation time: 3.07666 seconds
 ZDD written to output/grafo8674.100.zdd
 ===========================================
 Processing: grid33
-Compilation time: 0.0225878 seconds
+Compilation time: 0.0183801 seconds
 ZDD written to output/grid33.zdd
 ===========================================
+Processing: Interoute
+Compilation time: 0.232311 seconds
+ZDD written to output/Interoute.zdd
+===========================================
+Processing: Ion
+Compilation time: 0.00651579 seconds
+ZDD written to output/Ion.zdd
+===========================================
+Processing: Missouri
+Compilation time: 0.000305165 seconds
+ZDD written to output/Missouri.zdd
+===========================================
 Processing: ulysses16
-Compilation time: 0.061052 seconds
+Compilation time: 0.0460052 seconds
 ZDD written to output/ulysses16.zdd
 ===========================================
+Processing: UsCarrier
+Compilation time: 0.0491669 seconds
+ZDD written to output/UsCarrier.zdd
+===========================================
+Processing: UsSignal
+Compilation time: 0.000614047 seconds
+ZDD written to output/UsSignal.zdd
+===========================================
+Processing: VisionNet
+Compilation time: 0.0112605 seconds
+ZDD written to output/VisionNet.zdd
+===========================================
 
-Conversion completed at 2025年10月 4日 星期六 17时53分42秒 CST
+Conversion completed at 2025年 10月 05日 星期日 11:02:59 CST
 Total files: 26, Success: 26, Failed: 0

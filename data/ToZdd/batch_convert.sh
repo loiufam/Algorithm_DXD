@@ -23,13 +23,14 @@ echo "" >> "$LOG_FILE"
 count=0
 success=0
 
-# 遍历输入文件夹中的所有txt文件
-for input_file in "$INPUT_FOLDER"/*.txt; do
+# 遍历输入文件夹中的所有文件
+for input_file in "$INPUT_FOLDER"/*; do
     if [ -f "$input_file" ]; then
-        filename=$(basename "$input_file" .txt)
-        output_file="$OUTPUT_FOLDER/${filename}.zdd"
+        filename=$(basename "$input_file")
+        name="${filename%.*}"
+        output_file="$OUTPUT_FOLDER/${name}.zdd"
         
-        echo "Processing: $filename" >> "$LOG_FILE"
+        echo "Processing: $name" >> "$LOG_FILE"
         
         # 记录开始时间
         # start_time=$(date +%s.%N)
@@ -41,7 +42,7 @@ for input_file in "$INPUT_FOLDER"/*.txt; do
             # echo "$filename: SUCCESS ($elapsed seconds)" >> "$LOG_FILE"
             ((success++))
         else
-            echo "$filename: FAILED" >> "$LOG_FILE"
+            echo "$name: FAILED" >> "$LOG_FILE"
         fi
         echo "===========================================" >> "$LOG_FILE"
         
