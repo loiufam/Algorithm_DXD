@@ -43,7 +43,7 @@ int main() {
                 {
                     // 文件路径  
                     std::string file_name = entry.path().stem().string();        
-                    if (file_name == ".DS_Store") continue;     
+                    if (file_name == ".DS_Store") continue;
                     logger.logLine("文件名: " + file_name);
 
                     try {
