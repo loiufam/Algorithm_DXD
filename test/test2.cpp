@@ -40,12 +40,8 @@ int main() {
             for (const auto& entry : fs::directory_iterator(file_path))
             {
                 if (entry.is_regular_file())
-                {
-                    std::string fileName = entry.path().stem().string();
-                    if (fileName == ".DS_Store") continue;
-                    if(entry.path().stem().extension() == ".in") continue; // 跳过.in文件
-
-                    // 文件路径  
+                {                   
+                    // 文件名
                     std::string file_name = entry.path().stem().string();
                     if (file_name == ".DS_Store") continue;          
                     logger.logLine("文件名: " + file_name);
