@@ -2,13 +2,13 @@
 
 void DanceZDD::DLX(std::vector<label_t>& solution)
 {
-    if( root->right == root ) {
+    if( isSolved() ) {
         count++;
         // sols.push_back(solution);  
         return;
     } 
 
-    ColunmHeader* choose = selectCol();
+    ColumnHeader* choose = selectCol();
     if( choose->size <= 0 ){
         return;  
     }
@@ -49,17 +49,12 @@ void DanceZDD::DLX(std::vector<label_t>& solution)
 
 void DanceZDD::X(uint64_t& count)  
 {  
-    if( root->right == root ) {
+    if( isSolved() ) {
         count++;
         return;
     } 
-    ColunmHeader* choose = (ColunmHeader*)root->right, *cur=choose;  
-    while( cur != root )  
-    {   //选择元素最少的列
-        if( choose->size > cur->size )  
-            choose = cur;  
-        cur = (ColunmHeader*)cur->right;  
-    }  
+    ColumnHeader* choose = selectCol();
+
     if( choose->size <= 0 ){
         return;  
     } 
@@ -125,7 +120,7 @@ shared_ptr<ZDDNode> DanceZDD::unique(int r, shared_ptr<ZDDNode> x, shared_ptr<ZD
 
 shared_ptr<ZDDNode> DanceZDD::DXZ()
 {
-    if(root->right == root){
+    if(isSolved()){
         return T_ZDD;
     }
 
@@ -139,14 +134,7 @@ shared_ptr<ZDDNode> DanceZDD::DXZ()
         return memo_cache[columnState]; 
     }
 
-    ColunmHeader* choose = (ColunmHeader*)root->right;  
-    ColunmHeader* cur = choose;
-    while( cur != root )  
-    {   //选择元素最少的列
-        if( choose->size > cur->size )  
-            choose = cur;  
-        cur = (ColunmHeader*)cur->right;  
-    }  
+    ColumnHeader* choose = selectCol();
 
     if( choose->size <= 0 ){
         return F_ZDD;  
@@ -202,6 +190,7 @@ shared_ptr<ExperimentResult> DanceZDD::startDLX(){
         auto end = std::chrono::high_resolution_clock::now();
         searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
         logger.logLine("DLX搜索完成, 找到的解个数: " + std::to_string(count));
+        
         cur_result->solution_count = count;
         // count = sol; // 更新计数
         logger.logLine("DLX搜索耗时(s): " + std::to_string(searchTimeSeconds));

@@ -28,32 +28,27 @@ struct Node
 {  
     Node* left, *right, *up, *down;  
     int col, row;  
-    Node(){  
-        left = NULL; right = NULL;  
-        up = NULL; down = NULL;  
-        col = 0; row = 0;  
-    }  
-    Node( int r, int c )  
-    {  
-        left = NULL; right = NULL;  
-        up = NULL; down  = NULL;  
-        col = c; row = r;  
-    }  
+    Node(int r = -1, int c = -1) 
+        : row(r), col(c), left(nullptr), right(nullptr), 
+          up(nullptr), down(nullptr) {} 
+    
+    virtual ~Node() = default;
 };  
 
-struct ColunmHeader : public Node  
+struct ColumnHeader : public Node  
 {  
     int size;
     set<int> rows;
-    ColunmHeader() : size(0) {
+    ColumnHeader() : size(0) {
     }  
 }; 
 
 struct RowNode : public Node
 {
+    Node* firstNode;
     int size;
     set<int> cols;
-    RowNode() : size(0) {
+    RowNode() : firstNode(nullptr), size(0) {
     }
 };
 
@@ -77,8 +72,42 @@ struct Component{
     }
 };
 
+struct Block {
+        unordered_set<int> rows;  // 舞蹈链行id集合 
+        unordered_set<int> cols;  // 从1开始编号,对应舞蹈链列数id
+        bool is_spilited = false;
+        
+        Block() = default;
+
+        Block(const unordered_set<int>& r, const unordered_set<int>& c) :  rows(r), cols(c) {}
+
+        Block(const set<int>& r, const set<int>& c, bool is_spilited = true){
+            rows.insert(r.begin(), r.end());
+            cols.insert(c.begin(), c.end());
+        }
+
+        Block(const vector<int>& r, const vector<int>& c){
+            rows.insert(r.begin(), r.end());
+            cols.insert(c.begin(), c.end());
+        }
+
+        void printBlock() {
+            cout<< "cols: " << endl;
+            for(int c : cols){
+                cout << c << " ";
+            }
+            cout<<endl;
+            cout<< "rows: " << endl;
+            for(int r : rows){
+                cout<< r << " ";
+            }
+            cout<<endl; 
+        }
+
+};
+
 struct ColumnComparator {
-    bool operator()(const std::pair<int, ColunmHeader*>& a, const std::pair<int, ColunmHeader*>& b) const {
+    bool operator()(const std::pair<int, ColumnHeader*>& a, const std::pair<int, ColumnHeader*>& b) const {
         if (a.first != b.first) {
             return a.first < b.first;  // 一级排序：size从小到大
         }
@@ -129,35 +158,24 @@ class DancingMatrix
         std::vector<std::vector<int>> solutions; 
         set<int> rowsSet;  // 舞蹈链行id
         set<int> colsSet;  // 原始矩阵列
+        Block InitBlock;
         unordered_map<int, set<int>> rowToColsSet;
         unordered_map<int, set<int>> colToRowsSet;
         // 列状态
-        size_t currentColState = 0;
-        unordered_map<int, size_t> colHash; // 每个列的固定哈希值
         size_t getColumnState() const;
         
-        // 获取当前哈希
-        size_t getCurColState() const {
-            return currentColState;
-        }
-        
-        // 初始计算一次 hash
-        void computeInitialHash() {
-
-            ColunmHeader* cur = (ColunmHeader*)root->right;
-            while (cur != root) {
-                currentColState ^= colHash[cur->col];
-                cur = (ColunmHeader*)cur->right;
-            }
-        }
         
         //接收矩阵其及维度  
         DancingMatrix( int rows, int cols, int** matrix);  
         DancingMatrix( const string& file_path, int from, bool verbose = false );
 
-        // 复制函数
-        DancingMatrix(const DancingMatrix& other) 
-            : root(other.root), ColIndex(other.ColIndex), RowIndex(other.RowIndex) {};
+        // 禁用拷贝和赋值
+        DancingMatrix(const DancingMatrix&) = delete;
+        DancingMatrix& operator=(const DancingMatrix&) = delete;
+
+        // 允许移动
+        DancingMatrix(DancingMatrix&&) = delete;
+        DancingMatrix& operator=(DancingMatrix&&) = delete;
         //释放内存  
         ~DancingMatrix();  
         
@@ -166,18 +184,18 @@ class DancingMatrix
         void printMatrix() const; 
         void cover( int c );  
         void uncover( int c ); 
-        shared_ptr<ConnectedGraph> getConnectedGraph(){
-            return graph;
-        };
+        void coverInBlock(int c, Block& block);
+        void uncoverInBlock(int c, Block& block);
+
         string encodeBlockState(const unordered_set<int>& cols);
         size_t hashBlockState(const unordered_set<int>& cols);
         size_t hashColState(unordered_set<int>& cols);
      
-        ColunmHeader* selectCol();
-        ColunmHeader* selectColumnHeuristic(const unordered_set<int>& cols);
+        ColumnHeader* selectCol();
+        ColumnHeader* selectColumnHeuristic(const unordered_set<int>& cols);
         col_id getClosedSizeCol(const int expected_size);
         col_id getSmallestSizeCol();
-        // ColunmHeader* fastSelect();
+        // ColumnHeader* fastSelect();
 
         std::mutex rowIndexMutex; // 保护 RowIndex 的互斥锁
         void removeCol(int r, int c) {
@@ -185,7 +203,7 @@ class DancingMatrix
             if(colSet.find(c) == colSet.end()) {
                 return;
             }
-            lock_guard<mutex> lock(rowIndexMutex);
+            // lock_guard<mutex> lock(rowIndexMutex);
             colSet.erase(c);
         }
 
@@ -198,23 +216,37 @@ class DancingMatrix
             colSet.insert(c);
         }
 
-        ColunmHeader* getRoot() const {
-            return root;
+        inline ColumnHeader* getColumnHeader(int c) const {
+            ColumnHeader* col = &ColIndex[c];
+            return col;
         }
 
-        ColunmHeader* getColIndex() const {
-            return ColIndex;
+        inline void decColSize(int c) {
+            ColIndex[c].size--;
         }
 
-        RowNode* getRowIndex() const {
-            return RowIndex;
+        inline void incColSize(int c) {
+            ColIndex[c].size++;
         }
+
+        inline RowNode* getRowHeader(int r) const {
+            RowNode* row = &RowIndex[r];
+            return row;
+        }
+
+        inline bool isSolved() const {
+            return root->right == root;
+        }
+
+        vector<vector<int>> getComponents(set<int>& rows);
 
     private:  
-        ColunmHeader* root;  
-        ColunmHeader* ColIndex;  
-        RowNode* RowIndex; 
-        shared_ptr<ConnectedGraph> graph;
+        ColumnHeader* root;  
+        std::unique_ptr<ColumnHeader[]> ColIndex;
+        std::unique_ptr<RowNode[]> RowIndex;
+        std::vector<std::unique_ptr<Node>> dataNodes;
+
+        std::unique_ptr<ConnectedGraph> graph;
         
 };
 

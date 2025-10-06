@@ -1,0 +1,13 @@
+{
+"cmake.generator": "Unix Makefiles",
+"cmake.buildDirectory": "${workspaceFolder}/build",
+"cmake.configureOnOpen": true,
+"cmake.buildArgs": [],
+"cmake.buildToolArgs": [],
+"cmake.sourceDirectory": "${workspaceFolder}",
+"cmake.parallelJobs": 4,
+"cmake.configureSettings": {
+"CMAKE_C_COMPILER": "/usr/bin/clang",
+"CMAKE_CXX_COMPILER": "/usr/bin/clang++"
+}
+}

@@ -34,7 +34,7 @@ struct ORNode {
 struct CoverOperation {
     std::vector<int> columns;           // 被覆盖的列索引
     std::vector<Node*> coveredNodes;
-    std::vector<std::pair<ColunmHeader*, ColunmHeader*>> columnLinks; // 列头的原始链接
+    std::vector<std::pair<ColumnHeader*, ColumnHeader*>> columnLinks; // 列头的原始链接
 };
 
 enum class NodeType { OR, Decision, Decomposed, Variable, Terminal };  // 节点类型 AND node 分为Decision和Decomposed两种
@@ -79,39 +79,6 @@ struct SetIntHash {
 };
 
 
-struct Block {
-        unordered_set<int> rows;  // 舞蹈链行id集合 
-        unordered_set<int> cols;  // 从1开始编号,对应舞蹈链列数id
-        bool is_spilited = false;
-        
-        Block() = default;
-
-        Block(const unordered_set<int>& r, const unordered_set<int>& c) :  rows(r), cols(c) {}
-
-        Block(const set<int>& r, const set<int>& c, bool is_spilited = true){
-            rows.insert(r.begin(), r.end());
-            cols.insert(c.begin(), c.end());
-        }
-
-        Block(const vector<int>& r, const vector<int>& c){
-            rows.insert(r.begin(), r.end());
-            cols.insert(c.begin(), c.end());
-        }
-
-        void printBlock() {
-            cout<< "cols: " << endl;
-            for(int c : cols){
-                cout << c << " ";
-            }
-            cout<<endl;
-            cout<< "rows: " << endl;
-            for(int r : rows){
-                cout<< r << " ";
-            }
-            cout<<endl; 
-        }
-
-};
 
 struct DXD_Block {
 
@@ -180,10 +147,10 @@ struct DXDFrame {
 
 
     // for normal choose/OR processing
-    ColunmHeader* choose = nullptr;
+    ColumnHeader* choose = nullptr;
     std::shared_ptr<DNNFNode> orNode = nullptr;
     // iteration cursor over rows under chosen column
-    ColunmHeader* choosePtr = nullptr; 
+    ColumnHeader* choosePtr = nullptr; 
 
 
     std::vector<int> rowsUnderChoose; // snapshot of row ids under choose at time of selection
@@ -226,10 +193,7 @@ class DanceDNNF : DancingMatrix {
     public:
         DanceDNNF(int rows, int cols, int** matrix, Logger& l) 
             : DancingMatrix(rows, cols, matrix), logger(l) {
-            root = getRoot();
-            ColIndex = getColIndex();
-            RowIndex = getRowIndex();
-            connectedGraph = getConnectedGraph();
+ 
             timer.setTimeBound(TIME_LIMIT_SECONDS);
 
             std::cout<< "初始化DanceDNNF完成." << endl;
@@ -237,29 +201,19 @@ class DanceDNNF : DancingMatrix {
 
         DanceDNNF(const string& file_path, int from, Logger& l, bool verbose = false)
             : DancingMatrix(file_path, from, verbose), logger(l) {
-            root = getRoot();
-            ColIndex = getColIndex();
-            RowIndex = getRowIndex();
-            if(verbose) connectedGraph = getConnectedGraph();
+
             timer.setTimeBound(TIME_LIMIT_SECONDS);
 
-            std::cout<< "初始化DanceDNNF完成." << endl;
+            // std::cout<< "初始化DanceDNNF完成." << endl;
         }
 
-        ~DanceDNNF() {
-            clearSingleCache();
-            clearCache();
-            Cache.clear();
-            V_Table.clear();
-            block_cache.clear();
-        }
+        ~DanceDNNF() = default;
 
-        shared_ptr<ConnectedGraph> connectedGraph;
         CStopWatch timer;   // 计时器
-        shared_ptr<DXDResult> cur_result; // 当前实例结果
 
         int MAX_P_COUNT = 2; // 最大并行搜索次数   
         int p_count = 0; // 记录并行搜索的次数
+        int depth = 0;
         size_t MAX_B_COUNT = 1;
         string cur_instance = ""; // 当前处理的实例名
         bool isParallelSearch = false; // 是否已分解
@@ -278,8 +232,6 @@ class DanceDNNF : DancingMatrix {
         std::shared_ptr<ORNode> Search(Node* curC);
         void startSearch(bool verbose = false);
 
-        void coverInBlock(int c, Block& block);
-        void uncoverInBlock(int c, Block& block);
         void batchCoverInBlock(Node* curC, Block& block);
         void batchUncoverInBlock(Block& block);
         vector<int> collectColsInRow(int row, const Block &block);
@@ -298,6 +250,12 @@ class DanceDNNF : DancingMatrix {
 
         void traverseDNNF(const std::shared_ptr<DNNFNode>& node, std::vector<int>& solution);
         void countSolutions(shared_ptr<ORNode> node);
+
+        bool shouldDecompose (set<int>& rows) {
+            auto comps = getComponents(rows);
+            MAX_B_COUNT = std::max(MAX_B_COUNT, comps.size());
+            return comps.size() > 1;
+        }
 
         Block getBlock() {
             Block fullBlock(rowsSet, colsSet);
@@ -331,22 +289,16 @@ class DanceDNNF : DancingMatrix {
             CacheMT.clear();
         }
 
-        bool shouldDecompose(const Block& block) const {
-            return block.rows.size() >= MIN_BLOCK_ROWS && block.rows.size() <= MAX_BLOCK_ROWS && p_count < MAX_P_COUNT;
-        }
-
         void incrementPCount() {
             std::lock_guard<std::mutex> lock(countMutex);
             p_count += 1;
         }
 
     private:
-        // 父类成员
-        ColunmHeader* root;  
-        ColunmHeader* ColIndex;  
-        RowNode* RowIndex; 
+
         ThreadPool pool;
         Logger& logger;
+        shared_ptr<DXDResult> cur_result = make_shared<DXDResult>(); // 当前实例结果
         
         // DNNF相关
         std::shared_ptr<ORNode> rootOR;
@@ -393,7 +345,7 @@ class DecisionDNNF {
         DecisionDNNF(vector<unique_ptr<DancingMatrix>>&& matrices)
             : matrices(std::move(matrices)), pool(getThreadPool()) {
             
-            std::cout<< "初始化DecisionDNNF完成." << endl;
+            // std::cout<< "初始化DecisionDNNF完成." << endl;
         }
 
         DecisionDNNF(vector<SubMatrixTask>&& tasks, int maxConcurrent = 4)
@@ -416,7 +368,7 @@ class DecisionDNNF {
     private:
         void applyRowSelection(DancingMatrix& matrix, row_id selectedRow) {
             // 根据选中的行应用覆盖操作
-            RowNode* rowHead = &matrix.getRowIndex()[selectedRow];
+            RowNode* rowHead = matrix.getRowHeader(selectedRow);
             Node* startNode = rowHead->right;
             matrix.cover(startNode->col);
             Node* curC = startNode->right;
@@ -474,7 +426,7 @@ class ExactCoverSolver {
         int poolSize;
         Logger& logger;
         CStopWatch timer;   // 计时器
-        shared_ptr<ExperimentResult> cur_result; // 当前实例结果
+        shared_ptr<ExperimentResult> cur_result = make_shared<ExperimentResult>(); // 当前实例结果
 };
 
 // 信号量类，用于控制并发数

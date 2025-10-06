@@ -5,20 +5,21 @@
 DancingMatrix::DancingMatrix( int rows, int cols, int** matrix )  
     : ROWS(rows), COLS(cols) {
     EXIST_ROWS = rows;  
-    ColIndex = new ColunmHeader[cols+1];  
-    RowIndex = new RowNode[rows];  
+    ColIndex = std::make_unique<ColumnHeader[]>(cols + 1);  
+    RowIndex = std::make_unique<RowNode[]>(rows);  
     root = &ColIndex[0];  
     ColIndex[0].left = &ColIndex[COLS];  
     ColIndex[0].right = &ColIndex[1];  
     ColIndex[COLS].right = &ColIndex[0];  
     ColIndex[COLS].left = &ColIndex[COLS-1];  
-    for( int i=1; i<cols; i++ )  
+
+    for( int i = 1; i < cols; i++ )  
     {  
         ColIndex[i].left = &ColIndex[i-1];  
         ColIndex[i].right = &ColIndex[i+1];  
     }  
 
-    for ( int i=0; i<=cols; i++ )  
+    for ( int i = 0; i <= cols; i++ )  
     {  
         ColIndex[i].up = &ColIndex[i];  
         ColIndex[i].down = &ColIndex[i];  
@@ -26,6 +27,7 @@ DancingMatrix::DancingMatrix( int rows, int cols, int** matrix )
     }  
     ColIndex[0].down = &RowIndex[0];  
     
+    dataNodes.reserve(rows * cols / 2);
 
     // graph = std::make_shared<ConnectedGraph>(ROWS, COLS);
     for( int i = 0; i < rows; i++ ){
@@ -67,32 +69,30 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose )
 
     ROWS = rows;
     COLS = cols;
-    // if (ROWS > MAX_ROW) {
-    //     cerr << "矩阵行数过大，无法处理: " << ROWS << " 行." << endl;
-    //     throw runtime_error("矩阵行数过大");
-    // }
-    // 初始化列哈希表
-    for(int col = 1; col <= COLS; col++){
-        colHash[col] = std::hash<int>()(col);
+
+    if (ROWS > MAX_ROW) {
+        cerr << "矩阵行数过大，无法处理: " << ROWS << " 行." << endl;
+        throw runtime_error("time out");
     }
-    // graph = std::make_shared<ConnectedGraph>(ROWS, COLS); 
 
-    // cout << "矩阵维度: " << rows << " 行, " << cols << " 列." << endl;
+    // cout << "处理矩阵维度: " << rows << " 行, " << cols << " 列." << endl;
 
-    ColIndex = new ColunmHeader[cols+1];  
-    RowIndex = new RowNode[rows];  
+    ColIndex = std::make_unique<ColumnHeader[]>(cols + 1);  
+    RowIndex = std::make_unique<RowNode[]>(rows);  
     root = &ColIndex[0];  
+
     ColIndex[0].left = &ColIndex[COLS];  
     ColIndex[0].right = &ColIndex[1];  
     ColIndex[COLS].right = &ColIndex[0];  
     ColIndex[COLS].left = &ColIndex[COLS-1];  
-    for( int i=1; i<cols; i++ )  
+
+    for( int i = 1; i < cols; i++ )  
     {  
         ColIndex[i].left = &ColIndex[i-1];  
         ColIndex[i].right = &ColIndex[i+1];  
     }  
 
-    for ( int i=0; i<=cols; i++ )  
+    for ( int i = 0; i <= cols; i++ )  
     {  
         ColIndex[i].up = &ColIndex[i];  
         ColIndex[i].down = &ColIndex[i];  
@@ -100,6 +100,7 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose )
     }  
     ColIndex[0].down = &RowIndex[0]; 
 
+    dataNodes.reserve(rows * cols / 2);
     int currentRow = 0;
     while (getline(file, line)) {
         if (line.empty()) continue; // 跳过空行
@@ -113,7 +114,7 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose )
             iss >> token;
         }
 
-        int currentCol; // 列索引从1开始
+        int currentCol = 0; // 列索引从1开始
         while(iss >> currentCol) {
             if (currentCol < 1 || currentCol > cols) {
                 cerr << "无效的列索引: " << currentCol << " 在行 " << currentRow + 1 << endl;
@@ -124,70 +125,62 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose )
             rowsSet.insert(currentRow);
             colsSet.insert(currentCol); 
         }
-        currentRow++;
+        if (currentCol > 0)
+            currentRow++;
+        
         if (currentRow >= rows) break; // 防止超过预期行数
     }
 
-    // cout<< "初始化舞蹈链完成." << endl;
-    // computeInitialHash();
-    if(verbose) graph = make_shared<ConnectedGraph>(*this);
+    InitBlock = Block(rowsSet, colsSet);
+    if(verbose) graph = make_unique<ConnectedGraph>(*this);
     file.close();
 }
 
-//析构函数，在 DancingMatrix 对象被销毁时，释放所有动态分配的内存，避免内存泄漏
-DancingMatrix::~DancingMatrix()  
-{  
-    if (!ColIndex) return;
-    for (int i = 1; i <= COLS; ++i) {
-        auto* col = &ColIndex[i];
-        if (!col) continue;
+DancingMatrix::~DancingMatrix() = default;
 
-        std::vector<Node*> to_delete;
-        for (auto* node = col->down; node && node != col; node = node->down) {
-            to_delete.push_back(node);
-        }
-        for (auto* node : to_delete) delete node;
-    }
-    delete[] RowIndex;
-    delete[] ColIndex;
-    ColIndex = nullptr;
-    RowIndex = nullptr;
-
-}
+vector<vector<int>> DancingMatrix::getComponents(set<int>& rows) {
+    return graph->getComponents(rows);
+};
 
 //插入元素到双向十字链表中
 void DancingMatrix::insert( int r, int c )  
 {  
-    Node* cur = &ColIndex[c];  
     ColIndex[c].size++;  
     RowIndex[r].size++;
     // ColIndex[c].rows.insert(r);
-    RowIndex[r].cols.insert(c);
-    Node* newNode = new Node( r, c );  
+    // RowIndex[r].cols.insert(c);
+    auto newNode = std::make_unique<Node>(r, c);  
+    Node* newNodePtr = newNode.get();
+
+    Node* cur = &ColIndex[c];  
     while( cur->down != &ColIndex[c] && cur->down->row < r )  
         cur = cur->down;  
-    newNode->down = cur->down;  
-    newNode->up = cur;  
-    cur->down->up = newNode;  
-    cur->down = newNode;  
-    if( RowIndex[r].right == NULL )  
+
+    newNodePtr->down = cur->down;  
+    newNodePtr->up = cur;  
+    cur->down->up = newNodePtr;  
+    cur->down = newNodePtr;  
+    if( RowIndex[r].right == nullptr )  
     {  
-        RowIndex[r].right = newNode;  
-        newNode->left = newNode;  
-        newNode->right = newNode;  
+        RowIndex[r].right = newNodePtr;  
+        newNode->left = newNodePtr;  
+        newNode->right = newNodePtr;  
     }  
     else  
     {  
         Node* rowHead = RowIndex[r].right;  
         cur = rowHead;  
+
         while( cur->right != rowHead && cur->right->col < c )  
             cur = cur->right;  
-        newNode->right = cur->right;  
-        newNode->left = cur;  
-        cur->right->left = newNode;  
-        cur->right = newNode;  
+
+        newNodePtr->right = cur->right;  
+        newNodePtr->left = cur;  
+        cur->right->left = newNodePtr;  
+        cur->right = newNodePtr;  
     }  
     // graph->insertEdge(r, c-1); 
+    dataNodes.push_back(std::move(newNode));
 }
 
 string DancingMatrix::encodeBlockState(const unordered_set<int>& cols){
@@ -209,12 +202,12 @@ size_t DancingMatrix::hashBlockState(const unordered_set<int>& cols) {
 size_t DancingMatrix::hashColState(unordered_set<int>& cols) {
     size_t hash = 0;
     cols.clear();
-    ColunmHeader* curCol = (ColunmHeader *)root->right;
+    ColumnHeader* curCol = (ColumnHeader *)root->right;
     while(curCol != root) {
         int col = curCol->col;
         hash ^= std::hash<int>()(col) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
         cols.insert(col);
-        curCol = (ColunmHeader *)curCol->right;
+        curCol = (ColumnHeader *)curCol->right;
     }
     return hash;
 }
@@ -222,10 +215,10 @@ size_t DancingMatrix::hashColState(unordered_set<int>& cols) {
 //获取当前列的状态
 size_t DancingMatrix::getColumnState() const {
     size_t hash = 0;
-    ColunmHeader* cur = (ColunmHeader*)root->right;
+    ColumnHeader* cur = (ColumnHeader*)root->right;
     while (cur != root) {
         hash ^= std::hash<int>()(cur->col) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-        cur = (ColunmHeader*)cur->right;
+        cur = (ColumnHeader*)cur->right;
     }
     return hash;
 }
@@ -233,7 +226,7 @@ size_t DancingMatrix::getColumnState() const {
 void DancingMatrix::build_mapping_from_cols(const unordered_set<int>& blockCols, unordered_map<int, set<int>>& rowToCols, unordered_map<int, set<int>>& colToRows)
 {
     for (auto col : blockCols) {
-        ColunmHeader* c = &ColIndex[col];
+        ColumnHeader* c = &ColIndex[col];
         Node* curR = c->down;
         while (curR != c) {
             rowToCols[curR->row].insert(col);
@@ -246,7 +239,7 @@ void DancingMatrix::build_mapping_from_cols(const unordered_set<int>& blockCols,
 void DancingMatrix::printMatrix() const
 {
     std::cout<< "Remain Matrix Nodes: " << std::endl;
-    ColunmHeader* current = (ColunmHeader*)root->right;
+    ColumnHeader* current = (ColumnHeader*)root->right;
     while(current != root)
     {
         std::cout << "Column " << current->col << " size: " << current->size << " ";
@@ -262,18 +255,17 @@ void DancingMatrix::printMatrix() const
             }
             std::cout << " ) } " << std::endl;
         }
-        current = (ColunmHeader*)current->right;
+        current = (ColumnHeader*)current->right;
     }
     std::cout << std::endl;
 }
 
 void DancingMatrix::cover( int c )  
 {  
-    ColunmHeader* col = &ColIndex[c];  
+    ColumnHeader* col = &ColIndex[c];  
     col->right->left = col->left;  
     col->left->right = col->right; 
     // colsSet.erase(c); // 从当前矩阵移除该列
-    currentColState ^= colHash[c];
     
     Node* curR, *curC;  
     curC = col->down;  
@@ -302,7 +294,7 @@ void DancingMatrix::cover( int c )
 void DancingMatrix::uncover( int c )  
 {  
     Node* curR, *curC;  
-    ColunmHeader* col = &ColIndex[c];  
+    ColumnHeader* col = &ColIndex[c];  
     curC = col->up;  
     while( curC != col )  
     {  
@@ -326,13 +318,78 @@ void DancingMatrix::uncover( int c )
     }  
     col->right->left = col;  
     col->left->right = col;  
-    currentColState ^= colHash[c];
     // colsSet.insert(col->col);
-
 }
 
-ColunmHeader* DancingMatrix::selectColumnHeuristic(const unordered_set<int>& cols) {
-    ColunmHeader* chosen = nullptr;
+void DancingMatrix::coverInBlock(int c, Block& block){
+
+    ColumnHeader* col = &ColIndex[c];  
+    col->right->left = col->left;  
+    col->left->right = col->right;  
+    
+    block.cols.erase(c); // 从块中移除列
+
+
+    Node* curR, *curC;  
+    curC = col->down;  
+    while( curC != col )  
+    {    
+        // RowIndex[curC->row].cols.clear();
+        graph->remove(curC->row);
+        block.rows.erase(curC->row);
+
+        curR = curC->right;  
+        while( curR != curC )  
+        {          
+
+            curR->down->up = curR->up;  
+            curR->up->down = curR->down;  
+            decColSize(curR->col); 
+            // RowIndex[curR->row].cols.erase(curR->col);
+
+            curR = curR->right;  
+        }  
+
+        curC = curC->down;  
+    }  
+}
+
+void DancingMatrix::uncoverInBlock(int c, Block& block){ 
+    
+    Node* curR, *curC;  
+    ColumnHeader* col = &ColIndex[c];  
+
+    curC = col->up;  
+    while( curC != col )  
+    {  
+        Node* noteR = curC;  
+        curR = curC->left;  
+
+        while( curR != noteR )  
+        {  
+            // RowIndex[curR->row].cols.insert(curR->col);
+            incColSize(curR->col); 
+            curR->down->up = curR;  
+            curR->up->down = curR;  
+
+            
+            curR = curR->left;  
+        }  
+        // RowIndex[curC->row].cols.insert(curC->col);
+        block.rows.insert(curC->row);
+        graph->restore(curC->row);
+
+        curC = curC->up;  
+    }  
+
+    col->right->left = col;  
+    col->left->right = col;  
+
+    block.cols.insert(c);
+}
+
+ColumnHeader* DancingMatrix::selectColumnHeuristic(const unordered_set<int>& cols) {
+    ColumnHeader* chosen = nullptr;
     int minSize = INT_MAX;
     // vector<int> colVec(cols.begin(), cols.end());
     // sort(colVec.begin(), colVec.end()); // 对列进行排序，确保每次选择的顺序一致
@@ -347,36 +404,36 @@ ColunmHeader* DancingMatrix::selectColumnHeuristic(const unordered_set<int>& col
     return chosen;
 }
 
-ColunmHeader* DancingMatrix::selectCol()
+ColumnHeader* DancingMatrix::selectCol()
 {
-    ColunmHeader* choose = (ColunmHeader*)root->right, *cur=choose;  
+    ColumnHeader* choose = (ColumnHeader*)root->right, *cur=choose;  
     while( cur != root )  
     {   //选择元素最少的列
         if( choose->size > cur->size )  
             choose = cur;  
-        cur = (ColunmHeader*)cur->right;  
+        cur = (ColumnHeader*)cur->right;  
     } 
     return choose;
 }
 
 col_id DancingMatrix::getClosedSizeCol(const int expected_size) {
-    ColunmHeader* choose = (ColunmHeader*)root->right, *cur=choose;  
+    ColumnHeader* choose = (ColumnHeader*)root->right, *cur=choose;  
     while( cur != root )  
     {   //选择接近预期大小的列
         if( abs(choose->size - expected_size) > abs(cur->size - expected_size) )  
             choose = cur;  
-        cur = (ColunmHeader*)cur->right;  
+        cur = (ColumnHeader*)cur->right;  
     } 
     return choose->col;
 }
 
 col_id DancingMatrix::getSmallestSizeCol() {
-    ColunmHeader* choose = (ColunmHeader*)root->right, *cur=choose;  
+    ColumnHeader* choose = (ColumnHeader*)root->right, *cur=choose;  
     while( cur != root )  
     {   //选择元素最少的列
         if( choose->size > cur->size )  
             choose = cur;  
-        cur = (ColunmHeader*)cur->right;  
+        cur = (ColumnHeader*)cur->right;  
     } 
     return choose->col;
 }

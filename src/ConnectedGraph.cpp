@@ -19,7 +19,7 @@ ConnectedGraph::ConnectedGraph(const DancingMatrix& matrix){
     }
 
     unordered_map<int, set<int>> vertexToEdges;
-    const ColunmHeader* root = matrix.getRoot();
+    const ColumnHeader* root = matrix.getColumnHeader(0);
     Node* curCol = root->right;
     unordered_set<int> record;
     // step1: build mapping from vertex to edges
@@ -73,7 +73,7 @@ ConnectedGraph::ConnectedGraph(const DancingMatrix& matrix){
         }
     }
 
-    cout << "ConnectedGraph has constructed." << endl;
+    // cout << "ConnectedGraph has constructed." << endl;
 }
 
 // 析构函数
@@ -174,4 +174,53 @@ vector<vector<int>> ConnectedGraph::getComponents(set<int> existRowSet) {
 
     return components;
 
+}
+
+vector<Component> ConnectedGraph::getComponents() const{
+    vector<Component> res; 
+
+    if((int)mark.size() < N) 
+        mark.assign(N,0); 
+    else 
+        fill(mark.begin(), mark.end(), 0);
+
+    for(int v = 0; v < N; ++v){ 
+        if(!nodeActive[v] || mark[v]) continue;  // 跳过不活跃的节点
+
+        Treap* Rroot = rootOf(etf.enter[v]);
+        if(!Rroot) continue;
+        
+        Component comp; 
+        comp.rows.reserve(max(4, sz(Rroot)/4)); 
+        comp.cols.reserve(max(4, sz(Rroot)/4));
+
+        Treap* cur = Rroot;
+        trav_stack.clear();
+        trav_stack.reserve(max((size_t)trav_stack.capacity(), 
+            (size_t)min(sz(Rroot), (int)1e6)));
+        
+        while(cur || !trav_stack.empty()){
+            while(cur){ 
+                trav_stack.push_back(cur); 
+                cur = cur->l; 
+            }
+            
+            cur = trav_stack.back(); 
+            trav_stack.pop_back();
+
+            if(cur->v >= 0 && !mark[cur->v] && nodeActive[cur->v]){
+                mark[cur->v] = 1;
+                if(cur->v < R) 
+                    comp.rows.push_back(cur->v);
+                else 
+                    comp.cols.push_back(cur->v - R + 1);
+            }
+            cur = cur->r;
+        }
+
+        if(!comp.rows.empty() && !comp.cols.empty())
+            res.push_back(std::move(comp));
+    }
+
+    return res;
 }

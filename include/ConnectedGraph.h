@@ -247,7 +247,6 @@ class ConnectedGraph {
             }
         }
 
-
         void removeEdge(int r,int c){
             int u = r, v = R+c; 
             uint64_t k = key(u,v);
@@ -288,51 +287,7 @@ class ConnectedGraph {
 
         vector<vector<int>> getComponents(set<int> existRowSet);
 
-        vector<Component> getComponents() const{
-            vector<Component> res; 
-            if((int)mark.size() < N) 
-                mark.assign(N,0); 
-            else 
-                fill(mark.begin(), mark.end(), 0);
-
-            for(int v = 0; v < N; ++v){ 
-                if(!nodeActive[v] || mark[v]) continue;  // 跳过不活跃的节点
-
-                Treap* Rroot = rootOf(etf.enter[v]);
-                if(!Rroot) continue;
-                
-                Component comp; 
-                comp.rows.reserve(max(4, sz(Rroot)/4)); 
-                comp.cols.reserve(max(4, sz(Rroot)/4));
-
-                Treap* cur = Rroot;
-                trav_stack.clear();
-                trav_stack.reserve(max((size_t)trav_stack.capacity(), 
-                    (size_t)min(sz(Rroot), (int)1e6)));
-                
-                while(cur || !trav_stack.empty()){
-                    while(cur){ 
-                        trav_stack.push_back(cur); 
-                        cur = cur->l; 
-                    }
-                    cur = trav_stack.back(); 
-                    trav_stack.pop_back();
-
-                    if(cur->v >= 0 && !mark[cur->v] && nodeActive[cur->v]){
-                        mark[cur->v] = 1;
-                        if(cur->v < R) 
-                            comp.rows.push_back(cur->v);
-                        else 
-                            comp.cols.push_back(cur->v - R + 1);
-                    }
-                    cur = cur->r;
-                }
-
-                if(!comp.rows.empty() && !comp.cols.empty())
-                    res.push_back(std::move(comp));
-            }
-            return res;
-        }
+        vector<Component> getComponents() const;
 
     private:
         vertexNode* rowHeaderV;

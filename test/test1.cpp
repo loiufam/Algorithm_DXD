@@ -24,7 +24,7 @@ int main() {
         std::string folderPath1 = "../data/exact_cover_benchmark&1";
         std::string folderPath2 = "../data/set_partitioning_benchmarks&2";
         std::string folderPath3 = "../data/graph_matrix&3";
-        filePaths.insert(filePaths.end(), {folderPath3});
+        filePaths.insert(filePaths.end(), {folderPath1, folderPath2, folderPath3});
         char delimiter = '&';
         string table_file = "../exp_results.csv"; // 结果表格文件
         ExperimentProcessor processor; // 结果处理器

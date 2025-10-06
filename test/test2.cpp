@@ -55,6 +55,8 @@ int main() {
                         logger.logLine(std::string("处理文件时出错: ") + e.what());
                     }
 
+                    std::cout << std::endl;
+
                     try{
                         ExactCoverSolver ecSolver(entry.path().string(), read_mode, logger, 16);
                         ecSolver.cur_instance = file_name;
@@ -64,6 +66,7 @@ int main() {
                         logger.logLine(std::string("处理文件时出错: ") + e.what());
                     }
 
+                    std::cout << std::endl;
                 }
             }
             logger.logLine("处理文件夹完毕: " + fileFolderName);

@@ -3,6 +3,11 @@
 *.obj
 
 .DS_Store
+.vscode
+
+# Logs
+*.log
+*.lock
 
 # Executables
 *.exe
