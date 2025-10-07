@@ -92,15 +92,6 @@ ConnectedGraph::~ConnectedGraph() {
     delete[] rowHeaderE;
 }
 
-// ConnectedGraph::~ConnectedGraph() {
-//     // ETForest 的析构函数会自动释放 Treap 节点
-//     edgeCount.clear();
-//     isTreeEdge.clear();
-//     incidentNonTree.clear();
-//     mark.clear();
-//     nodeActive.clear();
-//     trav_stack.clear();
-// }
 
 void ConnectedGraph::remove(int i) {
 
@@ -176,8 +167,16 @@ vector<vector<int>> ConnectedGraph::getComponents(set<int> existRowSet) {
 
 }
 
+// 利用缓存优化
 vector<Component> ConnectedGraph::getComponents() const{
-    vector<Component> res; 
+    if (componentsCacheValid) {
+        return cachedComponents;
+    }
+
+    cachedComponents.clear();
+    rootToComponentIndex.clear();
+    nodeToComponent.assign(N, -1);
+
 
     if((int)mark.size() < N) 
         mark.assign(N,0); 
@@ -189,6 +188,12 @@ vector<Component> ConnectedGraph::getComponents() const{
 
         Treap* Rroot = rootOf(etf.enter[v]);
         if(!Rroot) continue;
+
+        // 检查是否已经处理过这个根
+        if(rootToComponentIndex.count(Rroot)) {
+            mark[v] = 1;
+            continue;
+        }
         
         Component comp; 
         comp.rows.reserve(max(4, sz(Rroot)/4)); 
@@ -198,6 +203,8 @@ vector<Component> ConnectedGraph::getComponents() const{
         trav_stack.clear();
         trav_stack.reserve(max((size_t)trav_stack.capacity(), 
             (size_t)min(sz(Rroot), (int)1e6)));
+
+        vector<int> nodesInComp; // 记录当前分量的所有节点
         
         while(cur || !trav_stack.empty()){
             while(cur){ 
@@ -210,6 +217,7 @@ vector<Component> ConnectedGraph::getComponents() const{
 
             if(cur->v >= 0 && !mark[cur->v] && nodeActive[cur->v]){
                 mark[cur->v] = 1;
+                nodesInComp.push_back(cur->v);
                 if(cur->v < R) 
                     comp.rows.push_back(cur->v);
                 else 
@@ -218,9 +226,57 @@ vector<Component> ConnectedGraph::getComponents() const{
             cur = cur->r;
         }
 
-        if(!comp.rows.empty() && !comp.cols.empty())
-            res.push_back(std::move(comp));
+        if(!comp.rows.empty() && !comp.cols.empty()) {
+            int compIdx = cachedComponents.size();
+            cachedComponents.push_back(std::move(comp));
+            rootToComponentIndex[Rroot] = compIdx;
+            
+            // 记录每个节点属于哪个分量
+            for(int node : nodesInComp) {
+                nodeToComponent[node] = compIdx;
+            }
+        }
     }
 
-    return res;
+    componentsCacheValid = true;
+    return cachedComponents;
+}
+
+bool ConnectedGraph::inSameComponent(int u, int v) {
+    if(!nodeActive[u] || !nodeActive[v]) return false;
+    return etf.connected(u, v);
+}
+
+// ===== 获取指定节点的连通分量（不重新计算所有分量）=====
+Component ConnectedGraph::getComponentOf(int node) const {
+    
+    Component comp;
+    if(!nodeActive[node]) return comp;
+    
+    Treap* Rroot = rootOf(etf.enter[node]);
+    if(!Rroot) return comp;
+    
+    comp.rows.reserve(max(4, sz(Rroot)/4));
+    comp.cols.reserve(max(4, sz(Rroot)/4));
+    
+    vector<char> localMark(N, 0);
+    Treap* cur = Rroot;
+    vector<Treap*> stack;
+    
+    while(cur || !stack.empty()){
+        while(cur){ stack.push_back(cur); cur = cur->l; }
+        cur = stack.back(); 
+        stack.pop_back();
+        
+        if(cur->v >= 0 && !localMark[cur->v] && nodeActive[cur->v]){
+            localMark[cur->v] = 1;
+            if(cur->v < R) 
+                comp.rows.push_back(cur->v);
+            else 
+                comp.cols.push_back(cur->v - R + 1);
+        }
+        cur = cur->r;
+    }
+    
+    return comp;
 }

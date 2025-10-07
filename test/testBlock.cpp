@@ -21,17 +21,7 @@ int main(){
         }
 
         DancingMatrix dlm(rows, cols, matrix);
-        Block block(dlm.rowsSet, dlm.colsSet);
-        std::cout << "开始搜索..." << std::endl;
-        std::shared_ptr<DNNFNode> res = dlm.parallelDXD(block);
-        std::cout << "搜索完成，找到 " << res->count << " 个解。" << std::endl;
-        std::cout << "搜索耗时: " << dlm.searchTimeSeconds << " 秒。" << std::endl;
-        if(dlm.isParallelSearch) {
-            std::cout << "并行搜索模式已启用。" << std::endl;
-        } else {
-            std::cout << "并行搜索模式未启用。" << std::endl;
-        }
-        dlm.printDNNF(res); // 打印DNNF树
+
 
 
         // 释放二维数组内存

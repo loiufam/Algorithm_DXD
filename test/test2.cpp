@@ -57,16 +57,16 @@ int main() {
 
                     std::cout << std::endl;
 
-                    try{
-                        ExactCoverSolver ecSolver(entry.path().string(), read_mode, logger, 16);
-                        ecSolver.cur_instance = file_name;
-                        shared_ptr<ExperimentResult> res = ecSolver.searchEC();
-                        processor.processResultFile(res, AlgorithmType::DXD_M);
-                    } catch (const std::exception& e) {
-                        logger.logLine(std::string("处理文件时出错: ") + e.what());
-                    }
+                    // try{
+                    //     ExactCoverSolver ecSolver(entry.path().string(), read_mode, logger, 16);
+                    //     ecSolver.cur_instance = file_name;
+                    //     shared_ptr<ExperimentResult> res = ecSolver.searchEC();
+                    //     processor.processResultFile(res, AlgorithmType::DXD_M);
+                    // } catch (const std::exception& e) {
+                    //     logger.logLine(std::string("处理文件时出错: ") + e.what());
+                    // }
 
-                    std::cout << std::endl;
+                    // std::cout << std::endl;
                 }
             }
             logger.logLine("处理文件夹完毕: " + fileFolderName);

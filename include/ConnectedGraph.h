@@ -110,11 +110,29 @@ struct ETForest {
         }
     }
 
-    ~ETForest(){
+    ~ETForest() {
         unordered_set<Treap*> roots;
         for(auto t: enter) if(t) roots.insert(rootOf(t));
         for(auto t: exit) if(t) roots.insert(rootOf(t));
-        for(auto root : roots){ if(!root) continue; vector<pair<Treap*,bool>> st; st.emplace_back(root,false); while(!st.empty()){ auto pr = st.back(); st.pop_back(); Treap* node = pr.first; bool visited = pr.second; if(!node) continue; if(visited){ delete node; } else { st.emplace_back(node,true); if(node->r) st.emplace_back(node->r,false); if(node->l) st.emplace_back(node->l,false); } } }
+        for(auto root : roots){ 
+            if(!root) continue; 
+            vector<pair<Treap*,bool>> st; 
+            st.emplace_back(root,false); 
+            while(!st.empty()){ 
+                auto pr = st.back(); 
+                st.pop_back(); 
+                Treap* node = pr.first; 
+                bool visited = pr.second; 
+                if(!node) continue; 
+                if(visited){ 
+                    delete node; 
+                } else { 
+                    st.emplace_back(node,true); 
+                    if(node->r) st.emplace_back(node->r,false); 
+                    if(node->l) st.emplace_back(node->l,false); 
+                } 
+            } 
+        }    
     }
 
     bool connected(int a,int b){ 
@@ -193,6 +211,12 @@ class ConnectedGraph {
         mutable vector<char> mark; // 复用的标记数组
         mutable vector<Treap*> trav_stack; // reusable traversal stack to avoid allocations
 
+        // ===== 新增：连通分量缓存机制 =====
+        mutable vector<Component> cachedComponents;
+        mutable bool componentsCacheValid;
+        mutable unordered_map<Treap*, int> rootToComponentIndex; // root -> component index
+        mutable vector<int> nodeToComponent; // node -> component index
+
         ConnectedGraph (const DancingMatrix& matrix);
         ConnectedGraph(int rows, int cols)
             : R(rows), C(cols), N(rows+cols), etf(rows+cols){
@@ -200,6 +224,8 @@ class ConnectedGraph {
             mark.assign(N,0);
             nodeActive.assign(N, true);  // 初始时所有节点都是活跃的
             trav_stack.reserve(1024); // initial reserve
+            componentsCacheValid = false;
+            nodeToComponent.assign(N, -1);
         }
         ~ConnectedGraph();
 
@@ -207,6 +233,7 @@ class ConnectedGraph {
         void deactivateRow(int row) {
             if (row >= 0 && row < R) {
                 nodeActive[row] = false;
+                invalidateComponentCache();
             }
         }
         
@@ -214,6 +241,7 @@ class ConnectedGraph {
         void activateRow(int row) {
             if (row >= 0 && row < R) {
                 nodeActive[row] = true;
+                invalidateComponentCache();
             }
         }
         
@@ -240,6 +268,7 @@ class ConnectedGraph {
             if(!etf.connected(u,v)){ 
                 etf.link(u,v); 
                 isTreeEdge[k]=true; 
+                mergeComponentsOnLink(u,v);
             }else{ 
                 incidentNonTree[u].insert(v); 
                 incidentNonTree[v].insert(u); 
@@ -264,6 +293,9 @@ class ConnectedGraph {
                 return; 
             }
             etf.cut(u,v);
+            // 分裂连通分量
+            splitComponentsOnCut(u, v);
+
             vector<int> compU = etf.component_nodes(u); 
             vector<int> compV = etf.component_nodes(v);
             unordered_set<int> setU(compU.begin(),compU.end());
@@ -279,6 +311,8 @@ class ConnectedGraph {
                         incidentNonTree[y].erase(x);
                         isTreeEdge[rk]=true; 
                         etf.link(x,y); 
+                        // 重新合并
+                        mergeComponentsOnLink(x, y);
                         return; 
                     }
                 }
@@ -289,11 +323,68 @@ class ConnectedGraph {
 
         vector<Component> getComponents() const;
 
+        // ===== 快速检查两个节点是否在同一连通分量 =====
+        bool inSameComponent(int u, int v);
+        
+        // ===== 获取节点所在的连通分量 =====
+        int getComponentIndex(int node) const {
+            if(!componentsCacheValid) {
+                getComponents(); // 触发缓存构建
+            }
+            return (node >= 0 && node < N) ? nodeToComponent[node] : -1;
+        }
+
+        Component getComponentOf(int node) const;
+
     private:
         vertexNode* rowHeaderV;
         vertexNode* rowHeaderE;
         vector<bool> nodeActive;  // 跟踪节点是否活跃
 
+        // ===== 缓存失效管理 =====
+        void invalidateComponentCache() const {
+            componentsCacheValid = false;
+        }
+
+        // ===== 增量更新：link时合并分量 =====
+        void mergeComponentsOnLink(int u, int v) {
+            if(!componentsCacheValid) return; // 缓存已失效，无需更新
+            
+            int compU = nodeToComponent[u];
+            int compV = nodeToComponent[v];
+            
+            if(compU == -1 || compV == -1 || compU == compV) {
+                invalidateComponentCache();
+                return;
+            }
+            
+            // 合并两个分量：将compV合并到compU
+            Component& targetComp = cachedComponents[compU];
+            Component& sourceComp = cachedComponents[compV];
+            
+            targetComp.rows.insert(targetComp.rows.end(), 
+                sourceComp.rows.begin(), sourceComp.rows.end());
+            targetComp.cols.insert(targetComp.cols.end(), 
+                sourceComp.cols.begin(), sourceComp.cols.end());
+            
+            // 更新节点映射
+            for(int row : sourceComp.rows) {
+                if(row < R) nodeToComponent[row] = compU;
+            }
+            for(int col : sourceComp.cols) {
+                nodeToComponent[R + col - 1] = compU;
+            }
+            
+            // 标记sourceComp为空（延迟删除）
+            sourceComp.rows.clear();
+            sourceComp.cols.clear();
+        }
+
+        // ===== 增量更新：cut时分裂分量 =====
+        void splitComponentsOnCut(int u, int v) {
+            // cut操作较复杂，直接失效缓存
+            invalidateComponentCache();
+        }
 };
 
 #endif
