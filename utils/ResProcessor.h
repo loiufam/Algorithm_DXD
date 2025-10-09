@@ -135,13 +135,13 @@ public:
             file << (row.dxd_m_time != "" ? row.dxd_m_time : "") << ",";
             
             // 处理解数
-            if (row.solution_failed) {
-                file << "failed,";
-            } else if (row.solution_count >= 0) {
-                file << row.solution_count << ",";
-            } else {
-                file << ",";
-            }
+            // if (row.solution_failed) {
+            //     file << "failed,";
+            // } else if (row.solution_count >= 0) {
+            //     file << row.solution_count << ",";
+            // } else {
+            //     file << ",";
+            // }
             
             // Max_B
             file << (row.max_blocks >= 0 ? std::to_string(row.max_blocks) : "");

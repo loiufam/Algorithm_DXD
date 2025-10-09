@@ -4,32 +4,40 @@ ConnectedGraph::ConnectedGraph(const DancingMatrix& matrix){
 
     int rowCount = matrix.ROWS;
     N = rowCount;
-    rowHeaderV = new vertexNode[rowCount];  // 图节点数组
-    rowHeaderE = new vertexNode[rowCount];  // 边节点数组
-
-    for(int i = 0; i < rowCount; ++i) {
-        // 对图头节点进行初始化
-        vertexNode* curV = &rowHeaderV[i];
-        curV->right = curV;
-        curV->left = curV;
-
-        vertexNode* curE = &rowHeaderE[i];
-        curE->head = curE;
-        curE->tail = curE;
+    rowHeaderV.reserve(rowCount);
+    rowHeaderE.reserve(rowCount);
+    for (int i = 0; i < rowCount; ++i) {
+        rowHeaderV.push_back(std::make_unique<vertexNode>(-1));
+        rowHeaderE.push_back(std::make_unique<vertexNode>(-1));
     }
 
-    unordered_map<int, set<int>> vertexToEdges;
+    // 设置 header 的自循环/自引用
+    for (int i = 0; i < rowCount; ++i) {
+        vertexNode* vhead = rowHeaderV[i].get();
+        vhead->right = vhead;
+        vhead->left = vhead;
+
+        vertexNode* ehead = rowHeaderE[i].get();
+        ehead->head = ehead;
+        ehead->tail = ehead;
+        ehead->down = nullptr; // 列链表以 nullptr 结尾
+    }
+
+
+    unordered_map<int, std::vector<int>> vertexToEdges;
     const ColumnHeader* root = matrix.getColumnHeader(0);
     Node* curCol = root->right;
-    unordered_set<int> record;
+    std::unordered_set<int> record;
+
     // step1: build mapping from vertex to edges
     while(curCol != root) {
 
-        vector<int> globalSequence; // 全局元素序列
+        std::vector<int> globalSequence; // 全局元素序列
         bool isvisited = true;
         Node* curRow = curCol->down;
         while(curRow != curCol) {
             globalSequence.push_back(curRow->row);
+
             if(!record.count(curRow->row)) {
                 isvisited = false;
             }
@@ -40,11 +48,9 @@ ConnectedGraph::ConnectedGraph(const DancingMatrix& matrix){
         
             for(int i = 0; i < globalSequence.size(); ++i) {
                 record.insert(globalSequence[i]);
-                set<int> subSequence;
-                for(int j = i+1; j < globalSequence.size(); ++j) {
-                    subSequence.insert(globalSequence[j]);
+                for(int j = i + 1; j < globalSequence.size(); ++j) {
+                    vertexToEdges[globalSequence[i]].push_back(globalSequence[j]);
                 }
-                vertexToEdges[globalSequence[i]].insert(subSequence.begin(), subSequence.end());
             }
         }
 
@@ -52,23 +58,35 @@ ConnectedGraph::ConnectedGraph(const DancingMatrix& matrix){
     }
 
     // step2: build rowHeaderV and rowHeaderE
+    edgePool.reserve(rowCount * 4);
+
     for(int i = 0; i < rowCount; ++i) {
-        vertexNode* curV = &rowHeaderV[i];
+        vertexNode* curV = rowHeaderV[i].get();
 
-        if(vertexToEdges[i].empty()) {
-            continue;
-        }
+        auto it = vertexToEdges.find(i);
+        if (it == vertexToEdges.end() || it->second.empty()) continue;
 
-        for(auto j : vertexToEdges[i]) {
-            vertexNode* newE = new vertexNode(j);
+        for(auto j : it->second) {
+            // 创建新边节点并获取裸指针用于链表连接
+            auto node_uptr = std::make_unique<vertexNode>(j);
+            vertexNode* newE = node_uptr.get();
+            // newE->down 默认为 nullptr
+
+            // 插入到行链表（在 header 后插入, 保持双向循环链）
             newE->right = curV->right;
             newE->left = curV;
             curV->right->left = newE;
             curV->right = newE;
 
-            rowHeaderE[j].tail->down = newE;
-            rowHeaderE[j].tail = newE;
+            // 插入到列链表（尾插）
+            vertexNode* ehead = rowHeaderE[j].get();
+            ehead->tail->down = newE; // 当 tail==head 时，会将 head->down 指向 newE
+            ehead->tail = newE; // 更新尾指针
 
+            // 托管节点生命周期
+            edgePool.push_back(std::move(node_uptr));
+
+            // 将 curV 前移到刚插入的节点，以便下一次插入保持链表正确
             curV = curV->right;
         }
     }
@@ -77,32 +95,48 @@ ConnectedGraph::ConnectedGraph(const DancingMatrix& matrix){
 }
 
 // 析构函数
-ConnectedGraph::~ConnectedGraph() {
+// ConnectedGraph::~ConnectedGraph() {
 
-    for(int i = 0; i < N; ++i) {
-        vertexNode* curV = &rowHeaderV[i];
-        vertexNode* curE = curV->right;
-        while(curE != curV) {
-            vertexNode* nextE = curE->right;
-            delete curE;
-            curE = nextE;
+//     for(int i = 0; i < N; ++i) {
+//         vertexNode* curV = &rowHeaderV[i];
+//         vertexNode* curE = curV->right;
+//         while(curE != curV) {
+//             vertexNode* nextE = curE->right;
+//             delete curE;
+//             curE = nextE;
+//         }
+//     }
+//     delete[] rowHeaderV;
+//     delete[] rowHeaderE;
+// }
+
+// 打印函数
+void ConnectedGraph::printGraph() const {
+    std::cout << "Graph with " << N << " vertices:" << std::endl;
+    for (int i = 0; i < N; ++i) {
+        const vertexNode* curV = rowHeaderV[i].get();
+        std::cout << "Vertex " << i << ": ";
+
+
+        const vertexNode* e = curV->right;
+        while (e != curV) {
+            std::cout << e->value << " ";
+            e = e->right;
         }
+        std::cout << std::endl;
     }
-    delete[] rowHeaderV;
-    delete[] rowHeaderE;
 }
-
 
 void ConnectedGraph::remove(int i) {
 
-    vertexNode* curHead = &rowHeaderE[i];
+    vertexNode* curHead = rowHeaderE[i].get();
     if (curHead->tail == curHead) {
         return; // 没有边，直接返回
     }
     // lock_guard<mutex> lock(graphMutex);
 
     vertexNode* curE = curHead->down;
-    while(curE != NULL) { 
+    while(curE != nullptr) { 
         curE->left->right = curE->right;
         curE->right->left = curE->left;
 
@@ -114,10 +148,10 @@ void ConnectedGraph::remove(int i) {
 void ConnectedGraph::restore(int i) {
 
     // lock_guard<mutex> lock(graphMutex);
-    vertexNode* curHead = &rowHeaderE[i];
+    vertexNode* curHead = rowHeaderE[i].get();
 
     vertexNode* curE = curHead->down;
-    while(curE != NULL) { 
+    while(curE != nullptr) { 
         curE->left->right = curE;
         curE->right->left = curE;
 
@@ -125,7 +159,8 @@ void ConnectedGraph::restore(int i) {
     }
 }
 
-vector<vector<int>> ConnectedGraph::getComponents(set<int> existRowSet) { 
+// TODO: 优化返回Block，无须继续计算列集合
+vector<vector<int>> ConnectedGraph::getComponents(const set<int>& existRowSet)  { 
 
     vector<vector<int>> components;
 
@@ -142,7 +177,7 @@ vector<vector<int>> ConnectedGraph::getComponents(set<int> existRowSet) {
             rowToComponent[i] = curIndex++;
         }
 
-        vertexNode* curHead = &rowHeaderV[i];
+        vertexNode* curHead = rowHeaderV[i].get();
         if (curHead->right != curHead) {
             vertexNode* cur = curHead->right;
 

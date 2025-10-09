@@ -191,8 +191,8 @@ private:
 class DanceDNNF : DancingMatrix { 
 
     public:
-        DanceDNNF(int rows, int cols, int** matrix, Logger& l) 
-            : DancingMatrix(rows, cols, matrix), logger(l) {
+        DanceDNNF(int rows, int cols, int** matrix, Logger& l, bool verbose = false) 
+            : DancingMatrix(rows, cols, matrix, verbose), logger(l) {
  
             timer.setTimeBound(TIME_LIMIT_SECONDS);
 
@@ -217,6 +217,7 @@ class DanceDNNF : DancingMatrix {
         size_t MAX_B_COUNT = 1;
         string cur_instance = ""; // 当前处理的实例名
         bool isParallelSearch = false; // 是否已分解
+        vector<vector<int>> curComp;
 
         vector<set<int>> mergeRowSets(Block& block);
         vector<Block> spilitBlock(const vector<set<int>>& mergeRowSets);
@@ -252,9 +253,10 @@ class DanceDNNF : DancingMatrix {
         void countSolutions(shared_ptr<ORNode> node);
 
         bool shouldDecompose (set<int>& rows) {
-            auto comps = getComponents(rows);
-            MAX_B_COUNT = std::max(MAX_B_COUNT, comps.size());
-            return comps.size() > 1;
+            curComp = getComponents(rows);
+            size_t num_comps = curComp.size();
+            MAX_B_COUNT = std::max(MAX_B_COUNT, num_comps);
+            return num_comps > 1;
         }
 
         Block getBlock() {
@@ -419,6 +421,8 @@ class ExactCoverSolver {
         string cur_instance = ""; // 当前处理的实例名
 
         shared_ptr<ExperimentResult> searchEC();
+
+        std::vector<row_id> getAssignCol(col_id& selectedCol);
     
     private:
         string input_file;

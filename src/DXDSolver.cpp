@@ -687,15 +687,11 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
     //shouldDecompose(block) 
     set<int> rows(block.rows.begin(), block.rows.end());
     if(block.rows.size() >= MIN_BLOCK_ROWS && shouldDecompose(rows)) {
-
-        // vector<Component> comps = connectedGraph->getComponents();
-        // if(comps.size() > 1){
-                
+            
         //     auto blocks = spilit(comps); // 分解为多个块
         //     auto res_and_node = serialSearch(blocks); 
         //     cacheST[state] = res_and_node; // 缓存结果
         //     return res_and_node; // 返回分解节点
-        // }
     }
 
     ColumnHeader* choose = selectColumnHeuristic(block.cols); 
@@ -783,7 +779,6 @@ shared_ptr<DXDResult> DanceDNNF::startDXD() {
         return cur_result;
     } catch (std::runtime_error &e) {
         logger.logLine("DXD搜索超时: " + std::string(e.what()));
-        logger.logLine("");
         cur_result->runtime = "timeout";
         return cur_result;
     }
@@ -906,26 +901,30 @@ shared_ptr<ExperimentResult> ExactCoverSolver::searchEC() {
     cur_result->instance_name = cur_instance;
     
     try{
-        DancingMatrix dm(input_file, from);
-
         logger.logLine("最大线程数: " + to_string(poolSize));
 
+        // DancingMatrix dm(input_file, from);
+
         // getClosedSizeCol(poolSize)
-        col_id selectCol = dm.getSmallestSizeCol();
-        ColumnHeader* colHead = dm.getColumnHeader(selectCol);
-        std::cout << "选择列: " << selectCol << " size: " << colHead->size << std::endl;
+        col_id selectCol;
+        auto assignRows = getAssignCol(selectCol);
+        int size = assignRows.size();
+        // ColumnHeader* colHead = dm.getColumnHeader(selectCol);
+        std::cout << "选择列: " << selectCol << " size: " << size << std::endl;
 
         // vector<unique_ptr<DancingMatrix>> subMatrices;
         // subMatrices.reserve(colHead->size);
         vector<SubMatrixTask> tasks;
-        tasks.reserve(colHead->size);
+        tasks.reserve(size);
         
+        for (auto& row : assignRows) {
+            tasks.emplace_back(row, input_file, from);
 
-        Node* curR = colHead->down;
-        while (curR != colHead) {
+        }
 
-            // auto subMatrix = make_unique<DancingMatrix>(input_file, from);
-            
+        // while (curR != colHead) {
+
+            // auto subMatrix = make_unique<DancingMatrix>(input_file, from);            
             // RowNode* rowHead = &subMatrix->getRowIndex()[curR->row];
             // Node* startNode = rowHead->right;
             // subMatrix->cover(startNode->col);
@@ -936,11 +935,9 @@ shared_ptr<ExperimentResult> ExactCoverSolver::searchEC() {
             //     curC = curC->right;
             // }
             // subMatrices.push_back(std::move(subMatrix));
-            // 只记录任务信息，不创建矩阵
-            tasks.emplace_back(curR->row, input_file, from);
-            
-            curR = curR->down;
-        }  
+
+        //     curR = curR->down;
+        // }  
 
         int maxConcurrent = std::min(poolSize, 8);  // 最多同时4个矩阵
         // DecisionDNNF solver(std::move(subMatrices));
@@ -962,10 +959,71 @@ shared_ptr<ExperimentResult> ExactCoverSolver::searchEC() {
     } catch (const std::exception& e) {
         cur_result->runtime = "failed";
         logger.logLine(string(e.what()));
-        logger.logLine("");
         return cur_result;
     }
 
+}
+
+std::vector<row_id> ExactCoverSolver::getAssignCol(col_id& selectedCol) { 
+    
+    ifstream ifs(input_file);
+    if(!ifs.is_open()) {
+        cout << "无法打开文件: " << input_file << endl;
+        return {};
+    }
+
+    string line, token;
+    getline(ifs, line);  // 读取第一行 
+    istringstream iss(line);
+
+    int rows, cols;
+    if( from == 1 ) {
+        iss >> token >> token >> token >> cols;
+        iss >> token >> token >> token >> rows;
+        getline(ifs, line); 
+    } else {
+        iss >> cols >> rows;
+    }
+
+    if (rows > MAX_ROW) {
+        cerr << "矩阵行数过大，无法处理: " << rows << " 行." << endl;
+        throw runtime_error("time out");
+    }
+
+    std::vector<std::vector<int>> matrix(cols + 1);
+
+    int cur_row = 0;
+    while (getline(ifs, line)) { 
+        if (line.empty()) continue;
+        istringstream iss(line);
+
+        if (from == 1 || from == 3) {
+            iss >> token;
+        } else if (from == 2) {
+            iss >> token;
+            iss >> token;
+        }
+
+        int col;
+        while (iss >> col) {
+            if (col > 0 && col <= cols) {
+                matrix[col].push_back(cur_row);
+            }
+        }
+        cur_row++;
+
+        if (cur_row >= rows) break;
+    }
+
+    int min_size = matrix[1].size();
+    for (int i = 2; i <= cols; i++) {
+        if (matrix[i].size() < min_size) {
+            min_size = matrix[i].size();
+            selectedCol = i;
+        }
+    }
+
+    return matrix[selectedCol];
 }
 
 // 主搜索函数(多线程版本)

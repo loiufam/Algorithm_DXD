@@ -60,10 +60,12 @@ struct Component{
 
     void printComponent() {
         cout<< "row_id: ";
+        sort(rows.begin(), rows.end());
         for(auto& r : rows) {
             cout<< r << " ";
         }
         cout << endl;
+        sort(cols.begin(), cols.end());
         cout << "col_id: ";
         for(auto& c : cols) {
             cout<< c << " ";
@@ -166,8 +168,8 @@ class DancingMatrix
         
         
         //接收矩阵其及维度  
-        DancingMatrix( int rows, int cols, int** matrix);  
-        DancingMatrix( const string& file_path, int from, bool verbose = false );
+        DancingMatrix( int rows, int cols, int** matrix, bool verbose = false);  
+        DancingMatrix( const string& file_path, int from, bool verbose = false);
 
         // 禁用拷贝和赋值
         DancingMatrix(const DancingMatrix&) = delete;
@@ -240,6 +242,10 @@ class DancingMatrix
 
         vector<vector<int>> getComponents(set<int>& rows);
 
+        vector<Component> getComponents();
+
+        void printGraph() const;
+
     private:  
         ColumnHeader* root;  
         std::unique_ptr<ColumnHeader[]> ColIndex;
@@ -247,6 +253,7 @@ class DancingMatrix
         std::vector<std::unique_ptr<Node>> dataNodes;
 
         std::unique_ptr<ConnectedGraph> graph;
+        bool enableGraphSync; // 是否启用图同步
         
 };
 

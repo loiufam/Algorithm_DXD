@@ -2,11 +2,13 @@
 #include "../include/ConnectedGraph.h"
 
 //构造函数
-DancingMatrix::DancingMatrix( int rows, int cols, int** matrix )  
-    : ROWS(rows), COLS(cols) {
+DancingMatrix::DancingMatrix( int rows, int cols, int** matrix, bool verbose )  
+    : ROWS(rows), COLS(cols), enableGraphSync(verbose) {
     EXIST_ROWS = rows;  
     ColIndex = std::make_unique<ColumnHeader[]>(cols + 1);  
     RowIndex = std::make_unique<RowNode[]>(rows);  
+    // if (verbose) graph = make_unique<ConnectedGraph>(rows, cols);
+
     root = &ColIndex[0];  
     ColIndex[0].left = &ColIndex[COLS];  
     ColIndex[0].right = &ColIndex[1];  
@@ -34,20 +36,19 @@ DancingMatrix::DancingMatrix( int rows, int cols, int** matrix )
         for( int j = 0; j < cols ; j++ ) {  
             if(matrix[i][j] == 1){
                 insert(  i , j+1 );  //行数与原矩阵相同，而列数加1
-                ONE_COUNT++; // 统计矩阵中1的个数
-                rowsSet.insert(i);
-                colsSet.insert(j+1); // 列数加1
-                // rowToColsSet[i].insert(j+1);
-                // colToRowsSet[j+1].insert(i);
+                // rowsSet.insert(i);
+                // colsSet.insert(j+1); 
             }
         }
     }
 
-    cout<< "初始化舞蹈链完成." << endl;
+    InitBlock = Block(rowsSet, colsSet);
+    if(verbose) graph = make_unique<ConnectedGraph>(*this);
+    std::cout<< "初始化舞蹈链完成." << endl;
 }
 
 // 从文件构造舞蹈链矩阵
-DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose )
+DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose ) : enableGraphSync(verbose)
 {
     ifstream file(file_path);
     if (!file.is_open()) {
@@ -132,7 +133,14 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose )
     }
 
     InitBlock = Block(rowsSet, colsSet);
-    if(verbose) graph = make_unique<ConnectedGraph>(*this);
+    if(verbose){
+        try{
+            std::cout << "开始初始化图..." << std::endl;
+            graph = make_unique<ConnectedGraph>(*this);
+        } catch (const std::bad_alloc& e) {
+            cerr << "内存分配失败: " << e.what() << endl;
+        }
+    }
     file.close();
 }
 
@@ -141,6 +149,14 @@ DancingMatrix::~DancingMatrix() = default;
 vector<vector<int>> DancingMatrix::getComponents(set<int>& rows) {
     return graph->getComponents(rows);
 };
+
+vector<Component> DancingMatrix::getComponents() {
+    return graph->getComponents();
+};
+
+void DancingMatrix::printGraph() const {
+    graph->printGraph();
+}
 
 //插入元素到双向十字链表中
 void DancingMatrix::insert( int r, int c )  
@@ -179,7 +195,9 @@ void DancingMatrix::insert( int r, int c )
         cur->right->left = newNodePtr;  
         cur->right = newNodePtr;  
     }  
-    // graph->insertEdge(r, c-1); 
+    // if (enableGraphSync)
+    //     graph->insertEdge(r, c-1); 
+
     dataNodes.push_back(std::move(newNode));
 }
 
@@ -299,8 +317,7 @@ void DancingMatrix::uncover( int c )
     while( curC != col )  
     {  
         Node* noteR = curC;  
-        // RowIndex[noteR->row].cols.insert(noteR->col);
-        // restoreCol(noteR->row, noteR->col);
+
         curR = curC->left;  
         while( curR != noteR )  
         {  
@@ -308,8 +325,6 @@ void DancingMatrix::uncover( int c )
             curR->down->up = curR;  
             curR->up->down = curR;  
 
-            // RowIndex[noteR->row].cols.insert(curR->col);
-            // restoreCol(noteR->row, curR->col);
             curR = curR->left;  
         }  
         rowsSet.insert(curC->row);
@@ -318,7 +333,7 @@ void DancingMatrix::uncover( int c )
     }  
     col->right->left = col;  
     col->left->right = col;  
-    // colsSet.insert(col->col);
+
 }
 
 void DancingMatrix::coverInBlock(int c, Block& block){
@@ -332,11 +347,16 @@ void DancingMatrix::coverInBlock(int c, Block& block){
 
     Node* curR, *curC;  
     curC = col->down;  
+
     while( curC != col )  
     {    
-        // RowIndex[curC->row].cols.clear();
-        graph->remove(curC->row);
-        block.rows.erase(curC->row);
+        int row = curC->row;
+        // graph->remove(curC->row);
+        block.rows.erase(row);
+
+        // if (enableGraphSync) {
+        //     graph->deactivateRow(row);
+        // }
 
         curR = curC->right;  
         while( curR != curC )  
@@ -345,7 +365,6 @@ void DancingMatrix::coverInBlock(int c, Block& block){
             curR->down->up = curR->up;  
             curR->up->down = curR->down;  
             decColSize(curR->col); 
-            // RowIndex[curR->row].cols.erase(curR->col);
 
             curR = curR->right;  
         }  
@@ -358,8 +377,8 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
     
     Node* curR, *curC;  
     ColumnHeader* col = &ColIndex[c];  
-
     curC = col->up;  
+
     while( curC != col )  
     {  
         Node* noteR = curC;  
@@ -367,7 +386,6 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
 
         while( curR != noteR )  
         {  
-            // RowIndex[curR->row].cols.insert(curR->col);
             incColSize(curR->col); 
             curR->down->up = curR;  
             curR->up->down = curR;  
@@ -375,9 +393,12 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
             
             curR = curR->left;  
         }  
-        // RowIndex[curC->row].cols.insert(curC->col);
+
         block.rows.insert(curC->row);
-        graph->restore(curC->row);
+        // graph->restore(curC->row);
+        // if (enableGraphSync) {
+        //     graph->activateRow(curC->row);
+        // }
 
         curC = curC->up;  
     }  

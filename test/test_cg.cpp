@@ -2,10 +2,11 @@
 
 int main(){
         std::vector<std::vector<int>> X = {
-            {1, 1, 1, 0, 1, 0},
+            {0, 1, 1, 0, 0, 0},
             {1, 1, 0, 0, 0, 0},    
-            {0, 0, 1, 1, 0, 1},
-            {0, 0, 0, 0, 1, 0}
+            {0, 0, 1, 0, 0, 1},
+            {0, 0, 0, 0, 1, 0},
+            {0, 0, 0, 1, 1, 0}
         };
 
         int rows = X.size();
@@ -20,9 +21,17 @@ int main(){
             }
         }
 
-        DancingMatrix dlm(rows, cols, matrix);
+        DancingMatrix dlm(rows, cols, matrix, true);
 
-
+        dlm.printGraph();
+        // auto block = dlm.InitBlock;
+        // dlm.coverInBlock(1, block);
+        // dlm.coverInBlock(2, block);
+        // auto components = dlm.getComponents();
+        // std::cout << "组件个数: " << components.size() << std::endl;
+        // for (auto& component : components) {
+        //     component.printComponent();
+        // }
 
         // 释放二维数组内存
         for (int i = 0; i < rows; ++i) {
