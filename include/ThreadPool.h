@@ -20,6 +20,8 @@
 #include <climits>
 #include <execution>
 
+const size_t MAX_THREADS = std::thread::hardware_concurrency();
+
 // ========================
 // 无锁环形队列实现
 // ========================
@@ -95,7 +97,7 @@ public:
     // 构造函数，指定线程数量
     explicit ThreadPool(size_t threads = std::thread::hardware_concurrency()) 
         : stop(false) {
-        if (threads == 0) {
+        if (threads == 0 || threads > MAX_THREADS) {
             threads = std::thread::hardware_concurrency();
         }
         

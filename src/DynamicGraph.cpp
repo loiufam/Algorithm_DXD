@@ -12,6 +12,7 @@ private:
     std::vector<RowState> rowStates;
     std::vector<std::unordered_set<int>> componentColumns;
     std::unordered_map<int, std::unordered_set<int>> activeColumnToRows;
+    mutable std::shared_mutex mtx;
     
     int N;
     int numComponents;
@@ -51,6 +52,7 @@ private:
     
     void rebuildIfNeeded() {
         if (!needsRebuild) return;
+        std::unique_lock<std::shared_mutex> write_lock(mtx);
                
         // 重置
         for (int i = 0; i < N; ++i) {
@@ -214,6 +216,8 @@ public:
     
     // **批量移除行的所有列**
     void deactivateRow(int row) {
+        std::unique_lock<std::shared_mutex> lock(mtx);  // 写锁，自动释放
+
         for (int col : rowStates[row].activeColumns) {
             activeColumnToRows[col].erase(row);
             rowStates[row].removedColumns.insert(col);
@@ -251,6 +255,8 @@ public:
     
     // **批量恢复行的所有列**
     void reactivateRow(int row) {
+        std::unique_lock<std::shared_mutex> lock(mtx);  // 写锁，自动释放
+
         for (int col : rowStates[row].removedColumns) {
             rowStates[row].activeColumns.insert(col);
             activeColumnToRows[col].insert(row);

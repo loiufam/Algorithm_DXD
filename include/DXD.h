@@ -211,14 +211,13 @@ class DanceDNNF : DancingMatrix {
 
         CStopWatch timer;   // 计时器
 
-        int MAX_P_COUNT = 2; // 最大并行搜索次数   
-        int p_count = 0; // 记录并行搜索的次数
+        int MAX_P_COUNT = 1; // 最大并行搜索次数   
+        int p_count; // 记录并行搜索的次数
         int depth = 0;
         size_t MAX_B_COUNT = 1;
         string cur_instance = ""; // 当前处理的实例名
-        bool isParallelSearch = false; // 是否已分解
+        bool isParallelSearch = false; // 是否并行搜索
         double decomposeTime = 0.0;
-        vector<pair<int, unordered_set<int>>> curComp;
 
         vector<set<int>> mergeRowSets(Block& block);
         vector<Block> spilitBlock(const vector<set<int>>& mergeRowSets);
@@ -236,33 +235,26 @@ class DanceDNNF : DancingMatrix {
 
         void batchCoverInBlock(Node* curC, Block& block);
         void batchUncoverInBlock(Block& block);
-        vector<int> collectColsInRow(int row, const Block &block);
-        vector<int> collectRowsUnderColumn(int col, const Block &block);
+
         shared_ptr<DNNFNode> DXD(Block& block);
-        shared_ptr<DNNFNode> DXD_iterative(Block&& rootBlock);
         shared_ptr<DNNFNode> serialSearch(vector<pair<int, unordered_set<int>>>& components);
-        shared_ptr<DNNFNode> serialSearch_iterative(const vector<Component>& components);
         shared_ptr<DNNFNode> parallelSearch(vector<pair<int, unordered_set<int>>>& components);
         shared_ptr<DNNFNode> parallelSearch(vector<Block>& blocks);
         shared_ptr<DNNFNode> parallelDXD(Block& blocks);
 
         // 启动搜索函数
         shared_ptr<DXDResult> startDXD();
-        void startMultiThreadDXD();
+        shared_ptr<DXDResult> startMultiThreadDXD();
 
         void traverseDNNF(const std::shared_ptr<DNNFNode>& node, std::vector<int>& solution);
         void countSolutions(shared_ptr<ORNode> node);
 
-        bool shouldDecompose () {
-            auto start = std::chrono::high_resolution_clock::now();
-            curComp = getComponents();
-            auto end = std::chrono::high_resolution_clock::now();
-            decomposeTime += std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
+        bool shouldDecompose (const int rowSize) {
 
-            size_t num_comps = curComp.size();
-            // cout << "当前实例有 " << num_comps << " 个分解块." << endl;
-            MAX_B_COUNT = std::max(MAX_B_COUNT, num_comps);
-            return num_comps > 1;
+            if (p_count > MAX_P_COUNT)
+                return false;
+
+            return rowSize >= MIN_BLOCK_ROWS;
         }
 
         Block getBlock() {
@@ -270,19 +262,20 @@ class DanceDNNF : DancingMatrix {
             return fullBlock;
         };
 
-        std::shared_ptr<DNNFNode> getInSingleCache(const size_t& key){
-            if(CacheST.find(key) != CacheST.end()){
-                return CacheST[key];
+        std::shared_ptr<DNNFNode> getCache(const size_t& key){
+            std::shared_lock<std::shared_mutex> readLock(cacheMutex);
+            if(C.find(key) != C.end()){
+                return C[key];
             }
             return nullptr;
         }
-        void setInSingleCache(const size_t& key, std::shared_ptr<DNNFNode> node){
-            CacheST[key] = node;
+        void setCache(const size_t& key, std::shared_ptr<DNNFNode> node){
+            std::unique_lock<std::shared_mutex> writeLock(cacheMutex);
+            if(C.find(key) == C.end()){
+                C[key] = node;
+            }
         }
         
-        void clearSingleCache(){
-            CacheST.clear();
-        }
         // 多线程安全的缓存访问
         std::shared_ptr<DNNFNode> getCachedResult(const size_t& key) {
             // std::lock_guard<std::mutex> lock(cacheMutex);
@@ -298,12 +291,16 @@ class DanceDNNF : DancingMatrix {
         }
 
         void incrementPCount() {
-            std::lock_guard<std::mutex> lock(countMutex);
             p_count += 1;
+        }
+
+        void setPoolSize(int size) {
+            poolSize = size;
         }
 
     private:
 
+        int poolSize = 4; // 线程池大小 默认4个线程
         ThreadPool& pool;
         Logger& logger;
         shared_ptr<DXDResult> cur_result = make_shared<DXDResult>(); // 当前实例结果
@@ -315,25 +312,24 @@ class DanceDNNF : DancingMatrix {
         std::unordered_set<size_t> detect_records; // 用于记录无法分解的矩阵状态
         std::shared_ptr<DNNFNode> T = std::make_shared<DNNFNode>(NodeType::Terminal, -1, 1);
         std::shared_ptr<DNNFNode> F = std::make_shared<DNNFNode>(NodeType::Terminal, -2, 0);
-          
+        
         
         std::unordered_map<size_t, std::shared_ptr<ORNode>> Cache;
         // DNNF缓存
-        unordered_map<size_t, shared_ptr<DNNFNode>> CacheST;  // 单线程
+        mutable std::shared_mutex cacheMutex;
+        unordered_map<size_t, shared_ptr<DNNFNode>> C;
         unordered_map<size_t, shared_ptr<DNNFNode>> CacheMT;  // 多线程
         unordered_map<int, shared_ptr<DNNFNode>> V_Table; // 变量节点缓存
 
         // Block缓存
         std::unordered_map<std::pair<std::unordered_set<int>, int>, Block, SetIntHash> block_cache;; // 用于存储Block的缓存，key为行集合和列数的组合，value为Block对象
 
-        std::mutex cacheMutex; // 缓存访问的互斥锁
-        std::mutex countMutex; // 计数的互斥锁
         // 操作栈用于批量回溯
         std::stack<CoverOperation> operationStack;
         vector<BatchOperation> batchOpStack;
 
-        ThreadPool& getThreadPool(int maxTheads = thread::hardware_concurrency()) {
-            return ThreadPoolManager::get_instance(maxTheads);
+        ThreadPool& getThreadPool() {
+            return ThreadPoolManager::get_instance(poolSize);
         }
 };
 

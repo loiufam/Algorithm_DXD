@@ -138,7 +138,7 @@ public:
             // if (row.solution_failed) {
             //     file << "failed,";
             // } else if (row.solution_count >= 0) {
-            //     file << row.solution_count << ",";
+            file << row.solution_count << ",";
             // } else {
             //     file << ",";
             // }
@@ -168,13 +168,12 @@ public:
         
         // 验证解数一致性
         if (result.solution_count >= 0) {
-            if (row.solution_count != result.solution_count && row.solution_count != -1) {
+            if (row.solution_count != result.solution_count 
+                    && row.solution_count != -1) {
                 row.solution_failed = true;
                 std::cerr << "Warning: Solution count mismatch for " << instance_name 
                          << " (existing: " << row.solution_count 
                          << ", new: " << result.solution_count << ")" << std::endl;
-            } else {
-                row.solution_count = result.solution_count;
             }
         }
         

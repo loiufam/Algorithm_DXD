@@ -35,7 +35,7 @@ int main() {
             std::string file_path = result[0];
             int read_mode = std::stoi(result[1]);
             std::string fileFolderName = file_path.substr(file_path.find_last_of("/\\") + 1);
-            logger.logLine("处理文件夹: " + fileFolderName);
+            logger.logLine("===========处理文件夹: " + fileFolderName + "==========");
             // 遍历文件夹
             for (const auto& entry : fs::directory_iterator(file_path))
             {
@@ -49,8 +49,10 @@ int main() {
                     try {
                         DanceDNNF dxdSolver(entry.path().string(), read_mode, logger, true);
                         dxdSolver.cur_instance = file_name;
+
                         shared_ptr<DXDResult> res = dxdSolver.startDXD();
                         processor.processResultFile(res, AlgorithmType::DXD_S);
+                        logger.logLine("");
                     } catch (const std::exception& e) {
                         logger.logLine(std::string("处理文件时出错: ") + e.what());
                     }
@@ -58,10 +60,15 @@ int main() {
                     std::cout << std::endl;
 
                     try{
-                        ExactCoverSolver ecSolver(entry.path().string(), read_mode, logger, 16);
-                        ecSolver.cur_instance = file_name;
-                        shared_ptr<ExperimentResult> res = ecSolver.searchEC();
+                        // ExactCoverSolver ecSolver(entry.path().string(), read_mode, logger, 16);
+                        // ecSolver.cur_instance = file_name;
+                        // shared_ptr<ExperimentResult> res = ecSolver.searchEC();
+                        DanceDNNF dxdSolver(entry.path().string(), read_mode, logger, true);
+                        dxdSolver.cur_instance = file_name;
+                        dxdSolver.setPoolSize(16);
+                        shared_ptr<DXDResult> res = dxdSolver.startMultiThreadDXD();
                         processor.processResultFile(res, AlgorithmType::DXD_M);
+                        logger.logLine("");
                     } catch (const std::exception& e) {
                         logger.logLine(std::string("处理文件时出错: ") + e.what());
                     }
