@@ -94,21 +94,6 @@ ConnectedGraph::ConnectedGraph(const DancingMatrix& matrix){
     // cout << "ConnectedGraph has constructed." << endl;
 }
 
-// 析构函数
-// ConnectedGraph::~ConnectedGraph() {
-
-//     for(int i = 0; i < N; ++i) {
-//         vertexNode* curV = &rowHeaderV[i];
-//         vertexNode* curE = curV->right;
-//         while(curE != curV) {
-//             vertexNode* nextE = curE->right;
-//             delete curE;
-//             curE = nextE;
-//         }
-//     }
-//     delete[] rowHeaderV;
-//     delete[] rowHeaderE;
-// }
 
 // 打印函数
 void ConnectedGraph::printGraph() const {

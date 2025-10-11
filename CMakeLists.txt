@@ -21,6 +21,17 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
 set(SOURCES0
     test/testUnionFind.cpp
 )
+
+set(MAIN_SOURCES
+    src/main.cpp
+    src/DancingMatrix.cpp
+    src/DXZSolver.cpp
+    src/DXDSolver.cpp
+    src/ConnectedGraph.cpp 
+    src/DynamicGraph.cpp  
+    src/DXDTime.cpp
+)
+
 set(TEST_SOURCES1
     test/test1.cpp
     src/DancingMatrix.cpp
@@ -33,17 +44,19 @@ set(TEST_SOURCES2
     src/DancingMatrix.cpp
     src/DXDSolver.cpp
     src/ConnectedGraph.cpp  
+    src/DynamicGraph.cpp
     src/DXDTime.cpp
 )
 set(TEST_SOURCES3
     test/test_cg.cpp
     src/DancingMatrix.cpp
     src/DXDSolver.cpp
-    src/ConnectedGraph.cpp  
+    src/DynamicGraph.cpp 
+    src/ConnectedGraph.cpp   
     src/DXDTime.cpp
 )
 # Add executable target
-# add_executable(test0 ${SOURCES0})
+# add_executable(main ${MAIN_SOURCES})
 # 1 : DLX and DXZ 2 : singleDXD and MultiDXD 3 : UnionFind
 # add_executable(test1 ${TEST_SOURCES1})
 add_executable(test2 ${TEST_SOURCES2})

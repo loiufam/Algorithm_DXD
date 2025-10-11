@@ -1,5 +1,6 @@
 #include "../include/DancingMatrix.h"
 #include "../include/ConnectedGraph.h"
+#include "DynamicGraph.cpp"
 
 //构造函数
 DancingMatrix::DancingMatrix( int rows, int cols, int** matrix, bool verbose )  
@@ -123,23 +124,20 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose ) 
             }
             insert(currentRow, currentCol); // 插入节点
             ONE_COUNT++; // 统计矩阵中1的个数
-            rowsSet.insert(currentRow);
+            // rowsSet.insert(currentRow);
             colsSet.insert(currentCol); 
         }
-        if (currentCol > 0)
-            currentRow++;
+
+        currentRow++;
         
         if (currentRow >= rows) break; // 防止超过预期行数
     }
 
-    InitBlock = Block(rowsSet, colsSet);
+    InitBlock = Block(colsSet, rows);
     if(verbose){
-        try{
-            std::cout << "开始初始化图..." << std::endl;
-            graph = make_unique<ConnectedGraph>(*this);
-        } catch (const std::bad_alloc& e) {
-            cerr << "内存分配失败: " << e.what() << endl;
-        }
+        // graph = make_unique<ConnectedGraph>(*this);
+        incrementalGraph = make_unique<IncrementalConnectedGraph>(rows);
+        incrementalGraph->initialize(*this);
     }
     file.close();
 }
@@ -150,8 +148,8 @@ vector<vector<int>> DancingMatrix::getComponents(set<int>& rows) {
     return graph->getComponents(rows);
 };
 
-vector<Component> DancingMatrix::getComponents() {
-    return graph->getComponents();
+vector<pair<int,unordered_set<int>>> DancingMatrix::getComponents() {
+    return incrementalGraph->getComponentColumnSetsAsSet();
 };
 
 void DancingMatrix::printGraph() const {
@@ -344,19 +342,13 @@ void DancingMatrix::coverInBlock(int c, Block& block){
     
     block.cols.erase(c); // 从块中移除列
 
-
     Node* curR, *curC;  
     curC = col->down;  
 
     while( curC != col )  
     {    
-        int row = curC->row;
-        // graph->remove(curC->row);
-        block.rows.erase(row);
-
-        // if (enableGraphSync) {
-        //     graph->deactivateRow(row);
-        // }
+        incrementalGraph->deactivateRow(curC->row);
+        block.row_size--;
 
         curR = curC->right;  
         while( curR != curC )  
@@ -394,11 +386,8 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
             curR = curR->left;  
         }  
 
-        block.rows.insert(curC->row);
-        // graph->restore(curC->row);
-        // if (enableGraphSync) {
-        //     graph->activateRow(curC->row);
-        // }
+        incrementalGraph->reactivateRow(curC->row);
+        block.row_size++;
 
         curC = curC->up;  
     }  

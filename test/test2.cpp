@@ -62,9 +62,7 @@ int main() {
                         ecSolver.cur_instance = file_name;
                         shared_ptr<ExperimentResult> res = ecSolver.searchEC();
                         processor.processResultFile(res, AlgorithmType::DXD_M);
-                    } catch (const std::bad_alloc& e) {
-                        logger.logLine(std::string("OOM") + e.what());
-                    }catch (const std::exception& e) {
+                    } catch (const std::exception& e) {
                         logger.logLine(std::string("处理文件时出错: ") + e.what());
                     }
 

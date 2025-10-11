@@ -192,17 +192,17 @@ class DanceDNNF : DancingMatrix {
 
     public:
         DanceDNNF(int rows, int cols, int** matrix, Logger& l, bool verbose = false) 
-            : DancingMatrix(rows, cols, matrix, verbose), logger(l) {
+            : DancingMatrix(rows, cols, matrix, verbose), logger(l), pool(getThreadPool()) {
  
             timer.setTimeBound(TIME_LIMIT_SECONDS);
 
             std::cout<< "初始化DanceDNNF完成." << endl;
         }
 
-        DanceDNNF(const string& file_path, int from, Logger& l, bool verbose = false)
-            : DancingMatrix(file_path, from, verbose), logger(l) {
+        DanceDNNF(const string& file_path, int from, Logger& l, bool verbose = false, int time_secs = 1200)
+            : DancingMatrix(file_path, from, verbose), logger(l), pool(getThreadPool()) {
 
-            timer.setTimeBound(TIME_LIMIT_SECONDS);
+            timer.setTimeBound(time_secs);
 
             // std::cout<< "初始化DanceDNNF完成." << endl;
         }
@@ -217,7 +217,8 @@ class DanceDNNF : DancingMatrix {
         size_t MAX_B_COUNT = 1;
         string cur_instance = ""; // 当前处理的实例名
         bool isParallelSearch = false; // 是否已分解
-        vector<vector<int>> curComp;
+        double decomposeTime = 0.0;
+        vector<pair<int, unordered_set<int>>> curComp;
 
         vector<set<int>> mergeRowSets(Block& block);
         vector<Block> spilitBlock(const vector<set<int>>& mergeRowSets);
@@ -239,11 +240,11 @@ class DanceDNNF : DancingMatrix {
         vector<int> collectRowsUnderColumn(int col, const Block &block);
         shared_ptr<DNNFNode> DXD(Block& block);
         shared_ptr<DNNFNode> DXD_iterative(Block&& rootBlock);
-        shared_ptr<DNNFNode> serialSearch(vector<Block>& blocks);
+        shared_ptr<DNNFNode> serialSearch(vector<pair<int, unordered_set<int>>>& components);
         shared_ptr<DNNFNode> serialSearch_iterative(const vector<Component>& components);
-        shared_ptr<DNNFNode> dxdSearch(vector<Block>& blocks);
-        shared_ptr<DNNFNode> parallelDXD(Block& blocks);
+        shared_ptr<DNNFNode> parallelSearch(vector<pair<int, unordered_set<int>>>& components);
         shared_ptr<DNNFNode> parallelSearch(vector<Block>& blocks);
+        shared_ptr<DNNFNode> parallelDXD(Block& blocks);
 
         // 启动搜索函数
         shared_ptr<DXDResult> startDXD();
@@ -252,9 +253,14 @@ class DanceDNNF : DancingMatrix {
         void traverseDNNF(const std::shared_ptr<DNNFNode>& node, std::vector<int>& solution);
         void countSolutions(shared_ptr<ORNode> node);
 
-        bool shouldDecompose (set<int>& rows) {
-            curComp = getComponents(rows);
+        bool shouldDecompose () {
+            auto start = std::chrono::high_resolution_clock::now();
+            curComp = getComponents();
+            auto end = std::chrono::high_resolution_clock::now();
+            decomposeTime += std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
+
             size_t num_comps = curComp.size();
+            // cout << "当前实例有 " << num_comps << " 个分解块." << endl;
             MAX_B_COUNT = std::max(MAX_B_COUNT, num_comps);
             return num_comps > 1;
         }
@@ -298,7 +304,7 @@ class DanceDNNF : DancingMatrix {
 
     private:
 
-        ThreadPool pool;
+        ThreadPool& pool;
         Logger& logger;
         shared_ptr<DXDResult> cur_result = make_shared<DXDResult>(); // 当前实例结果
         
@@ -325,6 +331,10 @@ class DanceDNNF : DancingMatrix {
         // 操作栈用于批量回溯
         std::stack<CoverOperation> operationStack;
         vector<BatchOperation> batchOpStack;
+
+        ThreadPool& getThreadPool(int maxTheads = thread::hardware_concurrency()) {
+            return ThreadPoolManager::get_instance(maxTheads);
+        }
 };
 
 struct SubMatrixTask {
@@ -338,17 +348,11 @@ struct SubMatrixTask {
 
 class DecisionDNNF {
     private:
-        vector<unique_ptr<DancingMatrix>> matrices;
         vector<SubMatrixTask> tasks;
         ThreadPool& pool;
         int maxConcurrentMatrices;  // 限制同时存在的矩阵数量
 
     public:
-        DecisionDNNF(vector<unique_ptr<DancingMatrix>>&& matrices)
-            : matrices(std::move(matrices)), pool(getThreadPool()) {
-            
-            // std::cout<< "初始化DecisionDNNF完成." << endl;
-        }
 
         DecisionDNNF(vector<SubMatrixTask>&& tasks, int maxConcurrent = 4)
             : tasks(std::move(tasks)), pool(getThreadPool()), maxConcurrentMatrices(maxConcurrent) {
@@ -356,7 +360,6 @@ class DecisionDNNF {
         }
 
         ~DecisionDNNF() {
-            matrices.clear();
             tasks.clear();
         }
 
@@ -410,11 +413,57 @@ class ExactCoverSolver {
     public:
         ExactCoverSolver(const string& input_file, int from, Logger& l, int p = thread::hardware_concurrency()) 
             : input_file(input_file), from(from), logger(l) {
-                timer.setTimeBound(TIME_LIMIT_BUILDING_SECONDS);
+                timer.setTimeBound(1800);
                 if (p > std::thread::hardware_concurrency()) {
                     poolSize = std::thread::hardware_concurrency();
                 } else {
                     poolSize = p;
+                }
+
+                std::ifstream ifs(input_file);
+
+                if (!ifs.is_open()) {
+                    throw std::runtime_error("无法打开文件: " + input_file);
+                }
+                
+                std::string line, token;
+                std::getline(ifs, line);
+                std::istringstream iss(line);
+                int rows, cols;
+                
+                if (from == 1) {
+                    iss >> token >> token >> token >> cols;
+                    iss >> token >> token >> token >> rows;
+                    std::getline(ifs, line);
+                } else {
+                    iss >> cols >> rows;
+                }
+                
+                if (rows > MAX_ROW) {
+                    throw std::runtime_error("矩阵行数过大: " + std::to_string(rows));
+                }
+                
+                matrix.resize(cols + 1);
+
+                int cur_row = 0;
+                while (std::getline(ifs, line) && cur_row < rows) {
+                    if (line.empty()) continue;
+                    
+                    std::istringstream row_iss(line);
+                    
+                    if (from == 1 || from == 3) {
+                        row_iss >> token;
+                    } else if (from == 2) {
+                        row_iss >> token >> token;
+                    }
+                    
+                    int col;
+                    while (row_iss >> col) {
+                        if (col > 0 && col <= cols) {
+                            matrix[col].push_back(cur_row);
+                        }
+                    }
+                    cur_row++;
                 }
             }
         ~ExactCoverSolver() = default;
@@ -422,11 +471,12 @@ class ExactCoverSolver {
 
         shared_ptr<ExperimentResult> searchEC();
 
-        std::vector<row_id> getAssignCol(col_id& selectedCol);
+        const std::vector<row_id>& getAssignCol(col_id& selectedCol);
     
     private:
         string input_file;
         int from;
+        std::vector<std::vector<row_id>> matrix;
         int poolSize;
         Logger& logger;
         CStopWatch timer;   // 计时器

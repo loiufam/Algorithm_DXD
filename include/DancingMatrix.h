@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <numeric>
 #include <cmath>
+#include <utility>
 
 using namespace std;
 using col_id = int;
@@ -77,6 +78,7 @@ struct Component{
 struct Block {
         unordered_set<int> rows;  // 舞蹈链行id集合 
         unordered_set<int> cols;  // 从1开始编号,对应舞蹈链列数id
+        int row_size;
         bool is_spilited = false;
         
         Block() = default;
@@ -88,22 +90,28 @@ struct Block {
             cols.insert(c.begin(), c.end());
         }
 
+        Block(const unordered_set<int>& c, int rs) : cols(c), row_size(rs) {} 
+
         Block(const vector<int>& r, const vector<int>& c){
             rows.insert(r.begin(), r.end());
             cols.insert(c.begin(), c.end());
         }
 
+        Block(const Block& other) {
+            cols = other.cols;
+            row_size = other.row_size;
+        };
         void printBlock() {
             cout<< "cols: " << endl;
             for(int c : cols){
                 cout << c << " ";
             }
             cout<<endl;
-            cout<< "rows: " << endl;
-            for(int r : rows){
-                cout<< r << " ";
-            }
-            cout<<endl; 
+            // cout<< "rows: " << endl;
+            // for(int r : rows){
+            //     cout<< r << " ";
+            // }
+            // cout<<endl; 
         }
 
 };
@@ -118,33 +126,57 @@ struct ColumnComparator {
 };
 
 // 并查集结构
-struct UnionFind {
-    vector<int> parent, size;  
+class UnionFind {
+private:
+    std::vector<int> parent;
+    std::vector<int> rank;
+    int numComponents;
     
-    UnionFind(int n) : parent(n), size(n, 1) {
-        iota(parent.begin(), parent.end(), 0);
+public:
+    UnionFind(int n) : parent(n), rank(n, 0), numComponents(n) {
+        for (int i = 0; i < n; ++i) {
+            parent[i] = i;
+        }
     }
     
+    // 路径压缩的查找
     int find(int x) {
         if (parent[x] != x) {
-            parent[x] = find(parent[x]);  // 路径压缩
+            parent[x] = find(parent[x]); // 路径压缩
         }
         return parent[x];
     }
     
-    bool unite(int a, int b) {
-        int pa = find(a), pb = find(b);
-        if (pa == pb) return false;
+    // 按秩合并
+    bool unite(int x, int y) {
+        int rootX = find(x);
+        int rootY = find(y);
         
-        // 按size合并，保持树的平衡
-        if (size[pa] < size[pb]) swap(pa, pb);
-        parent[pb] = pa;
-        size[pa] += size[pb];
+        if (rootX == rootY) return false;
+        
+        if (rank[rootX] < rank[rootY]) {
+            parent[rootX] = rootY;
+        } else if (rank[rootX] > rank[rootY]) {
+            parent[rootY] = rootX;
+        } else {
+            parent[rootY] = rootX;
+            rank[rootX]++;
+        }
+        numComponents--;
         return true;
+    }
+    
+    bool connected(int x, int y) {
+        return find(x) == find(y);
+    }
+    
+    int getNumComponents() const {
+        return numComponents;
     }
 };
 
 class ConnectedGraph;
+class IncrementalConnectedGraph;
 
 class DancingMatrix 
 {  
@@ -158,8 +190,8 @@ class DancingMatrix
         double searchTimeSeconds = 0.0;
         double countTimeSeconds = 0.0;
         std::vector<std::vector<int>> solutions; 
-        set<int> rowsSet;  // 舞蹈链行id
-        set<int> colsSet;  // 原始矩阵列
+        unordered_set<int> rowsSet;  // 舞蹈链行id
+        unordered_set<int> colsSet;  // 原始矩阵列
         Block InitBlock;
         unordered_map<int, set<int>> rowToColsSet;
         unordered_map<int, set<int>> colToRowsSet;
@@ -199,25 +231,6 @@ class DancingMatrix
         col_id getSmallestSizeCol();
         // ColumnHeader* fastSelect();
 
-        std::mutex rowIndexMutex; // 保护 RowIndex 的互斥锁
-        void removeCol(int r, int c) {
-            set<int> colSet = RowIndex[r].cols;
-            if(colSet.find(c) == colSet.end()) {
-                return;
-            }
-            // lock_guard<mutex> lock(rowIndexMutex);
-            colSet.erase(c);
-        }
-
-        void restoreCol(int r, int c) {
-            set<int> colSet = RowIndex[r].cols;
-            // if(colSet.find(c) != colSet.end()) {
-            //     return;
-            // }
-            // lock_guard<mutex> lock(rowIndexMutex);
-            colSet.insert(c);
-        }
-
         inline ColumnHeader* getColumnHeader(int c) const {
             ColumnHeader* col = &ColIndex[c];
             return col;
@@ -242,7 +255,7 @@ class DancingMatrix
 
         vector<vector<int>> getComponents(set<int>& rows);
 
-        vector<Component> getComponents();
+        vector<pair<int, unordered_set<int>>> getComponents();
 
         void printGraph() const;
 
@@ -253,6 +266,7 @@ class DancingMatrix
         std::vector<std::unique_ptr<Node>> dataNodes;
 
         std::unique_ptr<ConnectedGraph> graph;
+        std::unique_ptr<IncrementalConnectedGraph> incrementalGraph;
         bool enableGraphSync; // 是否启用图同步
         
 };

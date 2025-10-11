@@ -354,14 +354,16 @@ shared_ptr<DNNFNode> DanceDNNF::serialSearch_iterative(const std::vector<Compone
 }
 
 // 串行处理每个子块，组合为 分解 节点
-shared_ptr<DNNFNode> DanceDNNF::serialSearch(vector<Block>& blocks) {
+shared_ptr<DNNFNode> DanceDNNF::serialSearch(vector<pair<int, unordered_set<int>>>& components) {
 
     auto andNode = std::make_shared<DNNFNode>(NodeType::Decomposed, -1, 1);
     
-    andNode->children.reserve(blocks.size());
+    andNode->children.reserve(components.size());
 
-    for (auto& block : blocks) {
+    for (auto& comp : components) {
     
+        auto [rowSize, cols] = comp;
+        Block block(cols, rowSize);
         auto result = DXD(block);
 
         if (!result || result->label == -2) { 
@@ -377,32 +379,37 @@ shared_ptr<DNNFNode> DanceDNNF::serialSearch(vector<Block>& blocks) {
 }
 
 
-shared_ptr<DNNFNode> DanceDNNF::dxdSearch(vector<Block>& blocks) {
+shared_ptr<DNNFNode> DanceDNNF::parallelSearch(vector<pair<int, unordered_set<int>>>& components) {
 
+    isParallelSearch = true;
     std::vector<std::future<std::shared_ptr<DNNFNode>>> futures;
 
-    for (auto& block : blocks) {
+    for (auto& comp : components) {
+
+        auto [rowSize, cols] = comp;
+        Block block(cols, rowSize);
        futures.push_back(pool.enqueue([this](Block block) {
             // 使用值传递避免引用问题
             return DXD(block);
         }, block)); 
+        // futures.push_back(async(launch::async, [this, block]() {  
+        //     Block blockCopy = block;  // 或直接使用 block
+        //     return DXD(blockCopy);
+        // }));
     }
 
     // 收集结果并创建Decomposed节点
-    auto andNode = std::make_shared<DNNFNode>(NodeType::Decomposed, -1, 0);
-    uint64_t totalCount = 1; 
+    auto andNode = std::make_shared<DNNFNode>(NodeType::Decomposed, -1, 1);
 
-    
     for (auto& future : futures) {
         auto result = future.get();
         if (result->label == -2) { 
             return F;
         }
         andNode->children.push_back(result);
-        totalCount *= result->count;
+        andNode->count *= result->count;
     }
     
-    andNode->count = totalCount;
     return andNode;
 }
 
@@ -551,7 +558,7 @@ shared_ptr<DNNFNode> DanceDNNF::DXD_iterative(Block&& rootBlock) {
                     // frame.comps = connectedGraph->getComponents();
                     set<int> rows(frame.block.rows.begin(), frame.block.rows.end());
                     
-                    if(shouldDecompose(rows)){
+                    if(shouldDecompose()){
                         // MAX_B_COUNT = max(MAX_B_COUNT, frame.comps.size());
                         // handle decomposition inline by calling serialSearch_iterative
                         auto decompositionNode = serialSearch_iterative(frame.comps);
@@ -684,14 +691,12 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
         return CacheST[state];
     }
 
-    //shouldDecompose(block) 
-    set<int> rows(block.rows.begin(), block.rows.end());
-    if(block.rows.size() >= MIN_BLOCK_ROWS && shouldDecompose(rows)) {
+    // cout << "current block row size: " << block.row_size << endl;
+    if(!isParallelSearch && block.row_size >= MIN_BLOCK_ROWS && shouldDecompose()) {
             
-        //     auto blocks = spilit(comps); // 分解为多个块
-        //     auto res_and_node = serialSearch(blocks); 
-        //     cacheST[state] = res_and_node; // 缓存结果
-        //     return res_and_node; // 返回分解节点
+        auto res_and_node = parallelSearch(curComp); 
+        CacheST[state] = res_and_node; // 缓存结果
+        return res_and_node; // 返回分解节点
     }
 
     ColumnHeader* choose = selectColumnHeuristic(block.cols); 
@@ -760,6 +765,7 @@ shared_ptr<DXDResult> DanceDNNF::startDXD() {
         auto start = std::chrono::high_resolution_clock::now();
         shared_ptr<DNNFNode> rootDNNF = DXD(InitBlock);  
         auto end = std::chrono::high_resolution_clock::now();
+        timer.markStopTime();
 
         // std::cout << "搜索到的解个数: " << rootDNNF->count << std::endl;
         logger.logLine("搜索到的解个数: " + std::to_string(rootDNNF->count));
@@ -773,7 +779,10 @@ shared_ptr<DXDResult> DanceDNNF::startDXD() {
         if( MAX_B_COUNT > 1 ) {
             // std::cout << "本次搜索最大分块数为: " << MAX_B_COUNT << std::endl;
             logger.logLine("本次搜索最大分块数为: " + std::to_string(MAX_B_COUNT));
+        } else {
+            logger.logLine("本次搜索最大分块数为1");
         }
+        cout << "检测分解消耗时间: " << decomposeTime << " 秒" << endl;
         cur_result->max_blocks = MAX_B_COUNT;
 
         return cur_result;
@@ -885,9 +894,9 @@ shared_ptr<DNNFNode> DecisionDNNF::solve() {
                 
                 // semaphore.release();  // 释放资源
                 return result;
-            } catch (...) {
+            } catch (const std::exception& e) {
                 // semaphore.release();
-                throw;
+                throw std::runtime_error(e.what());
             }
         });
         futures.push_back(std::move(future));
@@ -912,8 +921,6 @@ shared_ptr<ExperimentResult> ExactCoverSolver::searchEC() {
         // ColumnHeader* colHead = dm.getColumnHeader(selectCol);
         std::cout << "选择列: " << selectCol << " size: " << size << std::endl;
 
-        // vector<unique_ptr<DancingMatrix>> subMatrices;
-        // subMatrices.reserve(colHead->size);
         vector<SubMatrixTask> tasks;
         tasks.reserve(size);
         
@@ -922,25 +929,8 @@ shared_ptr<ExperimentResult> ExactCoverSolver::searchEC() {
 
         }
 
-        // while (curR != colHead) {
 
-            // auto subMatrix = make_unique<DancingMatrix>(input_file, from);            
-            // RowNode* rowHead = &subMatrix->getRowIndex()[curR->row];
-            // Node* startNode = rowHead->right;
-            // subMatrix->cover(startNode->col);
-
-            // Node* curC = startNode->right;
-            // while (curC != startNode) {
-            //     subMatrix->cover(curC->col);
-            //     curC = curC->right;
-            // }
-            // subMatrices.push_back(std::move(subMatrix));
-
-        //     curR = curR->down;
-        // }  
-
-        int maxConcurrent = std::min(poolSize, 8);  // 最多同时4个矩阵
-        // DecisionDNNF solver(std::move(subMatrices));
+        int maxConcurrent = std::min(poolSize, size);  // 最多同时4个矩阵
         DecisionDNNF solver(std::move(tasks), maxConcurrent);
 
         auto start = std::chrono::high_resolution_clock::now();
@@ -964,66 +954,23 @@ shared_ptr<ExperimentResult> ExactCoverSolver::searchEC() {
 
 }
 
-std::vector<row_id> ExactCoverSolver::getAssignCol(col_id& selectedCol) { 
+const std::vector<row_id>& ExactCoverSolver::getAssignCol(col_id& selectedCol) { 
     
-    ifstream ifs(input_file);
-    if(!ifs.is_open()) {
-        cout << "无法打开文件: " << input_file << endl;
-        return {};
+    if (matrix.size() <= 1) {
+        throw std::runtime_error("矩阵未初始化");
     }
-
-    string line, token;
-    getline(ifs, line);  // 读取第一行 
-    istringstream iss(line);
-
-    int rows, cols;
-    if( from == 1 ) {
-        iss >> token >> token >> token >> cols;
-        iss >> token >> token >> token >> rows;
-        getline(ifs, line); 
-    } else {
-        iss >> cols >> rows;
-    }
-
-    if (rows > MAX_ROW) {
-        cerr << "矩阵行数过大，无法处理: " << rows << " 行." << endl;
-        throw runtime_error("time out");
-    }
-
-    std::vector<std::vector<int>> matrix(cols + 1);
-
-    int cur_row = 0;
-    while (getline(ifs, line)) { 
-        if (line.empty()) continue;
-        istringstream iss(line);
-
-        if (from == 1 || from == 3) {
-            iss >> token;
-        } else if (from == 2) {
-            iss >> token;
-            iss >> token;
+    
+    // 使用标准算法查找最小元素
+    auto min_it = std::min_element(
+        matrix.begin() + 1, 
+        matrix.end(),
+        [](const std::vector<row_id>& a, const std::vector<row_id>& b) {
+            return a.size() < b.size();
         }
-
-        int col;
-        while (iss >> col) {
-            if (col > 0 && col <= cols) {
-                matrix[col].push_back(cur_row);
-            }
-        }
-        cur_row++;
-
-        if (cur_row >= rows) break;
-    }
-
-    int min_size = matrix[1].size();
-    for (int i = 2; i <= cols; i++) {
-        if (matrix[i].size() < min_size) {
-            min_size = matrix[i].size();
-            selectedCol = i;
-        }
-    }
-
-    return matrix[selectedCol];
+    );
+    
+    selectedCol = std::distance(matrix.begin(), min_it);
+    return *min_it;
 }
 
 // 主搜索函数(多线程版本)

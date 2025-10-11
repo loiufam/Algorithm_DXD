@@ -23,6 +23,93 @@ struct vertexNode
     }
 };
 
+class UnionFindWithColumns {
+private:
+    std::vector<int> parent;
+    std::vector<int> rank;
+    // 每个连通分量的代表元素维护列集合
+    std::vector<std::unordered_set<int>> columnSets;
+    int numComponents;
+    
+public:
+    UnionFindWithColumns(int n) : parent(n), rank(n, 0), columnSets(n), numComponents(n) {
+        for (int i = 0; i < n; ++i) {
+            parent[i] = i;
+        }
+    }
+    
+    int find(int x) {
+        if (parent[x] != x) {
+            parent[x] = find(parent[x]);
+        }
+        return parent[x];
+    }
+    
+    // 优化的合并：同时合并列集合
+    bool unite(int x, int y) {
+        int rootX = find(x);
+        int rootY = find(y);
+        
+        if (rootX == rootY) return false;
+        
+        // 总是将小集合合并到大集合
+        if (rank[rootX] < rank[rootY]) {
+            std::swap(rootX, rootY);
+        }
+        
+        parent[rootY] = rootX;
+        
+        if (rank[rootX] == rank[rootY]) {
+            rank[rootX]++;
+        }
+        
+        // **合并列集合**
+        if (columnSets[rootY].size() > columnSets[rootX].size()) {
+            std::swap(columnSets[rootX], columnSets[rootY]);
+        }
+        columnSets[rootX].insert(columnSets[rootY].begin(), columnSets[rootY].end());
+        columnSets[rootY].clear(); // 释放内存
+        
+        numComponents--;
+        return true;
+    }
+    
+    // 添加列到行
+    void addColumn(int row, int col) {
+        int root = find(row);
+        columnSets[root].insert(col);
+    }
+    
+    int getNumComponents() const {
+        return numComponents;
+    }
+
+    bool connected(int x, int y) {
+        return find(x) == find(y);
+    } 
+
+    // 获取连通分量的列集合
+    const std::unordered_set<int>& getColumns(int row) {
+        return columnSets[find(row)];
+    }
+    
+    // 获取所有连通分量及其列集合
+    std::vector<std::pair<std::vector<int>, std::unordered_set<int>>> getComponents() {
+        std::unordered_map<int, std::vector<int>> components;
+        
+        for (int i = 0; i < parent.size(); ++i) {
+            int root = find(i);
+            components[root].push_back(i);
+        }
+        
+        std::vector<std::pair<std::vector<int>, std::unordered_set<int>>> result;
+        for (auto& [root, rows] : components) {
+            result.emplace_back(std::move(rows), columnSets[root]);
+        }
+        
+        return result;
+    }
+};
 
 class ConnectedGraph {
     
@@ -42,15 +129,15 @@ class ConnectedGraph {
         mutable vector<int> nodeToComponent; // node -> component index
 
         ConnectedGraph (const DancingMatrix& matrix);
-        ConnectedGraph(int rows, int cols)
-            : R(rows), C(cols), N(rows+cols), etf(rows+cols){
-            incidentNonTree.assign(N,{});
-            mark.assign(N,0);
-            nodeActive.assign(N, true);  // 初始时所有节点都是活跃的
-            trav_stack.reserve(1024); // initial reserve
-            componentsCacheValid = false;
-            nodeToComponent.assign(N, -1);
-        }
+        // ConnectedGraph(int rows, int cols)
+        //     : R(rows), C(cols), N(rows+cols), etf(rows+cols){
+        //     incidentNonTree.assign(N,{});
+        //     mark.assign(N,0);
+        //     nodeActive.assign(N, true);  // 初始时所有节点都是活跃的
+        //     trav_stack.reserve(1024); // initial reserve
+        //     componentsCacheValid = false;
+        //     nodeToComponent.assign(N, -1);
+        // }
         ~ConnectedGraph() = default;
 
         // 打印函数
