@@ -56,10 +56,10 @@ set(TEST_SOURCES3
     src/DXDTime.cpp
 )
 # Add executable target
-# add_executable(main ${MAIN_SOURCES})
+add_executable(main ${MAIN_SOURCES})
 # 1 : DLX and DXZ 2 : singleDXD and MultiDXD 3 : UnionFind
 # add_executable(test1 ${TEST_SOURCES1})
-add_executable(test2 ${TEST_SOURCES2})
+# add_executable(test2 ${TEST_SOURCES2})
 # add_executable(test ${TEST_SOURCES3})
 # find_package(Threads REQUIRED)
 # target_link_libraries(test PRIVATE Threads::Threads)

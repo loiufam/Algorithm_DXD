@@ -3,6 +3,7 @@
 
 #include "ThreadPool.h"
 #include "../utils/ResProcessor.h"
+#include "ETT.h"
 #include <string>
 #include <set>
 #include <map>
@@ -30,9 +31,10 @@ struct Node
 {  
     Node* left, *right, *up, *down;  
     int col, row;  
+    bool row_first_node;
     Node(int r = -1, int c = -1) 
         : row(r), col(c), left(nullptr), right(nullptr), 
-          up(nullptr), down(nullptr) {} 
+          up(nullptr), down(nullptr), row_first_node(false) {} 
     
     virtual ~Node() = default;
 };  
@@ -47,29 +49,29 @@ struct ColumnHeader : public Node
 
 struct RowNode : public Node
 {
-    Node* firstNode;
     int size;
     set<int> cols;
-    RowNode() : firstNode(nullptr), size(0) {
-    }
+    RowNode() :  size(0) {}
+
 };
 
 struct Component{ 
-    vector<int> rows; 
-    vector<int> cols; 
+    set<int> rows; 
+    unordered_set<int> cols; 
 
     Component() = default;
 
     void printComponent() {
         cout<< "row_id: ";
-        sort(rows.begin(), rows.end());
+        // sort(rows.begin(), rows.end());
         for(auto& r : rows) {
             cout<< r << " ";
         }
         cout << endl;
-        sort(cols.begin(), cols.end());
+        vector<int> sortedCols(cols.begin(), cols.end());
+        sort(sortedCols.begin(), sortedCols.end());
         cout << "col_id: ";
-        for(auto& c : cols) {
+        for(auto& c : sortedCols) {
             cout<< c << " ";
         }
         cout << endl; 
@@ -190,6 +192,7 @@ class DancingMatrix
         
         double searchTimeSeconds = 0.0;
         double countTimeSeconds = 0.0;
+        bool useETT;
         std::vector<std::vector<int>> solutions; 
         unordered_set<int> rowsSet;  // 舞蹈链行id
         unordered_set<int> colsSet;  // 原始矩阵列
@@ -202,13 +205,12 @@ class DancingMatrix
         
         //接收矩阵其及维度  
         DancingMatrix( int rows, int cols, int** matrix, bool verbose = false);  
-        DancingMatrix( const string& file_path, int from, bool verbose = false);
+        DancingMatrix( const string& file_path, int from, bool verbose = false, bool use_ett = false);
 
         // 禁用拷贝和赋值
         DancingMatrix(const DancingMatrix&) = delete;
         DancingMatrix& operator=(const DancingMatrix&) = delete;
 
-        // 允许移动
         DancingMatrix(DancingMatrix&&) = delete;
         DancingMatrix& operator=(DancingMatrix&&) = delete;
         //释放内存  
@@ -216,6 +218,8 @@ class DancingMatrix
         
         void build_mapping_from_cols(const unordered_set<int>& blockCols, unordered_map<int, set<int>>& rowToCols, unordered_map<int, set<int>>& colToRows);
         void insert( int r, int c );  
+        void add_connection(int r, int c);
+        void remove_connection(int r, int c);
         void printMatrix() const; 
         void cover( int c );  
         void uncover( int c ); 
@@ -254,9 +258,12 @@ class DancingMatrix
             return root->right == root;
         }
 
+        // IBD: Independent Block Detection
         vector<vector<int>> getComponents(set<int>& rows);
 
         vector<pair<int, unordered_set<int>>> getComponents();
+
+        vector<Component> getComponentsByETT();
 
         void printGraph() const;
 
@@ -268,6 +275,18 @@ class DancingMatrix
 
         std::unique_ptr<ConnectedGraph> graph;
         std::unique_ptr<IncrementalConnectedGraph> incrementalGraph;
+        ETTree etTree;  // 欧拉回路树
+
+        // 列到行的反向索引：col_to_rows[col] = {row1, row2, ...}
+        std::map<int, std::set<int>> col_to_rows;
+        
+        // 记录两行之间共享的列：shared_cols[{row1, row2}] = {col1, col2, ...}
+        std::map<std::pair<int, int>, std::set<int>> shared_cols;
+        
+        // 生成行对的规范化键
+        std::pair<int, int> make_row_pair(int r1, int r2) {
+            return r1 < r2 ? std::make_pair(r1, r2) : std::make_pair(r2, r1);
+        }
         bool enableGraphSync; // 是否启用图同步
         
 };

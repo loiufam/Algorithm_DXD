@@ -78,8 +78,6 @@ struct SetIntHash {
     }
 };
 
-
-
 struct DXD_Block {
 
         // row id from 0, column id from 1
@@ -191,18 +189,19 @@ private:
 class DanceDNNF : DancingMatrix { 
 
     public:
-        DanceDNNF(int rows, int cols, int** matrix, Logger& l, bool verbose = false) 
-            : DancingMatrix(rows, cols, matrix, verbose), logger(l), pool(getThreadPool()) {
+        DanceDNNF(int rows, int cols, int** matrix, Logger& l, bool verbose = false, int pool_size = 1) 
+            : DancingMatrix(rows, cols, matrix, verbose), logger(l), pool(getThreadPool(pool_size)) {
+            
  
             timer.setTimeBound(TIME_LIMIT_SECONDS);
 
             std::cout<< "初始化DanceDNNF完成." << endl;
         }
 
-        DanceDNNF(const string& file_path, int from, Logger& l, bool verbose = false, int time_secs = 1200)
-            : DancingMatrix(file_path, from, verbose), logger(l), pool(getThreadPool()) {
+        DanceDNNF(const string& file_path, int from, Logger& l, bool verbose = false, int pool_size = 4, bool useETT = false)
+            : DancingMatrix(file_path, from, verbose, useETT), logger(l), pool(getThreadPool(pool_size)) {
 
-            timer.setTimeBound(time_secs);
+            timer.setTimeBound(TIME_LIMIT_SECONDS);
 
             // std::cout<< "初始化DanceDNNF完成." << endl;
         }
@@ -222,7 +221,7 @@ class DanceDNNF : DancingMatrix {
         vector<set<int>> mergeRowSets(Block& block);
         vector<Block> spilitBlock(const vector<set<int>>& mergeRowSets);
         vector<Block> spilitBlockParallel(const vector<set<int>>& mergeRowSets);
-        vector<Block> spilit(const vector<vector<int>>& rows);
+
         void printBlocks(const vector<Block>& blocks);
         void printBlock(const Block& block);
 
@@ -251,7 +250,7 @@ class DanceDNNF : DancingMatrix {
 
         bool shouldDecompose (const int rowSize) {
 
-            if (p_count > MAX_P_COUNT)
+            if (p_count >= MAX_P_COUNT)
                 return false;
 
             return rowSize >= MIN_BLOCK_ROWS;
@@ -294,13 +293,9 @@ class DanceDNNF : DancingMatrix {
             p_count += 1;
         }
 
-        void setPoolSize(int size) {
-            poolSize = size;
-        }
 
     private:
 
-        int poolSize = 4; // 线程池大小 默认4个线程
         ThreadPool& pool;
         Logger& logger;
         shared_ptr<DXDResult> cur_result = make_shared<DXDResult>(); // 当前实例结果
@@ -328,7 +323,7 @@ class DanceDNNF : DancingMatrix {
         std::stack<CoverOperation> operationStack;
         vector<BatchOperation> batchOpStack;
 
-        ThreadPool& getThreadPool() {
+        ThreadPool& getThreadPool(int poolSize) {
             return ThreadPoolManager::get_instance(poolSize);
         }
 };

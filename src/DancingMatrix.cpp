@@ -49,7 +49,8 @@ DancingMatrix::DancingMatrix( int rows, int cols, int** matrix, bool verbose )
 }
 
 // 从文件构造舞蹈链矩阵
-DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose ) : enableGraphSync(verbose)
+DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose, bool useETT ) 
+    : useETT(useETT)
 {
     ifstream file(file_path);
     if (!file.is_open()) {
@@ -132,6 +133,12 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose ) 
         
         if (currentRow >= rows) break; // 防止超过预期行数
     }
+    if(useETT){
+        etTree.set_row_cols_getter([this](int row) -> const std::set<int>& {
+            return RowIndex[row].cols;
+        });
+    }
+
 
     InitBlock = Block(colsSet, rows);
     if(verbose){
@@ -152,6 +159,20 @@ vector<pair<int,unordered_set<int>>> DancingMatrix::getComponents() {
     return incrementalGraph->getComponentColumnSetsAsSet();
 };
 
+vector<Component> DancingMatrix::getComponentsByETT() {
+    auto ett_components = etTree.get_components();
+    std::vector<Component> result;
+    
+    for (const auto& [comp_id, info] : ett_components) {
+        Component comp;
+        comp.rows = info.rows;
+        comp.cols = info.cols;
+        result.push_back(comp);
+    }
+    
+    return result;
+}
+
 void DancingMatrix::printGraph() const {
     graph->printGraph();
 }
@@ -162,7 +183,7 @@ void DancingMatrix::insert( int r, int c )
     ColIndex[c].size++;  
     RowIndex[r].size++;
     // ColIndex[c].rows.insert(r);
-    // RowIndex[r].cols.insert(c);
+    RowIndex[r].cols.insert(c);
     auto newNode = std::make_unique<Node>(r, c);  
     Node* newNodePtr = newNode.get();
 
@@ -176,7 +197,8 @@ void DancingMatrix::insert( int r, int c )
     cur->down = newNodePtr;  
     if( RowIndex[r].right == nullptr )  
     {  
-        RowIndex[r].right = newNodePtr;  
+        RowIndex[r].right = newNodePtr; 
+        newNodePtr->row_first_node = true;
         newNode->left = newNodePtr;  
         newNode->right = newNodePtr;  
     }  
@@ -195,6 +217,9 @@ void DancingMatrix::insert( int r, int c )
     }  
     // if (enableGraphSync)
     //     graph->insertEdge(r, c-1); 
+    if (useETT) {
+        add_connection(r, c);
+    }
 
     dataNodes.push_back(std::move(newNode));
 }
@@ -276,20 +301,77 @@ void DancingMatrix::printMatrix() const
     std::cout << std::endl;
 }
 
+void DancingMatrix::add_connection(int r, int c)
+{
+    // 获取该列已有的其他行
+    std::set<int> other_rows = col_to_rows[c];
+    
+    // 将当前行添加到列索引
+    col_to_rows[c].insert(r);
+    
+    // 检查是否需要与其他行建立连接
+    for (int other_row : other_rows) {
+        if (other_row == r) continue;
+        
+        auto row_pair = make_row_pair(r, other_row);
+        
+        // 记录共享列
+        shared_cols[row_pair].insert(c);
+        
+        // 如果这是第一个共享列，建立连接
+        if (shared_cols[row_pair].size() == 1) {
+            etTree.link(r, other_row);
+        }
+    }
+}
+
+void DancingMatrix::remove_connection(int r, int c)
+{ 
+    // 获取该列的其他行
+    auto it = col_to_rows.find(c);
+    if (it == col_to_rows.end()) return;
+    
+    std::set<int> other_rows = it->second;
+    other_rows.erase(r);
+    
+    // 从列索引删除
+    col_to_rows[c].erase(r);
+    if (col_to_rows[c].empty()) {
+        col_to_rows.erase(c);
+    }
+    
+    // 检查是否需要断开与其他行的连接
+    for (int other_row : other_rows) {
+        auto row_pair = make_row_pair(r, other_row);
+        
+        // 从共享列中删除
+        if (shared_cols.find(row_pair) != shared_cols.end()) {
+            shared_cols[row_pair].erase(c);
+            
+            // 如果没有共享列了，断开连接
+            if (shared_cols[row_pair].empty()) {
+                shared_cols.erase(row_pair);
+                
+                if (etTree.has_edge(r, other_row)) {
+                    etTree.cut(r, other_row);
+                }
+            }
+        }
+    }
+}
+
 void DancingMatrix::cover( int c )  
 {  
     ColumnHeader* col = &ColIndex[c];  
     col->right->left = col->left;  
     col->left->right = col->right; 
-    // colsSet.erase(c); // 从当前矩阵移除该列
     
     Node* curR, *curC;  
     curC = col->down;  
     while( curC != col )  
     {   
         Node* noteR = curC;  
-        // RowIndex[noteR->row].cols.erase(noteR->col);
-        // removeCol(noteR->row, noteR->col);
+
         curR = noteR->right;  
         while( curR != noteR )  
         {  
@@ -297,12 +379,9 @@ void DancingMatrix::cover( int c )
             curR->up->down = curR->down;  
             --ColIndex[curR->col].size;  
 
-            // RowIndex[noteR->row].cols.erase(curR->col);
-            // removeCol(noteR->row, curR->col);
             curR = curR->right;  
         }  
-        rowsSet.erase(curC->row);
-        // connectedGraph->remove(curC->row);
+        // rowsSet.erase(curC->row);
         curC = curC->down;  
     }  
 }
@@ -325,8 +404,7 @@ void DancingMatrix::uncover( int c )
 
             curR = curR->left;  
         }  
-        rowsSet.insert(curC->row);
-        // connectedGraph->restore(curC->row);
+        // rowsSet.insert(curC->row);
         curC = curC->up;  
     }  
     col->right->left = col;  
@@ -349,6 +427,10 @@ void DancingMatrix::coverInBlock(int c, Block& block){
     {    
         incrementalGraph->deactivateRow(curC->row);
         block.row_size--;
+        if (useETT) {
+            remove_connection(curC->row, curC->col);
+            etTree.update_row_columns(curC->row, RowIndex[curC->row].cols);
+        }
 
         curR = curC->right;  
         while( curR != curC )  
@@ -356,7 +438,12 @@ void DancingMatrix::coverInBlock(int c, Block& block){
 
             curR->down->up = curR->up;  
             curR->up->down = curR->down;  
-            decColSize(curR->col); 
+            // decColSize(curR->col); 
+            if (useETT) {
+                remove_connection(curR->row, curR->col);
+                etTree.update_row_columns(curR->row, RowIndex[curR->row].cols);
+            }
+            --ColIndex[curR->col].size;
 
             curR = curR->right;  
         }  
@@ -378,16 +465,28 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
 
         while( curR != noteR )  
         {  
-            incColSize(curR->col); 
+            // incColSize(curR->col); 
+            ++ColIndex[curR->col].size;
             curR->down->up = curR;  
             curR->up->down = curR;  
+            if (useETT) {
+                add_connection(curR->row, curR->col);
+                if(!curR->row_first_node) {
+                    etTree.update_row_columns(curR->row, RowIndex[curR->row].cols);
+                }
+            }
 
-            
             curR = curR->left;  
         }  
 
         incrementalGraph->reactivateRow(curC->row);
         block.row_size++;
+        if (useETT) {
+            add_connection(curC->row, curC->col);
+            if(!curC->row_first_node) {
+                etTree.update_row_columns(curC->row, RowIndex[curC->row].cols);
+            }
+        }
 
         curC = curC->up;  
     }  

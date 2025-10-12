@@ -2,7 +2,8 @@
 #include "../include/DXZ.h"
 #include "../include/DXD.h"
 
-static Logger logger("../alg_log.txt");  // 全局日志
+static Logger logger("../multi_dxd_log.txt");  // 全局日志
+// const string muti_thread_dxd_log_file = "../muti_thread_dxd_log.csv";
 
 // 算法类型枚举
 enum class algorithm_type {
@@ -23,7 +24,7 @@ algorithm_type parseAlgorithmType(const std::string& name) {
     throw std::invalid_argument("Unknown algorithm type: " + name);
 }
 
-// ./main <input> <algorithm> <read_mode> [timeout_seconds]
+// ./main <input> <algorithm> <read_mode> [pool_size]
 int main(int argc, char *argv[]){
     
     if (argc < 4) {
@@ -36,11 +37,8 @@ int main(int argc, char *argv[]){
         std::string input_file = argv[1];
         std::string algType = argv[2];
         int read_mode = std::stoi(argv[3]);
-        int timeout_seconds = argc >= 5 ? std::stoi(argv[4]) : 1200; // 默认超时时间为 1200 秒
-        if (timeout_seconds <= 0) {
-            cerr << "Invalid timeout seconds: " << timeout_seconds << std::endl;
-            return 1;
-        }
+        int timeout_seconds = 1200; // 默认超时时间为 1200 秒
+
 
         string filename = fs::path(input_file).stem().string();
         algorithm_type type = parseAlgorithmType(algType);
@@ -64,17 +62,29 @@ int main(int argc, char *argv[]){
             case algorithm_type::dxd: 
                 {
                     logger.logLine("启用DXD算法求解: " + filename);
-                    DanceDNNF danceDNNF(input_file, read_mode, logger, true, timeout_seconds);
+                    DanceDNNF danceDNNF(input_file, read_mode, logger, true);
                     auto res = danceDNNF.startDXD();
                     logger.logLine("DXD算法求解结束: " + filename);
                     break;
                 }
             case algorithm_type::dxd_p:
                 {
+                    if (argc < 5){
+                        std::cout << "dxd_p needs arg poolsize" << std::endl;
+                    }
+                    int poolsize = std::stoi(argv[4]);
+
                     logger.logLine("启用多线程DXD算法求解: " + filename);
-                    ExactCoverSolver ecSolver(input_file, read_mode, logger, 16);
-                    auto res = ecSolver.searchEC();
-                    logger.logLine("多线程DXD算法求解结束: " + filename);
+                    logger.logLine("线程池大小: " + std::to_string(poolsize));
+                    // ExactCoverSolver ecSolver(input_file, read_mode, logger, 16);
+                    // auto res = ecSolver.searchEC();
+                    DanceDNNF danceDNNF(input_file, read_mode, logger, true, poolsize);
+                    auto res = danceDNNF.startMultiThreadDXD();
+                    // logger.logLine("多线程DXD算法求解结果: " + std::to_string(res->solution_count));
+                    // logger.logLine("多线程DXD算法求解耗时: " + res->runtime);
+                    // logger.logLine("多线程DXD算法求解最大分块: " + std::to_string(res->max_blocks));
+                    // logger.logLine("多线程DXD算法求解结束: " + filename);
+                    logger.logLine("");
                     break;
                 }
             default:

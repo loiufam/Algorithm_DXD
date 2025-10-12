@@ -5,7 +5,7 @@ int main(){
         const string file_path = "../data/graph_matrix/Missouri.txt";
         const string input_file = "../input_matrix.txt";
 
-        DancingMatrix matrix(input_file, 3);
+        DancingMatrix matrix(file_path, 3);
         IncrementalConnectedGraph graph(matrix.ROWS);
 
 

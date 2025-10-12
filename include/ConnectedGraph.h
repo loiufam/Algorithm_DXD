@@ -23,6 +23,13 @@ struct vertexNode
     }
 };
 
+struct MatrixComponent{
+    vector<int> rows;
+    vector<int> cols;
+
+    MatrixComponent() = default;
+};
+
 class UnionFindWithColumns {
 private:
     std::vector<int> parent;
@@ -123,7 +130,7 @@ class ConnectedGraph {
         mutable vector<Treap*> trav_stack; // reusable traversal stack to avoid allocations
 
         // ===== 新增：连通分量缓存机制 =====
-        mutable vector<Component> cachedComponents;
+        mutable vector<MatrixComponent> cachedComponents;
         mutable bool componentsCacheValid;
         mutable unordered_map<Treap*, int> rootToComponentIndex; // root -> component index
         mutable vector<int> nodeToComponent; // node -> component index
@@ -235,7 +242,7 @@ class ConnectedGraph {
 
         vector<vector<int>> getComponents(const set<int>& existRowSet);
 
-        vector<Component> getComponents() const;
+        vector<MatrixComponent> getComponents() const;
 
         // ===== 快速检查两个节点是否在同一连通分量 =====
         bool inSameComponent(int u, int v);
@@ -248,7 +255,7 @@ class ConnectedGraph {
             return (node >= 0 && node < N) ? nodeToComponent[node] : -1;
         }
 
-        Component getComponentOf(int node) const;
+        MatrixComponent getComponentOf(int node) const;
 
     private:
         std::vector<std::unique_ptr<vertexNode>> rowHeaderV;
@@ -274,13 +281,13 @@ class ConnectedGraph {
             }
             
             // 合并两个分量：将compV合并到compU
-            Component& targetComp = cachedComponents[compU];
-            Component& sourceComp = cachedComponents[compV];
+            MatrixComponent& targetComp = cachedComponents[compU];
+            MatrixComponent& sourceComp = cachedComponents[compV];
             
-            targetComp.rows.insert(targetComp.rows.end(), 
-                sourceComp.rows.begin(), sourceComp.rows.end());
-            targetComp.cols.insert(targetComp.cols.end(), 
-                sourceComp.cols.begin(), sourceComp.cols.end());
+            // targetComp.rows.insert(targetComp.rows.end(), 
+            //     sourceComp.rows.begin(), sourceComp.rows.end());
+            // targetComp.cols.insert(targetComp.cols.end(), 
+            //     sourceComp.cols.begin(), sourceComp.cols.end());
             
             // 更新节点映射
             for(int row : sourceComp.rows) {

@@ -63,9 +63,9 @@ int main() {
                         // ExactCoverSolver ecSolver(entry.path().string(), read_mode, logger, 16);
                         // ecSolver.cur_instance = file_name;
                         // shared_ptr<ExperimentResult> res = ecSolver.searchEC();
-                        DanceDNNF dxdSolver(entry.path().string(), read_mode, logger, true);
+                        DanceDNNF dxdSolver(entry.path().string(), read_mode, logger, true, 16);
                         dxdSolver.cur_instance = file_name;
-                        dxdSolver.setPoolSize(16);
+
                         shared_ptr<DXDResult> res = dxdSolver.startMultiThreadDXD();
                         processor.processResultFile(res, AlgorithmType::DXD_M);
                         logger.logLine("");

@@ -382,7 +382,8 @@ shared_ptr<DNNFNode> DanceDNNF::parallelSearch(vector<pair<int, unordered_set<in
 
     for (auto& future : futures) {
         auto result = future.get();
-        if (result->label == -2) { 
+
+        if (!result || result->label == -2) { 
             return F;
         }
         andNode->children.push_back(result);
@@ -450,25 +451,6 @@ void DanceDNNF::printBlock(const Block& block) {
 }
 
 
-vector<Block> DanceDNNF::spilit(const vector<vector<int>>& rows) {
-    vector<Block> blocks;
-    for(int i = 0; i < rows.size(); ++i) {
-        const vector<int>& rowVec = rows[i];
-        set<int> rowSet(rowVec.begin(), rowVec.end());
-        set<int> cols;
-        // 获取所有行涉及的列的并集
-        for(int row : rowSet) {
-            const RowNode* rowHead = getRowHeader(row);
-            cols.insert(rowHead->cols.begin(), rowHead->cols.end());
-        }
-
-        Block newBlock(rowSet, cols);
-        blocks.push_back(newBlock);
-    }
-
-    return blocks;
-}
-
 // DXD单线程（要体现分解性）
 shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
     
@@ -489,13 +471,15 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
 
     if(shouldDecompose(block.row_size)) {
 
-        auto start = std::chrono::high_resolution_clock::now();
+        // auto start = std::chrono::high_resolution_clock::now();
         auto curComp = getComponents();
-        auto end = std::chrono::high_resolution_clock::now();
-        decomposeTime += std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
+        // auto end = std::chrono::high_resolution_clock::now();
+        // decomposeTime += std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
 
-        shared_ptr<DNNFNode> res_and_node;
+        MAX_B_COUNT = std::max(MAX_B_COUNT, curComp.size());
         if (curComp.size() > 1){
+            // cout << "块分解为 " << curComp.size() << " 个子块" << endl;
+            shared_ptr<DNNFNode> res_and_node;
             p_count++;
             if (isParallelSearch) {
                 res_and_node = parallelSearch(curComp); 
@@ -625,16 +609,14 @@ shared_ptr<DXDResult> DanceDNNF::startMultiThreadDXD() {
         cout<< "多线程算法计时: " << searchTimeSeconds << " 秒。" << endl;
         
         cur_result->runtime = std::to_string(searchTimeSeconds);
-        cout << "检测分解时间占比: " << (decomposeTime / searchTimeSeconds) * 100.0 << "%" << endl;
+        // cout << "检测分解时间占比: " << (decomposeTime / searchTimeSeconds) * 100.0 << "%" << endl;
 
         cout << "多线程DXD搜索解个数: " << rootDNNF->count << endl;
         cur_result->solution_count = rootDNNF->count;
         
-        if( MAX_B_COUNT > 1 ) {
-            std::cout << "本次搜索开启多线程并行搜索, 最大分块数为: " << MAX_B_COUNT << std::endl;
-        } else {
-            std::cout << "本次搜索为串行搜索。" << std::endl;
-        }
+        std::cout << "最大分块数为: " << MAX_B_COUNT << std::endl;
+
+        cur_result->max_blocks = MAX_B_COUNT;
 
         return cur_result;
     } catch (std::runtime_error &e) {

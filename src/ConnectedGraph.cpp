@@ -188,7 +188,7 @@ vector<vector<int>> ConnectedGraph::getComponents(const set<int>& existRowSet)  
 }
 
 // 利用缓存优化
-vector<Component> ConnectedGraph::getComponents() const{
+vector<MatrixComponent> ConnectedGraph::getComponents() const{
     if (componentsCacheValid) {
         return cachedComponents;
     }
@@ -215,7 +215,7 @@ vector<Component> ConnectedGraph::getComponents() const{
             continue;
         }
         
-        Component comp; 
+        MatrixComponent comp; 
         comp.rows.reserve(max(4, sz(Rroot)/4)); 
         comp.cols.reserve(max(4, sz(Rroot)/4));
 
@@ -268,9 +268,9 @@ bool ConnectedGraph::inSameComponent(int u, int v) {
 }
 
 // ===== 获取指定节点的连通分量（不重新计算所有分量）=====
-Component ConnectedGraph::getComponentOf(int node) const {
+MatrixComponent ConnectedGraph::getComponentOf(int node) const {
     
-    Component comp;
+    MatrixComponent comp;
     if(!nodeActive[node]) return comp;
     
     Treap* Rroot = rootOf(etf.enter[node]);

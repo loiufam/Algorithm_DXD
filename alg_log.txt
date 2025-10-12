@@ -1,4 +1,0 @@
-启用多线程DXD算法求解: doublefact-17
-最大线程数: 8
-vector
-多线程DXD算法求解结束: doublefact-17
