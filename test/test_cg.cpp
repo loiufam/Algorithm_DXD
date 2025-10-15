@@ -5,7 +5,7 @@ int main(){
         const string file_path = "../data/graph_matrix/Missouri.txt";
         const string input_file = "../input_matrix.txt";
 
-        DancingMatrix matrix(file_path, 3);
+        DancingMatrix matrix(input_file, 3);
         IncrementalConnectedGraph graph(matrix.ROWS);
 
 
@@ -34,23 +34,22 @@ int main(){
 
         // 4. 动态删除操作
         std::cout << "\n=== 测试删除操作 ===" << std::endl;
-        graph.deactivateRow(3);
-        graph.deactivateRow(4);
+        graph.deactivateRow(0);
+        graph.deactivateRow(1);
 
         components = graph.computeComponents();
         std::cout << "删除后的连通分量数: " << components.size() << std::endl;
-        // 打印前5个连通分量
-        for (size_t i = 0; i < std::min(size_t(5), components.size()); ++i) {
+        for (size_t i = 0; i < std::min(size_t(10), components.size()); ++i) {
             components[i].print();
         }
         
         // 5. 恢复操作
         std::cout << "\n=== 测试恢复操作 ===" << std::endl;
-        graph.reactivateRows({3, 4});
+        graph.reactivateRows({0, 1});
         components = graph.computeComponents();
         std::cout << "恢复后的连通分量数: " << components.size() << std::endl;
-        // 打印前5个连通分量
-        for (size_t i = 0; i < std::min(size_t(5), components.size()); ++i) {
+
+        for (size_t i = 0; i < std::min(size_t(10), components.size()); ++i) {
             components[i].print();
         }
 
