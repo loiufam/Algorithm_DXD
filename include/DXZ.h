@@ -37,10 +37,10 @@ class DanceZDD : DancingMatrix{
             F_ZDD = make_shared<ZDDNode>(-2, nullptr, nullptr, true); // ZDD的F节点
         }
 
-        DanceZDD(const string& file_path, int from, Logger& l, int time_limit = 1200) 
+        DanceZDD(const string& file_path, int from, Logger& l) 
         : DancingMatrix(file_path, from), logger(l) {
 
-            timer.setTimeBound(time_limit);  
+            timer.setTimeBound(1200);  
            
             T_ZDD = make_shared<ZDDNode>(-1, nullptr, nullptr, true); // ZDD的T节点
             F_ZDD = make_shared<ZDDNode>(-2, nullptr, nullptr, true); // ZDD的F节点

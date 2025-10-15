@@ -13,9 +13,9 @@ void DanceZDD::DLX(std::vector<label_t>& solution)
         return;  
     }
 
-    if( timer.timeBoundBroken() ){
-        throw std::runtime_error("Time bound broken");
-    }
+    // if( timer.timeBoundBroken() ){
+    //     throw std::runtime_error("Time bound broken");
+    // }
 
     cover( choose->col );
     Node* curC = choose->down;  
@@ -124,9 +124,9 @@ shared_ptr<ZDDNode> DanceZDD::DXZ()
         return T_ZDD;
     }
 
-    if (timer.timeBoundBroken()) {
-        throw std::runtime_error("Time bound broken");
-    }
+    // if (timer.timeBoundBroken()) {
+    //     throw std::runtime_error("Time bound broken");
+    // }
 
     size_t columnState = getColumnState();
     // 查找缓存
@@ -189,11 +189,11 @@ shared_ptr<ExperimentResult> DanceZDD::startDLX(){
         DLX(solution);
         auto end = std::chrono::high_resolution_clock::now();
         searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
-        logger.logLine("DLX搜索完成, 找到的解个数: " + std::to_string(count));
+        logger.logLine("Solutions: " + std::to_string(count));
         
         cur_result->solution_count = count;
         // count = sol; // 更新计数
-        logger.logLine("DLX搜索耗时(s): " + std::to_string(searchTimeSeconds));
+        logger.logLine("Time: " + std::to_string(searchTimeSeconds) + " s");
         cur_result->runtime = std::to_string(searchTimeSeconds);
 
         return cur_result;
@@ -219,13 +219,13 @@ shared_ptr<ExperimentResult> DanceZDD::startDXZ(){
         cur_result->runtime = std::to_string(searchTimeSeconds);
         // std::cout << "搜索完成，找到 " << count << " 个解。" << std::endl;
         // std::cout << "DXZ搜索完成, 耗时: " << searchTimeSeconds << " 秒。" << std::endl;
-        logger.logLine("DXZ搜索完成, 耗时: " + std::to_string(searchTimeSeconds) + " 秒。");
+        logger.logLine("Time: " + std::to_string(searchTimeSeconds) + " s");
         // auto solutions = get_all_solutions(root);
         // auto zdd_size = get_zdd_size(root);
             
         // std::cout << "解的数量: " << solutions.size() << std::endl;
         cur_result->solution_count = count;
-        logger.logLine("解的数量: " + std::to_string(count));
+        logger.logLine("Solutions: " + std::to_string(count));
         // std::cout << "ZDD节点数: " << zdd_size << std::endl;
         // logger.logLine("ZDD节点数: " + std::to_string(zdd_size));
 

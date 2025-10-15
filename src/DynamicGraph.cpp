@@ -98,6 +98,100 @@ private:
               
     }
 
+    /**
+     * 在指定的行集合内局部重建连通分量
+     * @param restrictedRows 限制的行集合
+     * @param localParent 局部的并查集父节点数组（输出）
+     * @param localRank 局部的并查集秩数组（输出）
+     * @param localComponentColumns 局部的分量列集合（输出）
+     */
+    void rebuildLocally(
+        const std::unordered_set<int>& restrictedRows,
+        std::vector<int>& localParent,
+        std::vector<int>& localRank,
+        std::vector<std::unordered_set<int>>& localComponentColumns) const 
+    {
+        // 初始化局部并查集
+        localParent.resize(N);
+        localRank.resize(N, 0);
+        localComponentColumns.resize(N);
+        
+        for (int i = 0; i < N; ++i) {
+            localParent[i] = i;
+        }
+        
+        // 构建局部列索引（仅包含在 restrictedRows 中的行）
+        std::unordered_map<int, std::unordered_set<int>> localColumnToRows;
+        
+        for (int row : restrictedRows) {
+            if (row < 0 || row >= N) continue;
+
+            std::unordered_set<int> snapshot;
+            {
+                std::shared_lock<std::shared_mutex> rlk(mtx);
+                snapshot = rowStates[row].activeColumns; // copy
+            }
+            
+            for (int col : snapshot) {
+                localColumnToRows[col].insert(row);
+            }
+        }
+        
+        // 局部的 find 函数
+        std::function<int(int)> localFind = [&localParent](int x) -> int {
+            int root = x;
+            while (localParent[root] != root) root = localParent[root];
+            // 压缩路径
+            while (x != root) {
+                int nxt = localParent[x];
+                localParent[x] = root;
+                x = nxt;
+            }
+            return root;
+        };
+        
+        // 局部的 unite 函数
+        auto localUnite = [&localParent, &localRank, &localComponentColumns, &localFind](int a, int b) {
+            int ra = localFind(a);
+            int rb = localFind(b);
+            if (ra == rb) return false;
+            // 按秩合并
+            if (localRank[ra] < localRank[rb]) std::swap(ra, rb);
+            localParent[rb] = ra;
+            if (localRank[ra] == localRank[rb]) ++localRank[ra];
+            // 小并入大：如果 rb 的列集合比 ra 大，交换它们
+            if (localComponentColumns[ra].size() < localComponentColumns[rb].size())
+                localComponentColumns[ra].swap(localComponentColumns[rb]);
+            localComponentColumns[ra].insert(localComponentColumns[rb].begin(), localComponentColumns[rb].end());
+            return true;
+        };
+        
+        // 通过局部列索引构建连通分量
+        for (const auto& [col, rows] : localColumnToRows) {
+            if (rows.empty()) continue; // 空列跳过
+
+            if (rows.size() == 1) {
+                int row = *rows.begin();
+                int root = localFind(row);
+                localComponentColumns[root].insert(col);
+                continue;
+            }
+
+            // 将所有行合并到第一个行
+            int firstRow = *rows.begin();
+            for (int row : rows) {
+                if (row != firstRow) {
+                    localUnite(firstRow, row);
+                }
+            }
+            
+            // 为整个连通分量添加该列
+            int root = localFind(firstRow);
+            localComponentColumns[root].insert(col);
+        }
+    }
+
+
 public:
     // 连通分量结构
     struct Component {
@@ -279,7 +373,7 @@ public:
         needsRebuild = true;
     }
     
-    // **核心功能：计算所有连通分量**
+    // **核心功能：全局计算所有连通分量**
     std::vector<Component> computeComponents() {
         rebuildIfNeeded();
         
@@ -314,6 +408,64 @@ public:
         
         return components;
     }
+
+    /**
+     * 在指定的行集合内计算连通分量（不限制列）
+     * @param rows 限定的行集合
+     * @return 该行集合内的所有连通分量
+     */
+    std::vector<Block> computeComponentsInRows(const std::unordered_set<int>& rows) const {
+        // 过滤出有效的行
+        // std::unordered_set<int> validRows;
+        // for (int row : rows) {
+        //     if (row >= 0 && row < N && !rowStates[row].activeColumns.empty()) {
+        //         validRows.insert(row);
+        //     }
+        // }
+        
+        // if (validRows.empty()) {
+        //     return {};
+        // }
+        
+        // 局部并查集
+        std::vector<int> localParent;
+        std::vector<int> localRank;
+        std::vector<std::unordered_set<int>> localComponentColumns;
+        
+        rebuildLocally(rows, localParent, localRank, localComponentColumns);
+        
+        // 局部 find 函数
+        auto localFind = [&localParent](int x) {
+            while (localParent[x] != x) {
+                x = localParent[x];
+            }
+            return x;
+        };
+        
+        // 收集连通分量
+        std::unordered_map<int, std::vector<int>> componentMap;
+        
+        for (int row : rows) {
+            int root = localFind(row);
+            componentMap[root].push_back(row);
+        }
+        
+        // 构建 Component 对象
+        std::vector<Block> blocks;
+        blocks.reserve(componentMap.size());
+        
+        for (auto& [root, rows] : componentMap) {
+            std::unordered_set<int> cols = localComponentColumns[root];
+            blocks.emplace_back(std::move(rows), std::move(cols));
+        }
+        
+        std::sort(blocks.begin(), blocks.end(), 
+                  [](const Block& a, const Block& b) {
+                      return a.size() > b.size();
+                  });
+        
+        return blocks;
+    }
     
     // **计算连通分量的数量**
     int computeNumComponents() {
@@ -344,15 +496,15 @@ public:
     }
     
     // **获取所有连通分量的列集合及行数**
-    std::vector<std::pair<int, std::unordered_set<int>>> getComponentColumnSetsAsSet() {
+    std::vector<Block> getComponentColumnSetsAsSet() {
         auto components = computeComponents();
         
-        std::vector<std::pair<int, std::unordered_set<int>>> result;
+        std::vector<Block> result;
         result.reserve(components.size());
         
         for (auto& comp : components) {
-            int rowCount = static_cast<int>(comp.rows.size());
-            result.emplace_back(rowCount, std::move(comp.columnSet));
+            // int rowCount = static_cast<int>(comp.rows.size());
+            result.emplace_back(std::move(comp.rows), std::move(comp.columnSet));
         }
         
         return result;

@@ -334,16 +334,14 @@ vector<DXD_Block> DanceDNNF::detectBlocks(const DXD_Block& currentBlock) {
 
 
 // 串行处理每个子块，组合为 分解 节点
-shared_ptr<DNNFNode> DanceDNNF::serialSearch(vector<pair<int, unordered_set<int>>>& components) {
+shared_ptr<DNNFNode> DanceDNNF::serialSearch(vector<Block>& blocks) {
 
     auto andNode = std::make_shared<DNNFNode>(NodeType::Decomposed, -1, 1);
     
-    andNode->children.reserve(components.size());
+    andNode->children.reserve(blocks.size());
 
-    for (auto& comp : components) {
+    for (auto& block : blocks) {
     
-        auto [rowSize, cols] = comp;
-        Block block(cols, rowSize);
         auto result = DXD(block);
 
         if (!result || result->label == -2) { 
@@ -359,18 +357,15 @@ shared_ptr<DNNFNode> DanceDNNF::serialSearch(vector<pair<int, unordered_set<int>
 }
 
 
-shared_ptr<DNNFNode> DanceDNNF::parallelSearch(vector<pair<int, unordered_set<int>>>& components) {
+shared_ptr<DNNFNode> DanceDNNF::parallelSearch(vector<Block>& blocks) {
 
     std::vector<std::future<std::shared_ptr<DNNFNode>>> futures;
 
-    for (auto& comp : components) {
+    for (auto& block : blocks) {
 
-        auto [rowSize, cols] = comp;
-        Block block(cols, rowSize);
-       futures.push_back(pool.enqueue([this](Block block) {
-            // 使用值传递避免引用问题
-            return DXD(block);
-        }, block)); 
+        futures.push_back(pool.enqueue([this, b = Block(block)]() mutable {
+            return DXD(b);
+        }));
         // futures.push_back(async(launch::async, [this, block]() {  
         //     Block blockCopy = block;  // 或直接使用 block
         //     return DXD(blockCopy);
@@ -395,7 +390,7 @@ shared_ptr<DNNFNode> DanceDNNF::parallelSearch(vector<pair<int, unordered_set<in
 
 
 // 并行处理每个子块，组合为 分解 节点
-shared_ptr<DNNFNode> DanceDNNF::parallelSearch(vector<Block>& blocks) {
+shared_ptr<DNNFNode> DanceDNNF::parallelSearchDXD(vector<Block>& blocks) {
     isParallelSearch = true; // 标记为并行搜索
     
     std::vector<std::future<std::shared_ptr<DNNFNode>>> futures;
@@ -454,9 +449,9 @@ void DanceDNNF::printBlock(const Block& block) {
 // DXD单线程（要体现分解性）
 shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
     
-    if(timer.timeBoundBroken()) {
-        throw std::runtime_error("Time bound broken");
-    }
+    // if(timer.timeBoundBroken()) {
+    //     throw std::runtime_error("Time bound broken");
+    // }
     
     if(block.cols.empty()) {
         return T; // 如果没有列，返回T
@@ -469,22 +464,22 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
         return cacheRes;
     }
 
-    if(shouldDecompose(block.row_size)) {
+    if(block.rows.size() >= MIN_BLOCK_ROWS) {
 
         // auto start = std::chrono::high_resolution_clock::now();
-        auto curComp = getComponents();
+        auto curBlock = getComponents(block.rows);
         // auto end = std::chrono::high_resolution_clock::now();
         // decomposeTime += std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
 
-        MAX_B_COUNT = std::max(MAX_B_COUNT, curComp.size());
-        if (curComp.size() > 1){
-            // cout << "块分解为 " << curComp.size() << " 个子块" << endl;
+        MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
+        if (curBlock.size() > 1){
+            // cout << "块分解为 " << curBlock.size() << " 个子块" << endl;
             shared_ptr<DNNFNode> res_and_node;
             p_count++;
             if (isParallelSearch) {
-                res_and_node = parallelSearch(curComp); 
+                res_and_node = parallelSearch(curBlock); 
             } else {
-                res_and_node = serialSearch(curComp);
+                res_and_node = serialSearch(curBlock);
             }
 
             setCache(state, res_and_node); // 缓存结果
@@ -563,20 +558,17 @@ shared_ptr<DXDResult> DanceDNNF::startDXD() {
         timer.markStopTime();
 
         // std::cout << "搜索到的解个数: " << rootDNNF->count << std::endl;
-        logger.logLine("搜索到的解个数: " + std::to_string(rootDNNF->count));
+        logger.logLine("Solutions: " + std::to_string(rootDNNF->count));
         cur_result->solution_count = rootDNNF->count;
         
         searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
         // std::cout << "单线程DXD搜索完成, 耗时: " << searchTimeSeconds << " 秒。" << std::endl;
-        logger.logLine("单线程DXD搜索完成, 耗时: " + std::to_string(searchTimeSeconds) + " 秒。");
+        logger.logLine("Time: " + std::to_string(searchTimeSeconds) + " s");
         cur_result->runtime = std::to_string(searchTimeSeconds);
     
-        if( MAX_B_COUNT > 1 ) {
-            // std::cout << "本次搜索最大分块数为: " << MAX_B_COUNT << std::endl;
-            logger.logLine("本次搜索最大分块数为: " + std::to_string(MAX_B_COUNT));
-        } else {
-            logger.logLine("本次搜索最大分块数为1");
-        }
+        // std::cout << "本次搜索最大分块数为: " << MAX_B_COUNT << std::endl;
+        logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
+
         cout << "检测分解时间占比: " << (decomposeTime / searchTimeSeconds) * 100.0 << "%" << endl;
         cur_result->max_blocks = MAX_B_COUNT;
 
@@ -606,15 +598,17 @@ shared_ptr<DXDResult> DanceDNNF::startMultiThreadDXD() {
         timer.markStopTime();
    
         searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
-        cout<< "多线程算法计时: " << searchTimeSeconds << " 秒。" << endl;
+        // cout<< "多线程算法计时: " << searchTimeSeconds << " 秒。" << endl;
+        logger.logLine("Time: " + std::to_string(searchTimeSeconds) + " s");
         
         cur_result->runtime = std::to_string(searchTimeSeconds);
         // cout << "检测分解时间占比: " << (decomposeTime / searchTimeSeconds) * 100.0 << "%" << endl;
 
-        cout << "多线程DXD搜索解个数: " << rootDNNF->count << endl;
+        // cout << "多线程DXD搜索解个数: " << rootDNNF->count << endl;
+        logger.logLine("Solutions: " + std::to_string(rootDNNF->count));
         cur_result->solution_count = rootDNNF->count;
         
-        std::cout << "最大分块数为: " << MAX_B_COUNT << std::endl;
+        std::cout << "Max Blocks: " << MAX_B_COUNT << std::endl;
 
         cur_result->max_blocks = MAX_B_COUNT;
 

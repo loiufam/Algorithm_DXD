@@ -37,8 +37,8 @@ DancingMatrix::DancingMatrix( int rows, int cols, int** matrix, bool verbose )
         for( int j = 0; j < cols ; j++ ) {  
             if(matrix[i][j] == 1){
                 insert(  i , j+1 );  //行数与原矩阵相同，而列数加1
-                // rowsSet.insert(i);
-                // colsSet.insert(j+1); 
+                rowsSet.insert(i);
+                colsSet.insert(j+1); 
             }
         }
     }
@@ -125,7 +125,7 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose, b
             }
             insert(currentRow, currentCol); // 插入节点
             ONE_COUNT++; // 统计矩阵中1的个数
-            // rowsSet.insert(currentRow);
+            rowsSet.insert(currentRow);
             colsSet.insert(currentCol); 
         }
 
@@ -140,7 +140,7 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose, b
     }
 
 
-    InitBlock = Block(colsSet, rows);
+    InitBlock = Block(rowsSet, colsSet);
     if(verbose){
         // graph = make_unique<ConnectedGraph>(*this);
         incrementalGraph = make_unique<IncrementalConnectedGraph>(rows);
@@ -155,8 +155,8 @@ vector<vector<int>> DancingMatrix::getComponents(set<int>& rows) {
     return graph->getComponents(rows);
 };
 
-vector<pair<int,unordered_set<int>>> DancingMatrix::getComponents() {
-    return incrementalGraph->getComponentColumnSetsAsSet();
+vector<Block> DancingMatrix::getComponents(const unordered_set<int> rows) {
+    return incrementalGraph->computeComponentsInRows(rows);
 };
 
 vector<Component> DancingMatrix::getComponentsByETT() {
@@ -426,11 +426,12 @@ void DancingMatrix::coverInBlock(int c, Block& block){
     while( curC != col )  
     {    
         incrementalGraph->deactivateRow(curC->row);
-        block.row_size--;
-        if (useETT) {
-            remove_connection(curC->row, curC->col);
-            etTree.update_row_columns(curC->row, RowIndex[curC->row].cols);
-        }
+        block.rows.erase(curC->row);
+        
+        // if (useETT) {
+        //     remove_connection(curC->row, curC->col);
+        //     etTree.update_row_columns(curC->row, RowIndex[curC->row].cols);
+        // }
 
         curR = curC->right;  
         while( curR != curC )  
@@ -439,10 +440,10 @@ void DancingMatrix::coverInBlock(int c, Block& block){
             curR->down->up = curR->up;  
             curR->up->down = curR->down;  
             // decColSize(curR->col); 
-            if (useETT) {
-                remove_connection(curR->row, curR->col);
-                etTree.update_row_columns(curR->row, RowIndex[curR->row].cols);
-            }
+            // if (useETT) {
+            //     remove_connection(curR->row, curR->col);
+            //     etTree.update_row_columns(curR->row, RowIndex[curR->row].cols);
+            // }
             --ColIndex[curR->col].size;
 
             curR = curR->right;  
@@ -469,24 +470,24 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
             ++ColIndex[curR->col].size;
             curR->down->up = curR;  
             curR->up->down = curR;  
-            if (useETT) {
-                add_connection(curR->row, curR->col);
-                if(!curR->row_first_node) {
-                    etTree.update_row_columns(curR->row, RowIndex[curR->row].cols);
-                }
-            }
+            // if (useETT) {
+            //     add_connection(curR->row, curR->col);
+            //     if(!curR->row_first_node) {
+            //         etTree.update_row_columns(curR->row, RowIndex[curR->row].cols);
+            //     }
+            // }
 
             curR = curR->left;  
         }  
 
         incrementalGraph->reactivateRow(curC->row);
-        block.row_size++;
-        if (useETT) {
-            add_connection(curC->row, curC->col);
-            if(!curC->row_first_node) {
-                etTree.update_row_columns(curC->row, RowIndex[curC->row].cols);
-            }
-        }
+        block.rows.insert(curC->row);
+        // if (useETT) {
+        //     add_connection(curC->row, curC->col);
+        //     if(!curC->row_first_node) {
+        //         etTree.update_row_columns(curC->row, RowIndex[curC->row].cols);
+        //     }
+        // }
 
         curC = curC->up;  
     }  

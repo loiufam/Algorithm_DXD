@@ -236,9 +236,9 @@ class DanceDNNF : DancingMatrix {
         void batchUncoverInBlock(Block& block);
 
         shared_ptr<DNNFNode> DXD(Block& block);
-        shared_ptr<DNNFNode> serialSearch(vector<pair<int, unordered_set<int>>>& components);
-        shared_ptr<DNNFNode> parallelSearch(vector<pair<int, unordered_set<int>>>& components);
+        shared_ptr<DNNFNode> serialSearch(vector<Block>& blocks);
         shared_ptr<DNNFNode> parallelSearch(vector<Block>& blocks);
+        shared_ptr<DNNFNode> parallelSearchDXD(vector<Block>& blocks);
         shared_ptr<DNNFNode> parallelDXD(Block& blocks);
 
         // 启动搜索函数

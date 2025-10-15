@@ -9,7 +9,6 @@ static Logger logger("../multi_dxd_log.txt");  // 全局日志
 enum class algorithm_type {
     dlx,
     dxz,
-    d3x,
     dxd,
     dxd_p
 };
@@ -18,7 +17,6 @@ enum class algorithm_type {
 algorithm_type parseAlgorithmType(const std::string& name) {
     if (name == "dlx") return algorithm_type::dlx;
     if (name == "dxz") return algorithm_type::dxz;
-    if (name == "d3x") return algorithm_type::d3x;
     if (name == "dxd") return algorithm_type::dxd;
     if (name == "dxd_p") return algorithm_type::dxd_p;
     throw std::invalid_argument("Unknown algorithm type: " + name);
@@ -37,8 +35,6 @@ int main(int argc, char *argv[]){
         std::string input_file = argv[1];
         std::string algType = argv[2];
         int read_mode = std::stoi(argv[3]);
-        int timeout_seconds = 1200; // 默认超时时间为 1200 秒
-
 
         string filename = fs::path(input_file).stem().string();
         algorithm_type type = parseAlgorithmType(algType);
@@ -46,7 +42,7 @@ int main(int argc, char *argv[]){
             case algorithm_type::dlx:
                 {
                     logger.logLine("启用DLX算法求解: " + filename);
-                    DanceZDD danceZDD(input_file, read_mode, logger, timeout_seconds);
+                    DanceZDD danceZDD(input_file, read_mode, logger);
                     auto res = danceZDD.startDLX();
                     logger.logLine("DLX算法求解结束: " + filename);
                     break;
@@ -54,7 +50,7 @@ int main(int argc, char *argv[]){
             case algorithm_type::dxz:
                 {
                     logger.logLine("启用DXZ算法求解: " + filename);
-                    DanceZDD danceZDD(input_file, read_mode, logger, timeout_seconds);
+                    DanceZDD danceZDD(input_file, read_mode, logger);
                     auto res = danceZDD.startDXZ();
                     logger.logLine("DXZ算法求解结束: " + filename);
                     break;

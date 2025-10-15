@@ -81,10 +81,11 @@ struct Component{
 struct Block {
         unordered_set<int> rows;  // 舞蹈链行id集合 
         unordered_set<int> cols;  // 从1开始编号,对应舞蹈链列数id
-        int row_size;
         bool is_spilited = false;
         
         Block() = default;
+
+        size_t size() const { return rows.size(); }
 
         Block(const unordered_set<int>& r, const unordered_set<int>& c) :  rows(r), cols(c) {}
 
@@ -93,28 +94,26 @@ struct Block {
             cols.insert(c.begin(), c.end());
         }
 
-        Block(const unordered_set<int>& c, int rs) : cols(c), row_size(rs) {} 
-
-        Block(const vector<int>& r, const vector<int>& c){
+        Block(const vector<int>& r, const unordered_set<int>& c) : cols(c) {
             rows.insert(r.begin(), r.end());
-            cols.insert(c.begin(), c.end());
         }
 
         Block(const Block& other) {
             cols = other.cols;
-            row_size = other.row_size;
+            rows = other.rows;
         };
+
         void printBlock() {
             cout<< "cols: " << endl;
             for(int c : cols){
                 cout << c << " ";
             }
             cout<<endl;
-            // cout<< "rows: " << endl;
-            // for(int r : rows){
-            //     cout<< r << " ";
-            // }
-            // cout<<endl; 
+            cout<< "rows: " << endl;
+            for(int r : rows){
+                cout<< r << " ";
+            }
+            cout<<endl; 
         }
 
 };
@@ -261,7 +260,7 @@ class DancingMatrix
         // IBD: Independent Block Detection
         vector<vector<int>> getComponents(set<int>& rows);
 
-        vector<pair<int, unordered_set<int>>> getComponents();
+        vector<Block> getComponents(const unordered_set<int> rows);
 
         vector<Component> getComponentsByETT();
 

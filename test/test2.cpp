@@ -24,7 +24,7 @@ int main() {
         const std::string folderPath1 = "../data/exact_cover_benchmark&1";
         const std::string folderPath2 = "../data/set_partitioning_benchmarks&2";
         const std::string folderPath3 = "../data/graph_matrix&3";
-        filePaths.insert(filePaths.end(), {folderPath1, folderPath2, folderPath3});
+        filePaths.insert(filePaths.end(), {folderPath3});
         char delimiter = '&'; 
         string table_file = "../exp_results.csv"; // 结果表格文件
         ExperimentProcessor processor; // 结果处理器
@@ -59,6 +59,8 @@ int main() {
 
                     std::cout << std::endl;
 
+                    continue;
+                    
                     try{
                         // ExactCoverSolver ecSolver(entry.path().string(), read_mode, logger, 16);
                         // ecSolver.cur_instance = file_name;
