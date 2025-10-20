@@ -3,6 +3,7 @@
 
 #include "../include/DancingMatrix.h"
 #include "../include/DXDTime.h"
+#include <omp.h>
 
 const int UNCHOOSEN = -10;
 const int MIN_BLOCK_ROWS = 2;
@@ -198,9 +199,10 @@ class DanceDNNF : DancingMatrix {
             std::cout<< "初始化DanceDNNF完成." << endl;
         }
 
-        DanceDNNF(const string& file_path, int from, Logger& l, bool verbose = false, int pool_size = 4, bool useETT = false)
+        DanceDNNF(const string& file_path, int from, Logger& l, bool verbose = false, bool useETT = false, int pool_size = 8)
             : DancingMatrix(file_path, from, verbose, useETT), logger(l), pool(getThreadPool(pool_size)) {
 
+            omp_set_num_threads(pool_size); // 设置并行线程数
             timer.setTimeBound(TIME_LIMIT_SECONDS);
 
             // std::cout<< "初始化DanceDNNF完成." << endl;
@@ -238,6 +240,7 @@ class DanceDNNF : DancingMatrix {
         shared_ptr<DNNFNode> DXD(Block& block);
         shared_ptr<DNNFNode> serialSearch(vector<Block>& blocks);
         shared_ptr<DNNFNode> parallelSearch(vector<Block>& blocks);
+        shared_ptr<DNNFNode> parallelSearchUseOmp(vector<Block>& blocks);
         shared_ptr<DNNFNode> parallelSearchDXD(vector<Block>& blocks);
         shared_ptr<DNNFNode> parallelDXD(Block& blocks);
 

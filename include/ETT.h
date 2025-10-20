@@ -6,8 +6,54 @@
 #include <unordered_set>
 #include <map>
 #include <set>
+#include <queue>
+#include <stack>
 #include <vector>
 #include <algorithm>
+using namespace std;
+
+struct Block {
+    unordered_set<int> rows;  // 舞蹈链行id集合 
+    unordered_set<int> cols;  // 从1开始编号,对应舞蹈链列数id
+    bool is_spilited = false;
+    
+    Block() = default;
+
+    size_t size() const { return rows.size(); }
+
+    Block(const unordered_set<int>& r, const unordered_set<int>& c) :  rows(r), cols(c) {}
+
+    Block(const set<int>& r, const set<int>& c, bool is_spilited = true){
+        rows.insert(r.begin(), r.end());
+        cols.insert(c.begin(), c.end());
+    }
+
+    Block(const vector<int>& r, const unordered_set<int>& c) : cols(c) {
+        rows.insert(r.begin(), r.end());
+    }
+
+    Block(const set<int>& r, const unordered_set<int>& c) : cols(c) {
+        rows.insert(r.begin(), r.end());
+    }
+
+    Block(const Block& other) {
+        cols = other.cols;
+        rows = other.rows;
+    };
+
+    void printBlock() {
+        cout<< "cols: " << endl;
+        for(int c : cols){
+            cout << c << " ";
+        }
+        cout<<endl;
+        cout<< "rows: " << endl;
+        for(int r : rows){
+            cout<< r << " ";
+        }
+        cout<<endl; 
+    }
+};
 
 // ============================================================================
 // ET-Tree 核心实现
@@ -29,18 +75,26 @@ private:
     std::unordered_map<int, Node*> vertex_repr;
     std::unordered_map<long long, std::pair<Node*, Node*>> edge_nodes;
 
-    struct ComponentInfo {
-        std::set<int> rows;          // 该分量包含的所有行
-        std::unordered_set<int> cols;          // 该分量包含的所有列
-        
-        ComponentInfo() = default;
-    };
-    
     // 根节点 → 分量信息的映射
-    std::unordered_map<Node*, ComponentInfo> component_info;
+    std::unordered_map<Node*, Block> component_info;
     
     // 行 → 列集合的快速索引（从外部传入）
     std::function<const std::set<int>&(int)> get_row_cols;
+
+    // ========================================================================
+    // Row 激活/失活状态管理
+    // ========================================================================
+    
+    std::unordered_set<int> active_rows;      // 当前活跃的行集合
+    std::unordered_set<int> deactivated_rows; // 被deactivate的行
+
+    // 存储每行的邻接关系（用于局部搜索）
+    std::unordered_map<int, std::unordered_set<int>> row_adjacency;
+
+
+    // ========================================================================
+    // Splay Tree 基础操作
+    // ========================================================================
 
     void update(Node* x) {
         if (!x) return;
@@ -108,8 +162,8 @@ private:
     Node* get_root(Node* x) {
         if (!x) return nullptr;
         splay(x);
-        while (x->left) x = x->left;
-        splay(x);
+        // 向上找到真正的 root
+        while (x->parent) x = x->parent;
         return x;
     }
     
@@ -149,11 +203,26 @@ private:
     // 分量信息维护
     // ========================================================================
     
+    void collect_repr_rows(Node* node, std::unordered_set<int>& out_rows) {
+        if (!node) return;
+        std::stack<Node*> st;
+        st.push(node);
+        while (!st.empty()) {
+            Node* cur = st.top(); st.pop();
+            if (!cur) continue;
+            if (cur->is_repr && cur->vertex >= 0) {
+                out_rows.insert(cur->vertex);
+            }
+            if (cur->left) st.push(cur->left);
+            if (cur->right) st.push(cur->right);
+        }
+    }
+
     /**
      * 初始化单个顶点的分量信息
      */
     void init_component_info(Node* root, int vertex) {
-        ComponentInfo& info = component_info[root];
+        Block& info = component_info[root];
         info.rows.insert(vertex);
         
         // 获取该行的所有列
@@ -166,59 +235,60 @@ private:
     /**
      * 合并两个分量的信息
      */
-    void merge_component_info(Node* new_root, Node* root1, Node* root2) {
-        ComponentInfo& new_info = component_info[new_root];
+    void merge_component_info(Node* new_root_raw, Node* root1_raw, Node* root2_raw) {
+        Node* new_root = get_root(new_root_raw);
+        Node* r1 = get_root(root1_raw);
+        Node* r2 = get_root(root2_raw);
         
-        // 合并第一个分量的信息
-        if (component_info.find(root1) != component_info.end()) {
-            const auto& info1 = component_info[root1];
-            new_info.rows.insert(info1.rows.begin(), info1.rows.end());
-            new_info.cols.insert(info1.cols.begin(), info1.cols.end());
-            component_info.erase(root1);
+        Block& new_info = component_info[new_root];
+        
+        auto it1 = component_info.find(r1);
+        if (it1 != component_info.end()) {
+            new_info.rows.insert(it1->second.rows.begin(), it1->second.rows.end());
+            new_info.cols.insert(it1->second.cols.begin(), it1->second.cols.end());
+            component_info.erase(it1);
         }
-        
-        // 合并第二个分量的信息
-        if (component_info.find(root2) != component_info.end()) {
-            const auto& info2 = component_info[root2];
-            new_info.rows.insert(info2.rows.begin(), info2.rows.end());
-            new_info.cols.insert(info2.cols.begin(), info2.cols.end());
-            component_info.erase(root2);
+
+
+        auto it2 = component_info.find(r2);
+        if (it2 != component_info.end()) {
+            new_info.rows.insert(it2->second.rows.begin(), it2->second.rows.end());
+            new_info.cols.insert(it2->second.cols.begin(), it2->second.cols.end());
+            component_info.erase(it2);
         }
     }
     
     /**
      * 分裂分量信息
      */
-    void split_component_info(Node* old_root, Node* new_root1, Node* new_root2) {
-        if (component_info.find(old_root) == component_info.end()) {
-            return;
-        }
-        
-        // 获取旧的分量信息
-        ComponentInfo old_info = component_info[old_root];
+    void split_component_info(Node* old_root_raw, Node* new_root1_raw, Node* new_root2_raw) {
+        Node* old_root = get_root(old_root_raw);
+        Node* nr1 = get_root(new_root1_raw);
+        Node* nr2 = get_root(new_root2_raw);
+
+        // 移除旧映射（若存在）
         component_info.erase(old_root);
-        
-        // 重新计算两个新分量的信息
-        ComponentInfo& info1 = component_info[new_root1];
-        ComponentInfo& info2 = component_info[new_root2];
-        
-        // 遍历旧分量的所有行，判断属于哪个新分量
-        for (int row : old_info.rows) {
-            Node* row_node = vertex_repr[row];
-            Node* root = get_root(row_node);
-            
-            if (root == new_root1) {
-                info1.rows.insert(row);
-                if (get_row_cols) {
-                    const auto& cols = get_row_cols(row);
-                    info1.cols.insert(cols.begin(), cols.end());
-                }
-            } else if (root == new_root2) {
-                info2.rows.insert(row);
-                if (get_row_cols) {
-                    const auto& cols = get_row_cols(row);
-                    info2.cols.insert(cols.begin(), cols.end());
-                }
+
+        // 收集新子树的代表行
+        std::unordered_set<int> rows1, rows2;
+        collect_repr_rows(nr1, rows1);
+        collect_repr_rows(nr2, rows2);
+
+        Block& info1 = component_info[nr1];
+        Block& info2 = component_info[nr2];
+
+        info1.rows = std::move(rows1);
+        info2.rows = std::move(rows2);
+
+
+        if (get_row_cols) {
+            for (int r : info1.rows) {
+                const auto& cols = get_row_cols(r);
+                info1.cols.insert(cols.begin(), cols.end());
+            }
+            for (int r : info2.rows) {
+                const auto& cols = get_row_cols(r);
+                info2.cols.insert(cols.begin(), cols.end());
             }
         }
     }
@@ -226,6 +296,16 @@ private:
 public:
 
     ETTree() = default;
+
+    ~ETTree() {
+        for (auto& [v, node] : vertex_repr) {
+            delete node;
+        }
+        for (auto& [eid, nodes] : edge_nodes) {
+            delete nodes.first;
+            delete nodes.second;
+        }
+    }
     
     /**
      * 设置获取行列信息的回调函数
@@ -238,7 +318,7 @@ public:
         if (vertex_repr.find(v) != vertex_repr.end()) return;
         Node* node = create_node(v, true);
         vertex_repr[v] = node;
-
+        active_rows.insert(v);
         // 初始化分量信息
         init_component_info(node, v);
     }
@@ -246,8 +326,8 @@ public:
     bool link(int u, int v) {
         if (connected(u, v)) return false;
         
-        make_tree(u);
-        make_tree(v);
+        // make_tree(u);
+        // make_tree(v);
         
         Node* repr_u = vertex_repr[u];
         Node* repr_v = vertex_repr[v];
@@ -258,6 +338,10 @@ public:
         Node* edge_vu = create_node(-1);
         edge_nodes[edge_id(u, v)] = {edge_uv, edge_vu};
         
+        // 维护邻接关系
+        row_adjacency[u].insert(v);
+        row_adjacency[v].insert(u);
+
         auto [u_left, u_right] = split(repr_u);
         auto [v_left, v_right] = split(repr_v);
         
@@ -269,6 +353,7 @@ public:
         new_root = merge(new_root, repr_u);
         new_root = merge(new_root, u_right);
         
+        cout << "start merge" << endl;
         merge_component_info(new_root, root_u, root_v);
         return true;
     }
@@ -282,6 +367,10 @@ public:
         Node* old_root = get_root(edge_uv);
 
         edge_nodes.erase(eid);
+
+        // 更新邻接关系
+        row_adjacency[u].erase(v);
+        row_adjacency[v].erase(u);
         
         splay(edge_uv);
         auto [left1, right1] = split(edge_uv);
@@ -306,13 +395,132 @@ public:
         }
         return get_root(vertex_repr[u]) == get_root(vertex_repr[v]);
     }
+
+    /**
+     * Deactivate一行：标记为不活跃，但不删除边
+     * 用于coverColumn时移除包含该列的行
+     */
+    void deactivateRow(int row) {
+        if (active_rows.find(row) != active_rows.end()) {
+            active_rows.erase(row);
+            deactivated_rows.insert(row);
+        }
+    }
     
-    std::unordered_map<int, ComponentInfo> get_components() {
-        std::unordered_map<int, ComponentInfo> result;
+    /**
+     * Reactivate一行：恢复为活跃状态
+     * 用于uncoverColumn时恢复行
+     */
+    void reactivateRow(int row) {
+        if (deactivated_rows.find(row) != deactivated_rows.end()) {
+            deactivated_rows.erase(row);
+            active_rows.insert(row);
+        }
+    }
+    
+    /**
+     * 检查行是否活跃
+     */
+    bool isRowActive(int row) const {
+        return active_rows.find(row) != active_rows.end();
+    }
+    
+    /**
+     * 获取所有活跃的行
+     */
+    const std::unordered_set<int>& getActiveRows() const {
+        return active_rows;
+    }
+    
+    /**
+     * 在指定的行和列范围内，找出所有连通分量
+     * @param block_rows 块内的行集合
+     * @param block_cols 块内的列集合
+     * @return 每个连通分量的Block（包含行集合和列集合）
+     */
+    std::vector<Block> findComponentsInBlock(
+        const std::unordered_set<int>& block_rows) {
         
-        int comp_id = 0;
+        std::vector<Block> components;
+        std::unordered_set<int> visited;
+        
+        // 只处理块内且活跃的行
+        for (int start_row : block_rows) {
+            if (visited.count(start_row)) continue;
+            if (!isRowActive(start_row)) continue;
+            if (vertex_repr.find(start_row) == vertex_repr.end()) continue;
+            
+            // BFS 找出连通分量
+            Block component;
+            std::queue<int> q;
+            q.push(start_row);
+            visited.insert(start_row);
+            
+            while (!q.empty()) {
+                int current = q.front();
+                q.pop();
+                component.rows.insert(current);
+
+                // 收集该行的列
+                if (get_row_cols) {
+                    const auto& cols = get_row_cols(current);
+                    component.cols.insert(cols.begin(), cols.end());
+                }
+                
+                // 遍历邻接行
+                if (row_adjacency.find(current) != row_adjacency.end()) {
+                    for (int neighbor : row_adjacency[current]) {
+                        // 只访问块内、活跃、未访问的行
+                        if (visited.count(neighbor)) continue;
+                        if (!block_rows.count(neighbor)) continue;
+                        if (!isRowActive(neighbor)) continue;
+                        
+                        visited.insert(neighbor);
+                        q.push(neighbor);
+                    }
+                }
+            }
+            
+            if (!component.rows.empty()) {
+                components.push_back(component);
+            }
+        }
+        
+        return components;
+    }
+
+    // ========================================================================
+    // 优化：增量式信息查询
+    // ========================================================================
+    
+    /**
+     * 获取所有活跃行的全局连通分量
+     * 返回每个组件的Block
+     */
+    std::vector<Block> getActiveComponents() const {
+        std::vector<Block> result;
+        
         for (const auto& [root, info] : component_info) {
-            result[comp_id++] = info;
+            Block active_info;
+            
+            // 只包含活跃的行
+            for (int row : info.rows) {
+                if (isRowActive(row)) {
+                    active_info.rows.insert(row);
+                }
+            }
+            
+            // 重新计算活跃行对应的列
+            if (!active_info.rows.empty() && get_row_cols) {
+                for (int row : active_info.rows) {
+                    const auto& cols = get_row_cols(row);
+                    active_info.cols.insert(cols.begin(), cols.end());
+                }
+            }
+            
+            if (!active_info.rows.empty()) {
+                result.push_back(active_info);
+            }
         }
         
         return result;
@@ -330,7 +538,7 @@ public:
         auto it = component_info.find(root);
         
         if (it != component_info.end()) {
-            ComponentInfo& info = it->second;
+            Block& info = it->second;
             
             // 移除该行的旧列
             if (get_row_cols) {

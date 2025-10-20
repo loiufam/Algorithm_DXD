@@ -3,7 +3,7 @@
 
 #include "ThreadPool.h"
 #include "../utils/ResProcessor.h"
-#include "ETT.h"
+#include "TreapETT.h"
 #include <string>
 #include <set>
 #include <map>
@@ -55,6 +55,26 @@ struct RowNode : public Node
 
 };
 
+// 签名用于Memo Cache
+struct Signature {
+    vector<bool> covered;  // 哪些列已被覆盖
+    
+    bool operator==(const Signature& other) const {
+        return covered == other.covered;
+    }
+};
+
+// 哈希函数
+struct SignatureHash {
+    size_t operator()(const Signature& sig) const {
+        size_t h = 0;
+        for (size_t i = 0; i < sig.covered.size(); i++) {
+            if (sig.covered[i]) h ^= (i + 1) * 2654435761u;
+        }
+        return h;
+    }
+};
+
 struct Component{ 
     set<int> rows; 
     unordered_set<int> cols; 
@@ -78,45 +98,6 @@ struct Component{
     }
 };
 
-struct Block {
-        unordered_set<int> rows;  // 舞蹈链行id集合 
-        unordered_set<int> cols;  // 从1开始编号,对应舞蹈链列数id
-        bool is_spilited = false;
-        
-        Block() = default;
-
-        size_t size() const { return rows.size(); }
-
-        Block(const unordered_set<int>& r, const unordered_set<int>& c) :  rows(r), cols(c) {}
-
-        Block(const set<int>& r, const set<int>& c, bool is_spilited = true){
-            rows.insert(r.begin(), r.end());
-            cols.insert(c.begin(), c.end());
-        }
-
-        Block(const vector<int>& r, const unordered_set<int>& c) : cols(c) {
-            rows.insert(r.begin(), r.end());
-        }
-
-        Block(const Block& other) {
-            cols = other.cols;
-            rows = other.rows;
-        };
-
-        void printBlock() {
-            cout<< "cols: " << endl;
-            for(int c : cols){
-                cout << c << " ";
-            }
-            cout<<endl;
-            cout<< "rows: " << endl;
-            for(int r : rows){
-                cout<< r << " ";
-            }
-            cout<<endl; 
-        }
-
-};
 
 struct ColumnComparator {
     bool operator()(const std::pair<int, ColumnHeader*>& a, const std::pair<int, ColumnHeader*>& b) const {
@@ -196,10 +177,10 @@ class DancingMatrix
         unordered_set<int> rowsSet;  // 舞蹈链行id
         unordered_set<int> colsSet;  // 原始矩阵列
         Block InitBlock;
-        unordered_map<int, set<int>> rowToColsSet;
-        unordered_map<int, set<int>> colToRowsSet;
+
         // 列状态
         size_t getColumnState() const;
+        Signature getColumnSignature() const;
         
         
         //接收矩阵其及维度  
@@ -262,9 +243,10 @@ class DancingMatrix
 
         vector<Block> getComponents(const unordered_set<int> rows);
 
-        vector<Component> getComponentsByETT();
+        vector<Block> getComponentsByETT(const unordered_set<int> rows);
 
         void printGraph() const;
+        void build_graph();
 
     private:  
         ColumnHeader* root;  
@@ -276,8 +258,11 @@ class DancingMatrix
         std::unique_ptr<IncrementalConnectedGraph> incrementalGraph;
         ETTree etTree;  // 欧拉回路树
 
+        // 行 -> 包含该行的列集合
+        unordered_map<int, set<int>> row_to_cols;
+
         // 列到行的反向索引：col_to_rows[col] = {row1, row2, ...}
-        std::map<int, std::set<int>> col_to_rows;
+        map<int, set<int>> col_to_rows;
         
         // 记录两行之间共享的列：shared_cols[{row1, row2}] = {col1, col2, ...}
         std::map<std::pair<int, int>, std::set<int>> shared_cols;
@@ -351,4 +336,5 @@ class PreProccess
         // 处理d3x数据集
         static int** processFileToMatrix3(const std::string& filename, int& r, int& c);
 };
+
 #endif
