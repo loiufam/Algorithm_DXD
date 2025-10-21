@@ -145,9 +145,8 @@ void DanceDNNF::startSearch(bool g)
     auto end = std::chrono::high_resolution_clock::now();
 
     searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
-    countSolutions(rootOR);
+
     std::cout << "搜索完成，耗时: " << searchTimeSeconds << " 秒。" << std::endl;
-    std::cout << "搜索到的解个数: " << count << std::endl;
 }
 
 void mergeSets(vector<set<int>>& merged_sets, const set<int>& new_set) {
@@ -522,7 +521,7 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
         return cacheRes;
     }
 
-    if(block.rows.size() >= MIN_BLOCK_ROWS) {
+    if(block.rows.size() >= MIN_BLOCK_ROWS && !queryRecord(state)) {
 
         // auto curBlock = getComponents(block.rows);
         auto curBlock = getComponentsByETT(block.rows);
@@ -541,6 +540,8 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
 
             setCache(state, res_and_node); // 缓存结果
             return res_and_node; // 返回分解节点
+        } else {
+            insertRecord(state);
         }
     }
 
@@ -613,18 +614,15 @@ shared_ptr<DXDResult> DanceDNNF::startDXD() {
         auto end = std::chrono::high_resolution_clock::now();
         timer.markStopTime();
 
-        // std::cout << "搜索到的解个数: " << rootDNNF->count << std::endl;
-        logger.logLine("Solutions: " + std::to_string(rootDNNF->count));
-        cur_result->solution_count = rootDNNF->count;
-        
         searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
-        // std::cout << "单线程DXD搜索完成, 耗时: " << searchTimeSeconds << " 秒。" << std::endl;
+        
         logger.logLine("Time: " + std::to_string(searchTimeSeconds) + " s");
         cur_result->runtime = std::to_string(searchTimeSeconds);
-    
-        // std::cout << "本次搜索最大分块数为: " << MAX_B_COUNT << std::endl;
-        logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
 
+        logger.logLine("Solutions: " + std::to_string(rootDNNF->count));
+        cur_result->solution_count = rootDNNF->count;
+    
+        logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
         cur_result->max_blocks = MAX_B_COUNT;
 
         return cur_result;
@@ -660,8 +658,7 @@ shared_ptr<DXDResult> DanceDNNF::startMultiThreadDXD() {
         logger.logLine("Solutions: " + std::to_string(rootDNNF->count));
         cur_result->solution_count = rootDNNF->count;
         
-        std::cout << "Max Blocks: " << MAX_B_COUNT << std::endl;
-
+        logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
         cur_result->max_blocks = MAX_B_COUNT;
 
         return cur_result;
@@ -860,7 +857,7 @@ shared_ptr<DNNFNode> DanceDNNF::parallelDXD(Block& block) {
     size_t state = hashBlockState(block.cols); // 编码当前块状态
 
     // 检查缓存
-    auto cachedResult = getCachedResult(state);
+    auto cachedResult = getCache(state);
     if (cachedResult) {
         return cachedResult;
     }
@@ -929,7 +926,7 @@ shared_ptr<DNNFNode> DanceDNNF::parallelDXD(Block& block) {
         orNode = F;
     }   
     // 插入缓存
-    setCachedResult(state, orNode);
+    setCache(state, orNode);
     return orNode;
 }
 
@@ -1012,82 +1009,3 @@ void DanceDNNF::batchUncoverInBlock(Block& block)
 
 }
 
-// 遍历Decision-DNNF，收集所有解（每个解是若干行号的集合）
-void DanceDNNF::traverseDNNF(const std::shared_ptr<DNNFNode>& node, std::vector<int>& currentSolution) {
-    if (!node || node->label == -2) return; // F 节点
-    if (node->label == -1) {
-        // T 节点，表示当前路径是一种完整解
-        solutions.push_back(currentSolution);
-        return;
-    }
-
-    switch (node->type) {
-        case NodeType::OR:
-            // OR节点：多个子分支，分别尝试
-            for (const auto& child : node->children) {
-                traverseDNNF(child, currentSolution);
-            }
-            break;
-        
-        case NodeType::Decision:
-            if (node->left && node->left->type == NodeType::Variable) {
-                currentSolution.push_back(node->left->label); // 加入当前变量（行号）
-                traverseDNNF(node->right, currentSolution); // 递归右子树
-                currentSolution.pop_back(); // 回溯
-            }
-            break;
-
-        case NodeType::Decomposed:
-            {
-                // Decomposed 是 AND 节点，所有子节点必须都满足
-                std::vector<std::vector<int>> partialResults(1);
-                for (const auto& child : node->children) {
-                    std::vector<std::vector<int>> temp;
-                    std::vector<int> empty;
-                    traverseDNNF(child, empty);
-
-                    std::vector<std::vector<int>> newResults;
-                    for (const auto& prefix : partialResults) {
-                        for (const auto& suffix : temp) {
-                            std::vector<int> merged = prefix;
-                            merged.insert(merged.end(), suffix.begin(), suffix.end());
-                            newResults.push_back(std::move(merged));
-                        }
-                    }
-                    partialResults = std::move(newResults);
-                }
-                for (auto& solution : partialResults) {
-                    solutions.push_back(std::move(solution));
-                }
-            }
-            break;
-        // case NodeType::Variable:
-        //     currentSolution.push_back(node->label);
-        //     solutions.push_back(currentSolution);
-        //     currentSolution.pop_back();
-        //     break;
-
-        // case NodeType::Terminal:
-        //     if (node->label == -1) solutions.push_back(currentSolution); // T
-        //     break;
-        default:
-            break;
-    }
-}
-
-void DanceDNNF::countSolutions(shared_ptr<ORNode> node) {
-    if (!node) return;
-    
-    if (node->label == -1) { // T节点
-        count++;
-        return;
-    }
-    
-    if (node->label == -2) { // F节点
-        return;
-    }
-    
-    countSolutions(node->left->next);
-    countSolutions(node->right->next);
-
-}

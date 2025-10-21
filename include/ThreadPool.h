@@ -113,12 +113,12 @@ public:
     }
 
     // 禁用拷贝构造和赋值
-    ThreadPool(const ThreadPool&) = delete;
-    ThreadPool& operator=(const ThreadPool&) = delete;
+    // ThreadPool(const ThreadPool&) = delete;
+    // ThreadPool& operator=(const ThreadPool&) = delete;
 
     // 允许移动构造和赋值
-    // ThreadPool(ThreadPool&&) = default;
-    // ThreadPool& operator=(ThreadPool&&) = default;
+    ThreadPool(ThreadPool&&) = default;
+    ThreadPool& operator=(ThreadPool&&) = default;
 
     // 析构函数，确保所有资源正确释放
     ~ThreadPool() {

@@ -190,7 +190,7 @@ private:
 class DanceDNNF : DancingMatrix { 
 
     public:
-        DanceDNNF(int rows, int cols, int** matrix, Logger& l, bool verbose = false, int pool_size = 1) 
+        DanceDNNF(int rows, int cols, int** matrix, Logger& l, bool verbose = false, int pool_size = 8) 
             : DancingMatrix(rows, cols, matrix, verbose), logger(l), pool(getThreadPool(pool_size)) {
             
  
@@ -205,7 +205,6 @@ class DanceDNNF : DancingMatrix {
             omp_set_num_threads(pool_size); // 设置并行线程数
             timer.setTimeBound(TIME_LIMIT_SECONDS);
 
-            // std::cout<< "初始化DanceDNNF完成." << endl;
         }
 
         ~DanceDNNF() = default;
@@ -248,15 +247,14 @@ class DanceDNNF : DancingMatrix {
         shared_ptr<DXDResult> startDXD();
         shared_ptr<DXDResult> startMultiThreadDXD();
 
-        void traverseDNNF(const std::shared_ptr<DNNFNode>& node, std::vector<int>& solution);
-        void countSolutions(shared_ptr<ORNode> node);
+        bool queryRecord (size_t key) {
+            std::shared_lock<std::shared_mutex> readLock(recordMutex);
+            return records.find(key) != records.end();
+        }
 
-        bool shouldDecompose (const int rowSize) {
-
-            if (p_count >= MAX_P_COUNT)
-                return false;
-
-            return rowSize >= MIN_BLOCK_ROWS;
+        void insertRecord (size_t key) {
+            std::unique_lock<std::shared_mutex> writeLock(recordMutex);
+            records.insert(key);
         }
 
         Block getBlock() {
@@ -277,24 +275,6 @@ class DanceDNNF : DancingMatrix {
                 C[key] = node;
             }
         }
-        
-        // 多线程安全的缓存访问
-        std::shared_ptr<DNNFNode> getCachedResult(const size_t& key) {
-            // std::lock_guard<std::mutex> lock(cacheMutex);
-            auto it = CacheMT.find(key);
-            return (it != CacheMT.end()) ? it->second : nullptr;
-        }
-        void setCachedResult(const size_t& key, std::shared_ptr<DNNFNode> node) {
-            // std::lock_guard<std::mutex> lock(cacheMutex);
-            CacheMT[key] = node;
-        }
-        void clearCache(){
-            CacheMT.clear();
-        }
-
-        void incrementPCount() {
-            p_count += 1;
-        }
 
 
     private:
@@ -307,7 +287,7 @@ class DanceDNNF : DancingMatrix {
         std::shared_ptr<ORNode> rootOR;
         vector<string> cache_input_order; // 记录缓存的输入顺序，便于输出
         std::shared_ptr<DNNFNode> rootDNNF;
-        std::unordered_set<size_t> detect_records; // 用于记录无法分解的矩阵状态
+        std::unordered_set<size_t> records; // 用于记录无法分解的矩阵状态
         std::shared_ptr<DNNFNode> T = std::make_shared<DNNFNode>(NodeType::Terminal, -1, 1);
         std::shared_ptr<DNNFNode> F = std::make_shared<DNNFNode>(NodeType::Terminal, -2, 0);
         
@@ -315,8 +295,8 @@ class DanceDNNF : DancingMatrix {
         std::unordered_map<size_t, std::shared_ptr<ORNode>> Cache;
         // DNNF缓存
         mutable std::shared_mutex cacheMutex;
+        mutable std::shared_mutex recordMutex; // 记录互斥锁
         unordered_map<size_t, shared_ptr<DNNFNode>> C;
-        unordered_map<size_t, shared_ptr<DNNFNode>> CacheMT;  // 多线程
         unordered_map<int, shared_ptr<DNNFNode>> V_Table; // 变量节点缓存
 
         // Block缓存

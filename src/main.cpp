@@ -1,16 +1,16 @@
-#include "../include/DancingMatrix.h"
 #include "../include/DXZ.h"
 #include "../include/DXD.h"
 
-static Logger logger("../multi_dxd_log.txt");  // 全局日志
+static Logger logger("../run_results.txt");  // 全局日志
 // const string muti_thread_dxd_log_file = "../muti_thread_dxd_log.csv";
+static const int DEFAULT_THREADS = 24;  // 线程数
 
 // 算法类型枚举
 enum class algorithm_type {
     dlx,
     dxz,
     dxd,
-    dxd_p
+    mdxd
 };
 
 // 将字符串转换为枚举
@@ -18,23 +18,24 @@ algorithm_type parseAlgorithmType(const std::string& name) {
     if (name == "dlx") return algorithm_type::dlx;
     if (name == "dxz") return algorithm_type::dxz;
     if (name == "dxd") return algorithm_type::dxd;
-    if (name == "dxd_p") return algorithm_type::dxd_p;
+    if (name == "mdxd") return algorithm_type::mdxd;
     throw std::invalid_argument("Unknown algorithm type: " + name);
 }
 
-// ./main <input> <algorithm> <read_mode> [pool_size]
+// ./main <algorithm> <input> <read_mode> [pool_size]
 int main(int argc, char *argv[]){
     
     if (argc < 4) {
-            std::cout << "Usage: " << argv[0] << " <input> <algorithm> <read_mode> [timeout_seconds]" << std::endl;
+            std::cout << "Usage: " << argv[0] << "<algorithm> <input> <read_mode> [pool_size]" << std::endl;
             return 1;
     }
     
     try
     {
-        std::string input_file = argv[1];
-        std::string algType = argv[2];
+        std::string algType = argv[1];
+        std::string input_file = argv[2];
         int read_mode = std::stoi(argv[3]);
+        int poolsize = argc > 4 ? std::stoi(argv[4]) : DEFAULT_THREADS;
 
         string filename = fs::path(input_file).stem().string();
         algorithm_type type = parseAlgorithmType(algType);
@@ -58,29 +59,18 @@ int main(int argc, char *argv[]){
             case algorithm_type::dxd: 
                 {
                     logger.logLine("启用DXD算法求解: " + filename);
-                    DanceDNNF danceDNNF(input_file, read_mode, logger, true);
+                    DanceDNNF danceDNNF(input_file, read_mode, logger, false, true);
                     auto res = danceDNNF.startDXD();
                     logger.logLine("DXD算法求解结束: " + filename);
                     break;
                 }
-            case algorithm_type::dxd_p:
+            case algorithm_type::mdxd:
                 {
-                    if (argc < 5){
-                        std::cout << "dxd_p needs arg poolsize" << std::endl;
-                    }
-                    int poolsize = std::stoi(argv[4]);
-
                     logger.logLine("启用多线程DXD算法求解: " + filename);
-                    logger.logLine("线程池大小: " + std::to_string(poolsize));
-                    // ExactCoverSolver ecSolver(input_file, read_mode, logger, 16);
-                    // auto res = ecSolver.searchEC();
-                    DanceDNNF danceDNNF(input_file, read_mode, logger, true, poolsize);
+                    // logger.logLine("线程池大小: " + std::to_string(poolsize));
+                    DanceDNNF danceDNNF(input_file, read_mode, logger, false, true, poolsize);
                     auto res = danceDNNF.startMultiThreadDXD();
-                    // logger.logLine("多线程DXD算法求解结果: " + std::to_string(res->solution_count));
-                    // logger.logLine("多线程DXD算法求解耗时: " + res->runtime);
-                    // logger.logLine("多线程DXD算法求解最大分块: " + std::to_string(res->max_blocks));
-                    // logger.logLine("多线程DXD算法求解结束: " + filename);
-                    logger.logLine("");
+                    logger.logLine("多线程DXD算法求解结束: " + filename);
                     break;
                 }
             default:
