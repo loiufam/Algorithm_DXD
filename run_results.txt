@@ -1,2 +1,5 @@
-启用DLX算法求解: doublefact-21
-DLX开始搜索...
+启用DXZ算法求解: input_matrix
+DXZ开始搜索...
+Time: 0.000004 s
+Solutions: 2
+DXZ算法求解结束: input_matrix

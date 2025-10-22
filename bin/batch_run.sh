@@ -140,8 +140,7 @@ update_csv() {
 		else 
 			$algo_col = time;
 		
-		if ($11 = "") 
-			$11 = sol;
+		$11 = sol;
 
 		if ((algo == "dxd" || algo == "mdxd") && maxb != "")
 			$12 = maxb
@@ -158,7 +157,7 @@ for dir in "$INPUT_DIR"/*/; do
 
 	# 根据文件夹前缀确定 read_mode 
 	case $dir_name in 
-		e*) read_mode=1 ;; 
+		# e*) read_mode=1 ;; 
 		s*) read_mode=2 ;; 
 		g*) read_mode=3 ;; 
 		*) echo "[WARN] 未识别的文件夹: $dir_name 跳过"; continue ;; 
