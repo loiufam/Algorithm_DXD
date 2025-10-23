@@ -1,5 +1,6 @@
-启用DXZ算法求解: input_matrix
-DXZ开始搜索...
-Time: 0.000004 s
-Solutions: 2
-DXZ算法求解结束: input_matrix
+启用DXD算法求解: sppnw23
+开始单线程DXD搜索...
+Time: 0.160240 s
+Solutions: 80524
+Max Blocks: 2
+DXD算法求解结束: sppnw23
