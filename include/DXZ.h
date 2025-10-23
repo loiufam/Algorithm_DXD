@@ -26,6 +26,12 @@ struct ZDDNode {
 
 };
 
+// ZDD节点结构
+struct Simple_ZDDNode {
+    int option;  // 选项编号
+    int lo, hi;  // low和high分支
+};
+
 class DanceZDD : DancingMatrix{
     public:
         DanceZDD(int rows, int cols, int** matrix, Logger& l) 
@@ -35,6 +41,9 @@ class DanceZDD : DancingMatrix{
            
             T_ZDD = make_shared<ZDDNode>(-1, nullptr, nullptr, true); // ZDD的T节点
             F_ZDD = make_shared<ZDDNode>(-2, nullptr, nullptr, true); // ZDD的F节点
+            zddNodes.push_back({-1, 1, 1});
+            zddNodes.push_back({-1, 0, 0});
+            zddRoot = 0;
         }
 
         DanceZDD(const string& file_path, int from, Logger& l) 
@@ -44,6 +53,9 @@ class DanceZDD : DancingMatrix{
            
             T_ZDD = make_shared<ZDDNode>(-1, nullptr, nullptr, true); // ZDD的T节点
             F_ZDD = make_shared<ZDDNode>(-2, nullptr, nullptr, true); // ZDD的F节点
+            zddNodes.push_back({-1, 1, 1});
+            zddNodes.push_back({-1, 0, 0});
+            zddRoot = 0;
         }
         
         ~DanceZDD() = default;
@@ -58,6 +70,8 @@ class DanceZDD : DancingMatrix{
         size_t hashFunction(int r, ZDDNode* x, ZDDNode* y);
         shared_ptr<ZDDNode> unique(int r, shared_ptr<ZDDNode> x, shared_ptr<ZDDNode> y);
         shared_ptr<ZDDNode> DXZ();
+        int makeZDDNode(int r, int lo, int hi);
+        int search();
 
         void DLX(std::vector<label_t>& solution);
         void X(uint64_t& count);  // 搜索但不记录解
@@ -124,6 +138,8 @@ class DanceZDD : DancingMatrix{
             return count_zdd_nodes(root, visited);
         }
 
+        // 从ZDD计算解的数量
+        uint64_t countSolutions(int node, unordered_map<int, uint64_t >& memo);
 
     private:
         Logger& logger;
@@ -136,6 +152,13 @@ class DanceZDD : DancingMatrix{
 
         // 备忘录缓存：活跃列集合 -> ZDD节点
         std::unordered_map<size_t, std::shared_ptr<ZDDNode>> memo_cache;
+
+        // ZDD相关
+        vector<Simple_ZDDNode> zddNodes;
+        int zddRoot;
+        
+        // Memo Cache
+        unordered_map<Signature, int, SignatureHash> memoCache;
 
 
         struct NodeKey {

@@ -117,13 +117,18 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose, b
             iss >> token;
         }
 
-        int currentCol = 0; // 列索引从1开始
+        int currentCol; 
         while(iss >> currentCol) {
             if (currentCol < 1 || currentCol > cols) {
                 cerr << "无效的列索引: " << currentCol << " 在行 " << currentRow + 1 << endl;
                 exit(1);
             }
             insert(currentRow, currentCol); // 插入节点
+            col_to_rows[currentCol].insert(currentRow); // 更新列到行的映射
+            if(useETT) {
+                row_to_cols[currentRow].insert(currentCol); // 更新行到列的映射
+                etTree.make_tree(currentRow); // 构建ETT顶点
+            }
             ONE_COUNT++; // 统计矩阵中1的个数
             rowsSet.insert(currentRow);
             colsSet.insert(currentCol); 
@@ -133,19 +138,27 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose, b
         
         if (currentRow >= rows) break; // 防止超过预期行数
     }
-    if(useETT){
-        etTree.set_row_cols_getter([this](int row) -> const std::set<int>& {
-            return RowIndex[row].cols;
-        });
-    }
-
 
     InitBlock = Block(rowsSet, colsSet);
-    if(verbose){
+
+    if(useETT){
+        etTree.set_row_cols_getter([this](int row) -> const std::set<int>& {
+            static std::set<int> empty;
+            auto it = row_to_cols.find(row);
+            return (it != row_to_cols.end()) ? it->second : empty;
+        });
+
+
+        build_graph();
+
+    }
+
+    if (verbose) {
         // graph = make_unique<ConnectedGraph>(*this);
         incrementalGraph = make_unique<IncrementalConnectedGraph>(rows);
         incrementalGraph->initialize(*this);
     }
+
     file.close();
 }
 
@@ -159,18 +172,33 @@ vector<Block> DancingMatrix::getComponents(const unordered_set<int> rows) {
     return incrementalGraph->computeComponentsInRows(rows);
 };
 
-vector<Component> DancingMatrix::getComponentsByETT() {
-    auto ett_components = etTree.get_components();
-    std::vector<Component> result;
+vector<Block> DancingMatrix::getComponentsByETT(const unordered_set<int> rows) {
+    return etTree.findComponentsInBlock(rows);
+}
+
+
+/**
+ * 构建初始图：有列交集的行之间建边
+ */
+void DancingMatrix::build_graph() {
+    // 遍历所有列，找到包含该列的行，它们之间建边
+    for (const auto& [col, rows] : col_to_rows) {
+        if (rows.size() < 2) continue;
+
+        vector<int> row_vec(rows.begin(), rows.end());
+
+        // sort(row_vec.begin(), row_vec.end(), [&](int a, int b){ return row_to_cols[a].size() > row_to_cols[b].size(); }); // 按行大小排序
     
-    for (const auto& [comp_id, info] : ett_components) {
-        Component comp;
-        comp.rows = info.rows;
-        comp.cols = info.cols;
-        result.push_back(comp);
+        for (size_t i = 1; i < row_vec.size(); ++i) {
+            int u = row_vec[i-1];
+            int v = row_vec[i];
+            if (!etTree.isRowActive(u) || !etTree.isRowActive(v)) continue;
+            if (!etTree.connected(u, v)) {
+                // cout << "add rows: " << u << " " << v << endl;
+                etTree.link(u, v);
+            }
+        }
     }
-    
-    return result;
 }
 
 void DancingMatrix::printGraph() const {
@@ -183,7 +211,7 @@ void DancingMatrix::insert( int r, int c )
     ColIndex[c].size++;  
     RowIndex[r].size++;
     // ColIndex[c].rows.insert(r);
-    RowIndex[r].cols.insert(c);
+    // RowIndex[r].cols.insert(c);
     auto newNode = std::make_unique<Node>(r, c);  
     Node* newNodePtr = newNode.get();
 
@@ -215,11 +243,8 @@ void DancingMatrix::insert( int r, int c )
         cur->right->left = newNodePtr;  
         cur->right = newNodePtr;  
     }  
-    // if (enableGraphSync)
-    //     graph->insertEdge(r, c-1); 
-    if (useETT) {
-        add_connection(r, c);
-    }
+
+
 
     dataNodes.push_back(std::move(newNode));
 }
@@ -262,6 +287,26 @@ size_t DancingMatrix::getColumnState() const {
         cur = (ColumnHeader*)cur->right;
     }
     return hash;
+}
+
+// 创建当前状态的签名
+Signature DancingMatrix::getColumnSignature() const {
+    Signature sig;
+    sig.covered.resize(COLS + 1, false);
+    
+    // 标记已覆盖的列
+    for (int j = 1; j <= COLS; j++) {
+        bool found = false;
+        for (int k = root->right->col; k != 0; k = ColIndex[k].right->col) {
+            if (k == j) {
+                found = true;
+                break;
+            }
+        }
+        sig.covered[j] = !found;
+    }
+    
+    return sig;
 }
 
 void DancingMatrix::build_mapping_from_cols(const unordered_set<int>& blockCols, unordered_map<int, set<int>>& rowToCols, unordered_map<int, set<int>>& colToRows)
@@ -425,13 +470,12 @@ void DancingMatrix::coverInBlock(int c, Block& block){
 
     while( curC != col )  
     {    
-        incrementalGraph->deactivateRow(curC->row);
         block.rows.erase(curC->row);
-        
-        // if (useETT) {
-        //     remove_connection(curC->row, curC->col);
-        //     etTree.update_row_columns(curC->row, RowIndex[curC->row].cols);
-        // }
+
+        // incrementalGraph->deactivateRow(curC->row);
+        if (useETT) {
+            etTree.deactivateRow(curC->row);
+        }
 
         curR = curC->right;  
         while( curR != curC )  
@@ -439,11 +483,7 @@ void DancingMatrix::coverInBlock(int c, Block& block){
 
             curR->down->up = curR->up;  
             curR->up->down = curR->down;  
-            // decColSize(curR->col); 
-            // if (useETT) {
-            //     remove_connection(curR->row, curR->col);
-            //     etTree.update_row_columns(curR->row, RowIndex[curR->row].cols);
-            // }
+
             --ColIndex[curR->col].size;
 
             curR = curR->right;  
@@ -466,28 +506,19 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
 
         while( curR != noteR )  
         {  
-            // incColSize(curR->col); 
+
             ++ColIndex[curR->col].size;
             curR->down->up = curR;  
             curR->up->down = curR;  
-            // if (useETT) {
-            //     add_connection(curR->row, curR->col);
-            //     if(!curR->row_first_node) {
-            //         etTree.update_row_columns(curR->row, RowIndex[curR->row].cols);
-            //     }
-            // }
 
             curR = curR->left;  
         }  
 
-        incrementalGraph->reactivateRow(curC->row);
+        // incrementalGraph->reactivateRow(curC->row);
         block.rows.insert(curC->row);
-        // if (useETT) {
-        //     add_connection(curC->row, curC->col);
-        //     if(!curC->row_first_node) {
-        //         etTree.update_row_columns(curC->row, RowIndex[curC->row].cols);
-        //     }
-        // }
+        if (useETT) {
+            etTree.reactivateRow(curC->row);
+        }
 
         curC = curC->up;  
     }  

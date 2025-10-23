@@ -6,6 +6,8 @@
 from typing import List, Tuple, Set
 import sys
 import os
+import time
+log_file = "log.txt"
 
 def read_exact_cover_matrix(filepath: str, read_mode: int = 1) -> Tuple[List[Set[int]], int, int]:
     """
@@ -236,13 +238,13 @@ def matrix_to_cnf(input_file: str, output_file: str, read_mode: int = 1):
     print(f"✓ 生成 {len(clauses)} 个子句，{num_vars} 个变量")
     
     # 如果output_file是文件夹
-    if os.path.isdir(output_file):
-        input_file_name = os.path.basename(input_file)
-        output_file = os.path.join(output_file, f"{os.path.splitext(input_file_name)[0]}.cnf")
+    # if os.path.isdir(output_file):
+    #     input_file_name = os.path.basename(input_file)
+    #     output_file = os.path.join(output_file, f"{os.path.splitext(input_file_name)[0]}.cnf")
 
     # 写入DIMACS格式
-    write_dimacs_cnf(clauses, num_vars, output_file)
-    print(f"✓ CNF文件已保存到: {output_file}")
+    # write_dimacs_cnf(clauses, num_vars, output_file)
+    # print(f"✓ CNF文件已保存到: {output_file}")
     
     # 统计信息
     clause_sizes = [len(c) for c in clauses if c]
@@ -264,13 +266,25 @@ def batch_convert(input_folder: str, output_folder: str, read_mode: int = 1):
 
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
-    
-    for filename in os.listdir(input_folder):
-        if filename.endswith(".txt") or filename.endswith(".ec"):
-            input_file = os.path.join(input_folder, filename)
-            output_file = os.path.join(output_folder, f"{os.path.splitext(filename)[0]}.cnf")
-            print(f"\n转换文件: {input_file} → {output_file}")
-            matrix_to_cnf(input_file, output_file, read_mode)
+
+    with open(log_file, "a", encoding="utf-8") as log:
+        for filename in os.listdir(input_folder):
+            if filename.endswith(".txt") or filename.endswith(".ec"):
+                input_file = os.path.join(input_folder, filename)
+                output_file = os.path.join(output_folder, f"{os.path.splitext(filename)[0]}.cnf")
+                print(f"\n转换文件: {input_file} → {output_file}")
+
+                start = time.time()
+                matrix_to_cnf(input_file, output_file, read_mode)
+                duration = time.time() - start
+
+                base_name = os.path.splitext(filename)[0]
+
+                # 写入日志
+                log.write(f"{base_name} {duration:.4f}\n")
+                log.flush()
+
+                print(f"  - 转换完成，耗时: {duration:.4f} 秒")
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:
