@@ -5,7 +5,7 @@ CUDD_LIB = $(CUDD_DIR)/lib
 
 # 编译器设置
 CXX = g++
-CXXFLAGS = -std=c++11 -O3 -Wall
+CXXFLAGS = -std=c++17 -O3 -Wall
 INCLUDES = -I$(CUDD_INCLUDE)
 LDFLAGS = -L$(CUDD_LIB)
 LIBS = -lcudd -lm

@@ -6,7 +6,13 @@
 from typing import List, Tuple, Set
 import sys
 import os
+import pathlib
 import time
+import csv
+
+TIME_COLUMN_INDEX = 13  
+INSTANCE_COLUMN = "Instance"
+TIME_COLUMN = "cnf_compile(s)"
 log_file = "log.txt"
 
 def read_exact_cover_matrix(filepath: str, read_mode: int = 1) -> Tuple[List[Set[int]], int, int]:
@@ -286,18 +292,92 @@ def batch_convert(input_folder: str, output_folder: str, read_mode: int = 1):
 
                 print(f"  - 转换完成，耗时: {duration:.4f} 秒")
 
+def read_csv(filename):
+    headers = []
+    rows = []
+    try:
+        with open(filename, 'r', newline='') as f:
+            reader = csv.reader(f)
+            headers = next(reader, [])
+            for row in reader:
+                # 填充缺失列
+                while len(row) < len(headers):
+                    row.append('')
+                rows.append(row)
+    except FileNotFoundError:
+        print(f"Warning: Cannot open CSV file: {filename} (will create new)")
+    return headers, rows
+
+def write_csv(filename, headers, rows):
+    with open(filename, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(headers)
+        for row in rows:
+            # 确保行长度一致
+            while len(row) < len(headers):
+                row.append('')
+            writer.writerow(row)
+
+def update_record(headers, rows, instance_name, compile_time):
+    found = False
+    for row in rows:
+        while len(row) < len(headers):
+            row.append('')
+        if row and row[0] == instance_name:
+            row[TIME_COLUMN_INDEX] = str(compile_time)
+            found = True
+            break
+
+    if not found:
+        new_row = [''] * len(headers)
+        if headers:
+            new_row[0] = instance_name
+            if TIME_COLUMN_INDEX < len(headers):
+                new_row[TIME_COLUMN_INDEX] = str(compile_time)
+        rows.append(new_row)
+
 if __name__ == "__main__":
-    if len(sys.argv) < 4:
-        print("Usage: python matrix_to_cnf.py <input_file> <output_file> <read_mode> [batch_mode]")
-        sys.exit(1)
+    # if len(sys.argv) < 4:
+    #     print("Usage: python matrix_to_cnf.py <input_file> <output_file> <read_mode> [batch_mode]")
+    #     sys.exit(1)
 
-    input_file = sys.argv[1]
-    output_file = sys.argv[2]
-    read_mode = int(sys.argv[3]) if len(sys.argv) > 3 else 1
+    # input_file = sys.argv[1]
+    # output_file = sys.argv[2]
+    # read_mode = int(sys.argv[3]) if len(sys.argv) > 3 else 1
 
-    if len(sys.argv) > 4 and sys.argv[4] == "-b":
-        batch_convert(input_file, output_file, read_mode)
-        print(f"✓ 批量转换完成，输出文件夹: {output_file}")
-    else:
-        matrix_to_cnf(input_file, output_file, read_mode)
-        print(f"✓ 转换完成!")
+    # 文件夹路径
+    directories = [
+        ("../exact_cover_benchmark", 1),
+        ("../set_partitioning_benchmarks", 2),
+        ("../graph_matrix", 3)
+    ]
+
+    headers, rows = read_csv("compile_time.csv")
+
+    for folder_path, mode in directories:
+        print(f"Start compile folder: {folder_path}, mode: {mode}")
+        folder = pathlib.Path(folder_path)
+        if not folder.exists():
+            print(f"Warning: folder not found - {folder_path}")
+            continue
+
+        for entry in folder.iterdir():
+            if entry.is_file():
+                file_path = str(entry)
+                file_name = entry.stem
+                print(f"Processing file: {file_name} (path: {file_path})")
+
+                start = time.time()
+                matrix_to_cnf(file_path, "", mode)
+                duration = round(time.time() - start, 4)
+
+                update_record(headers, rows, file_name, duration)
+    
+    write_csv("compile_time.csv", headers, rows)
+
+    # if len(sys.argv) > 4 and sys.argv[4] == "-b":
+    #     batch_convert(input_file, output_file, read_mode)
+    #     print(f"✓ 批量转换完成，输出文件夹: {output_file}")
+    # else:
+    #     matrix_to_cnf(input_file, output_file, read_mode)
+    #     print(f"✓ 转换完成!")

@@ -6,7 +6,12 @@
 #include <map>
 #include <string>
 #include <chrono>
+#include <filesystem>
 #include <cudd.h>
+
+const int TIME_COLUMN_INDEX = 12; // 第13列（索引从0开始）
+const std::string INSTANCE_COLUMN = "Instance";
+const std::string TIME_COLUMN = "zdd_compile(s)";
 
 struct ZDDInfo {
     std::string id;
@@ -383,44 +388,219 @@ private:
     }
 };
 
+// CSV辅助函数：读取CSV文件，保留列顺序
+void readCSV(const std::string& filename,
+            std::vector<std::string>& headers,
+            std::vector<std::vector<std::string>>& rows) {
+
+    std::ifstream file(filename);
+    
+    if (!file.is_open()) {
+        std::cerr << "Warning: Cannot open CSV file: " << filename << " (will create new)" << std::endl;
+        return;
+    }
+    
+    std::string line;
+    
+    // 读取表头
+    if (std::getline(file, line)) {
+        std::stringstream ss(line);
+        std::string cell;
+        while (std::getline(ss, cell, ',')) {
+            headers.push_back(cell);
+        }
+    }
+    
+    // 读取数据行
+    while (std::getline(file, line)) {
+        std::vector<std::string> row;
+        std::stringstream ss(line);
+        std::string cell;
+        
+        int col = 0;
+        while (std::getline(ss, cell, ',')) {
+            row.push_back(cell);
+            col++;
+        }
+        
+        // 确保行有足够的列（用空字符串填充）
+        while (row.size() < headers.size()) {
+            row.push_back("");
+        }
+        
+        rows.push_back(row);
+    }
+    
+    file.close();
+
+}
+
+// CSV辅助函数：写入CSV文件
+void writeCSV(const std::string& filename, 
+              const std::vector<std::string>& headers,
+              const std::vector<std::vector<std::string>>& rows) {
+    std::ofstream file(filename);
+    
+    if (!file.is_open()) {
+        std::cerr << "Error: Cannot open CSV file for writing: " << filename << std::endl;
+        return;
+    }
+    
+    // 写入表头
+    for (size_t i = 0; i < headers.size(); i++) {
+        file << headers[i];
+        if (i < headers.size() - 1) file << ",";
+    }
+    file << "\n";
+    
+    // 写入数据行
+    for (const auto& row : rows) {
+        for (size_t i = 0; i < row.size(); i++) {
+            file << row[i];
+            if (i < row.size() - 1) file << ",";
+        }
+        file << "\n";
+    }
+    
+    file.close();
+}
+
+void updateRecord(  std::vector<std::string>& headers,
+                    std::vector<std::vector<std::string>>& rows,
+                    const std::string& instanceName,
+                    double compileTime) {
+
+    // 查找是否已存在该实例（在第1列查找）
+    bool found = false;
+    for (auto& row : rows) {
+        // 确保行有足够的列
+        while (row.size() < headers.size()) {
+            row.push_back("");
+        }
+        
+        if (!row.empty() && row[0] == instanceName) {
+            // 更新第13列的时间
+            row[TIME_COLUMN_INDEX] = std::to_string(compileTime);
+            found = true;
+            break;
+        }
+    }
+    
+    // 如果不存在，添加新记录
+    if (!found) {
+        std::vector<std::string> newRow(headers.size(), "");
+        newRow[0] = instanceName; // 第1列：实例名
+        newRow[TIME_COLUMN_INDEX] = std::to_string(compileTime); // 第13列：编译时间
+        rows.push_back(newRow);
+    }
+    
+}
+
+void checkHeaders(std::vector<std::string>& headers) {
+
+    // 如果文件不存在或为空，创建表头
+    if (headers.empty()) {
+        // 创建13列的表头
+        for (int i = 0; i < 13; i++) {
+            if (i == 0) {
+                headers.push_back(INSTANCE_COLUMN);
+            } else if (i == TIME_COLUMN_INDEX) {
+                headers.push_back(TIME_COLUMN);
+            } else {
+                headers.push_back("col" + std::to_string(i + 1));
+            }
+        }
+    } else {
+        while (headers.size() < 13) {
+            headers.push_back("col" + std::to_string(headers.size() + 1));
+        }
+
+        if (headers.size() > 0) headers[0] = INSTANCE_COLUMN;
+        if (headers.size() > TIME_COLUMN_INDEX) headers[TIME_COLUMN_INDEX] = TIME_COLUMN;
+    }
+}
+
 int main(int argc, char* argv[]) {
-    if (argc < 4) {
-        std::cout << "Usage: " << argv[0] << " <input_matrix> <output_zdd> <read_mode> [output_dot]" << std::endl;
-        std::cout << "Example: " << argv[0] << " matrix.txt output.zdd 1 output.dot" << std::endl;
-        return 1;
-    }
+
+    // if (argc < 4) {
+    //     std::cout << "Usage: " << argv[0] << " <input_matrix> <output_zdd> <read_mode> [output_dot]" << std::endl;
+    //     std::cout << "Example: " << argv[0] << " matrix.txt output.zdd 1 output.dot" << std::endl;
+    //     return 1;
+    // }
     
-    std::string inputFile = argv[1];
-    std::string outputFile = argv[2];
-    int read_mode = std::stoi(argv[3]);
-    std::string dotFile = (argc > 4) ? argv[4] : "";
-    
-    CUDDMatrixCompiler compiler;
-    
-    // 加载矩阵
-    if (!compiler.readFromFile(inputFile, read_mode)) {
-        return 1;
-    }
-    
-    // 编译为ZDD
-    auto start = std::chrono::high_resolution_clock::now();
-    DdNode* zdd = compiler.compile();
-    auto end = std::chrono::high_resolution_clock::now();
-    
-    double elapsed = std::chrono::duration<double>(end - start).count();
-    std::cout << "Compilation time: " << elapsed << " seconds" << std::endl;
-    
-    // 输出统计信息
-    // compiler.printStats(zdd);
-    
-    // 输出ZDD文件
-    compiler.outputZDD(zdd, outputFile);
-    
-    // 可选：导出DOT文件用于可视化
-    if (!dotFile.empty()) {
-        compiler.exportDotCustom(zdd, dotFile);
-    }
-    
+    // std::string inputFile = argv[1];
+    // std::string outputFile = argv[2];
+    // int read_mode = std::stoi(argv[3]);
+    // std::string dotFile = (argc > 4) ? argv[4] : "";
+
+    // 文件夹路径
+    std::vector<std::string> filePaths;
+    std::string folderPath1 = "../exact_cover_benchmark 1";
+    std::string folderPath2 = "../set_partitioning_benchmarks 2";
+    std::string folderPath3 = "../graph_matrix 3";
+    filePaths.push_back(folderPath1);
+    filePaths.push_back(folderPath2);
+    filePaths.push_back(folderPath3);
+
+    // 读取csv文件
+    std::vector<std::string> headers;
+    std::vector<std::vector<std::string>> rows;
+
+    const std::string table = "compile_time.csv";
+    readCSV(table, headers, rows);
+    checkHeaders(headers);
+
+    // 遍历文件夹中的文件
+    std::string folderName;
+    int mode;
+    for (const auto& folderPath : filePaths) {
+        std::stringstream ss(folderPath);
+        ss >> folderName;
+        ss >> mode;
+        std::cout << "Start compile folder: " << folderName << ", mode: " << mode << std::endl;
+        for (const auto& entry : std::filesystem::directory_iterator(folderName)) {
+            if (entry.is_regular_file()) {
+                std::string filePath = entry.path().string();
+                std::string fileName = entry.path().stem().string();
+
+                CUDDMatrixCompiler compiler;
+
+                // 加载矩阵
+                if (!compiler.readFromFile(filePath, mode)) {
+                    std::cerr << "Failed to read file: " << filePath << std::endl;
+                    return 1;
+                }
+                
+                std::cout << "Compiling " << fileName << std::endl;
+
+                // 编译为ZDD
+                auto start = std::chrono::high_resolution_clock::now();
+                compiler.compile();
+                auto end = std::chrono::high_resolution_clock::now();
+                
+                double elapsed = std::chrono::duration<double>(end - start).count();
+                std::cout << "Compilation time: " << elapsed << " seconds" << std::endl;
+
+                // 按文件名写入csv {instace(col1) == fileName, time(13) == elapsed}
+                updateRecord(headers, rows, fileName, elapsed);
+
+                // 输出统计信息
+                // compiler.printStats(zdd);
+                
+                // 输出ZDD文件
+                // compiler.outputZDD(zdd, outputFile);
+                
+                // 可选：导出DOT文件用于可视化
+                // if (!dotFile.empty()) {
+                //     compiler.exportDotCustom(zdd, dotFile);
+                // }
+                
+            }
+        }
+    }    
+    writeCSV(table, headers, rows); // 写入csv文件
+
+    std::cout << "All compilations completed. Results saved to " << table << std::endl;
     return 0;
 }
 

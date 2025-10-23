@@ -1,6 +1,1 @@
-启用DXD算法求解: sppnw23
-开始单线程DXD搜索...
-Time: 0.160240 s
-Solutions: 80524
-Max Blocks: 2
-DXD算法求解结束: sppnw23
+启用DLX算法求解: grafo190.20

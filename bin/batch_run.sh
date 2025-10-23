@@ -157,7 +157,7 @@ for dir in "$INPUT_DIR"/*/; do
 
 	# 根据文件夹前缀确定 read_mode 
 	case $dir_name in 
-		# e*) read_mode=1 ;; 
+		e*) read_mode=1 ;; 
 		s*) read_mode=2 ;; 
 		g*) read_mode=3 ;; 
 		*) echo "[WARN] 未识别的文件夹: $dir_name 跳过"; continue ;; 
@@ -173,7 +173,7 @@ for input_file in "$dir"*.{txt,ec}; do
 	echo "==============================" 
 	echo "📂 文件: $file_name" 
 
-	for algo in dxd mdxd; do 
+	for algo in dlx dxz; do 
 		echo "▶️ 运行算法: $algo ..."
 		# 执行算法并捕获输出 
 		run_algorithm "$algo" "$input_file" "$read_mode" "$base_name" 
