@@ -12,8 +12,9 @@ int main(){
         // DancingMatrix matrix(input_file, 3, false, true); 
         // auto block = matrix.InitBlock;
 
-        // matrix.coverInBlock(9, block);
-        // matrix.coverInBlock(10, block);
+        // cout << "cover cols 4, 5 in initial block:" << endl;
+        // matrix.coverInBlock(4, block);
+        // matrix.coverInBlock(5, block);
 
         // auto components = matrix.getComponentsByETT(block.rows);
         // int i = 1;
@@ -22,7 +23,17 @@ int main(){
         // }
         // cout << endl;
 
-        DanceDNNF dxd(input_file, 3, logger, false, true);
+        // matrix.uncoverInBlock(5, block);
+        // matrix.uncoverInBlock(4, block);
+        // cout << "uncover cols 4, 5 :" << endl;
+
+        // components = matrix.getComponentsByETT(block.rows);
+        // i = 1;
+        // for(auto& component : components){
+        //     component.printBlock(i++);
+        // }
+        // cout << endl;
+        DanceDNNF dxd(input_file, 3, logger, false, true, 8);
         // dxd.startDXD();
         dxd.startMultiThreadDXD();
 

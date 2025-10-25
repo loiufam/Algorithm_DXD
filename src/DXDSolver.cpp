@@ -391,19 +391,19 @@ shared_ptr<DNNFNode> DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks) {
     const int n = blocks.size();
         
     // 小规模优化：直接串行
-    if (n <= 2) {
-        auto andNode = std::make_shared<DNNFNode>(NodeType::Decomposed, -1, 1);
-        for (auto& block : blocks) {
-            Block blockCopy = block;
-            auto result = DXD(blockCopy);
-            if (!result || result->label == -2) {
-                return F;
-            }
-            andNode->children.push_back(result);
-            andNode->count *= result->count;
-        }
-        return andNode;
-    }
+    // if (n <= 2) {
+    //     auto andNode = std::make_shared<DNNFNode>(NodeType::Decomposed, -1, 1);
+    //     for (auto& block : blocks) {
+    //         Block blockCopy = block;
+    //         auto result = DXD(blockCopy);
+    //         if (!result || result->label == -2) {
+    //             return F;
+    //         }
+    //         andNode->children.push_back(result);
+    //         andNode->count *= result->count;
+    //     }
+    //     return andNode;
+    // }
     
     // 并行处理
     std::vector<std::shared_ptr<DNNFNode>> results(n);
@@ -506,9 +506,9 @@ void DanceDNNF::printBlock(const Block& block) {
 // DXD单线程（要体现分解性）
 shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
     
-    // if(timer.timeBoundBroken()) {
-    //     throw std::runtime_error("Time bound broken");
-    // }
+    if(timer.timeBoundBroken()) {
+        throw std::runtime_error("Time bound broken");
+    }
     
     if(block.cols.empty()) {
         return T; // 如果没有列，返回T
@@ -613,13 +613,15 @@ shared_ptr<DXDResult> DanceDNNF::startDXD() {
         shared_ptr<DNNFNode> rootDNNF = DXD(InitBlock);  
         auto end = std::chrono::high_resolution_clock::now();
         timer.markStopTime();
+        timer.reset();
 
         searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
-        
+        searchTime = searchTimeSeconds;
         logger.logLine("Time: " + std::to_string(searchTimeSeconds) + " s");
         cur_result->runtime = std::to_string(searchTimeSeconds);
 
         logger.logLine("Solutions: " + std::to_string(rootDNNF->count));
+        solutionCount = rootDNNF->count;
         cur_result->solution_count = rootDNNF->count;
     
         logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
@@ -627,6 +629,7 @@ shared_ptr<DXDResult> DanceDNNF::startDXD() {
 
         return cur_result;
     } catch (std::runtime_error &e) {
+        timeout = true;
         logger.logLine("DXD搜索超时: " + std::string(e.what()));
         cur_result->runtime = "timeout";
         return cur_result;
@@ -649,20 +652,25 @@ shared_ptr<DXDResult> DanceDNNF::startMultiThreadDXD() {
         auto rootDNNF = DXD(InitBlock);  // 多线程DXD搜索
         auto end = std::chrono::high_resolution_clock::now();
         timer.markStopTime();
+        timer.reset();
    
         searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
 
         logger.logLine("Time: " + std::to_string(searchTimeSeconds) + " s");
         cur_result->runtime = std::to_string(searchTimeSeconds);
+        searchTime = searchTimeSeconds;
 
         logger.logLine("Solutions: " + std::to_string(rootDNNF->count));
         cur_result->solution_count = rootDNNF->count;
+        solutionCount = rootDNNF->count;
         
         logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
         cur_result->max_blocks = MAX_B_COUNT;
 
         return cur_result;
+
     } catch (std::runtime_error &e) {
+        timeout = true;
         logger.logLine("DXD搜索超时: " + std::string(e.what()));
         cur_result->runtime = "timeout";
         return cur_result;

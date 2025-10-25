@@ -1,2 +1,3 @@
-Time: 0.001468 s
-Solutions: 2
+Time: 0.000014 s
+Solutions: 0
+Max Blocks: 2

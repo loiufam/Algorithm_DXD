@@ -1,119 +1,73 @@
-===========处理文件夹: graph_matrix==========
-文件名: UsSignal
+===========处理文件夹: exact_cover_benchmark==========
+文件名: doublefact-13
 开始单线程DXD搜索...
-搜索到的解个数: 0
-单线程DXD搜索完成, 耗时: 0.427211 秒。
-本次搜索最大分块数为1
+Time: 0.018604 s
+Solutions: 135135
+Max Blocks: 1
 
-文件名: grafo251.20
+Time: 0.017233 s
+Solutions: 135135
+Max Blocks: 1
+
+文件名: kts15-ptpt-0012
 开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+Time: 0.038138 s
+Solutions: 4
+Max Blocks: 1
 
-文件名: grafo117.20
+Time: 0.037834 s
+Solutions: 4
+Max Blocks: 1
+
+文件名: sts15-blk-00008
 开始单线程DXD搜索...
-搜索到的解个数: 4322
-单线程DXD搜索完成, 耗时: 346.885265 秒。
-本次搜索最大分块数为: 3
+Time: 0.000953 s
+Solutions: 40
+Max Blocks: 1
 
-文件名: ulysses16
+Time: 0.000950 s
+Solutions: 40
+Max Blocks: 1
+
+文件名: bell-11
 开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+Time: 0.296151 s
+Solutions: 678570
+Max Blocks: 1
 
-文件名: grafo8513.100
+Time: 0.301100 s
+Solutions: 678570
+Max Blocks: 1
+
+文件名: bell-05
 开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+Time: 0.000073 s
+Solutions: 52
+Max Blocks: 1
 
-文件名: burma14
+Time: 0.000046 s
+Solutions: 52
+Max Blocks: 1
+
+文件名: kts15-ptpt-0009
 开始单线程DXD搜索...
-搜索到的解个数: 109899
-单线程DXD搜索完成, 耗时: 445.834498 秒。
-本次搜索最大分块数为: 3
+Time: 0.087274 s
+Solutions: 6
+Max Blocks: 1
 
-文件名: grid33
+Time: 0.088156 s
+Solutions: 6
+Max Blocks: 1
+
+文件名: bell-10
 开始单线程DXD搜索...
-搜索到的解个数: 52265
-单线程DXD搜索完成, 耗时: 724.460310 秒。
-本次搜索最大分块数为: 3
+Time: 0.058747 s
+Solutions: 115975
+Max Blocks: 1
 
-文件名: grafo8674.100
-处理文件时出错: time out
-文件名: grafo7785.100
+Time: 0.059517 s
+Solutions: 115975
+Max Blocks: 1
+
+文件名: latin8-blk-00002
 开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
-
-文件名: Funet
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
-
-文件名: Interoute
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
-
-文件名: grafo8564.100
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
-
-文件名: grafo215.20
-开始单线程DXD搜索...
-搜索到的解个数: 12291
-单线程DXD搜索完成, 耗时: 340.449515 秒。
-本次搜索最大分块数为: 4
-
-文件名: Deltacom
-处理文件时出错: time out
-文件名: Ion
-开始单线程DXD搜索...
-搜索到的解个数: 0
-单线程DXD搜索完成, 耗时: 5.364835 秒。
-本次搜索最大分块数为1
-
-文件名: grafo8373.100
-处理文件时出错: time out
-文件名: UsCarrier
-开始单线程DXD搜索...
-搜索到的解个数: 0
-单线程DXD搜索完成, 耗时: 823.171561 秒。
-本次搜索最大分块数为1
-
-文件名: Darkstrand
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
-
-文件名: grafo8224.100
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
-
-文件名: grafo190.20
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
-
-文件名: Missouri
-开始单线程DXD搜索...
-搜索到的解个数: 32
-单线程DXD搜索完成, 耗时: 0.160006 秒。
-本次搜索最大分块数为1
-
-文件名: grafo244.20
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
-
-文件名: eil51
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
-
-文件名: VisionNet
-开始单线程DXD搜索...
-搜索到的解个数: 5809
-单线程DXD搜索完成, 耗时: 106.859455 秒。
-本次搜索最大分块数为: 3
-
-文件名: att48
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
-
-文件名: grafo121.20
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
-
-处理文件夹完毕: graph_matrix
-所有文件处理完毕

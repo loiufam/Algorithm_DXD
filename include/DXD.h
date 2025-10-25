@@ -199,12 +199,13 @@ class DanceDNNF : DancingMatrix {
             std::cout<< "初始化DanceDNNF完成." << endl;
         }
 
-        DanceDNNF(const string& file_path, int from, Logger& l, bool verbose = false, bool useETT = false, int pool_size = 8)
+        DanceDNNF(const string& file_path, int from, Logger& l, bool verbose = false, bool useETT = false, int pool_size = 1)
             : DancingMatrix(file_path, from, verbose, useETT), logger(l), pool(getThreadPool(pool_size)) {
 
-            omp_set_num_threads(pool_size); // 设置并行线程数
+            if(useETT){
+                omp_set_num_threads(pool_size); // 设置并行线程数
+            }
             timer.setTimeBound(TIME_LIMIT_SECONDS);
-
         }
 
         ~DanceDNNF() = default;
@@ -216,6 +217,9 @@ class DanceDNNF : DancingMatrix {
         int depth = 0;
         size_t MAX_B_COUNT = 1;
         string cur_instance = ""; // 当前处理的实例名
+        double searchTime = 0.0;
+        uint64_t solutionCount = 0; // 记录解的数量
+        bool timeout = false; // 是否超时
         bool isParallelSearch = false; // 是否并行搜索
         double decomposeTime = 0.0;
 
@@ -269,6 +273,7 @@ class DanceDNNF : DancingMatrix {
             }
             return nullptr;
         }
+
         void setCache(const size_t& key, std::shared_ptr<DNNFNode> node){
             std::unique_lock<std::shared_mutex> writeLock(cacheMutex);
             if(C.find(key) == C.end()){

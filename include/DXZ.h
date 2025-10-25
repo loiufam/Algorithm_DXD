@@ -64,7 +64,11 @@ class DanceZDD : DancingMatrix{
         shared_ptr<ZDDNode> F_ZDD; // ZDD的F节点
         vector<vector<label_t>> sols;
         CStopWatch timer;
+
         string cur_instance = ""; // 当前处理的实例名
+        double searchTime = 0.0;
+        uint64_t solutionCount = 0;
+        bool timeout = false;
 
         // ZDD 相关方法
         size_t hashFunction(int r, ZDDNode* x, ZDDNode* y);
@@ -151,7 +155,8 @@ class DanceZDD : DancingMatrix{
         std::unordered_map<std::string, shared_ptr<ZDDNode>> Z_; // ZDD缓存（线程安全）
 
         // 备忘录缓存：活跃列集合 -> ZDD节点
-        std::unordered_map<size_t, std::shared_ptr<ZDDNode>> memo_cache;
+        unordered_map<size_t, shared_ptr<ZDDNode>> memo_cache;
+        unordered_map<size_t, int> Cache;
 
         // ZDD相关
         vector<Simple_ZDDNode> zddNodes;

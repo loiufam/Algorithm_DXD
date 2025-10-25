@@ -1,8 +1,13 @@
 #include "../include/DancingMatrix.h"
 #include "../include/DXZ.h"
+#include "../include/MyCSV.h"
 #include "../utils/ResProcessor.h"
 
 static Logger logger("../dxz_exp_log.txt");  // 全局日志
+const string table_file = "../exp_results.csv"; // 结果表格文件
+
+const int DLX_COLUMN_INDEX = 3;
+const int DXZ_COLUMN_INDEX = 4;
 
 // 使用分隔符分割字符串
 std::vector<std::string> split(const std::string& str, char delimiter) {
@@ -19,16 +24,21 @@ std::vector<std::string> split(const std::string& str, char delimiter) {
 
 // 专门测DLX和DXZ的代码
 int main() { 
+
         // 文件夹路径
         std::vector<std::string> filePaths;
         std::string folderPath1 = "../data/exact_cover_benchmark&1";
         std::string folderPath2 = "../data/set_partitioning_benchmarks&2";
         std::string folderPath3 = "../data/graph_matrix&3";
-        filePaths.insert(filePaths.end(), {folderPath1, folderPath2, folderPath3});
+        filePaths.push_back(folderPath1);
+        filePaths.push_back(folderPath2);
+        filePaths.push_back(folderPath3);
         char delimiter = '&';
-        string table_file = "../exp_results.csv"; // 结果表格文件
-        ExperimentProcessor processor; // 结果处理器
-        processor.loadTable(table_file);
+
+        // ExperimentProcessor processor; 
+        // processor.loadTable(table_file);
+        MyCSV experimentCSV; // 结果CSV处理器
+        experimentCSV.readCSV(table_file); // 读取结果表格
 
         for (auto& fp : filePaths) {
             std::vector<std::string> result = split(fp, delimiter);
@@ -50,20 +60,22 @@ int main() {
                         DanceZDD dxzSolver(entry.path().string(), read_mode, logger);
                         dxzSolver.cur_instance = file_name;
                         shared_ptr<ExperimentResult> res = dxzSolver.startDLX();
-                        processor.processResultFile(res, AlgorithmType::DLX);
+                        // processor.processResultFile(res, AlgorithmType::DLX);
+                        experimentCSV.updateTime(file_name, dxzSolver.searchTime, DLX_COLUMN_INDEX, dxzSolver.timeout);
                         std::cout << std::endl;
                         
                         shared_ptr<ExperimentResult> resDXZ = dxzSolver.startDXZ();
-                        processor.processResultFile(resDXZ, AlgorithmType::DXZ);
+                        // processor.processResultFile(resDXZ, AlgorithmType::DXZ);
+                        experimentCSV.updateTime(file_name, dxzSolver.searchTime, DXZ_COLUMN_INDEX, dxzSolver.timeout);
                         std::cout << std::endl;
                     } catch (const std::exception& e) {
                         logger.logLine(std::string("处理文件时出错: ") + e.what());
                     }
-
                 }
             }
             logger.logLine("处理文件夹完毕: " + fileFolderName);
-            processor.saveTable(table_file);
+            // processor.saveTable(table_file);
+            experimentCSV.writeCSV(table_file);
         }
         std::cout << "所有文件处理完毕" << std::endl;
     return 0;
