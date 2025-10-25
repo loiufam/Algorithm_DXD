@@ -1,73 +1,115 @@
 ===========处理文件夹: exact_cover_benchmark==========
 文件名: doublefact-13
 开始单线程DXD搜索...
-Time: 0.018604 s
+Time: 0.020498 s
 Solutions: 135135
 Max Blocks: 1
 
-Time: 0.017233 s
+Time: 0.019878 s
 Solutions: 135135
 Max Blocks: 1
 
 文件名: kts15-ptpt-0012
 开始单线程DXD搜索...
-Time: 0.038138 s
+Time: 0.041190 s
 Solutions: 4
 Max Blocks: 1
 
-Time: 0.037834 s
+Time: 0.041564 s
 Solutions: 4
 Max Blocks: 1
 
 文件名: sts15-blk-00008
 开始单线程DXD搜索...
-Time: 0.000953 s
+Time: 0.000996 s
 Solutions: 40
 Max Blocks: 1
 
-Time: 0.000950 s
+Time: 0.000967 s
 Solutions: 40
 Max Blocks: 1
 
 文件名: bell-11
 开始单线程DXD搜索...
-Time: 0.296151 s
+Time: 0.306251 s
 Solutions: 678570
 Max Blocks: 1
 
-Time: 0.301100 s
+Time: 0.312274 s
 Solutions: 678570
 Max Blocks: 1
 
 文件名: bell-05
 开始单线程DXD搜索...
-Time: 0.000073 s
+Time: 0.000088 s
 Solutions: 52
 Max Blocks: 1
 
-Time: 0.000046 s
+Time: 0.000048 s
 Solutions: 52
 Max Blocks: 1
 
 文件名: kts15-ptpt-0009
 开始单线程DXD搜索...
-Time: 0.087274 s
+Time: 0.090415 s
 Solutions: 6
 Max Blocks: 1
 
-Time: 0.088156 s
+Time: 0.090969 s
 Solutions: 6
 Max Blocks: 1
 
 文件名: bell-10
 开始单线程DXD搜索...
-Time: 0.058747 s
+Time: 0.059088 s
 Solutions: 115975
 Max Blocks: 1
 
-Time: 0.059517 s
+Time: 0.059818 s
 Solutions: 115975
 Max Blocks: 1
 
 文件名: latin8-blk-00002
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+DXD搜索超时: Time bound broken
+
+文件名: latin8-blk-00009
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+DXD搜索超时: Time bound broken
+
+文件名: kts15-ptpt-0007
+开始单线程DXD搜索...
+Time: 0.070517 s
+Solutions: 12
+Max Blocks: 1
+
+Time: 0.070556 s
+Solutions: 12
+Max Blocks: 1
+
+文件名: kts15-ptpt-0021
+开始单线程DXD搜索...
+Time: 0.114925 s
+Solutions: 72
+Max Blocks: 1
+
+Time: 0.114717 s
+Solutions: 72
+Max Blocks: 1
+
+文件名: kts15-ptpt-0002
+开始单线程DXD搜索...
+Time: 0.053050 s
+Solutions: 0
+Max Blocks: 1
+
+Time: 0.052886 s
+Solutions: 0
+Max Blocks: 1
+
+文件名: latin8-blk-00010
 开始单线程DXD搜索...

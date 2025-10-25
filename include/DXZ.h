@@ -166,25 +166,39 @@ class DanceZDD : DancingMatrix{
         unordered_map<Signature, int, SignatureHash> memoCache;
 
 
-        struct NodeKey {
-            int label;
-            std::shared_ptr<ZDDNode> lo;
-            std::shared_ptr<ZDDNode> hi;
-            
-            bool operator==(const NodeKey& other) const {
-                return label == other.label && lo == other.lo && hi == other.hi;
+        struct Key {
+            int r;
+            int lo;
+            int hi;
+            bool operator==(Key const& o) const noexcept {
+                return r==o.r && lo==o.lo && hi==o.hi;
             }
         };
     
-        struct NodeKeyHash {
-            std::size_t operator()(const NodeKey& k) const {
-                return std::hash<int>{}(k.label) ^
-                    (std::hash<void*>{}(k.lo.get()) << 1) ^
-                    (std::hash<void*>{}(k.hi.get()) << 2);
+        // splitmix64 for good mixing
+        static uint64_t splitmix64(uint64_t x) {
+            x += 0x9e3779b97f4a7c15ULL;
+            x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
+            x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
+            x = x ^ (x >> 31);
+            return x;
+        }
+
+        struct KeyHash {
+            size_t operator()(Key const& k) const noexcept {
+                // mix three ints into one 64-bit hash
+                uint64_t a = static_cast<uint32_t>(k.r);
+                uint64_t b = static_cast<uint32_t>(k.lo);
+                uint64_t c = static_cast<uint32_t>(k.hi);
+
+                uint64_t h = a;
+                h = h * 0x9e3779b97f4a7c15ULL + (b << 1);
+                h = splitmix64(h ^ (c + 0x9e3779b97f4a7c15ULL));
+                return static_cast<size_t>(h);
             }
         };
     
-        std::unordered_map<NodeKey, std::shared_ptr<ZDDNode>, NodeKeyHash> node_table;
+        std::unordered_map<Key, int, KeyHash> node_table;
 
 };
 

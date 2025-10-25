@@ -126,13 +126,17 @@ int DanceZDD::makeZDDNode(int r, int lo, int hi) {
     if (hi == 0) return lo;
     
     // 查找是否已存在相同的节点（节点共享）
-    for (size_t i = 2; i < zddNodes.size(); i++) {
-        if (zddNodes[i].option == r && 
-            zddNodes[i].lo == lo && 
-            zddNodes[i].hi == hi) {
-            return i;
-        }
-    }
+    // for (size_t i = 2; i < zddNodes.size(); i++) {
+    //     if (zddNodes[i].option == r && 
+    //         zddNodes[i].lo == lo && 
+    //         zddNodes[i].hi == hi) {
+    //         return i;
+    //     }
+    // }
+
+    Key k{r, lo, hi};
+    auto it = node_table.find(k);
+    if (it != node_table.end()) return it->second;
     
     // 创建新节点
     Simple_ZDDNode node;
@@ -140,8 +144,10 @@ int DanceZDD::makeZDDNode(int r, int lo, int hi) {
     node.lo = lo;
     node.hi = hi;
     zddNodes.push_back(node);
+    int idx = static_cast<int>(zddNodes.size() - 1);
+    node_table.emplace(k, idx);
     
-    return zddNodes.size() - 1;
+    return idx;
 }
 
 shared_ptr<ZDDNode> DanceZDD::DXZ()
@@ -217,10 +223,10 @@ int DanceZDD::search() {
         return Cache[columnState]; 
     }
 
-    // // 生成当前状态的签名
+    // 生成当前状态的签名
     // Signature sig = getColumnSignature();
     
-    // // 检查Memo Cache
+    // 检查Memo Cache
     // auto it = memoCache.find(sig);
     // if (it != memoCache.end()) {
     //     return it->second;

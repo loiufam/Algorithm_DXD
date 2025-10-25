@@ -56,6 +56,7 @@ int main() {
                     if (file_name == ".DS_Store") continue;
                     logger.logLine("文件名: " + file_name);
 
+                    // DLX
                     try {
                         DanceZDD dxzSolver(entry.path().string(), read_mode, logger);
                         dxzSolver.cur_instance = file_name;
@@ -64,8 +65,16 @@ int main() {
                         experimentCSV.updateTime(file_name, dxzSolver.searchTime, DLX_COLUMN_INDEX, dxzSolver.timeout);
                         std::cout << std::endl;
                         
-                        shared_ptr<ExperimentResult> resDXZ = dxzSolver.startDXZ();
-                        // processor.processResultFile(resDXZ, AlgorithmType::DXZ);
+                    } catch (const std::exception& e) {
+                        logger.logLine(std::string("处理文件时出错: ") + e.what());
+                    }
+
+                    // DXZ
+                    try {
+                        DanceZDD dxzSolver(entry.path().string(), read_mode, logger);
+                        dxzSolver.cur_instance = file_name;
+                        shared_ptr<ExperimentResult> res = dxzSolver.startDXZ();
+                        // processor.processResultFile(res, AlgorithmType::DXZ);
                         experimentCSV.updateTime(file_name, dxzSolver.searchTime, DXZ_COLUMN_INDEX, dxzSolver.timeout);
                         std::cout << std::endl;
                     } catch (const std::exception& e) {
