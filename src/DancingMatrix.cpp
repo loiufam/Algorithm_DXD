@@ -49,8 +49,8 @@ DancingMatrix::DancingMatrix( int rows, int cols, int** matrix, bool verbose )
 }
 
 // 从文件构造舞蹈链矩阵
-DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose, bool useETT ) 
-    : useETT(useETT)
+DancingMatrix::DancingMatrix( const string& file_path, int from, bool useIg , bool useETT  ) 
+    : useIG(useIg), useETT(useETT)
 {
     ifstream file(file_path);
     if (!file.is_open()) {
@@ -78,6 +78,9 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose, b
         throw runtime_error("time out");
     }
 
+    if (useETT) {
+        etTree = make_unique<ETTree>(); 
+    }
     // cout << "处理矩阵维度: " << rows << " 行, " << cols << " 列." << endl;
 
     ColIndex = std::make_unique<ColumnHeader[]>(cols + 1);  
@@ -153,7 +156,7 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose, b
 
     }
 
-    if (verbose) {
+    if (useIg) {
         // graph = make_unique<ConnectedGraph>(*this);
         incrementalGraph = make_unique<IncrementalConnectedGraph>(rows);
         incrementalGraph->initialize(*this);
@@ -243,8 +246,6 @@ void DancingMatrix::insert( int r, int c )
         cur->right->left = newNodePtr;  
         cur->right = newNodePtr;  
     }  
-
-
 
     dataNodes.push_back(std::move(newNode));
 }
@@ -472,9 +473,10 @@ void DancingMatrix::coverInBlock(int c, Block& block){
     {    
         block.rows.erase(curC->row);
 
-        // incrementalGraph->deactivateRow(curC->row);
         if (useETT) {
             etTree->deactivateRow(curC->row);
+        } else if (useIG) {
+            incrementalGraph->deactivateRow(curC->row);
         }
 
         curR = curC->right;  
@@ -514,10 +516,11 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
             curR = curR->left;  
         }  
 
-        // incrementalGraph->reactivateRow(curC->row);
         block.rows.insert(curC->row);
         if (useETT) {
             etTree->reactivateRow(curC->row);
+        } else if (useIG) {
+            incrementalGraph->reactivateRow(curC->row);
         }
 
         curC = curC->up;  

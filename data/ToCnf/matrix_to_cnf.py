@@ -10,7 +10,7 @@ import pathlib
 import time
 import csv
 
-TIME_COLUMN_INDEX = 13  
+TIME_COLUMN_INDEX = 15  
 INSTANCE_COLUMN = "Instance"
 TIME_COLUMN = "cnf_compile(s)"
 log_file = "log.txt"
@@ -244,13 +244,13 @@ def matrix_to_cnf(input_file: str, output_file: str, read_mode: int = 1):
     print(f"✓ 生成 {len(clauses)} 个子句，{num_vars} 个变量")
     
     # 如果output_file是文件夹
-    # if os.path.isdir(output_file):
-    #     input_file_name = os.path.basename(input_file)
-    #     output_file = os.path.join(output_file, f"{os.path.splitext(input_file_name)[0]}.cnf")
+    if os.path.isdir(output_file):
+        input_file_name = os.path.basename(input_file)
+        output_file = os.path.join(output_file, f"{os.path.splitext(input_file_name)[0]}.cnf")
 
     # 写入DIMACS格式
-    # write_dimacs_cnf(clauses, num_vars, output_file)
-    # print(f"✓ CNF文件已保存到: {output_file}")
+    write_dimacs_cnf(clauses, num_vars, output_file)
+    print(f"✓ CNF文件已保存到: {output_file}")
     
     # 统计信息
     clause_sizes = [len(c) for c in clauses if c]
@@ -347,12 +347,16 @@ if __name__ == "__main__":
 
     # 文件夹路径
     directories = [
-        ("../exact_cover_benchmark", 1),
-        ("../set_partitioning_benchmarks", 2),
-        ("../graph_matrix", 3)
+        # ("../exact_cover_benchmark", 1),
+        # ("../set_partitioning_benchmarks", 2),
+        ("../graph_matrix/partition", 3),
+        ("../graph_matrix/cycle", 3)
     ]
 
-    headers, rows = read_csv("compile_time.csv")
+    table = "../../exp_results.csv"
+    output_path = "../../../Share_Data/graph_cnf/"
+
+    headers, rows = read_csv(table)
 
     for folder_path, mode in directories:
         print(f"Start compile folder: {folder_path}, mode: {mode}")
@@ -368,12 +372,12 @@ if __name__ == "__main__":
                 print(f"Processing file: {file_name} (path: {file_path})")
 
                 start = time.time()
-                matrix_to_cnf(file_path, "", mode)
+                matrix_to_cnf(file_path, output_path, mode)
                 duration = round(time.time() - start, 4)
 
                 update_record(headers, rows, file_name, duration)
     
-    write_csv("compile_time.csv", headers, rows)
+    write_csv(table, headers, rows)
 
     # if len(sys.argv) > 4 and sys.argv[4] == "-b":
     #     batch_convert(input_file, output_file, read_mode)

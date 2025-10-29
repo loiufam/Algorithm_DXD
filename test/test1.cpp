@@ -5,6 +5,7 @@
 
 static Logger logger("../dxz_exp_log.txt");  // 全局日志
 const string table_file = "../exp_results.csv"; // 结果表格文件
+const string result_file = "../exp_results_updated1.csv"; // 结果文件
 
 const int DLX_COLUMN_INDEX = 3;
 const int DXZ_COLUMN_INDEX = 4;
@@ -88,7 +89,7 @@ int main() {
             }
             logger.logLine("处理文件夹完毕: " + fileFolderName);
             // processor.saveTable(table_file);
-            experimentCSV.writeCSV(table_file);
+            experimentCSV.writeCSV(result_file);
         }
         std::cout << "所有文件处理完毕" << std::endl;
     return 0;

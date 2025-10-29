@@ -523,8 +523,12 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
 
     if(block.rows.size() >= MIN_BLOCK_ROWS && !queryRecord(state)) {
 
-        // auto curBlock = getComponents(block.rows);
-        auto curBlock = getComponentsByETT(block.rows);
+        vector<Block> curBlock;
+        if (useETT) {
+            curBlock = getComponentsByETT(block.rows);
+        } else if (useIG) {
+            curBlock = getComponents(block.rows);
+        }
 
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
         if (curBlock.size() > 1){
@@ -608,6 +612,7 @@ shared_ptr<DXDResult> DanceDNNF::startDXD() {
     try{
 
         C.clear();
+        timer.reset();
         timer.markStartTime();
         auto start = std::chrono::high_resolution_clock::now();
         shared_ptr<DNNFNode> rootDNNF = DXD(InitBlock);  
@@ -648,6 +653,7 @@ shared_ptr<DXDResult> DanceDNNF::startMultiThreadDXD() {
 
     try {
         C.clear();
+        timer.reset();
         timer.markStartTime();
         auto start = std::chrono::high_resolution_clock::now();
         auto rootDNNF = DXD(InitBlock);  // 多线程DXD搜索

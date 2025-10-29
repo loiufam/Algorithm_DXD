@@ -1,1 +1,5 @@
-启用DXD算法求解: grid_4x4
+启用DXZ算法求解: matrix
+DXZ开始搜索...
+Time: 0.000089 s
+Solutions: 125
+DXZ算法求解结束: matrix

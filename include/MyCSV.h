@@ -112,8 +112,13 @@ public:
             if (!row.empty() && row[0] == instanceName) {
                 if (!isTimeout) {
                     std::ostringstream oss;
-                    oss << std::fixed << std::setprecision(4) << time; // 保留4位小数
-                    row[TIME_COLUMN_INDEX] = oss.str();
+                    if (time < 0.001) {
+                        // 小于 1ms 的情况
+                        row[TIME_COLUMN_INDEX] = "<1ms";
+                    } else {
+                        oss << std::fixed << std::setprecision(4) << time; // 保留 4 位小数
+                        row[TIME_COLUMN_INDEX] = oss.str();
+                    }
                 } else {
                     row[TIME_COLUMN_INDEX] = "timeout";
                 }
@@ -128,8 +133,13 @@ public:
             newRow[0] = instanceName; // 第1列：实例名
             if (!isTimeout) {
                 std::ostringstream oss;
-                oss << std::fixed << std::setprecision(4) << time; // 保留4位小数
-                newRow[TIME_COLUMN_INDEX] = oss.str();
+                if (time < 0.001) {
+                    // 小于 1ms 的情况
+                    newRow[TIME_COLUMN_INDEX] = "<1ms";
+                } else {
+                    oss << std::fixed << std::setprecision(4) << time; // 保留 4 位小数
+                    newRow[TIME_COLUMN_INDEX] = oss.str();
+                }
             } else {
                 newRow[TIME_COLUMN_INDEX] = "timeout";
             }

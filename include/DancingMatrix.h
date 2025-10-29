@@ -173,6 +173,7 @@ class DancingMatrix
         double searchTimeSeconds = 0.0;
         double countTimeSeconds = 0.0;
         bool useETT;
+        bool useIG; // 使用增量图
         std::vector<std::vector<int>> solutions; 
         unordered_set<int> rowsSet;  // 舞蹈链行id
         unordered_set<int> colsSet;  // 原始矩阵列
@@ -185,7 +186,7 @@ class DancingMatrix
         
         //接收矩阵其及维度  
         DancingMatrix( int rows, int cols, int** matrix, bool verbose = false);  
-        DancingMatrix( const string& file_path, int from, bool verbose = false, bool use_ett = false);
+        DancingMatrix( const string& file_path, int from, bool use_ig = false, bool use_ett = false);
 
         // 禁用拷贝和赋值
         DancingMatrix(const DancingMatrix&) = delete;
@@ -256,7 +257,7 @@ class DancingMatrix
 
         std::unique_ptr<ConnectedGraph> graph;
         std::unique_ptr<IncrementalConnectedGraph> incrementalGraph;
-        std::unique_ptr<ETTree> etTree = make_unique<ETTree>();  // 欧拉回路树
+        std::unique_ptr<ETTree> etTree;  // 欧拉回路树
 
         // 行 -> 包含该行的列集合
         unordered_map<int, set<int>> row_to_cols;

@@ -35,7 +35,10 @@ int main(int argc, char *argv[]){
         std::string algType = argv[1];
         std::string input_file = argv[2];
         int read_mode = std::stoi(argv[3]);
-        int poolsize = argc > 4 ? std::stoi(argv[4]) : DEFAULT_THREADS;
+        bool use_ett = false;
+        if (argc > 4) {
+            use_ett = std::string(argv[4]) == "ett";
+        }
 
         string filename = fs::path(input_file).stem().string();
         algorithm_type type = parseAlgorithmType(algType);
@@ -58,19 +61,32 @@ int main(int argc, char *argv[]){
                 }
             case algorithm_type::dxd: 
                 {
-                    logger.logLine("启用DXD算法求解: " + filename);
-                    DanceDNNF danceDNNF(input_file, read_mode, logger, false, true);
-                    auto res = danceDNNF.startDXD();
-                    logger.logLine("DXD算法求解结束: " + filename);
+                    if (use_ett) {
+                        logger.logLine("启用DXD算法求解: " + filename);
+                        DanceDNNF danceDNNF(input_file, read_mode, logger, false, true);
+                        auto res = danceDNNF.startDXD();
+                        logger.logLine("DXD算法求解结束: " + filename);
+                    } else {
+                        logger.logLine("启用DXD算法求解: " + filename);
+                        DanceDNNF danceDNNF(input_file, read_mode, logger, true, false);
+                        auto res = danceDNNF.startDXD();
+                        logger.logLine("DXD算法求解结束: " + filename);
+                    }
                     break;
                 }
             case algorithm_type::mdxd:
                 {
-                    logger.logLine("启用多线程DXD算法求解: " + filename);
-                    // logger.logLine("线程池大小: " + std::to_string(poolsize));
-                    DanceDNNF danceDNNF(input_file, read_mode, logger, false, true, poolsize);
-                    auto res = danceDNNF.startMultiThreadDXD();
-                    logger.logLine("多线程DXD算法求解结束: " + filename);
+                    if (use_ett) {
+                        logger.logLine("启用多线程DXD算法求解: " + filename);
+                        DanceDNNF danceDNNF(input_file, read_mode, logger, false, true, DEFAULT_THREADS);
+                        auto res = danceDNNF.startMultiThreadDXD();
+                        logger.logLine("多线程DXD算法求解结束: " + filename);
+                    } else {
+                        logger.logLine("启用多线程DXD算法求解: " + filename);
+                        DanceDNNF danceDNNF(input_file, read_mode, logger, true, false, DEFAULT_THREADS);
+                        auto res = danceDNNF.startMultiThreadDXD();
+                        logger.logLine("多线程DXD算法求解结束: " + filename);
+                    }
                     break;
                 }
             default:

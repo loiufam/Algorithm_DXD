@@ -199,10 +199,10 @@ class DanceDNNF : DancingMatrix {
             std::cout<< "初始化DanceDNNF完成." << endl;
         }
 
-        DanceDNNF(const string& file_path, int from, Logger& l, bool verbose = false, bool useETT = false, int pool_size = 1)
-            : DancingMatrix(file_path, from, verbose, useETT), logger(l), pool(getThreadPool(pool_size)) {
+        DanceDNNF(const string& file_path, int from, Logger& l, bool useIG = false, bool useETT = false, int pool_size = 1)
+            : DancingMatrix(file_path, from, useIG, useETT), logger(l), pool(getThreadPool(pool_size)) {
 
-            if(useETT){
+            if(useETT || useIG) {
                 omp_set_num_threads(pool_size); // 设置并行线程数
             }
             timer.setTimeBound(TIME_LIMIT_SECONDS);

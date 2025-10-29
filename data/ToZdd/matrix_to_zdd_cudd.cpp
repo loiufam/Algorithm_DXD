@@ -9,7 +9,7 @@
 #include <filesystem>
 #include <cudd.h>
 
-const int TIME_COLUMN_INDEX = 12; // 第13列（索引从0开始）
+const int TIME_COLUMN_INDEX = 14; // 第13列（索引从0开始）
 const std::string INSTANCE_COLUMN = "Instance";
 const std::string TIME_COLUMN = "zdd_compile(s)";
 
@@ -490,7 +490,7 @@ void updateRecord(  std::vector<std::string>& headers,
     if (!found) {
         std::vector<std::string> newRow(headers.size(), "");
         newRow[0] = instanceName; // 第1列：实例名
-        newRow[TIME_COLUMN_INDEX] = std::to_string(compileTime); // 第13列：编译时间
+        newRow[TIME_COLUMN_INDEX] = std::to_string(compileTime); 
         rows.push_back(newRow);
     }
     
@@ -515,8 +515,8 @@ void checkHeaders(std::vector<std::string>& headers) {
             headers.push_back("col" + std::to_string(headers.size() + 1));
         }
 
-        if (headers.size() > 0) headers[0] = INSTANCE_COLUMN;
-        if (headers.size() > TIME_COLUMN_INDEX) headers[TIME_COLUMN_INDEX] = TIME_COLUMN;
+        // if (headers.size() > 0) headers[0] = INSTANCE_COLUMN;
+        // if (headers.size() > TIME_COLUMN_INDEX) headers[TIME_COLUMN_INDEX] = TIME_COLUMN;
     }
 }
 
@@ -538,15 +538,20 @@ int main(int argc, char* argv[]) {
     std::string folderPath1 = "../exact_cover_benchmark 1";
     std::string folderPath2 = "../set_partitioning_benchmarks 2";
     std::string folderPath3 = "../graph_matrix 3";
-    filePaths.push_back(folderPath1);
-    filePaths.push_back(folderPath2);
-    filePaths.push_back(folderPath3);
+    std::string folderPath4 = "../graph_matrix/partition 3";
+    std::string folderPath5 = "../graph_matrix/cycle 3";
+    // filePaths.push_back(folderPath1);
+    // filePaths.push_back(folderPath2);
+    // filePaths.push_back(folderPath3);
+    filePaths.push_back(folderPath4);
+    filePaths.push_back(folderPath5);
 
     // 读取csv文件
     std::vector<std::string> headers;
     std::vector<std::vector<std::string>> rows;
 
-    const std::string table = "compile_time.csv";
+    const std::string table = "../../exp_results.csv";
+    const std::string outputPath = "../../../D3X/data/graphs/";
     readCSV(table, headers, rows);
     checkHeaders(headers);
 
@@ -562,6 +567,7 @@ int main(int argc, char* argv[]) {
             if (entry.is_regular_file()) {
                 std::string filePath = entry.path().string();
                 std::string fileName = entry.path().stem().string();
+                std::string outputFile = outputPath + fileName + ".zdd";
 
                 CUDDMatrixCompiler compiler;
 
@@ -575,20 +581,20 @@ int main(int argc, char* argv[]) {
 
                 // 编译为ZDD
                 auto start = std::chrono::high_resolution_clock::now();
-                compiler.compile();
+                auto zdd = compiler.compile();
                 auto end = std::chrono::high_resolution_clock::now();
                 
                 double elapsed = std::chrono::duration<double>(end - start).count();
                 std::cout << "Compilation time: " << elapsed << " seconds" << std::endl;
 
-                // 按文件名写入csv {instace(col1) == fileName, time(13) == elapsed}
+                // 按文件名写入csv {instace(col1) == fileName, time(14) == elapsed}
                 updateRecord(headers, rows, fileName, elapsed);
 
                 // 输出统计信息
                 // compiler.printStats(zdd);
                 
                 // 输出ZDD文件
-                // compiler.outputZDD(zdd, outputFile);
+                compiler.outputZDD(zdd, outputFile);
                 
                 // 可选：导出DOT文件用于可视化
                 // if (!dotFile.empty()) {
