@@ -1,5 +1,1 @@
-启用DXZ算法求解: sppnw30
-DXZ开始搜索...
-Time: 1.138356 s
-Solutions: 4122439
-DXZ算法求解结束: sppnw30
+启用DXD算法求解: grid_4x4

@@ -639,7 +639,8 @@ shared_ptr<DXDResult> DanceDNNF::startDXD() {
 
 shared_ptr<DXDResult> DanceDNNF::startMultiThreadDXD() {
 
-    std::cout << "开始多线程DXD搜索..." << std::endl;
+    // std::cout << "开始多线程DXD搜索..." << std::endl;
+    logger.logLine("开始多线程DXD搜索...");
     cur_result->instance_name = cur_instance;
     
     p_count = 0;

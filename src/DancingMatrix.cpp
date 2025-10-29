@@ -127,7 +127,7 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose, b
             col_to_rows[currentCol].insert(currentRow); // 更新列到行的映射
             if(useETT) {
                 row_to_cols[currentRow].insert(currentCol); // 更新行到列的映射
-                etTree.make_tree(currentRow); // 构建ETT顶点
+                etTree->make_tree(currentRow); // 构建ETT顶点
             }
             ONE_COUNT++; // 统计矩阵中1的个数
             rowsSet.insert(currentRow);
@@ -142,7 +142,7 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool verbose, b
     InitBlock = Block(rowsSet, colsSet);
 
     if(useETT){
-        etTree.set_row_cols_getter([this](int row) -> const std::set<int>& {
+        etTree->set_row_cols_getter([this](int row) -> const std::set<int>& {
             static std::set<int> empty;
             auto it = row_to_cols.find(row);
             return (it != row_to_cols.end()) ? it->second : empty;
@@ -173,7 +173,7 @@ vector<Block> DancingMatrix::getComponents(const unordered_set<int> rows) {
 };
 
 vector<Block> DancingMatrix::getComponentsByETT(const unordered_set<int> rows) {
-    return etTree.findComponentsInBlock(rows);
+    return etTree->findComponentsInBlock(rows);
 }
 
 
@@ -192,10 +192,10 @@ void DancingMatrix::build_graph() {
         for (size_t i = 1; i < row_vec.size(); ++i) {
             int u = row_vec[i-1];
             int v = row_vec[i];
-            if (!etTree.isRowActive(u) || !etTree.isRowActive(v)) continue;
-            if (!etTree.connected(u, v)) {
+            if (!etTree->isRowActive(u) || !etTree->isRowActive(v)) continue;
+            if (!etTree->connected(u, v)) {
                 // cout << "add rows: " << u << " " << v << endl;
-                etTree.link(u, v);
+                etTree->link(u, v);
             }
         }
     }
@@ -365,7 +365,7 @@ void DancingMatrix::add_connection(int r, int c)
         
         // 如果这是第一个共享列，建立连接
         if (shared_cols[row_pair].size() == 1) {
-            etTree.link(r, other_row);
+            etTree->link(r, other_row);
         }
     }
 }
@@ -397,8 +397,8 @@ void DancingMatrix::remove_connection(int r, int c)
             if (shared_cols[row_pair].empty()) {
                 shared_cols.erase(row_pair);
                 
-                if (etTree.has_edge(r, other_row)) {
-                    etTree.cut(r, other_row);
+                if (etTree->has_edge(r, other_row)) {
+                    etTree->cut(r, other_row);
                 }
             }
         }
@@ -474,7 +474,7 @@ void DancingMatrix::coverInBlock(int c, Block& block){
 
         // incrementalGraph->deactivateRow(curC->row);
         if (useETT) {
-            etTree.deactivateRow(curC->row);
+            etTree->deactivateRow(curC->row);
         }
 
         curR = curC->right;  
@@ -517,7 +517,7 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
         // incrementalGraph->reactivateRow(curC->row);
         block.rows.insert(curC->row);
         if (useETT) {
-            etTree.reactivateRow(curC->row);
+            etTree->reactivateRow(curC->row);
         }
 
         curC = curC->up;  

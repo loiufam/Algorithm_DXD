@@ -256,7 +256,7 @@ class DancingMatrix
 
         std::unique_ptr<ConnectedGraph> graph;
         std::unique_ptr<IncrementalConnectedGraph> incrementalGraph;
-        ETTree etTree;  // 欧拉回路树
+        std::unique_ptr<ETTree> etTree = make_unique<ETTree>();  // 欧拉回路树
 
         // 行 -> 包含该行的列集合
         unordered_map<int, set<int>> row_to_cols;

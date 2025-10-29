@@ -30,9 +30,13 @@ int main() {
         std::string folderPath1 = "../data/exact_cover_benchmark&1";
         std::string folderPath2 = "../data/set_partitioning_benchmarks&2";
         std::string folderPath3 = "../data/graph_matrix&3";
-        filePaths.push_back(folderPath1);
-        filePaths.push_back(folderPath2);
-        filePaths.push_back(folderPath3);
+        std::string folderPath4 = "../data/graph_matrix/partition&3";
+        std::string folderPath5 = "../data/graph_matrix/cycle&3";
+        // filePaths.push_back(folderPath1);
+        // filePaths.push_back(folderPath2);
+        // filePaths.push_back(folderPath3);
+        filePaths.push_back(folderPath4);
+        filePaths.push_back(folderPath5);
         char delimiter = '&';
 
         // ExperimentProcessor processor; 
