@@ -1,0 +1,34 @@
+使用ETT进行独立块检测
+===========处理文件夹: partition==========
+文件名: Uunet
+开始单线程DXD搜索...
+Time: 2.214998 s
+Solutions: 1208457967081622224
+Max Blocks: 6
+开始多线程DXD搜索...
+Time: 2.086518 s
+Solutions: 1208457967081622224
+Max Blocks: 6
+
+文件名: Renater2001
+开始单线程DXD搜索...
+Time: 0.194842 s
+Solutions: 3254931000
+Max Blocks: 4
+开始多线程DXD搜索...
+Time: 0.206118 s
+Solutions: 3254931000
+Max Blocks: 4
+
+文件名: TLex
+开始单线程DXD搜索...
+Time: 0.003581 s
+Solutions: 6090
+Max Blocks: 3
+开始多线程DXD搜索...
+Time: 0.004407 s
+Solutions: 6090
+Max Blocks: 3
+
+文件名: BandcDXD搜索超时: Time bound broDXD搜索超时: Time bound broken
+开始多线程DXD搜索...

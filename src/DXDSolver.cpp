@@ -408,25 +408,46 @@ shared_ptr<DNNFNode> DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks) {
     // 并行处理
     std::vector<std::shared_ptr<DNNFNode>> results(n);
     std::atomic<bool> has_failure(false);
+    std::atomic<bool> has_timeout(false);  // 新增：标记超时
     
     #pragma omp parallel for schedule(dynamic) if(n > 4)
     for (int i = 0; i < n; i++) {
-        // 提前检查失败标志（减少不必要的计算）
-        if (has_failure.load(std::memory_order_acquire)) {
+        // 提前检查失败标志
+        if (has_failure.load(std::memory_order_acquire) || 
+            has_timeout.load(std::memory_order_acquire)) {
             results[i] = nullptr;
             continue;
         }
         
-        // 每个线程使用block的副本（避免竞争）
-        Block blockCopy = blocks[i];
-        auto result = DXD(blockCopy);
-        
-        if (!result || result->label == -2) {
+        try {
+            // 每个线程使用block的副本
+            Block blockCopy = blocks[i];
+            auto result = DXD(blockCopy);
+            
+            if (!result || result->label == -2) {
+                has_failure.store(true, std::memory_order_release);
+                results[i] = nullptr;
+            } else {
+                results[i] = result;
+            }
+        } catch (const std::runtime_error& e) {
+            // 捕获超时异常
+            if (std::string(e.what()).find("Time bound") != std::string::npos) {
+                has_timeout.store(true, std::memory_order_release);
+            } else {
+                has_failure.store(true, std::memory_order_release);
+            }
+            results[i] = nullptr;
+        } catch (...) {
+            // 捕获其他异常
             has_failure.store(true, std::memory_order_release);
             results[i] = nullptr;
-        } else {
-            results[i] = result;
         }
+    }
+
+    // 检查超时（在主线程重新抛出）
+    if (has_timeout.load()) {
+        throw std::runtime_error("Time bound broken");
     }
     
     // 检查是否有失败

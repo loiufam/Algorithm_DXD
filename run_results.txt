@@ -1,5 +1,6 @@
-启用DXZ算法求解: matrix
-DXZ开始搜索...
-Time: 0.000089 s
-Solutions: 125
-DXZ算法求解结束: matrix
+启用多线程DXD算法求解: Aarnet
+开始多线程DXD搜索...
+Time: 0.017659 s
+Solutions: 4450775
+Max Blocks: 4
+多线程DXD算法求解结束: Aarnet

@@ -152,13 +152,15 @@ int DanceZDD::makeZDDNode(int r, int lo, int hi) {
 
 shared_ptr<ZDDNode> DanceZDD::DXZ()
 {
+
+    if (timer.timeBoundBroken()) {
+        throw std::runtime_error("Time OUT");
+    }
+
     if(isSolved()){
         return T_ZDD;
     }
 
-    // if (timer.timeBoundBroken()) {
-    //     throw std::runtime_error("Time bound broken");
-    // }
 
     size_t columnState = getColumnState();
     if (memo_cache.find(columnState) != memo_cache.end()) {
