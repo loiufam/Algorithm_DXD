@@ -249,10 +249,10 @@ public:
         return it->second;
     }
 
-    inline const unordered_set<int> &getActiveRows() const { return active_rows; }
-    inline void deactivateRow(int r) { std::scoped_lock lock(mutex_); active_rows.erase(r); deactivated_rows.insert(r); }
-    inline void reactivateRow(int r) { std::scoped_lock lock(mutex_); deactivated_rows.erase(r); active_rows.insert(r); }
-    inline bool isRowActive(int r) const { return active_rows.count(r); }
+    inline const unordered_set<int> &getActiveRows() const { std::shared_lock lock(mutex_);  return active_rows; }
+    inline void deactivateRow(int r) { std::unique_lock lock(mutex_);  active_rows.erase(r); deactivated_rows.insert(r); }
+    inline void reactivateRow(int r) { std::unique_lock lock(mutex_);  deactivated_rows.erase(r); active_rows.insert(r); }
+    inline bool isRowActive(int r) const { std::shared_lock lock(mutex_);  return active_rows.count(r); }
 
     // ================= findComponentsInBlock（增量式） =================
     std::vector<Block> findComponentsInBlock(const std::unordered_set<int> &block_rows);
@@ -265,7 +265,7 @@ private:
     unordered_set<int> active_rows, deactivated_rows;
     vector<ETTreapNode *> nodes_allocated;
     function<const set<int>&(int)> get_row_cols;
-    mutable std::mutex mutex_; // for thread safety
+    mutable std::shared_mutex mutex_;  // 读写锁
 
 
     ETTreapNode *new_node(int v, bool edge = false, bool repr = false) {

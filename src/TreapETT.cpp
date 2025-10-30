@@ -13,6 +13,7 @@ std::vector<Block> ETTree::findComponentsInBlock(const std::unordered_set<int> &
 
         bool small_delta = (added.size() + removed.size()) * 5 < block_rows.size();
 
+        std::shared_lock lock(mutex_);  // 读锁
         if (!small_delta) {
             cached_root_blocks.clear();
             cached_row_root.clear();

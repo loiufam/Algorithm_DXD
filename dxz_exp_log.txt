@@ -400,3 +400,304 @@ Time: 0.000094 s
 Solutions: 84375
 文件名: Chinanet
 DLX开始搜索...
+DLX搜索超时: Time OUT
+DXZ开始搜索...
+Time: 0.117359 s
+Solutions: 1360027982598671750
+文件名: Uran
+DLX开始搜索...
+Time: 1094.289711 s
+Solutions: 2341997805
+DXZ开始搜索...
+Time: 0.001508 s
+Solutions: 2341997805
+文件名: BtEurope
+DLX开始搜索...
+Time: 168.281549 s
+Solutions: 361402930
+DXZ开始搜索...
+Time: 0.001061 s
+Solutions: 361402930
+处理文件夹完毕: partition
+处理文件夹: cycle
+文件名: grafo206.12
+DLX开始搜索...
+Time: 0.000005 s
+Solutions: 4
+DXZ开始搜索...
+Time: 0.000010 s
+Solutions: 4
+文件名: grafo301.17
+DLX开始搜索...
+Time: 0.000006 s
+Solutions: 8
+DXZ开始搜索...
+Time: 0.000014 s
+Solutions: 8
+文件名: grafo342.16
+DLX开始搜索...
+Time: 0.000007 s
+Solutions: 8
+DXZ开始搜索...
+Time: 0.000013 s
+Solutions: 8
+文件名: grafo116.28
+DLX开始搜索...
+Time: 0.000452 s
+Solutions: 1195
+DXZ开始搜索...
+Time: 0.000115 s
+Solutions: 1195
+文件名: grafo200.11
+DLX开始搜索...
+Time: 0.000004 s
+Solutions: 4
+DXZ开始搜索...
+Time: 0.000010 s
+Solutions: 4
+文件名: grafo306.18
+DLX开始搜索...
+Time: 0.000013 s
+Solutions: 25
+DXZ开始搜索...
+Time: 0.000021 s
+Solutions: 25
+文件名: grafo305.16
+DLX开始搜索...
+Time: 0.000006 s
+Solutions: 8
+DXZ开始搜索...
+Time: 0.000012 s
+Solutions: 8
+文件名: grafo343.14
+DLX开始搜索...
+Time: 0.000008 s
+Solutions: 12
+DXZ开始搜索...
+Time: 0.000020 s
+Solutions: 12
+文件名: grafo341.30
+DLX开始搜索...
+Time: 0.000816 s
+Solutions: 2873
+DXZ开始搜索...
+Time: 0.000125 s
+Solutions: 2873
+文件名: grafo309.26
+DLX开始搜索...
+Time: 0.000132 s
+Solutions: 420
+DXZ开始搜索...
+Time: 0.000056 s
+Solutions: 420
+文件名: grafo303.11
+DLX开始搜索...
+Time: 0.000004 s
+Solutions: 4
+DXZ开始搜索...
+Time: 0.000009 s
+Solutions: 4
+文件名: grafo203.13
+DLX开始搜索...
+Time: 0.000007 s
+Solutions: 11
+DXZ开始搜索...
+Time: 0.000017 s
+Solutions: 11
+文件名: grafo340.15
+DLX开始搜索...
+Time: 0.000006 s
+Solutions: 8
+DXZ开始搜索...
+Time: 0.000011 s
+Solutions: 8
+文件名: grafo302.17
+DLX开始搜索...
+Time: 0.000005 s
+Solutions: 8
+DXZ开始搜索...
+Time: 0.000010 s
+Solutions: 8
+文件名: grafo202.13
+DLX开始搜索...
+Time: 0.000005 s
+Solutions: 11
+DXZ开始搜索...
+Time: 0.000013 s
+Solutions: 11
+文件名: grafo308.14
+DLX开始搜索...
+Time: 0.000005 s
+Solutions: 12
+DXZ开始搜索...
+Time: 0.000012 s
+Solutions: 12
+文件名: grafo316.11
+DLX开始搜索...
+Time: 0.000003 s
+Solutions: 4
+DXZ开始搜索...
+Time: 0.000008 s
+Solutions: 4
+文件名: grafo207.12
+DLX开始搜索...
+Time: 0.000003 s
+Solutions: 4
+DXZ开始搜索...
+Time: 0.000007 s
+Solutions: 4
+文件名: grafo114.26
+DLX开始搜索...
+Time: 0.000113 s
+Solutions: 399
+DXZ开始搜索...
+Time: 0.000062 s
+Solutions: 399
+文件名: grafo205.30
+DLX开始搜索...
+Time: 0.000886 s
+Solutions: 3119
+DXZ开始搜索...
+Time: 0.000118 s
+Solutions: 3119
+文件名: grafo317.13
+DLX开始搜索...
+Time: 0.000008 s
+Solutions: 12
+DXZ开始搜索...
+Time: 0.000016 s
+Solutions: 12
+文件名: grafo210.10
+DLX开始搜索...
+Time: 0.000004 s
+Solutions: 4
+DXZ开始搜索...
+Time: 0.000009 s
+Solutions: 4
+文件名: grafo201.13
+DLX开始搜索...
+Time: 0.000007 s
+Solutions: 11
+DXZ开始搜索...
+Time: 0.000016 s
+Solutions: 11
+文件名: grafo310.14
+DLX开始搜索...
+Time: 0.000008 s
+Solutions: 12
+DXZ开始搜索...
+Time: 0.000015 s
+Solutions: 12
+文件名: grafo346.19
+DLX开始搜索...
+Time: 0.000008 s
+Solutions: 22
+DXZ开始搜索...
+Time: 0.000016 s
+Solutions: 22
+文件名: grafo208.38
+DLX开始搜索...
+Time: 0.021788 s
+Solutions: 58650
+DXZ开始搜索...
+Time: 0.000460 s
+Solutions: 58650
+文件名: grafo318.20
+DLX开始搜索...
+Time: 0.000021 s
+Solutions: 57
+DXZ开始搜索...
+Time: 0.000045 s
+Solutions: 57
+文件名: grafo113.28
+DLX开始搜索...
+Time: 0.000360 s
+Solutions: 876
+DXZ开始搜索...
+Time: 0.000108 s
+Solutions: 876
+文件名: grafo304.15
+DLX开始搜索...
+Time: 0.000005 s
+Solutions: 8
+DXZ开始搜索...
+Time: 0.000011 s
+Solutions: 8
+文件名: grafo344.36
+DLX开始搜索...
+Time: 0.011044 s
+Solutions: 33030
+DXZ开始搜索...
+Time: 0.000313 s
+Solutions: 33030
+文件名: grafo345.14
+DLX开始搜索...
+Time: 0.000008 s
+Solutions: 11
+DXZ开始搜索...
+Time: 0.000019 s
+Solutions: 11
+文件名: grafo319.26
+DLX开始搜索...
+Time: 0.000111 s
+Solutions: 331
+DXZ开始搜索...
+Time: 0.000054 s
+Solutions: 331
+文件名: grafo311.16
+DLX开始搜索...
+Time: 0.000007 s
+Solutions: 8
+DXZ开始搜索...
+Time: 0.000013 s
+Solutions: 8
+文件名: grafo115.30
+DLX开始搜索...
+Time: 0.001002 s
+Solutions: 3460
+DXZ开始搜索...
+Time: 0.000133 s
+Solutions: 3460
+文件名: grafo312.27
+DLX开始搜索...
+Time: 0.000116 s
+Solutions: 383
+DXZ开始搜索...
+Time: 0.000046 s
+Solutions: 383
+文件名: grafo209.10
+DLX开始搜索...
+Time: 0.000003 s
+Solutions: 4
+DXZ开始搜索...
+Time: 0.000010 s
+Solutions: 4
+文件名: grafo204.15
+DLX开始搜索...
+Time: 0.000005 s
+Solutions: 8
+DXZ开始搜索...
+Time: 0.000013 s
+Solutions: 8
+文件名: grafo300.13
+DLX开始搜索...
+Time: 0.000011 s
+Solutions: 12
+DXZ开始搜索...
+Time: 0.000015 s
+Solutions: 12
+文件名: grafo320.35
+DLX开始搜索...
+Time: 0.010921 s
+Solutions: 33258
+DXZ开始搜索...
+Time: 0.000376 s
+Solutions: 33258
+文件名: grafo307.13
+DLX开始搜索...
+Time: 0.000007 s
+Solutions: 12
+DXZ开始搜索...
+Time: 0.000018 s
+Solutions: 12
+处理文件夹完毕: cycle

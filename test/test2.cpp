@@ -3,8 +3,7 @@
 #include "../include/MyCSV.h"
 #include "../utils/ResProcessor.h"
 
-static Logger logger1("../dxd_exp_log_1.txt");  // 全局日志1
-static Logger logger2("../dxd_exp_log_2.txt");  // 全局日志2
+static Logger logger("../dxd_exp_log.txt");  // 全局日志
 const string table_file = "../exp_results.csv"; // 结果表格文件
 const string output_file = "../exp_results_updated2.csv";
 
@@ -32,9 +31,9 @@ int main(int argc, char* argv[]) {
 
         bool useETT = std::string(argv[1]) == "ett"; // 是否使用ETT
         if (useETT) {
-            logger1.logLine("使用ETT进行独立块检测");
+            logger.logLine("使用ETT进行独立块检测");
         } else {
-            logger2.logLine("使用增量图进行独立块检测");
+            logger.logLine("使用增量图进行独立块检测");
         }
         // 文件夹路径
         std::vector<std::string> filePaths;
@@ -60,7 +59,7 @@ int main(int argc, char* argv[]) {
             std::string file_path = result[0];
             int read_mode = std::stoi(result[1]);
             std::string fileFolderName = file_path.substr(file_path.find_last_of("/\\") + 1);
-            logger1.logLine("===========处理文件夹: " + fileFolderName + "==========");
+            logger.logLine("===========处理文件夹: " + fileFolderName + "==========");
             // logger2.logLine("===========处理文件夹: " + fileFolderName + "==========");
             // 遍历文件夹
             for (const auto& entry : fs::directory_iterator(file_path))
@@ -70,61 +69,54 @@ int main(int argc, char* argv[]) {
                     // 文件名
                     std::string file_name = entry.path().stem().string();
                     if (file_name == ".DS_Store") continue;          
-                    logger1.logLine("文件名: " + file_name);
+                    logger.logLine("文件名: " + file_name);
                     // logger2.logLine("文件名: " + file_name);
 
                     if (useETT) {
                         // 1. use ETT
-                        try {
-                            DanceDNNF dxdSolver(entry.path().string(), read_mode, logger1, false, true);
+                        {
+                            DanceDNNF dxdSolver(entry.path().string(), read_mode, logger, false, true);
                             dxdSolver.cur_instance = file_name;
                             shared_ptr<DXDResult> res = dxdSolver.startDXD();
                             experimentCSV.updateTime(file_name, dxdSolver.searchTime, NEW_DXD_COLUMN_INDEX, dxdSolver.timeout);
                             if (!dxdSolver.timeout) {
                                 experimentCSV.updateCount(file_name, dxdSolver.MAX_B_COUNT, MAX_BLOCK_COLUMN_INDEX);
                             }
-                        } catch (const std::exception& e) {
-                            logger1.logLine(std::string("处理文件时出错: ") + e.what());    
-                        }
+                        } 
                         
-                        logger1.logLine("");
+                        logger.logLine("");
 
-                        try {
-                            DanceDNNF dxdSolver(entry.path().string(), read_mode, logger1, false, true, 24);
+                        {
+                            DanceDNNF dxdSolver(entry.path().string(), read_mode, logger, false, true, 24);
                             dxdSolver.cur_instance = file_name;
                             auto res = dxdSolver.startMultiThreadDXD();
                             experimentCSV.updateTime(file_name, dxdSolver.searchTime, NEW_MDXD_COLUMN_INDEX, dxdSolver.timeout);
                             if (!dxdSolver.timeout) {
                                 experimentCSV.updateCount(file_name, dxdSolver.MAX_B_COUNT, MAX_BLOCK_COLUMN_INDEX);
                             }
-                        } catch (const std::exception& e) {
-                            logger1.logLine(std::string("处理文件时出错: ") + e.what());    
                         }
+                        
                         
                     } else {
                         // 2. use IG
-                        try {
-                            DanceDNNF dxdSolver(entry.path().string(), read_mode, logger1, true, false); 
+                        {
+                            DanceDNNF dxdSolver(entry.path().string(), read_mode, logger, true, false); 
                             dxdSolver.cur_instance = file_name;
                             shared_ptr<DXDResult> res = dxdSolver.startDXD();
                             experimentCSV.updateTime(file_name, dxdSolver.searchTime, DXD_COLUMN_INDEX, dxdSolver.timeout);
-                        } catch (const std::exception& e) {
-                            logger1.logLine(std::string("处理文件时出错: ") + e.what());     
-                        }
+                        } 
 
-                        logger1.logLine("");
+                        logger.logLine("");
 
-                        try {
-                            DanceDNNF dxdSolver(entry.path().string(), read_mode, logger1, true, false, 24); 
+                         {
+                            DanceDNNF dxdSolver(entry.path().string(), read_mode, logger, true, false, 24); 
                             dxdSolver.cur_instance = file_name;
                             auto res = dxdSolver.startMultiThreadDXD();
                             experimentCSV.updateTime(file_name, dxdSolver.searchTime, MDXD_COLUMN_INDEX, dxdSolver.timeout);
-                        } catch (const std::exception& e) {
-                            logger1.logLine(std::string("处理文件时出错: ") + e.what());
                         }
                     }
 
-                    logger1.logLine("");
+                    logger.logLine("");
   
                     // ExactCoverSolver ecSolver(entry.path().string(), read_mode, logger, 16);
                     // ecSolver.cur_instance = file_name;
@@ -132,13 +124,11 @@ int main(int argc, char* argv[]) {
                 }
             }
             experimentCSV.writeCSV(output_file);
-            logger1.logLine("处理文件夹完毕: " + fileFolderName);
-            // logger2.logLine("处理文件夹完毕: " + fileFolderName);
+            logger.logLine("处理文件夹完毕: " + fileFolderName);
             // processor.saveTable(table_file);
         }
 
-        logger1.logLine("所有文件处理完毕");
-        // logger2.logLine("所有文件处理完毕");
+        logger.logLine("所有文件处理完毕");
     return 0;
 
 }

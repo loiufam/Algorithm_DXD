@@ -2,33 +2,309 @@
 ===========处理文件夹: partition==========
 文件名: Uunet
 开始单线程DXD搜索...
-Time: 2.214998 s
+Time: 2.176641 s
 Solutions: 1208457967081622224
 Max Blocks: 6
+
 开始多线程DXD搜索...
-Time: 2.086518 s
+Time: 2.027491 s
 Solutions: 1208457967081622224
 Max Blocks: 6
 
 文件名: Renater2001
 开始单线程DXD搜索...
-Time: 0.194842 s
-Solutions: 3254931000
-Max Blocks: 4
+Time: 0.454694 s
+Solutions: 8351676983177355264
+Max Blocks: 5
+
 开始多线程DXD搜索...
-Time: 0.206118 s
+Time: 0.193128 s
 Solutions: 3254931000
 Max Blocks: 4
 
 文件名: TLex
 开始单线程DXD搜索...
-Time: 0.003581 s
-Solutions: 6090
-Max Blocks: 3
-开始多线程DXD搜索...
-Time: 0.004407 s
+Time: 0.003491 s
 Solutions: 6090
 Max Blocks: 3
 
-文件名: BandcDXD搜索超时: Time bound broDXD搜索超时: Time bound broken
+开始多线程DXD搜索...
+Time: 0.003667 s
+Solutions: 6090
+Max Blocks: 3
+
+文件�DXD搜索超时: Time bound broken
+
+开�DXD搜索超时: Time boDXD搜索超时: Time bound broken
+
+文�DXD搜索超时: Time bound broken
+
+文件名: Basnet
+开始单线程DXD搜索...
+Time: 0.000246 s
+Solutions: 8
+Max Blocks: 4
+
+开始多线程DXD搜索...
+Time: 0.000211 s
+Solutions: 8
+Max Blocks: 4
+
+文件名: UniC
+开始单线程DXD搜索...
+Time: 0.025433 s
+Solutions: 694320900
+Max Blocks: 5
+
+开始多线程DXD搜索...
+Time: 0.028068 s
+Solutions: 694320900
+Max Blocks: 5
+
+文件名: Grena
+开始单线程DXD搜索...
+Time: 0.003099 s
+Solutions: 58500
+Max Blocks: 4
+
+开始多线程DXD搜索...
+Time: 0.003242 s
+Solutions: 58500
+Max Blocks: 4
+
+文件名: Ans
+开始单线程DXD搜索...
+Time: 0.006142 s
+Solutions: 126875
+Max Blocks: 5
+
+开始多线程DXD搜索...
+Time: 0.007581 s
+Solutions: 126875
+Max Blocks: 5
+
+文件名: Amres
+开始单线程DXD搜索...
+Time: 0.014862 s
+Solutions: 557145680
+Max Blocks: 5
+
+开始多线程DXD搜索...
+Time: 0.013104 s
+Solutions: 557145680
+Max Blocks: 5
+
+文件名: Rediris
+开始单线程DXD搜索...
+Time: 0.093669 s
+Solutions: 5382000
+Max Blocks: 4
+
+开始多线程DXD搜索...
+Time: 0.092026 s
+Solutions: 5382000
+Max Blocks: 4
+
+文件名: Bellsouth
+开始单线程DXD搜索...
+Time: 0.752755 s
+Solutions: 8073860398446024000
+Max Blocks: 9
+
+开始多线程DXD搜索...
+Time: 0.595910 s
+Solutions: 8073860398446024000
+Max Blocks: 9
+
+文件名: Cernet
+开始单线程DXD搜索...
+Time: 0.962793 s
+Solutions: 12310841494134063104
+Max Blocks: 9
+
+开始多线程DXD搜索...
+Time: 0.334825 s
+Solutions: 21676569192375552
+Max Blocks: 6
+
+文件名: Savvis
+开始单线程DXD搜索...
+Time: 0.001872 s
+Solutions: 253125
+Max Blocks: 5
+
+开始多线程DXD搜索...
+Time: 0.002682 s
+Solutions: 253125
+Max Blocks: 5
+
+�DXD搜索超时: Time bound broken
+
+开始�DXD搜索超时: TimeDXD搜索超时: Time bound broken
+
+文件名: Harnet
+开始单线程DXD搜索...
+Time: 0.292172 s
+Solutions: 737048340
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.293685 s
+Solutions: 737048340
+Max Blocks: 3
+
+文件名: Airtel
+开始单线程DXD搜索...
+Time: 0.054108 s
+Solutions: 890155
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.052913 s
+Solutions: 890155
+Max Blocks: 3
+
+文件名: Grnet
+开始单线程DXD搜索...
+Time: 0.968424 s
+Solutions: 1206801341076240
+Max Blocks: 5
+
+开始多线程DXD搜索...
+Time: 0.668885 s
+Solutions: 1206801341076240
+Max Blocks: 5
+
+文件名: Abvt
+开始单线程DXD搜索...
+Time: 0.874336 s
+Solutions: 7394865140
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.830475 s
+Solutions: 7394865140
+Max Blocks: 3
+
+文件名: Arn
+开始单线程DXD搜索...
+Time: 1.266995 s
+Solutions: 3526917517760
+Max Blocks: 4
+
+开始多线程DXD搜索...
+Time: 1.395740 s
+Solutions: 3526917517760
+Max Blocks: 4
+
+文件名: Gridnet
+开始单线程DXD搜索...
+Time: 0.000499 s
+Solutions: 125
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.000547 s
+Solutions: 125
+Max Blocks: 3
+
+文件名: Cesnet1997
+开始单线程DXD搜索...
+Time: 0.001246 s
+Solutions: 2250
+Max Blocks: 4
+
+开始多线程DXD搜索...
+Time: 0.001288 s
+Solutions: 2250
+Max Blocks: 4
+
+文件名: Abilene
+开始单线程DXD搜索...
+Time: 0.008728 s
+Solutions: 2030
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.009112 s
+Solutions: 2030
+Max Blocks: 3
+
+文件名: Cesnet1993
+开始单线程DXD搜索...
+Time: 0.000493 s
+Solutions: 125
+Max Blocks: 4
+
+开始多线程DXD搜索...
+Time: 0.000570 s
+Solutions: 125
+Max Blocks: 4
+
+文件名: Aconet
+开始单线程DXD搜索...
+Time: 4.394833 s
+Solutions: 1197603575
+Max Blocks: 4
+
+开始多线程DXD搜索...
+Time: 4.478969 s
+Solutions: 1197603575
+Max Blocks: 4
+
+文件名: Belnet2005
+开始单线程DXD搜索...
+Time: 0.120434 s
+Solutions: 173054025
+Max Blocks: 5
+
+开始多线程DXD搜索...
+Time: 0.094244 s
+Solutions: 173054025
+Max Blocks: 5
+
+文件名: Cynet
+开始单线程DXD搜索...
+Time: 45.128767 s
+Solutions: 901597780125
+Max Blocks: 5
+
+开始多线程DXD搜索...
+Time: 43.849891 s
+Solutions: 901597780125
+Max Blocks: 5
+
+文件名: Biznet
+开始单线程DXD搜索...
+Time: 0.487183 s
+Solutions: 1396941396597
+Max Blocks: 4
+
+开始多线程DXD搜索...
+Time: 0.501218 s
+Solutions: 1396941396597
+Max Blocks: 4
+
+文件名: Telcove
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: Integra
+开始单线程DXD搜索...
+Time: 0.015767 s
+Solutions: 617526000
+Max Blocks: 6
+
+开始多线程DXD搜索...
+Time: 0.016707 s
+Solutions: 617526000
+Max Blocks: 6
+
+文件名: Oteglobe
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
 开始多线程DXD搜索...
