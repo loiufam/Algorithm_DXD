@@ -1,703 +1,108 @@
 处理文件夹: partition
 文件名: Uunet
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 0.021042 s
-Solutions: 1208457967081622224
 文件名: Renater2001
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 0.006278 s
-Solutions: 3254931000
 文件名: TLex
-DLX开始搜索...
-Time: 0.002434 s
-Solutions: 6090
-DXZ开始搜索...
-Time: 0.000185 s
-Solutions: 6090
 文件名: Bandcon
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 10.487068 s
-Solutions: 332090831582
 文件名: Basnet
-DLX开始搜索...
-Time: 0.000012 s
-Solutions: 8
-DXZ开始搜索...
-Time: 0.000019 s
-Solutions: 8
 文件名: UniC
-DLX开始搜索...
-Time: 326.955513 s
-Solutions: 694320900
-DXZ开始搜索...
-Time: 0.000848 s
-Solutions: 694320900
 文件名: Grena
-DLX开始搜索...
-Time: 0.018850 s
-Solutions: 58500
-DXZ开始搜索...
-Time: 0.000129 s
-Solutions: 58500
 文件名: Ans
-DLX开始搜索...
-Time: 0.049768 s
-Solutions: 126875
-DXZ开始搜索...
-Time: 0.000240 s
-Solutions: 126875
 文件名: Amres
-DLX开始搜索...
-Time: 219.369308 s
-Solutions: 557145680
-DXZ开始搜索...
-Time: 0.000503 s
-Solutions: 557145680
 文件名: Rediris
-DLX开始搜索...
-Time: 2.967103 s
-Solutions: 5382000
-DXZ开始搜索...
-Time: 0.002499 s
-Solutions: 5382000
 文件名: Bellsouth
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 0.010215 s
-Solutions: 8073860398446024000
 文件名: Cernet
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 0.006094 s
-Solutions: 21676569192375552
 文件名: Savvis
-DLX开始搜索...
-Time: 0.068772 s
-Solutions: 253125
-DXZ开始搜索...
-Time: 0.000104 s
-Solutions: 253125
 文件名: GtsCe
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 77.091970 s
-Solutions: 18283340440407198848
 文件名: Harnet
-DLX开始搜索...
-Time: 400.499671 s
-Solutions: 737048340
-DXZ开始搜索...
-Time: 0.003146 s
-Solutions: 737048340
 文件名: Airtel
-DLX开始搜索...
-Time: 0.415361 s
-Solutions: 890155
-DXZ开始搜索...
-Time: 0.000987 s
-Solutions: 890155
 文件名: Grnet
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 0.005643 s
-Solutions: 1206801341076240
 文件名: Abvt
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 0.006664 s
-Solutions: 7394865140
 文件名: Arn
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 0.008276 s
-Solutions: 3526917517760
 文件名: Gridnet
-DLX开始搜索...
-Time: 0.000045 s
-Solutions: 125
-DXZ开始搜索...
-Time: 0.000025 s
-Solutions: 125
 文件名: Cesnet1997
-DLX开始搜索...
-Time: 0.000653 s
-Solutions: 2250
-DXZ开始搜索...
-Time: 0.000057 s
-Solutions: 2250
 文件名: Abilene
-DLX开始搜索...
-Time: 0.000851 s
-Solutions: 2030
-DXZ开始搜索...
-Time: 0.000174 s
-Solutions: 2030
 文件名: Cesnet1993
-DLX开始搜索...
-Time: 0.000043 s
-Solutions: 125
-DXZ开始搜索...
-Time: 0.000020 s
-Solutions: 125
 文件名: Aconet
-DLX开始搜索...
-Time: 439.203446 s
-Solutions: 1197603575
-DXZ开始搜索...
-Time: 0.021475 s
-Solutions: 1197603575
 文件名: Belnet2005
-DLX开始搜索...
-Time: 78.994047 s
-Solutions: 173054025
-DXZ开始搜索...
-Time: 0.001216 s
-Solutions: 173054025
 文件名: Cynet
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 0.103933 s
-Solutions: 901599911625
 文件名: Biznet
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 0.004289 s
-Solutions: 1396941396597
 文件名: Telcove
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-DXZ搜索超时: Time OUT
 文件名: Integra
-DLX开始搜索...
-Time: 239.661310 s
-Solutions: 617526000
-DXZ开始搜索...
-Time: 0.000317 s
-Solutions: 617526000
 文件名: Oteglobe
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-DXZ搜索超时: Time OUT
 文件名: Arnes
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 0.001555 s
-Solutions: 6332762064720
 文件名: grid_3x3
-DLX开始搜索...
-Time: 0.000047 s
-Solutions: 125
-DXZ开始搜索...
-Time: 0.000035 s
-Solutions: 125
 文件名: Surfnet
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 0.015078 s
-Solutions: 15824368999290851952
 文件名: HiberniaCanada
-DLX开始搜索...
-Time: 0.003731 s
-Solutions: 11700
-DXZ开始搜索...
-Time: 0.000100 s
-Solutions: 11700
 文件名: Bren
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 0.004687 s
-Solutions: 227567298816000
 文件名: grid_3x4
-DLX开始搜索...
-Time: 0.000343 s
-Solutions: 900
-DXZ开始搜索...
-Time: 0.000050 s
-Solutions: 900
 文件名: Agis
-DLX开始搜索...
-Time: 321.092510 s
-Solutions: 694320900
-DXZ开始搜索...
-Time: 0.000917 s
-Solutions: 694320900
 文件名: BtAsiaPac
-DLX开始搜索...
-Time: 8.594103 s
-Solutions: 16118700
-DXZ开始搜索...
-Time: 0.002494 s
-Solutions: 16118700
 文件名: Litnet
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 0.016606 s
-Solutions: 1065022897069675232
 文件名: Bics
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 0.003249 s
-Solutions: 2486336438250
 文件名: Ai3
-DLX开始搜索...
-Time: 0.000036 s
-Solutions: 125
-DXZ开始搜索...
-Time: 0.000024 s
-Solutions: 125
 文件名: Syringa
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 0.009045 s
-Solutions: 6094492007316880384
 文件名: Carnet
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 0.053502 s
-Solutions: 1637663146820301600
 文件名: Uninet
-DLX开始搜索...
-Time: 0.004329 s
-Solutions: 13520
-DXZ开始搜索...
-Time: 0.000252 s
-Solutions: 13520
 文件名: grid_4x4
-DLX开始搜索...
-Time: 0.502597 s
-Solutions: 931500
-DXZ开始搜索...
-Time: 0.002460 s
-Solutions: 931500
 文件名: Marwan
-DLX开始搜索...
-Time: 0.018905 s
-Solutions: 58500
-DXZ开始搜索...
-Time: 0.000115 s
-Solutions: 58500
 文件名: Aarnet
-DLX开始搜索...
-Time: 2.056116 s
-Solutions: 4450775
-DXZ开始搜索...
-Time: 0.000843 s
-Solutions: 4450775
 文件名: Bbnplanet
-DLX开始搜索...
-Time: 238.191542 s
-Solutions: 617526000
-DXZ开始搜索...
-Time: 0.000387 s
-Solutions: 617526000
 文件名: BeyondTheNetwork
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 0.020899 s
-Solutions: 3885088930913959476
 文件名: Ntt
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-DXZ搜索超时: Time OUT
 文件名: Bellcanada
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 0.014731 s
-Solutions: 3006974471354708352
 文件名: BsonetEurope
-DLX开始搜索...
-Time: 0.449274 s
-Solutions: 986625
-DXZ开始搜索...
-Time: 0.000663 s
-Solutions: 986625
 文件名: AttMpls
-DLX开始搜索...
-Time: 581.523001 s
-Solutions: 1092546000
-DXZ开始搜索...
-Time: 0.002634 s
-Solutions: 1092546000
 文件名: grid_4x3
-DLX开始搜索...
-Time: 0.000927 s
-Solutions: 3375
-DXZ开始搜索...
-Time: 0.000069 s
-Solutions: 3375
 文件名: Oxford
-DLX开始搜索...
-Time: 3.187282 s
-Solutions: 8233680
-DXZ开始搜索...
-Time: 0.000402 s
-Solutions: 8233680
 文件名: Heanet
-DLX开始搜索...
-Time: 0.000006 s
-Solutions: 8
-DXZ开始搜索...
-Time: 0.000012 s
-Solutions: 8
 文件名: Sago
-DLX开始搜索...
-Time: 0.195786 s
-Solutions: 608400
-DXZ开始搜索...
-Time: 0.000172 s
-Solutions: 608400
 文件名: GtsCzechRepublic
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 0.000737 s
-Solutions: 339301719120
 文件名: Azrena
-DLX开始搜索...
-Time: 63.716491 s
-Solutions: 138864180
-DXZ开始搜索...
-Time: 0.000915 s
-Solutions: 138864180
 文件名: Canerie
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 0.012429 s
-Solutions: 31194708958980
 文件名: Ibm
-DLX开始搜索...
-Time: 0.023111 s
-Solutions: 84375
-DXZ开始搜索...
-Time: 0.000094 s
-Solutions: 84375
 文件名: Chinanet
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DXZ开始搜索...
-Time: 0.117359 s
-Solutions: 1360027982598671750
 文件名: Uran
-DLX开始搜索...
-Time: 1094.289711 s
-Solutions: 2341997805
-DXZ开始搜索...
-Time: 0.001508 s
-Solutions: 2341997805
 文件名: BtEurope
-DLX开始搜索...
-Time: 168.281549 s
-Solutions: 361402930
-DXZ开始搜索...
-Time: 0.001061 s
-Solutions: 361402930
 处理文件夹完毕: partition
 处理文件夹: cycle
 文件名: grafo206.12
-DLX开始搜索...
-Time: 0.000005 s
-Solutions: 4
-DXZ开始搜索...
-Time: 0.000010 s
-Solutions: 4
 文件名: grafo301.17
-DLX开始搜索...
-Time: 0.000006 s
-Solutions: 8
-DXZ开始搜索...
-Time: 0.000014 s
-Solutions: 8
 文件名: grafo342.16
-DLX开始搜索...
-Time: 0.000007 s
-Solutions: 8
-DXZ开始搜索...
-Time: 0.000013 s
-Solutions: 8
 文件名: grafo116.28
-DLX开始搜索...
-Time: 0.000452 s
-Solutions: 1195
-DXZ开始搜索...
-Time: 0.000115 s
-Solutions: 1195
 文件名: grafo200.11
-DLX开始搜索...
-Time: 0.000004 s
-Solutions: 4
-DXZ开始搜索...
-Time: 0.000010 s
-Solutions: 4
 文件名: grafo306.18
-DLX开始搜索...
-Time: 0.000013 s
-Solutions: 25
-DXZ开始搜索...
-Time: 0.000021 s
-Solutions: 25
 文件名: grafo305.16
-DLX开始搜索...
-Time: 0.000006 s
-Solutions: 8
-DXZ开始搜索...
-Time: 0.000012 s
-Solutions: 8
 文件名: grafo343.14
-DLX开始搜索...
-Time: 0.000008 s
-Solutions: 12
-DXZ开始搜索...
-Time: 0.000020 s
-Solutions: 12
 文件名: grafo341.30
-DLX开始搜索...
-Time: 0.000816 s
-Solutions: 2873
-DXZ开始搜索...
-Time: 0.000125 s
-Solutions: 2873
 文件名: grafo309.26
-DLX开始搜索...
-Time: 0.000132 s
-Solutions: 420
-DXZ开始搜索...
-Time: 0.000056 s
-Solutions: 420
 文件名: grafo303.11
-DLX开始搜索...
-Time: 0.000004 s
-Solutions: 4
-DXZ开始搜索...
-Time: 0.000009 s
-Solutions: 4
 文件名: grafo203.13
-DLX开始搜索...
-Time: 0.000007 s
-Solutions: 11
-DXZ开始搜索...
-Time: 0.000017 s
-Solutions: 11
 文件名: grafo340.15
-DLX开始搜索...
-Time: 0.000006 s
-Solutions: 8
-DXZ开始搜索...
-Time: 0.000011 s
-Solutions: 8
 文件名: grafo302.17
-DLX开始搜索...
-Time: 0.000005 s
-Solutions: 8
-DXZ开始搜索...
-Time: 0.000010 s
-Solutions: 8
 文件名: grafo202.13
-DLX开始搜索...
-Time: 0.000005 s
-Solutions: 11
-DXZ开始搜索...
-Time: 0.000013 s
-Solutions: 11
 文件名: grafo308.14
-DLX开始搜索...
-Time: 0.000005 s
-Solutions: 12
-DXZ开始搜索...
-Time: 0.000012 s
-Solutions: 12
 文件名: grafo316.11
-DLX开始搜索...
-Time: 0.000003 s
-Solutions: 4
-DXZ开始搜索...
-Time: 0.000008 s
-Solutions: 4
 文件名: grafo207.12
-DLX开始搜索...
-Time: 0.000003 s
-Solutions: 4
-DXZ开始搜索...
-Time: 0.000007 s
-Solutions: 4
 文件名: grafo114.26
-DLX开始搜索...
-Time: 0.000113 s
-Solutions: 399
-DXZ开始搜索...
-Time: 0.000062 s
-Solutions: 399
 文件名: grafo205.30
-DLX开始搜索...
-Time: 0.000886 s
-Solutions: 3119
-DXZ开始搜索...
-Time: 0.000118 s
-Solutions: 3119
 文件名: grafo317.13
-DLX开始搜索...
-Time: 0.000008 s
-Solutions: 12
-DXZ开始搜索...
-Time: 0.000016 s
-Solutions: 12
 文件名: grafo210.10
-DLX开始搜索...
-Time: 0.000004 s
-Solutions: 4
-DXZ开始搜索...
-Time: 0.000009 s
-Solutions: 4
 文件名: grafo201.13
-DLX开始搜索...
-Time: 0.000007 s
-Solutions: 11
-DXZ开始搜索...
-Time: 0.000016 s
-Solutions: 11
 文件名: grafo310.14
-DLX开始搜索...
-Time: 0.000008 s
-Solutions: 12
-DXZ开始搜索...
-Time: 0.000015 s
-Solutions: 12
 文件名: grafo346.19
-DLX开始搜索...
-Time: 0.000008 s
-Solutions: 22
-DXZ开始搜索...
-Time: 0.000016 s
-Solutions: 22
 文件名: grafo208.38
-DLX开始搜索...
-Time: 0.021788 s
-Solutions: 58650
-DXZ开始搜索...
-Time: 0.000460 s
-Solutions: 58650
 文件名: grafo318.20
-DLX开始搜索...
-Time: 0.000021 s
-Solutions: 57
-DXZ开始搜索...
-Time: 0.000045 s
-Solutions: 57
 文件名: grafo113.28
-DLX开始搜索...
-Time: 0.000360 s
-Solutions: 876
-DXZ开始搜索...
-Time: 0.000108 s
-Solutions: 876
 文件名: grafo304.15
-DLX开始搜索...
-Time: 0.000005 s
-Solutions: 8
-DXZ开始搜索...
-Time: 0.000011 s
-Solutions: 8
 文件名: grafo344.36
-DLX开始搜索...
-Time: 0.011044 s
-Solutions: 33030
-DXZ开始搜索...
-Time: 0.000313 s
-Solutions: 33030
 文件名: grafo345.14
-DLX开始搜索...
-Time: 0.000008 s
-Solutions: 11
-DXZ开始搜索...
-Time: 0.000019 s
-Solutions: 11
 文件名: grafo319.26
-DLX开始搜索...
-Time: 0.000111 s
-Solutions: 331
-DXZ开始搜索...
-Time: 0.000054 s
-Solutions: 331
 文件名: grafo311.16
-DLX开始搜索...
-Time: 0.000007 s
-Solutions: 8
-DXZ开始搜索...
-Time: 0.000013 s
-Solutions: 8
 文件名: grafo115.30
-DLX开始搜索...
-Time: 0.001002 s
-Solutions: 3460
-DXZ开始搜索...
-Time: 0.000133 s
-Solutions: 3460
 文件名: grafo312.27
-DLX开始搜索...
-Time: 0.000116 s
-Solutions: 383
-DXZ开始搜索...
-Time: 0.000046 s
-Solutions: 383
 文件名: grafo209.10
-DLX开始搜索...
-Time: 0.000003 s
-Solutions: 4
-DXZ开始搜索...
-Time: 0.000010 s
-Solutions: 4
 文件名: grafo204.15
-DLX开始搜索...
-Time: 0.000005 s
-Solutions: 8
-DXZ开始搜索...
-Time: 0.000013 s
-Solutions: 8
 文件名: grafo300.13
-DLX开始搜索...
-Time: 0.000011 s
-Solutions: 12
-DXZ开始搜索...
-Time: 0.000015 s
-Solutions: 12
 文件名: grafo320.35
-DLX开始搜索...
-Time: 0.010921 s
-Solutions: 33258
-DXZ开始搜索...
-Time: 0.000376 s
-Solutions: 33258
 文件名: grafo307.13
-DLX开始搜索...
-Time: 0.000007 s
-Solutions: 12
-DXZ开始搜索...
-Time: 0.000018 s
-Solutions: 12
 处理文件夹完毕: cycle

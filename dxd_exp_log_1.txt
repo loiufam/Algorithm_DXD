@@ -308,3 +308,819 @@ Max Blocks: 6
 DXD搜索超时: Time bound broken
 
 开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: Arnes
+开始单线程DXD搜索...
+Time: 0.109239 s
+Solutions: 6332762064720
+Max Blocks: 6
+
+开始多线程DXD搜索...
+Time: 0.136329 s
+Solutions: 6332762064720
+Max Blocks: 6
+
+文件名: grid_3x3
+开始单线程DXD搜索...
+Time: 0.000592 s
+Solutions: 125
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.000549 s
+Solutions: 125
+Max Blocks: 3
+
+文件名: Surfnet
+开始单线程DXD搜索...
+Time: 3.042261 s
+Solutions: 15824368999290851952
+Max Blocks: 7
+
+开始多线程DXD搜索...
+Time: 3.048608 s
+Solutions: 15824368999290851952
+Max Blocks: 7
+
+文件名: HiberniaCanada
+开始单线程DXD搜索...
+Time: 0.003497 s
+Solutions: 11700
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.004016 s
+Solutions: 11700
+Max Blocks: 3
+
+文件名: Bren
+开始单线程DXD搜索...
+Time: 0.449850 s
+Solutions: 227567298816000
+Max Blocks: 6
+
+开始多线程DXD搜索...
+Time: 0.437275 s
+Solutions: 227567298816000
+Max Blocks: 6
+
+文件名: grid_3x4
+开始单线程DXD搜索...
+Time: 0.001214 s
+Solutions: 900
+Max Blocks: 4
+
+开始多线程DXD搜索...
+Time: 0.001311 s
+Solutions: 900
+Max Blocks: 4
+
+文件名: Agis
+开始单线程DXD搜索...
+Time: 0.055859 s
+Solutions: 694320900
+Max Blocks: 5
+
+开始多线程DXD搜索...
+Time: 0.055313 s
+Solutions: 694320900
+Max Blocks: 5
+
+文件名: BtAsiaPac
+开始单线程DXD搜索...
+Time: 0.240255 s
+Solutions: 16118700
+Max Blocks: 4
+
+开始多线程DXD搜索...
+Time: 0.236510 s
+Solutions: 16118700
+Max Blocks: 4
+
+文件名: Litnet
+开始单线程DXD搜索...
+Time: 2.896522 s
+Solutions: 1065022897069675232
+Max Blocks: 5
+
+开始多线程DXD搜索...
+Time: 2.772491 s
+Solutions: 1065022897069675232
+Max Blocks: 5
+
+文件名: Bics
+开始单线程DXD搜索...
+Time: 0.287448 s
+Solutions: 2486336438250
+Max Blocks: 6
+
+开始多线程DXD搜索...
+Time: 0.276797 s
+Solutions: 2486336438250
+Max Blocks: 6
+
+文件名: Ai3
+开始单线程DXD搜索...
+Time: 0.000524 s
+Solutions: 125
+Max Blocks: 4
+
+开始多线程DXD搜索...
+Time: 0.000548 s
+Solutions: 125
+Max Blocks: 4
+
+文件名: Syringa
+开始单线程DXD搜索...
+Time: 1.056919 s
+Solutions: 6094492007316880384
+Max Blocks: 10
+
+开始多线程DXD搜索...
+Time: 0.843294 s
+Solutions: 6094492007316880384
+Max Blocks: 10
+
+文件名: Carnet
+开始单线程DXD搜索...
+Time: 14.391140 s
+Solutions: 1637663146820301600
+Max Blocks: 6
+
+开始多线程DXD搜索...
+Time: 13.910485 s
+Solutions: 1637663146820301600
+Max Blocks: 6
+
+文件名: Uninet
+开始单线程DXD搜索...
+Time: 0.004659 s
+Solutions: 13520
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.005499 s
+Solutions: 13520
+Max Blocks: 3
+
+文件名: grid_4x4
+开始单线程DXD搜索...
+Time: 0.239496 s
+Solutions: 931500
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.218690 s
+Solutions: 931500
+Max Blocks: 3
+
+文件名: Marwan
+开始单线程DXD搜索...
+Time: 0.003506 s
+Solutions: 58500
+Max Blocks: 4
+
+开始多线程DXD搜索...
+Time: 0.003854 s
+Solutions: 58500
+Max Blocks: 4
+
+文件名: Aarnet
+开始单线程DXD搜索...
+Time: 0.052194 s
+Solutions: 4450775
+Max Blocks: 4
+
+开始多线程DXD搜索...
+Time: 0.056868 s
+Solutions: 4450775
+Max Blocks: 4
+
+文件名: Bbnplanet
+开始单线程DXD搜索...
+Time: 0.017533 s
+Solutions: 617526000
+Max Blocks: 6
+
+开始多线程DXD搜索...
+Time: 0.018885 s
+Solutions: 617526000
+Max Blocks: 6
+
+文件名: BeyondTheNetwork
+开始单线程DXD搜索...
+Time: 5.720062 s
+Solutions: 3885088930913959476
+Max Blocks: 7
+
+开始多线程DXD搜索...
+Time: 5.486214 s
+Solutions: 3885088930913959476
+Max Blocks: 7
+
+文件名: Ntt
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: Bellcanada
+开始单线程DXD搜索...
+Time: 2.363963 s
+Solutions: 3006974471354708352
+Max Blocks: 6
+
+开始多线程DXD搜索...
+Time: 2.468953 s
+Solutions: 3006974471354708352
+Max Blocks: 6
+
+文件名: BsonetEurope
+开始单线程DXD搜索...
+Time: 0.045184 s
+Solutions: 986625
+Max Blocks: 4
+
+开始多线程DXD搜索...
+Time: 0.045099 s
+Solutions: 986625
+Max Blocks: 4
+
+文件名: AttMpls
+开始单线程DXD搜索...
+Time: 0.264144 s
+Solutions: 1092546000
+Max Blocks: 5
+
+开始多线程DXD搜索...
+Time: 0.240970 s
+Solutions: 1092546000
+Max Blocks: 5
+
+文件名: grid_4x3
+开始单线程DXD搜索...
+Time: 0.001970 s
+Solutions: 3375
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.001900 s
+Solutions: 3375
+Max Blocks: 3
+
+文件名: Oxford
+开始单线程DXD搜索...
+Time: 0.016035 s
+Solutions: 8233680
+Max Blocks: 4
+
+开始多线程DXD搜索...
+Time: 0.015693 s
+Solutions: 8233680
+Max Blocks: 4
+
+文件名: Heanet
+开始单线程DXD搜索...
+Time: 0.000347 s
+Solutions: 8
+Max Blocks: 4
+
+开始多线程DXD搜索...
+Time: 0.000255 s
+Solutions: 8
+Max Blocks: 4
+
+文件名: Sago
+开始单线程DXD搜索...
+Time: 0.006096 s
+Solutions: 608400
+Max Blocks: 4
+
+开始多线程DXD搜索...
+Time: 0.005590 s
+Solutions: 608400
+Max Blocks: 4
+
+文件名: GtsCzechRepublic
+开始单线程DXD搜索...
+Time: 0.052489 s
+Solutions: 339301719120
+Max Blocks: 6
+
+开始多线程DXD搜索...
+Time: 0.036671 s
+Solutions: 339301719120
+Max Blocks: 6
+
+文件名: Azrena
+开始单线程DXD搜索...
+Time: 0.059427 s
+Solutions: 138864180
+Max Blocks: 4
+
+开始多线程DXD搜索...
+Time: 0.056603 s
+Solutions: 138864180
+Max Blocks: 4
+
+文件名: Canerie
+开始单线程DXD搜索...
+Time: 2.130118 s
+Solutions: 31194708958980
+Max Blocks: 4
+
+开始多线程DXD搜索...
+Time: 2.096209 s
+Solutions: 31194708958980
+Max Blocks: 4
+
+文件名: Ibm
+开始单线程DXD搜索...
+Time: 0.002308 s
+Solutions: 84375
+Max Blocks: 5
+
+开始多线程DXD搜索...
+Time: 0.003063 s
+Solutions: 84375
+Max Blocks: 5
+
+文件名: Chinanet
+开始单线程DXD搜索...
+Time: 40.649361 s
+Solutions: 1353874379520376350
+Max Blocks: 5
+
+开始多线程DXD搜索...
+Time: 38.853240 s
+Solutions: 1360124230538664500
+Max Blocks: 5
+
+文件名: Uran
+开始单线程DXD搜索...
+Time: 0.097943 s
+Solutions: 2341997805
+Max Blocks: 4
+
+开始多线程DXD搜索...
+Time: 0.116626 s
+Solutions: 2341997805
+Max Blocks: 4
+
+文件名: BtEurope
+开始单线程DXD搜索...
+Time: 0.063251 s
+Solutions: 361402930
+Max Blocks: 5
+
+开始多线程DXD搜索...
+Time: 0.065031 s
+Solutions: 361402930
+Max Blocks: 5
+
+处理文件夹完毕: partition
+===========处理文件夹: cycle==========
+文件名: grafo206.12
+开始单线程DXD搜索...
+Time: 0.000183 s
+Solutions: 4
+Max Blocks: 2
+
+开始多线程DXD搜索...
+Time: 0.000212 s
+Solutions: 4
+Max Blocks: 2
+
+文件名: grafo301.17
+开始单线程DXD搜索...
+Time: 0.000245 s
+Solutions: 8
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.000296 s
+Solutions: 8
+Max Blocks: 3
+
+文件名: grafo342.16
+开始单线程DXD搜索...
+Time: 0.000225 s
+Solutions: 8
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.000251 s
+Solutions: 8
+Max Blocks: 3
+
+文件名: grafo116.28
+开始单线程DXD搜索...
+Time: 0.017668 s
+Solutions: 1195
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.017438 s
+Solutions: 1195
+Max Blocks: 3
+
+文件名: grafo200.11
+开始单线程DXD搜索...
+Time: 0.000158 s
+Solutions: 4
+Max Blocks: 2
+
+开始多线程DXD搜索...
+Time: 0.000377 s
+Solutions: 4
+Max Blocks: 2
+
+文件名: grafo306.18
+开始单线程DXD搜索...
+Time: 0.000400 s
+Solutions: 25
+Max Blocks: 2
+
+开始多线程DXD搜索...
+Time: 0.000663 s
+Solutions: 25
+Max Blocks: 2
+
+文件名: grafo305.16
+开始单线程DXD搜索...
+Time: 0.000251 s
+Solutions: 8
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.000217 s
+Solutions: 8
+Max Blocks: 3
+
+文件名: grafo343.14
+开始单线程DXD搜索...
+Time: 0.000417 s
+Solutions: 12
+Max Blocks: 2
+
+开始多线程DXD搜索...
+Time: 0.000432 s
+Solutions: 12
+Max Blocks: 2
+
+文件名: grafo341.30
+开始单线程DXD搜索...
+Time: 0.032921 s
+Solutions: 2873
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.009783 s
+Solutions: 2873
+Max Blocks: 3
+
+文件名: grafo309.26
+开始单线程DXD搜索...
+Time: 0.005688 s
+Solutions: 420
+Max Blocks: 2
+
+开始多线程DXD搜索...
+Time: 0.005194 s
+Solutions: 420
+Max Blocks: 2
+
+文件名: grafo303.11
+开始单线程DXD搜索...
+Time: 0.000143 s
+Solutions: 4
+Max Blocks: 2
+
+开始多线程DXD搜索...
+Time: 0.000167 s
+Solutions: 4
+Max Blocks: 2
+
+文件名: grafo203.13
+开始单线程DXD搜索...
+Time: 0.000299 s
+Solutions: 11
+Max Blocks: 2
+
+开始多线程DXD搜索...
+Time: 0.000330 s
+Solutions: 11
+Max Blocks: 2
+
+文件名: grafo340.15
+开始单线程DXD搜索...
+Time: 0.000186 s
+Solutions: 8
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.000219 s
+Solutions: 8
+Max Blocks: 3
+
+文件名: grafo302.17
+开始单线程DXD搜索...
+Time: 0.000195 s
+Solutions: 8
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.000228 s
+Solutions: 8
+Max Blocks: 3
+
+文件名: grafo202.13
+开始单线程DXD搜索...
+Time: 0.000444 s
+Solutions: 11
+Max Blocks: 2
+
+开始多线程DXD搜索...
+Time: 0.000447 s
+Solutions: 11
+Max Blocks: 2
+
+文件名: grafo308.14
+开始单线程DXD搜索...
+Time: 0.000416 s
+Solutions: 12
+Max Blocks: 1
+
+开始多线程DXD搜索...
+Time: 0.000401 s
+Solutions: 12
+Max Blocks: 1
+
+文件名: grafo316.11
+开始单线程DXD搜索...
+Time: 0.000137 s
+Solutions: 4
+Max Blocks: 2
+
+开始多线程DXD搜索...
+Time: 0.000179 s
+Solutions: 4
+Max Blocks: 2
+
+文件名: grafo207.12
+开始单线程DXD搜索...
+Time: 0.000146 s
+Solutions: 4
+Max Blocks: 2
+
+开始多线程DXD搜索...
+Time: 0.000166 s
+Solutions: 4
+Max Blocks: 2
+
+文件名: grafo114.26
+开始单线程DXD搜索...
+Time: 0.003190 s
+Solutions: 399
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.002820 s
+Solutions: 399
+Max Blocks: 3
+
+文件名: grafo205.30
+开始单线程DXD搜索...
+Time: 0.019128 s
+Solutions: 3119
+Max Blocks: 2
+
+开始多线程DXD搜索...
+Time: 0.019148 s
+Solutions: 3119
+Max Blocks: 2
+
+文件名: grafo317.13
+开始单线程DXD搜索...
+Time: 0.000340 s
+Solutions: 12
+Max Blocks: 2
+
+开始多线程DXD搜索...
+Time: 0.000417 s
+Solutions: 12
+Max Blocks: 2
+
+文件名: grafo210.10
+开始单线程DXD搜索...
+Time: 0.000142 s
+Solutions: 4
+Max Blocks: 2
+
+开始多线程DXD搜索...
+Time: 0.000160 s
+Solutions: 4
+Max Blocks: 2
+
+文件名: grafo201.13
+开始单线程DXD搜索...
+Time: 0.000494 s
+Solutions: 11
+Max Blocks: 2
+
+开始多线程DXD搜索...
+Time: 0.000762 s
+Solutions: 11
+Max Blocks: 2
+
+文件名: grafo310.14
+开始单线程DXD搜索...
+Time: 0.000486 s
+Solutions: 12
+Max Blocks: 1
+
+开始多线程DXD搜索...
+Time: 0.000382 s
+Solutions: 12
+Max Blocks: 1
+
+文件名: grafo346.19
+开始单线程DXD搜索...
+Time: 0.000656 s
+Solutions: 22
+Max Blocks: 2
+
+开始多线程DXD搜索...
+Time: 0.000686 s
+Solutions: 22
+Max Blocks: 2
+
+文件名: grafo208.38
+开始单线程DXD搜索...
+Time: 0.064996 s
+Solutions: 58650
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.068738 s
+Solutions: 58650
+Max Blocks: 3
+
+文件名: grafo318.20
+开始单线程DXD搜索...
+Time: 0.001500 s
+Solutions: 57
+Max Blocks: 2
+
+开始多线程DXD搜索...
+Time: 0.001566 s
+Solutions: 57
+Max Blocks: 2
+
+文件名: grafo113.28
+开始单线程DXD搜索...
+Time: 0.013246 s
+Solutions: 876
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.013457 s
+Solutions: 876
+Max Blocks: 3
+
+文件名: grafo304.15
+开始单线程DXD搜索...
+Time: 0.000213 s
+Solutions: 8
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.000249 s
+Solutions: 8
+Max Blocks: 3
+
+文件名: grafo344.36
+开始单线程DXD搜索...
+Time: 0.111405 s
+Solutions: 33030
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.076886 s
+Solutions: 33030
+Max Blocks: 3
+
+文件名: grafo345.14
+开始单线程DXD搜索...
+Time: 0.000415 s
+Solutions: 11
+Max Blocks: 1
+
+开始多线程DXD搜索...
+Time: 0.000390 s
+Solutions: 11
+Max Blocks: 1
+
+文件名: grafo319.26
+开始单线程DXD搜索...
+Time: 0.002329 s
+Solutions: 331
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.002767 s
+Solutions: 331
+Max Blocks: 3
+
+文件名: grafo311.16
+开始单线程DXD搜索...
+Time: 0.000321 s
+Solutions: 8
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.000252 s
+Solutions: 8
+Max Blocks: 3
+
+文件名: grafo115.30
+开始单线程DXD搜索...
+Time: 0.009647 s
+Solutions: 3460
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.009203 s
+Solutions: 3460
+Max Blocks: 3
+
+文件名: grafo312.27
+开始单线程DXD搜索...
+Time: 0.002964 s
+Solutions: 383
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.003122 s
+Solutions: 383
+Max Blocks: 3
+
+文件名: grafo209.10
+开始单线程DXD搜索...
+Time: 0.000180 s
+Solutions: 4
+Max Blocks: 2
+
+开始多线程DXD搜索...
+Time: 0.000183 s
+Solutions: 4
+Max Blocks: 2
+
+文件名: grafo204.15
+开始单线程DXD搜索...
+Time: 0.000213 s
+Solutions: 8
+Max Blocks: 3
+
+开始多线程DXD搜索...
+Time: 0.000397 s
+Solutions: 8
+Max Blocks: 3
+
+文件名: grafo300.13
+开始单线程DXD搜索...
+Time: 0.000499 s
+Solutions: 12
+Max Blocks: 2
+
+开始多线程DXD搜索...
+Time: 0.000496 s
+Solutions: 12
+Max Blocks: 2
+
+文件名: grafo320.35
+开始单线程DXD搜索...
+Time: 0.087995 s
+Solutions: 33258
+Max Blocks: 2
+
+开始多线程DXD搜索...
+Time: 0.088378 s
+Solutions: 33258
+Max Blocks: 2
+
+文件名: grafo307.13
+开始单线程DXD搜索...
+Time: 0.000346 s
+Solutions: 12
+Max Blocks: 2
+
+开始多线程DXD搜索...
+Time: 0.000380 s
+Solutions: 12
+Max Blocks: 2
+
+处理文件夹完毕: cycle
+所有文件处理完毕

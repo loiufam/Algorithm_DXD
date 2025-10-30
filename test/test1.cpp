@@ -5,7 +5,7 @@
 
 static Logger logger("../dxz_exp_log.txt");  // 全局日志
 const string table_file = "../exp_results.csv"; // 结果表格文件
-const string result_file = "../exp_results_updated1.csv"; // 结果文件
+const string result_file = "../exp_results_test1.csv"; // 结果文件
 
 const int DLX_COLUMN_INDEX = 3;
 const int DXZ_COLUMN_INDEX = 4;
@@ -21,6 +21,21 @@ std::vector<std::string> split(const std::string& str, char delimiter) {
     }
 
     return tokens;
+}
+
+// 读取矩阵文件行列数
+void readMatrixInfo(const std::string& filePath, int& row, int& column) {
+    std::ifstream file(filePath);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open file: " << filePath << std::endl;
+        return;
+    }
+
+    std::string line;
+    std::getline(file, line); // 读取第一行，即矩阵的行列数
+
+    std::istringstream iss(line);
+    iss >> column >> row; 
 }
 
 // 专门测DLX和DXZ的代码
@@ -55,11 +70,17 @@ int main() {
             for (const auto& entry : fs::directory_iterator(file_path))
             {
                 if (entry.is_regular_file())
-                {
-                    // 文件路径  
+                { 
                     std::string file_name = entry.path().stem().string();        
                     if (file_name == ".DS_Store") continue;
                     logger.logLine("文件名: " + file_name);
+
+                    int rows, cols;
+                    readMatrixInfo(entry.path().string(), rows, cols); // 读取矩阵信息
+                    experimentCSV.updateCount(file_name, cols, 1); // 更新列
+                    experimentCSV.updateCount(file_name, rows, 2); // 更新行
+                    // continue;
+
 
                     // DLX
                     try {

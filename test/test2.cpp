@@ -5,7 +5,7 @@
 
 static Logger logger("../dxd_exp_log.txt");  // 全局日志
 const string table_file = "../exp_results.csv"; // 结果表格文件
-const string output_file = "../exp_results_updated2.csv";
+const string output_file = "../exp_results_test2.csv";
 
 const int DXD_COLUMN_INDEX = 6;
 const int MDXD_COLUMN_INDEX = 7;
