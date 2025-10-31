@@ -1,108 +1,148 @@
-处理文件夹: partition
-文件名: Uunet
-文件名: Renater2001
-文件名: TLex
-文件名: Bandcon
-文件名: Basnet
-文件名: UniC
-文件名: Grena
-文件名: Ans
-文件名: Amres
-文件名: Rediris
-文件名: Bellsouth
-文件名: Cernet
-文件名: Savvis
-文件名: GtsCe
-文件名: Harnet
-文件名: Airtel
-文件名: Grnet
-文件名: Abvt
-文件名: Arn
-文件名: Gridnet
-文件名: Cesnet1997
-文件名: Abilene
-文件名: Cesnet1993
-文件名: Aconet
-文件名: Belnet2005
-文件名: Cynet
-文件名: Biznet
-文件名: Telcove
-文件名: Integra
-文件名: Oteglobe
-文件名: Arnes
-文件名: grid_3x3
-文件名: Surfnet
-文件名: HiberniaCanada
-文件名: Bren
-文件名: grid_3x4
-文件名: Agis
-文件名: BtAsiaPac
-文件名: Litnet
-文件名: Bics
-文件名: Ai3
-文件名: Syringa
-文件名: Carnet
-文件名: Uninet
-文件名: grid_4x4
-文件名: Marwan
-文件名: Aarnet
-文件名: Bbnplanet
-文件名: BeyondTheNetwork
-文件名: Ntt
-文件名: Bellcanada
-文件名: BsonetEurope
-文件名: AttMpls
-文件名: grid_4x3
-文件名: Oxford
-文件名: Heanet
-文件名: Sago
-文件名: GtsCzechRepublic
-文件名: Azrena
-文件名: Canerie
-文件名: Ibm
-文件名: Chinanet
-文件名: Uran
-文件名: BtEurope
-处理文件夹完毕: partition
 处理文件夹: cycle
-文件名: grafo206.12
-文件名: grafo301.17
-文件名: grafo342.16
-文件名: grafo116.28
-文件名: grafo200.11
-文件名: grafo306.18
-文件名: grafo305.16
-文件名: grafo343.14
-文件名: grafo341.30
-文件名: grafo309.26
-文件名: grafo303.11
-文件名: grafo203.13
-文件名: grafo340.15
-文件名: grafo302.17
-文件名: grafo202.13
-文件名: grafo308.14
-文件名: grafo316.11
-文件名: grafo207.12
-文件名: grafo114.26
-文件名: grafo205.30
-文件名: grafo317.13
-文件名: grafo210.10
-文件名: grafo201.13
-文件名: grafo310.14
-文件名: grafo346.19
-文件名: grafo208.38
-文件名: grafo318.20
-文件名: grafo113.28
-文件名: grafo304.15
-文件名: grafo344.36
-文件名: grafo345.14
-文件名: grafo319.26
-文件名: grafo311.16
-文件名: grafo115.30
-文件名: grafo312.27
-文件名: grafo209.10
-文件名: grafo204.15
-文件名: grafo300.13
-文件名: grafo320.35
-文件名: grafo307.13
+文件名: grafo8190.73
+DLX开始搜索...
+DLX搜索超时: Time OUT
+
+DXZ开始搜索...
+DXZ搜索超时: Time OUT
+
+文件名: grafo7625.47
+DLX开始搜索...
+Time: 16.195485 s
+Solutions: 2000351
+
+DXZ开始搜索...
+Time: 5.610407 s
+Solutions: 2000351
+
+文件名: grafo7627.57
+DLX开始搜索...
+Time: 173.472897 s
+Solutions: 20464773
+
+DXZ开始搜索...
+Time: 31.810164 s
+Solutions: 20464799
+
+文件名: grafo8186.90
+DLX开始搜索...
+DLX搜索超时: Time OUT
+
+DXZ开始搜索...
+DXZ搜索超时: Time OUT
+
+文件名: grafo8039.65
+DLX开始搜索...
+Time: 1043.298170 s
+Solutions: 90152760
+
+DXZ开始搜索...
+Time: 175.944746 s
+Solutions: 90035140
+
+文件名: grafo8187.70
+DLX开始搜索...
+DLX搜索超时: Time OUT
+
+DXZ开始搜索...
+Time: 486.374385 s
+Solutions: 216759248
+
+文件名: grafo8188.62
+DLX开始搜索...
+Time: 388.291168 s
+Solutions: 37738687
+
+DXZ开始搜索...
+Time: 77.666517 s
+Solutions: 37738855
+
+文件名: grafo7622.45
+DLX开始搜索...
+Time: 11.965467 s
+Solutions: 1385439
+
+DXZ开始搜索...
+Time: 5.361792 s
+Solutions: 1385428
+
+文件名: grafo8025.82
+DLX开始搜索...
+DLX搜索超时: Time OUT
+
+DXZ开始搜索...
+DXZ搜索超时: Time OUT
+
+文件名: grafo7628.47
+DLX开始搜索...
+Time: 14.825814 s
+Solutions: 1690661
+
+DXZ开始搜索...
+Time: 7.378326 s
+Solutions: 1690663
+
+文件名: grafo8032.68
+DLX开始搜索...
+DLX搜索超时: Time OUT
+
+DXZ开始搜索...
+Time: 469.061880 s
+Solutions: 129495758
+
+文件名: grafo7623.45
+DLX开始搜索...
+Time: 13.238675 s
+Solutions: 1624373
+
+DXZ开始搜索...
+Time: 4.938440 s
+Solutions: 1624373
+
+文件名: grafo8189.85
+DLX开始搜索...
+DLX搜索超时: Time OUT
+
+DXZ开始搜索...
+DXZ搜索超时: Time OUT
+
+文件名: grafo8223.99
+DLX开始搜索...
+DLX搜索超时: Time OUT
+
+DXZ开始搜索...
+DXZ搜索超时: Time OUT
+
+文件名: grafo8222.84
+DLX开始搜索...
+DLX搜索超时: Time OUT
+
+DXZ开始搜索...
+DXZ搜索超时: Time OUT
+
+文件名: grafo8225.88
+DLX开始搜索...
+DLX搜索超时: Time OUT
+
+DXZ开始搜索...
+DXZ搜索超时: Time OUT
+
+文件名: grafo7626.38
+DLX开始搜索...
+Time: 4.312244 s
+Solutions: 569185
+
+DXZ开始搜索...
+Time: 2.410412 s
+Solutions: 569185
+
+文件名: grafo7624.41
+DLX开始搜索...
+Time: 3.754415 s
+Solutions: 451093
+
+DXZ开始搜索...
+Time: 2.339578 s
+Solutions: 451108
+
 处理文件夹完毕: cycle

@@ -218,19 +218,28 @@ class DancingMatrix
         // ColumnHeader* fastSelect();
 
         inline ColumnHeader* getColumnHeader(int c) const {
+            std::shared_lock lock(mutex_);
             ColumnHeader* col = &ColIndex[c];
             return col;
         }
 
+        inline int getColSize(int c) const {
+            std::shared_lock lock(mutex_);
+            return ColIndex[c].size;
+        }
+
         inline void decColSize(int c) {
+            std::unique_lock lock(mutex_);
             ColIndex[c].size--;
         }
 
         inline void incColSize(int c) {
+            std::unique_lock lock(mutex_);
             ColIndex[c].size++;
         }
 
         inline RowNode* getRowHeader(int r) const {
+            std::shared_lock lock(mutex_);
             RowNode* row = &RowIndex[r];
             return row;
         }
@@ -258,6 +267,7 @@ class DancingMatrix
         std::unique_ptr<ConnectedGraph> graph;
         std::unique_ptr<IncrementalConnectedGraph> incrementalGraph;
         std::unique_ptr<ETTree> etTree;  // 欧拉回路树
+        mutable std::shared_mutex mutex_;  // 读写锁
 
         // 行 -> 包含该行的列集合
         unordered_map<int, set<int>> row_to_cols;

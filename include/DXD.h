@@ -133,36 +133,6 @@ struct BatchOperation {
     BatchOperation() = default;
 };
 
-struct DXDFrame {
-    enum Stage { START, DECOMPOSED_HANDLED, CHOOSE_ASSIGNED, ITER_ROWS, AFTER_CHILD, FINISH } stage;
-    Block block; // local copy of the Block for this frame
-    size_t stateHash = 0; // cached state hash
-    std::shared_ptr<DNNFNode> cachedResult = nullptr; // if looked up from cache
-
-
-    // for decomposition handling
-    std::vector<Component> comps; // if decomposition is found
-    std::vector<std::shared_ptr<DNNFNode>> collectedChildren; // for serialSearch
-
-
-    // for normal choose/OR processing
-    ColumnHeader* choose = nullptr;
-    std::shared_ptr<DNNFNode> orNode = nullptr;
-    // iteration cursor over rows under chosen column
-    ColumnHeader* choosePtr = nullptr; 
-
-
-    std::vector<int> rowsUnderChoose; // snapshot of row ids under choose at time of selection
-    size_t rowCursor = 0; // next row to process
-
-
-    // after child returns, childResult will be placed here by the driver
-    std::shared_ptr<DNNFNode> childResult;
-
-
-    DXDFrame(const Block &b): stage(START), block(b) {}
-};
-
 // 设计线程安全的栈
 class ThreadSafeStack {
 
@@ -204,6 +174,7 @@ class DanceDNNF : DancingMatrix {
 
             if(useETT || useIG) {
                 omp_set_num_threads(pool_size); // 设置并行线程数
+                omp_set_max_active_levels(1); // 设置最大并行级别
             }
             timer.setTimeBound(TIME_LIMIT_SECONDS);
         }
@@ -226,9 +197,6 @@ class DanceDNNF : DancingMatrix {
         vector<set<int>> mergeRowSets(Block& block);
         vector<Block> spilitBlock(const vector<set<int>>& mergeRowSets);
         vector<Block> spilitBlockParallel(const vector<set<int>>& mergeRowSets);
-
-        void printBlocks(const vector<Block>& blocks);
-        void printBlock(const Block& block);
 
         vector<DXD_Block> detectBlocks(const DXD_Block& currentBlock);
         void batchCover(const std::vector<int>& columns);

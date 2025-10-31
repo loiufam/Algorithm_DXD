@@ -42,17 +42,20 @@ int main(int argc, char* argv[]) {
         const std::string folderPath3 = "../data/graph_matrix&3";
         std::string folderPath4 = "../data/graph_matrix/partition&3";
         std::string folderPath5 = "../data/graph_matrix/cycle&3";
+
         // filePaths.push_back(folderPath1);
         // filePaths.push_back(folderPath2);
         // filePaths.push_back(folderPath3);
-        filePaths.push_back(folderPath4);
+        // filePaths.push_back(folderPath4);
         filePaths.push_back(folderPath5);
+
         char delimiter = '&'; 
 
         // ExperimentProcessor processor; 
         // processor.loadTable(table_file);
         MyCSV experimentCSV; // 结果CSV处理器
         experimentCSV.readCSV(table_file); // 读取结果表格
+        int counter = 0;
 
         for (auto& fp : filePaths) {
             std::vector<std::string> result = split(fp, delimiter);
@@ -68,7 +71,9 @@ int main(int argc, char* argv[]) {
                 {                   
                     // 文件名
                     std::string file_name = entry.path().stem().string();
-                    if (file_name == ".DS_Store") continue;          
+                    if (file_name == ".DS_Store") continue;    
+
+
                     logger.logLine("文件名: " + file_name);
                     // logger2.logLine("文件名: " + file_name);
 
@@ -79,9 +84,6 @@ int main(int argc, char* argv[]) {
                             dxdSolver.cur_instance = file_name;
                             shared_ptr<DXDResult> res = dxdSolver.startDXD();
                             experimentCSV.updateTime(file_name, dxdSolver.searchTime, NEW_DXD_COLUMN_INDEX, dxdSolver.timeout);
-                            if (!dxdSolver.timeout) {
-                                experimentCSV.updateCount(file_name, dxdSolver.MAX_B_COUNT, MAX_BLOCK_COLUMN_INDEX);
-                            }
                         } 
                         
                         logger.logLine("");
@@ -113,17 +115,24 @@ int main(int argc, char* argv[]) {
                             dxdSolver.cur_instance = file_name;
                             auto res = dxdSolver.startMultiThreadDXD();
                             experimentCSV.updateTime(file_name, dxdSolver.searchTime, MDXD_COLUMN_INDEX, dxdSolver.timeout);
+                            if (!dxdSolver.timeout) {
+                                experimentCSV.updateCount(file_name, dxdSolver.MAX_B_COUNT, MAX_BLOCK_COLUMN_INDEX);
+                            }
                         }
                     }
 
                     logger.logLine("");
+
+                    if (++counter % 2 == 0) {
+                        experimentCSV.writeCSV(output_file);
+                    }
   
                     // ExactCoverSolver ecSolver(entry.path().string(), read_mode, logger, 16);
                     // ecSolver.cur_instance = file_name;
                     // shared_ptr<ExperimentResult> res = ecSolver.searchEC();
                 }
             }
-            experimentCSV.writeCSV(output_file);
+            // experimentCSV.writeCSV(output_file);
             logger.logLine("处理文件夹完毕: " + fileFolderName);
             // processor.saveTable(table_file);
         }

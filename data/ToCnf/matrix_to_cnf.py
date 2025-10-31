@@ -349,12 +349,12 @@ if __name__ == "__main__":
     directories = [
         # ("../exact_cover_benchmark", 1),
         # ("../set_partitioning_benchmarks", 2),
-        ("../graph_matrix/partition", 3),
+        # ("../graph_matrix/partition", 3),
         ("../graph_matrix/cycle", 3)
     ]
 
     table = "../../exp_results.csv"
-    output_path = "../../../Share_Data/graph_cnf/"
+    output_path = "../../../Share_Data/graph_cnf/Rome"
 
     headers, rows = read_csv(table)
 

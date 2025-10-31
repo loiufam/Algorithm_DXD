@@ -538,11 +538,12 @@ ColumnHeader* DancingMatrix::selectColumnHeuristic(const unordered_set<int>& col
     // vector<int> colVec(cols.begin(), cols.end());
     // sort(colVec.begin(), colVec.end()); // 对列进行排序，确保每次选择的顺序一致
     for (int col : cols) {
-        int sz = ColIndex[col].size;
-        if (sz == 1) return &ColIndex[col]; // 启发式剪枝
+        if (col < 1 || col > COLS) continue; // 跳过无效列
+        int sz = getColSize(col);
+        if (sz == 1) return getColumnHeader(col); // 启发式剪枝
         if (sz < minSize) {
             minSize = sz;
-            chosen = &ColIndex[col];
+            chosen = getColumnHeader(col);
         }
     }
     return chosen;

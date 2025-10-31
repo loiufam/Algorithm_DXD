@@ -543,7 +543,7 @@ int main(int argc, char* argv[]) {
     // filePaths.push_back(folderPath1);
     // filePaths.push_back(folderPath2);
     // filePaths.push_back(folderPath3);
-    filePaths.push_back(folderPath4);
+    // filePaths.push_back(folderPath4);
     filePaths.push_back(folderPath5);
 
     // 读取csv文件
@@ -551,7 +551,7 @@ int main(int argc, char* argv[]) {
     std::vector<std::vector<std::string>> rows;
 
     const std::string table = "../../exp_results.csv";
-    const std::string outputPath = "../../../D3X/data/graphs/";
+    const std::string outputPath = "../../../D3X/data/graphs/cycle/";
     readCSV(table, headers, rows);
     checkHeaders(headers);
 

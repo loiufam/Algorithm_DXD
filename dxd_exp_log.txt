@@ -1,314 +1,301 @@
 使用ETT进行独立块检测
-===========处理文件夹: partition==========
-文件名: Uunet
-开始单线程DXD搜索...
-Time: 2.198608 s
-Solutions: 1208457967081622224
-Max Blocks: 6
-
-开始多线程DXD搜索...
-Time: 2.220079 s
-Solutions: 1208457967081622224
-Max Blocks: 6
-
-文件名: Renater2001
-开始单线程DXD搜索...
-Time: 0.465938 s
-Solutions: 8351676983177355264
-Max Blocks: 5
-
-开始多线程DXD搜索...
-Time: 0.199984 s
-Solutions: 3254931000
-Max Blocks: 4
-
-文件名: TLex
-开始单线程DXD搜索...
-Time: 0.003639 s
-Solutions: 6090
-Max Blocks: 3
-
-开始多线程DXD搜索...
-Time: 0.004101 s
-Solutions: 6090
-Max Blocks: 3
-
-文件名: Bandcon
+===========处理文件夹: cycle==========
+文件名: grafo7627.57
 开始单线程DXD搜索...
 DXD搜索超时: Time bound broken
 
 开始多线程DXD搜索...
 DXD搜索超时: Time bound broken
 
-文件名: Basnet
-开始单线程DXD搜索...
-Time: 0.000267 s
-Solutions: 8
-Max Blocks: 4
-
-开始多线程DXD搜索...
-Time: 0.000217 s
-Solutions: 8
-Max Blocks: 4
-
-文件名: UniC
-开始单线程DXD搜索...
-Time: 0.026710 s
-Solutions: 694320900
-Max Blocks: 5
-
-开始多线程DXD搜索...
-Time: 0.026025 s
-Solutions: 694320900
-Max Blocks: 5
-
-文件名: Grena
-开始单线程DXD搜索...
-Time: 0.002676 s
-Solutions: 58500
-Max Blocks: 4
-
-开始多线程DXD搜索...
-Time: 0.002220 s
-Solutions: 58500
-Max Blocks: 4
-
-文件名: Ans
-开始单线程DXD搜索...
-Time: 0.005022 s
-Solutions: 126875
-Max Blocks: 5
-
-开始多线程DXD搜索...
-Time: 0.005891 s
-Solutions: 126875
-Max Blocks: 5
-
-文件名: Amres
-开始单线程DXD搜索...
-Time: 0.012418 s
-Solutions: 557145680
-Max Blocks: 5
-
-开始多线程DXD搜索...
-Time: 0.015159 s
-Solutions: 557145680
-Max Blocks: 5
-
-文件名: Rediris
-开始单线程DXD搜索...
-Time: 0.084900 s
-Solutions: 5382000
-Max Blocks: 4
-
-开始多线程DXD搜索...
-Time: 0.084762 s
-Solutions: 5382000
-Max Blocks: 4
-
-文件名: Bellsouth
-开始单线程DXD搜索...
-Time: 0.811563 s
-Solutions: 8073860398446024000
-Max Blocks: 9
-
-开始多线程DXD搜索...
-Time: 0.739183 s
-Solutions: 8073860398446024000
-Max Blocks: 9
-
-文件名: Cernet
-开始单线程DXD搜索...
-Time: 0.379973 s
-Solutions: 21676569192375552
-Max Blocks: 6
-
-开始多线程DXD搜索...
-Time: 0.374570 s
-Solutions: 21676569192375552
-Max Blocks: 6
-
-文件名: Savvis
-开始单线程DXD搜索...
-Time: 0.001913 s
-Solutions: 253125
-Max Blocks: 5
-
-开始多线程DXD搜索...
-Time: 0.001578 s
-Solutions: 253125
-Max Blocks: 5
-
-文件名: GtsCe
+文件名: grafo8186.90
 开始单线程DXD搜索...
 DXD搜索超时: Time bound broken
 
 开始多线程DXD搜索...
 DXD搜索超时: Time bound broken
 
-文件名: Harnet
-开始单线程DXD搜索...
-Time: 0.104941 s
-Solutions: 737048340
-Max Blocks: 3
-
-开始多线程DXD搜索...
-Time: 0.104905 s
-Solutions: 737048340
-Max Blocks: 3
-
-文件名: Airtel
-开始单线程DXD搜索...
-Time: 0.023150 s
-Solutions: 890155
-Max Blocks: 3
-
-开始多线程DXD搜索...
-Time: 0.026299 s
-Solutions: 890155
-Max Blocks: 3
-
-文件名: Grnet
-开始单线程DXD搜索...
-Time: 0.326875 s
-Solutions: 1206801341076240
-Max Blocks: 5
-
-开始多线程DXD搜索...
-Time: 0.321024 s
-Solutions: 1206801341076240
-Max Blocks: 5
-
-文件名: Abvt
-开始单线程DXD搜索...
-Time: 0.697365 s
-Solutions: 5119040330586371828
-Max Blocks: 5
-
-开始多线程DXD搜索...
-Time: 0.370311 s
-Solutions: 7394865140
-Max Blocks: 3
-
-文件名: Arn
-开始单线程DXD搜索...
-Time: 0.559765 s
-Solutions: 3526917517760
-Max Blocks: 4
-
-开始多线程DXD搜索...
-Time: 0.614770 s
-Solutions: 3526917517760
-Max Blocks: 4
-
-文件名: Gridnet
-开始单线程DXD搜索...
-Time: 0.000362 s
-Solutions: 125
-Max Blocks: 3
-
-开始多线程DXD搜索...
-Time: 0.000388 s
-Solutions: 125
-Max Blocks: 3
-
-文件名: Cesnet1997
-开始单线程DXD搜索...
-Time: 0.000837 s
-Solutions: 2250
-Max Blocks: 4
-
-开始多线程DXD搜索...
-Time: 0.000911 s
-Solutions: 2250
-Max Blocks: 4
-
-文件名: Abilene
-开始单线程DXD搜索...
-Time: 0.004852 s
-Solutions: 2030
-Max Blocks: 3
-
-开始多线程DXD搜索...
-Time: 0.004551 s
-Solutions: 2030
-Max Blocks: 3
-
-文件名: Cesnet1993
-开始单线程DXD搜索...
-Time: 0.000357 s
-Solutions: 125
-Max Blocks: 4
-
-开始多线程DXD搜索...
-Time: 0.000396 s
-Solutions: 125
-Max Blocks: 4
-
-文件名: Aconet
-开始单线程DXD搜索...
-Time: 2.179116 s
-Solutions: 1197603575
-Max Blocks: 4
-
-开始多线程DXD搜索...
-Time: 1.799029 s
-Solutions: 1197603575
-Max Blocks: 4
-
-文件名: Belnet2005
-开始单线程DXD搜索...
-Time: 0.037999 s
-Solutions: 173054025
-Max Blocks: 5
-
-开始多线程DXD搜索...
-Time: 0.042654 s
-Solutions: 173054025
-Max Blocks: 5
-
-文件名: Cynet
-开始单线程DXD搜索...
-Time: 19.901738 s
-Solutions: 901597780125
-Max Blocks: 5
-
-开始多线程DXD搜索...
-Time: 18.733651 s
-Solutions: 901597780125
-Max Blocks: 5
-
-文件名: Biznet
-开始单线程DXD搜索...
-Time: 0.296549 s
-Solutions: 17689533319850444544
-Max Blocks: 5
-
-开始多线程DXD搜索...
-Time: 0.217445 s
-Solutions: 1396941396597
-Max Blocks: 4
-
-文件名: Telcove
+文件名: grafo8039.65
 开始单线程DXD搜索...
 DXD搜索超时: Time bound broken
 
 开始多线程DXD搜索...
 DXD搜索超时: Time bound broken
 
-文件名: Integra
-开始单线程DXD搜索...
-Time: 0.007661 s
-Solutions: 617526000
-Max Blocks: 6
-
-开始多线程DXD搜索...
-Time: 0.011282 s
-Solutions: 617526000
-Max Blocks: 6
-
-文件名: Oteglobe
+文件名: grafo8187.70
 开始单线程DXD搜索...
 DXD搜索超时: Time bound broken
 
 开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: grafo8188.62
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: grafo7622.45
+开始单线程DXD搜索...
+Time: 274.176022 s
+Solutions: 1385447
+Max Blocks: 1
+
+开始多线程DXD搜索...
+Time: 276.884121 s
+Solutions: 1385447
+Max Blocks: 1
+
+文件名: grafo8025.82
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: grafo7628.47
+开始单线程DXD搜索...
+Time: 367.450786 s
+Solutions: 1690646
+Max Blocks: 1
+
+开始多线程DXD搜索...
+Time: 371.174454 s
+Solutions: 1690646
+Max Blocks: 1
+
+文件名: grafo8032.68
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: grafo7623.45
+开始单线程DXD搜索...
+Time: 285.779924 s
+Solutions: 1624405
+Max Blocks: 1
+
+开始多线程DXD搜索...
+Time: 285.113158 s
+Solutions: 1624405
+Max Blocks: 1
+
+文件名: grafo8189.85
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: grafo8223.99
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: grafo8222.84
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: grafo8225.88
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: grafo7626.38
+开始单线程DXD搜索...
+Time: 111.678155 s
+Solutions: 569190
+Max Blocks: 1
+
+开始多线程DXD搜索...
+Time: 112.829077 s
+Solutions: 569190
+Max Blocks: 1
+
+文件名: grafo7624.41
+开始单线程DXD搜索...
+Time: 100.792819 s
+Solutions: 451016
+Max Blocks: 1
+
+开始多线程DXD搜索...
+Time: 102.835702 s
+Solutions: 451016
+Max Blocks: 1
+
+处理文件夹完毕: cycle
+所有文件处理完毕
+�...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: grafo7628.47
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: grafo8032.68
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: grafo7623.45
+开始单线程DXD搜索...
+Time: 1145.873958 s
+Solutions: 1624405
+Max Blocks: 2
+
+开始多线程DXD搜索...
+Time: 1153.092068 s
+Solutions: 1624405
+Max Blocks: 2
+
+文件名: grafo8189.85
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: grafo8223.99
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: grafo8222.84
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: grafo8225.88
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: grafo7626.38
+开始单线程DXD搜索...
+Time: 438.618138 s
+Solutions: 569190
+Max Blocks: 1
+
+开始多线程DXD搜索...
+Time: 440.302412 s
+Solutions: 569190
+Max Blocks: 1
+
+文件名: grafo7624.41
+开始单线程DXD搜索...
+Time: 390.710534 s
+Solutions: 451016
+Max Blocks: 1
+
+开始多线程DXD搜索...
+Time: 382.196009 s
+Solutions: 451016
+Max Blocks: 1
+
+处理文件夹完毕: cycle
+===========处理文件夹: cycle_old==========
+文件名: grafo206.12
+
+文件名: grafo301.17
+
+文件名: grafo342.16
+
+文件名: grafo116.28
+
+文件名: grafo200.11
+
+文件名: grafo306.18
+
+文件名: grafo305.16
+
+文件名: grafo343.14
+
+文件名: grafo341.30
+
+文件名: grafo309.26
+
+文件名: grafo303.11
+
+文件名: grafo203.13
+
+文件名: grafo340.15
+
+文件名: grafo302.17
+
+文件名: grafo202.13
+
+文件名: grafo308.14
+
+文件名: grafo316.11
+
+文件名: grafo207.12
+
+文件名: grafo114.26
+
+文件名: grafo205.30
+
+文件名: grafo317.13
+
+文件名: grafo210.10
+
+文件名: grafo201.13
+
+文件名: grafo310.14
+
+文件名: grafo346.19
+
+文件名: grafo208.38
+
+文件名: grafo318.20
+
+文件名: grafo113.28
+
+文件名: grafo304.15
+
+文件名: grafo344.36
+
+文件名: grafo345.14
+
+文件名: grafo319.26
+
+文件名: grafo311.16
+
+文件名: grafo115.30
+
+文件名: grafo312.27
+
+文件名: grafo209.10
+
+文件名: grafo204.15
+
+文件名: grafo300.13
+
+文件名: grafo320.35
+
+文件名: grafo307.13
+
+处理文件夹完毕: cycle_old
+所有文件处理完毕

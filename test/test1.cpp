@@ -51,7 +51,7 @@ int main() {
         // filePaths.push_back(folderPath1);
         // filePaths.push_back(folderPath2);
         // filePaths.push_back(folderPath3);
-        filePaths.push_back(folderPath4);
+        // filePaths.push_back(folderPath4);
         filePaths.push_back(folderPath5);
         char delimiter = '&';
 
@@ -59,6 +59,7 @@ int main() {
         // processor.loadTable(table_file);
         MyCSV experimentCSV; // 结果CSV处理器
         experimentCSV.readCSV(table_file); // 读取结果表格
+        int counter = 0;
 
         for (auto& fp : filePaths) {
             std::vector<std::string> result = split(fp, delimiter);
@@ -83,34 +84,37 @@ int main() {
 
 
                     // DLX
-                    try {
+                    {
                         DanceZDD dxzSolver(entry.path().string(), read_mode, logger);
                         dxzSolver.cur_instance = file_name;
                         shared_ptr<ExperimentResult> res = dxzSolver.startDLX();
                         // processor.processResultFile(res, AlgorithmType::DLX);
                         experimentCSV.updateTime(file_name, dxzSolver.searchTime, DLX_COLUMN_INDEX, dxzSolver.timeout);
-                        std::cout << std::endl;
                         
-                    } catch (const std::exception& e) {
-                        logger.logLine(std::string("处理文件时出错: ") + e.what());
                     }
 
+                    logger.logLine("");
+
                     // DXZ
-                    try {
+                    {
                         DanceZDD dxzSolver(entry.path().string(), read_mode, logger);
                         dxzSolver.cur_instance = file_name;
                         shared_ptr<ExperimentResult> res = dxzSolver.startDXZ();
                         // processor.processResultFile(res, AlgorithmType::DXZ);
                         experimentCSV.updateTime(file_name, dxzSolver.searchTime, DXZ_COLUMN_INDEX, dxzSolver.timeout);
-                        std::cout << std::endl;
-                    } catch (const std::exception& e) {
-                        logger.logLine(std::string("处理文件时出错: ") + e.what());
+                    } 
+
+                    logger.logLine("");
+
+                    if (++counter % 5 == 0) {
+                        experimentCSV.writeCSV(result_file);
                     }
                 }
+
             }
             logger.logLine("处理文件夹完毕: " + fileFolderName);
             // processor.saveTable(table_file);
-            experimentCSV.writeCSV(result_file);
+            // experimentCSV.writeCSV(result_file);
         }
         std::cout << "所有文件处理完毕" << std::endl;
     return 0;

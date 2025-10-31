@@ -410,7 +410,7 @@ shared_ptr<DNNFNode> DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks) {
     std::atomic<bool> has_failure(false);
     std::atomic<bool> has_timeout(false);  // 新增：标记超时
     
-    #pragma omp parallel for schedule(dynamic) if(n > 4)
+    #pragma omp parallel for schedule(dynamic) if(n > 2)
     for (int i = 0; i < n; i++) {
         // 提前检查失败标志
         if (has_failure.load(std::memory_order_acquire) || 
@@ -496,34 +496,6 @@ shared_ptr<DNNFNode> DanceDNNF::parallelSearchDXD(vector<Block>& blocks) {
     return andNode;
 }
 
-void DanceDNNF::printBlocks(const vector<Block>& blocks) {
-        cout << "找到 " << blocks.size() << " 个独立块:\n";
-        for (size_t i = 0; i < blocks.size(); i++) {
-            cout << "块 " << i + 1 << ":\n";
-            printBlock(blocks[i]);
-        }
-}
-
-void DanceDNNF::printBlock(const Block& block) {
-        cout << "  行: [";
-        int j = 0;
-        for (int row : block.rows) {
-            cout << row + 1; // 转为1基索引显示
-            if (j < block.rows.size() - 1) cout << ", ";
-            j++;
-        }
-        cout << "]\n";
-        cout << "  列: [";
-        j = 0;
-        for (int col : block.cols) {
-            cout << col; 
-            if (j < block.cols.size() - 1) cout << ", ";
-            j++;
-        }
-        cout << "]\n\n"; 
-}
-
-
 // DXD单线程（要体现分解性）
 shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
     
@@ -572,7 +544,7 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
 
     ColumnHeader* choose = selectColumnHeuristic(block.cols); 
 
-    if(choose->size <= 0) {
+    if(!choose || choose->size <= 0) {
         setCache(state, F); // 缓存结果
         return F; // 如果没有可选列，返回F
     }
