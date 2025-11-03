@@ -362,13 +362,13 @@ shared_ptr<DNNFNode> DanceDNNF::parallelSearch(vector<Block>& blocks) {
 
     for (auto& block : blocks) {
 
-        futures.push_back(pool.enqueue([this, b = Block(block)]() mutable {
-            return DXD(b);
-        }));
-        // futures.push_back(async(launch::async, [this, block]() {  
-        //     Block blockCopy = block;  // 或直接使用 block
-        //     return DXD(blockCopy);
+        // futures.push_back(pool.enqueue([this, b = Block(block)]() mutable {
+        //     return DXD(b);
         // }));
+        futures.push_back(async(launch::async, [this, block]() {  
+            Block blockCopy = block;  // 或直接使用 block
+            return DXD(blockCopy);
+        }));
     }
 
     // 收集结果并创建Decomposed节点
@@ -391,26 +391,26 @@ shared_ptr<DNNFNode> DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks) {
     const int n = blocks.size();
         
     // 小规模优化：直接串行
-    // if (n <= 2) {
-    //     auto andNode = std::make_shared<DNNFNode>(NodeType::Decomposed, -1, 1);
-    //     for (auto& block : blocks) {
-    //         Block blockCopy = block;
-    //         auto result = DXD(blockCopy);
-    //         if (!result || result->label == -2) {
-    //             return F;
-    //         }
-    //         andNode->children.push_back(result);
-    //         andNode->count *= result->count;
-    //     }
-    //     return andNode;
-    // }
+    if (n <= 4) {
+        auto andNode = std::make_shared<DNNFNode>(NodeType::Decomposed, -1, 1);
+        for (auto& block : blocks) {
+            Block blockCopy = block;
+            auto result = DXD(blockCopy);
+            if (!result || result->label == -2) {
+                return F;
+            }
+            andNode->children.push_back(result);
+            andNode->count *= result->count;
+        }
+        return andNode;
+    }
     
     // 并行处理
     std::vector<std::shared_ptr<DNNFNode>> results(n);
     std::atomic<bool> has_failure(false);
     std::atomic<bool> has_timeout(false);  // 新增：标记超时
     
-    #pragma omp parallel for schedule(dynamic) if(n > 2)
+    #pragma omp parallel for schedule(dynamic) if(n > 4)
     for (int i = 0; i < n; i++) {
         // 提前检查失败标志
         if (has_failure.load(std::memory_order_acquire) || 
@@ -467,34 +467,6 @@ shared_ptr<DNNFNode> DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks) {
     return andNode;
 }
 
-// 并行处理每个子块，组合为 分解 节点
-shared_ptr<DNNFNode> DanceDNNF::parallelSearchDXD(vector<Block>& blocks) {
-    isParallelSearch = true; // 标记为并行搜索
-    
-    std::vector<std::future<std::shared_ptr<DNNFNode>>> futures;
-        
-    for (auto& block : blocks) {
-        futures.push_back(pool.enqueue([this, block]() mutable {
-            return parallelDXD(block);
-        }));
-    }
-    
-    // 收集结果并创建AND节点
-    auto andNode = std::make_shared<DNNFNode>(NodeType::Decomposed, -1, 0);
-    uint64_t totalCount = 1; 
-    
-    for (auto& future : futures) {
-        auto result = future.get();
-        if (result->label == -2) { 
-            return F;
-        }
-        andNode->children.push_back(result);
-        totalCount *= result->count;
-    }
-    
-    andNode->count = totalCount;
-    return andNode;
-}
 
 // DXD单线程（要体现分解性）
 shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
@@ -514,7 +486,7 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
         return cacheRes;
     }
 
-    if(block.rows.size() >= MIN_BLOCK_ROWS && !queryRecord(state)) {
+    if(p_count < MAX_P_COUNT && block.rows.size() >= MIN_BLOCK_ROWS) {
 
         vector<Block> curBlock;
         if (useETT) {
@@ -522,10 +494,20 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
         } else if (useIG) {
             curBlock = getComponents(block.rows);
         }
+        // if (debug) record_detect_count++;
 
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
-        if (curBlock.size() > 1){
-            // cout << "块分解为 " << curBlock.size() << " 个子块" << endl;
+        if (curBlock.size() > 1) {
+            // if (debug) {
+            //     cout << "第 " << record_detect_count << " 次检测到块分解。" << endl;
+            //     cout << "块分解为 " << curBlock.size() << " 个子块" << endl;
+            //     int i = 1;
+            //     for (auto& b : curBlock) {
+            //         b.printBlock(i++);
+            //     }
+            // }
+            turnOffGraphSync(); // 关闭图同步，提升性能
+
             shared_ptr<DNNFNode> res_and_node;
             p_count++;
             if (isParallelSearch) {
@@ -537,9 +519,10 @@ shared_ptr<DNNFNode> DanceDNNF::DXD(Block& block) {
 
             setCache(state, res_and_node); // 缓存结果
             return res_and_node; // 返回分解节点
-        } else {
-            insertRecord(state);
-        }
+        } 
+        // else {
+        //     insertRecord(state);
+        // }
     }
 
     ColumnHeader* choose = selectColumnHeuristic(block.cols); 
@@ -617,6 +600,7 @@ shared_ptr<DXDResult> DanceDNNF::startDXD() {
         searchTime = searchTimeSeconds;
         logger.logLine("Time: " + std::to_string(searchTimeSeconds) + " s");
         cur_result->runtime = std::to_string(searchTimeSeconds);
+        timeout = false;
 
         logger.logLine("Solutions: " + std::to_string(rootDNNF->count));
         solutionCount = rootDNNF->count;
@@ -659,6 +643,7 @@ shared_ptr<DXDResult> DanceDNNF::startMultiThreadDXD() {
         logger.logLine("Time: " + std::to_string(searchTimeSeconds) + " s");
         cur_result->runtime = std::to_string(searchTimeSeconds);
         searchTime = searchTimeSeconds;
+        timeout = false;
 
         logger.logLine("Solutions: " + std::to_string(rootDNNF->count));
         cur_result->solution_count = rootDNNF->count;

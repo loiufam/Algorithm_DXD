@@ -39,6 +39,10 @@ int main(int argc, char *argv[]){
         if (argc > 4) {
             use_ett = std::string(argv[4]) == "ett";
         }
+        bool debug = false;
+        if (argc > 5) {
+            debug = std::string(argv[5]) == "debug";
+        }
 
         string filename = fs::path(input_file).stem().string();
         algorithm_type type = parseAlgorithmType(algType);
@@ -78,12 +82,12 @@ int main(int argc, char *argv[]){
                 {
                     if (use_ett) {
                         logger.logLine("启用多线程DXD算法求解: " + filename);
-                        DanceDNNF danceDNNF(input_file, read_mode, logger, false, true, DEFAULT_THREADS);
+                        DanceDNNF danceDNNF(input_file, read_mode, logger, false, true, DEFAULT_THREADS, debug);
                         auto res = danceDNNF.startMultiThreadDXD();
                         logger.logLine("多线程DXD算法求解结束: " + filename);
                     } else {
                         logger.logLine("启用多线程DXD算法求解: " + filename);
-                        DanceDNNF danceDNNF(input_file, read_mode, logger, true, false, DEFAULT_THREADS);
+                        DanceDNNF danceDNNF(input_file, read_mode, logger, true, false, DEFAULT_THREADS, debug);
                         auto res = danceDNNF.startMultiThreadDXD();
                         logger.logLine("多线程DXD算法求解结束: " + filename);
                     }

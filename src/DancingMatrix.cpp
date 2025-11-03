@@ -411,7 +411,8 @@ void DancingMatrix::cover( int c )
     ColumnHeader* col = &ColIndex[c];  
     col->right->left = col->left;  
     col->left->right = col->right; 
-    
+    colsSet.erase(c);
+
     Node* curR, *curC;  
     curC = col->down;  
     while( curC != col )  
@@ -427,7 +428,7 @@ void DancingMatrix::cover( int c )
 
             curR = curR->right;  
         }  
-        // rowsSet.erase(curC->row);
+        rowsSet.erase(curC->row);
         curC = curC->down;  
     }  
 }
@@ -450,12 +451,12 @@ void DancingMatrix::uncover( int c )
 
             curR = curR->left;  
         }  
-        // rowsSet.insert(curC->row);
+        rowsSet.insert(curC->row);
         curC = curC->up;  
     }  
     col->right->left = col;  
     col->left->right = col;  
-
+    colsSet.insert(c);
 }
 
 void DancingMatrix::coverInBlock(int c, Block& block){
@@ -473,10 +474,12 @@ void DancingMatrix::coverInBlock(int c, Block& block){
     {    
         block.rows.erase(curC->row);
 
-        if (useETT) {
-            etTree->deactivateRow(curC->row);
-        } else if (useIG) {
-            incrementalGraph->deactivateRow(curC->row);
+        if (enableGraphSync) {
+            if (useETT) {
+                etTree->deactivateRow(curC->row);
+            } else if (useIG) {
+                incrementalGraph->deactivateRow(curC->row);
+            }
         }
 
         curR = curC->right;  
@@ -517,10 +520,12 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
         }  
 
         block.rows.insert(curC->row);
-        if (useETT) {
-            etTree->reactivateRow(curC->row);
-        } else if (useIG) {
-            incrementalGraph->reactivateRow(curC->row);
+        if (enableGraphSync) {
+            if (useETT) {
+                etTree->reactivateRow(curC->row);
+            } else if (useIG) {
+                incrementalGraph->reactivateRow(curC->row);
+            }
         }
 
         curC = curC->up;  
@@ -535,12 +540,11 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
 ColumnHeader* DancingMatrix::selectColumnHeuristic(const unordered_set<int>& cols) {
     ColumnHeader* chosen = nullptr;
     int minSize = INT_MAX;
-    // vector<int> colVec(cols.begin(), cols.end());
-    // sort(colVec.begin(), colVec.end()); // 对列进行排序，确保每次选择的顺序一致
+
     for (int col : cols) {
         if (col < 1 || col > COLS) continue; // 跳过无效列
         int sz = getColSize(col);
-        if (sz == 1) return getColumnHeader(col); // 启发式剪枝
+
         if (sz < minSize) {
             minSize = sz;
             chosen = getColumnHeader(col);
@@ -551,12 +555,14 @@ ColumnHeader* DancingMatrix::selectColumnHeuristic(const unordered_set<int>& col
 
 ColumnHeader* DancingMatrix::selectCol()
 {
-    ColumnHeader* choose = (ColumnHeader*)root->right, *cur=choose;  
+    ColumnHeader* choose = getColumnHeader(root->right->col), *cur=choose;  
     while( cur != root )  
     {   //选择元素最少的列
-        if( choose->size > cur->size )  
+        int chooseSize = getColSize(choose->col);
+        int curSize = getColSize(cur->col);
+        if( chooseSize > curSize )  
             choose = cur;  
-        cur = (ColumnHeader*)cur->right;  
+        cur = getColumnHeader(cur->right->col);  
     } 
     return choose;
 }

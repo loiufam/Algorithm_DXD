@@ -218,23 +218,23 @@ class DancingMatrix
         // ColumnHeader* fastSelect();
 
         inline ColumnHeader* getColumnHeader(int c) const {
-            std::shared_lock lock(mutex_);
+            // std::shared_lock lock(mutex_);
             ColumnHeader* col = &ColIndex[c];
             return col;
         }
 
         inline int getColSize(int c) const {
-            std::shared_lock lock(mutex_);
+            // std::shared_lock lock(mutex_);
             return ColIndex[c].size;
         }
 
         inline void decColSize(int c) {
-            std::unique_lock lock(mutex_);
+            // std::unique_lock lock(mutex_);
             ColIndex[c].size--;
         }
 
         inline void incColSize(int c) {
-            std::unique_lock lock(mutex_);
+            // std::unique_lock lock(mutex_);
             ColIndex[c].size++;
         }
 
@@ -257,6 +257,14 @@ class DancingMatrix
 
         void printGraph() const;
         void build_graph();
+
+        void turnOnGraphSync() {
+            enableGraphSync = true;
+        }
+
+        void turnOffGraphSync() {
+            enableGraphSync = false;
+        }
 
     private:  
         ColumnHeader* root;  
@@ -282,7 +290,7 @@ class DancingMatrix
         std::pair<int, int> make_row_pair(int r1, int r2) {
             return r1 < r2 ? std::make_pair(r1, r2) : std::make_pair(r2, r1);
         }
-        bool enableGraphSync; // 是否启用图同步
+        bool enableGraphSync = true; // 是否启用图同步
         
 };
 

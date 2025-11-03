@@ -3,11 +3,25 @@
 
 static Logger logger("../test/test_log.txt");  // 全局日志
 
-int main(){
+int main(int argc, char* argv[]) {
+
+    string input_file = "../input_matrix.txt";
+    if (argc > 1) {
+        input_file = std::string(argv[1]);
+    }
+
+    bool useEtt = true; // 是否使用ETT
+    if (argc > 2) {
+        useEtt = std::string(argv[2]) == "ett";
+    }
+
+    bool debug = false;
+    if (argc > 3) {
+        debug = std::string(argv[3]) == "debug";
+    }
 
     try
     {
-        const string input_file = "../input_matrix.txt";
 
         // DancingMatrix matrix(input_file, 3, false, true); 
         // auto block = matrix.InitBlock;
@@ -33,9 +47,15 @@ int main(){
         //     component.printBlock(i++);
         // }
         // cout << endl;
-        DanceDNNF dxd(input_file, 3, logger, false, true, 8);
-        // dxd.startDXD();
-        dxd.startMultiThreadDXD();
+        if (useEtt) {
+            cout << "使用ETT方法" << endl;
+            DanceDNNF dxd(input_file, 3, logger, false, true, 12, debug);
+            dxd.startMultiThreadDXD();
+        } else {
+            cout << "使用原方法" << endl;
+            DanceDNNF dxd(input_file, 3, logger, true, false, 12, debug);
+            dxd.startMultiThreadDXD();
+        }
 
     }
     catch (const std::exception& e) {

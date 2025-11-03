@@ -220,25 +220,25 @@ int DanceZDD::search() {
     } 
 
 
-    size_t columnState = getColumnState();
-    if (Cache.find(columnState) != Cache.end()) {
-        return Cache[columnState]; 
-    }
+    // size_t columnState = getColumnState();
+    // if (Cache.find(columnState) != Cache.end()) {
+    //     return Cache[columnState]; 
+    // }
 
     // 生成当前状态的签名
-    // Signature sig = getColumnSignature();
+    Signature sig = getColumnSignature();
     
     // 检查Memo Cache
-    // auto it = memoCache.find(sig);
-    // if (it != memoCache.end()) {
-    //     return it->second;
-    // }
+    auto it = memoCache.find(sig);
+    if (it != memoCache.end()) {
+        return it->second;
+    }
 
     ColumnHeader* choose = selectCol();
 
     if( choose->size <= 0 ){
-        // memoCache[sig] = 0;
-        Cache[columnState] = 0;
+        memoCache[sig] = 0;
+        // Cache[columnState] = 0;
         return 0;  
     } 
 
@@ -272,8 +272,8 @@ int DanceZDD::search() {
     uncover(choose->col);  //回溯
     
     // 存入缓存
-    // memoCache[sig] = resZDD;
-    Cache[columnState] = resZDD;
+    memoCache[sig] = resZDD;
+    // Cache[columnState] = resZDD;
 
     return resZDD;
 
@@ -311,6 +311,7 @@ shared_ptr<ExperimentResult> DanceZDD::startDLX(){
         logger.logLine("Time: " + std::to_string(searchTimeSeconds) + " s");
         cur_result->runtime = std::to_string(searchTimeSeconds);
         searchTime = searchTimeSeconds;
+        timeout = false;
 
         logger.logLine("Solutions: " + std::to_string(count));
         cur_result->solution_count = count;
@@ -341,6 +342,7 @@ shared_ptr<ExperimentResult> DanceZDD::startDXZ(){
         cur_result->runtime = std::to_string(searchTimeSeconds);
         searchTime = searchTimeSeconds;
         logger.logLine("Time: " + std::to_string(searchTimeSeconds) + " s");
+        timeout = false;
 
         unordered_map<int, uint64_t> countMemo;
         count = countSolutions(root, countMemo);

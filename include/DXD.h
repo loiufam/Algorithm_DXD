@@ -161,7 +161,7 @@ class DanceDNNF : DancingMatrix {
 
     public:
         DanceDNNF(int rows, int cols, int** matrix, Logger& l, bool verbose = false, int pool_size = 8) 
-            : DancingMatrix(rows, cols, matrix, verbose), logger(l), pool(getThreadPool(pool_size)) {
+            : DancingMatrix(rows, cols, matrix, verbose), logger(l) {
             
  
             timer.setTimeBound(TIME_LIMIT_SECONDS);
@@ -169,12 +169,12 @@ class DanceDNNF : DancingMatrix {
             std::cout<< "初始化DanceDNNF完成." << endl;
         }
 
-        DanceDNNF(const string& file_path, int from, Logger& l, bool useIG = false, bool useETT = false, int pool_size = 1)
-            : DancingMatrix(file_path, from, useIG, useETT), logger(l), pool(getThreadPool(pool_size)) {
+        DanceDNNF(const string& file_path, int from, Logger& l, 
+                        bool useIG = false, bool useETT = false, int pool_size = 8, bool debug = false)
+            : DancingMatrix(file_path, from, useIG, useETT), logger(l), debug(debug) {
 
             if(useETT || useIG) {
                 omp_set_num_threads(pool_size); // 设置并行线程数
-                omp_set_max_active_levels(1); // 设置最大并行级别
             }
             timer.setTimeBound(TIME_LIMIT_SECONDS);
         }
@@ -185,7 +185,7 @@ class DanceDNNF : DancingMatrix {
 
         int MAX_P_COUNT = 1; // 最大并行搜索次数   
         int p_count; // 记录并行搜索的次数
-        int depth = 0;
+        int record_detect_count = 0; // 记录第几次检测
         size_t MAX_B_COUNT = 1;
         string cur_instance = ""; // 当前处理的实例名
         double searchTime = 0.0;
@@ -193,6 +193,7 @@ class DanceDNNF : DancingMatrix {
         bool timeout = false; // 是否超时
         bool isParallelSearch = false; // 是否并行搜索
         double decomposeTime = 0.0;
+        bool debug = false;
 
         vector<set<int>> mergeRowSets(Block& block);
         vector<Block> spilitBlock(const vector<set<int>>& mergeRowSets);
@@ -212,7 +213,6 @@ class DanceDNNF : DancingMatrix {
         shared_ptr<DNNFNode> serialSearch(vector<Block>& blocks);
         shared_ptr<DNNFNode> parallelSearch(vector<Block>& blocks);
         shared_ptr<DNNFNode> parallelSearchUseOmp(vector<Block>& blocks);
-        shared_ptr<DNNFNode> parallelSearchDXD(vector<Block>& blocks);
         shared_ptr<DNNFNode> parallelDXD(Block& blocks);
 
         // 启动搜索函数
@@ -252,7 +252,7 @@ class DanceDNNF : DancingMatrix {
 
     private:
 
-        ThreadPool& pool;
+        // ThreadPool& pool;
         Logger& logger;
         shared_ptr<DXDResult> cur_result = make_shared<DXDResult>(); // 当前实例结果
         

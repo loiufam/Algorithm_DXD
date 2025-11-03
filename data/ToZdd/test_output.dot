@@ -1,0 +1,45 @@
+digraph ZDD {
+  rankdir=TB;
+  node [shape=circle];
+  edge [arrowhead=none];
+
+  F [shape=box, label="0"];
+  T [shape=box, label="1"];
+
+  n14 [label="1"];
+  n15 [label="2"];
+  n16 [label="3"];
+  n17 [label="4"];
+  n18 [label="5"];
+  n19 [label="7"];
+  n19 -> F [style=dashed, color=red];
+  n19 -> T [style=solid, color=blue];
+  n18 -> F [style=dashed, color=red];
+  n18 -> n19 [style=solid, color=blue];
+  n17 -> F [style=dashed, color=red];
+  n17 -> n18 [style=solid, color=blue];
+  n20 [label="5"];
+  n21 [label="6"];
+  n21 -> F [style=dashed, color=red];
+  n21 -> T [style=solid, color=blue];
+  n20 -> F [style=dashed, color=red];
+  n20 -> n21 [style=solid, color=blue];
+  n16 -> n17 [style=dashed, color=red];
+  n16 -> n20 [style=solid, color=blue];
+  n22 [label="3"];
+  n23 [label="6"];
+  n23 -> F [style=dashed, color=red];
+  n23 -> n19 [style=solid, color=blue];
+  n22 -> n19 [style=dashed, color=red];
+  n22 -> n23 [style=solid, color=blue];
+  n15 -> n16 [style=dashed, color=red];
+  n15 -> n22 [style=solid, color=blue];
+  n24 [label="4"];
+  n25 [label="7"];
+  n25 -> T [style=dashed, color=red];
+  n25 -> T [style=solid, color=blue];
+  n24 -> F [style=dashed, color=red];
+  n24 -> n25 [style=solid, color=blue];
+  n14 -> n15 [style=dashed, color=red];
+  n14 -> n24 [style=solid, color=blue];
+}

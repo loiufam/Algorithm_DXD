@@ -522,91 +522,110 @@ void checkHeaders(std::vector<std::string>& headers) {
 
 int main(int argc, char* argv[]) {
 
-    // if (argc < 4) {
-    //     std::cout << "Usage: " << argv[0] << " <input_matrix> <output_zdd> <read_mode> [output_dot]" << std::endl;
-    //     std::cout << "Example: " << argv[0] << " matrix.txt output.zdd 1 output.dot" << std::endl;
-    //     return 1;
-    // }
+    if (argc < 4) {
+        std::cout << "Usage: " << argv[0] << " <input_matrix> <output_zdd> <read_mode> [output_dot]" << std::endl;
+        std::cout << "Example: " << argv[0] << " matrix.txt output.zdd 1 output.dot" << std::endl;
+        return 1;
+    }
     
-    // std::string inputFile = argv[1];
-    // std::string outputFile = argv[2];
-    // int read_mode = std::stoi(argv[3]);
-    // std::string dotFile = (argc > 4) ? argv[4] : "";
+    std::string inputFile = argv[1];
+    std::string outputFile = argv[2];
+    int read_mode = std::stoi(argv[3]);
+    std::string dotFile = (argc > 4) ? argv[4] : "";
+    bool batchExperiment = (argc > 5 && std::string(argv[5]) == "batch");
 
-    // 文件夹路径
-    std::vector<std::string> filePaths;
-    std::string folderPath1 = "../exact_cover_benchmark 1";
-    std::string folderPath2 = "../set_partitioning_benchmarks 2";
-    std::string folderPath3 = "../graph_matrix 3";
-    std::string folderPath4 = "../graph_matrix/partition 3";
-    std::string folderPath5 = "../graph_matrix/cycle 3";
-    // filePaths.push_back(folderPath1);
-    // filePaths.push_back(folderPath2);
-    // filePaths.push_back(folderPath3);
-    // filePaths.push_back(folderPath4);
-    filePaths.push_back(folderPath5);
+    if (batchExperiment) {
+        // 文件夹路径
+        std::vector<std::string> filePaths;
+        std::string folderPath1 = "../exact_cover_benchmark 1";
+        std::string folderPath2 = "../set_partitioning_benchmarks 2";
+        std::string folderPath3 = "../graph_matrix 3";
+        std::string folderPath4 = "../graph_matrix/partition 3";
+        std::string folderPath5 = "../graph_matrix/cycle 3";
+        // filePaths.push_back(folderPath1);
+        // filePaths.push_back(folderPath2);
+        // filePaths.push_back(folderPath3);
+        // filePaths.push_back(folderPath4);
+        filePaths.push_back(folderPath5);
 
-    // 读取csv文件
-    std::vector<std::string> headers;
-    std::vector<std::vector<std::string>> rows;
+        // 读取csv文件
+        std::vector<std::string> headers;
+        std::vector<std::vector<std::string>> rows;
 
-    const std::string table = "../../exp_results.csv";
-    const std::string outputPath = "../../../D3X/data/graphs/cycle/";
-    readCSV(table, headers, rows);
-    checkHeaders(headers);
+        const std::string table = "../../exp_results.csv";
+        const std::string outputPath = "../../../D3X/data/graphs/cycle/";
+        readCSV(table, headers, rows);
+        checkHeaders(headers);
 
-    // 遍历文件夹中的文件
-    std::string folderName;
-    int mode;
-    for (const auto& folderPath : filePaths) {
-        std::stringstream ss(folderPath);
-        ss >> folderName;
-        ss >> mode;
-        std::cout << "Start compile folder: " << folderName << ", mode: " << mode << std::endl;
-        for (const auto& entry : std::filesystem::directory_iterator(folderName)) {
-            if (entry.is_regular_file()) {
-                std::string filePath = entry.path().string();
-                std::string fileName = entry.path().stem().string();
-                std::string outputFile = outputPath + fileName + ".zdd";
+        // 遍历文件夹中的文件
+        std::string folderName;
+        int mode;
+        for (const auto& folderPath : filePaths) {
+            std::stringstream ss(folderPath);
+            ss >> folderName;
+            ss >> mode;
+            std::cout << "Start compile folder: " << folderName << ", mode: " << mode << std::endl;
+            for (const auto& entry : std::filesystem::directory_iterator(folderName)) {
+                if (entry.is_regular_file()) {
+                    std::string filePath = entry.path().string();
+                    std::string fileName = entry.path().stem().string();
+                    std::string outputFile = outputPath + fileName + ".zdd";
 
-                CUDDMatrixCompiler compiler;
+                    CUDDMatrixCompiler compiler;
 
-                // 加载矩阵
-                if (!compiler.readFromFile(filePath, mode)) {
-                    std::cerr << "Failed to read file: " << filePath << std::endl;
-                    return 1;
+                    // 加载矩阵
+                    if (!compiler.readFromFile(filePath, mode)) {
+                        std::cerr << "Failed to read file: " << filePath << std::endl;
+                        return 1;
+                    }
+                    
+                    std::cout << "Compiling " << fileName << std::endl;
+
+                    // 编译为ZDD
+                    auto start = std::chrono::high_resolution_clock::now();
+                    auto zdd = compiler.compile();
+                    auto end = std::chrono::high_resolution_clock::now();
+                    
+                    double elapsed = std::chrono::duration<double>(end - start).count();
+                    std::cout << "Compilation time: " << elapsed << " seconds" << std::endl;
+
+                    // 按文件名写入csv {instace(col1) == fileName, time(14) == elapsed}
+                    updateRecord(headers, rows, fileName, elapsed);
+                    
+                    // 输出ZDD文件
+                    compiler.outputZDD(zdd, outputFile);
+                    
                 }
-                
-                std::cout << "Compiling " << fileName << std::endl;
-
-                // 编译为ZDD
-                auto start = std::chrono::high_resolution_clock::now();
-                auto zdd = compiler.compile();
-                auto end = std::chrono::high_resolution_clock::now();
-                
-                double elapsed = std::chrono::duration<double>(end - start).count();
-                std::cout << "Compilation time: " << elapsed << " seconds" << std::endl;
-
-                // 按文件名写入csv {instace(col1) == fileName, time(14) == elapsed}
-                updateRecord(headers, rows, fileName, elapsed);
-
-                // 输出统计信息
-                // compiler.printStats(zdd);
-                
-                // 输出ZDD文件
-                compiler.outputZDD(zdd, outputFile);
-                
-                // 可选：导出DOT文件用于可视化
-                // if (!dotFile.empty()) {
-                //     compiler.exportDotCustom(zdd, dotFile);
-                // }
-                
             }
-        }
-    }    
-    writeCSV(table, headers, rows); // 写入csv文件
+        }    
+        writeCSV(table, headers, rows); // 写入csv文件
 
-    std::cout << "All compilations completed. Results saved to " << table << std::endl;
+        std::cout << "All compilations completed. Results saved to " << table << std::endl;
+    } else {
+
+        CUDDMatrixCompiler compiler;
+
+        // 加载矩阵
+        if (!compiler.readFromFile(inputFile, read_mode)) {
+            std::cerr << "Failed to read file: " << inputFile << std::endl;
+            return 1;
+        }
+        
+        std::cout << "Compiling " << inputFile << std::endl;
+
+        // 编译为ZDD
+        auto zdd = compiler.compile();
+
+        // 输出ZDD文件
+        compiler.outputZDD(zdd, outputFile);
+        
+        // 导出DOT文件用于可视化
+        if (!dotFile.empty()) {
+            compiler.exportDotCustom(zdd, dotFile);
+        }
+
+    }
+    
     return 0;
 }
 

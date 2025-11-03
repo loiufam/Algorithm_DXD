@@ -1,5 +1,2 @@
-启用DXZ算法求解: grafo7625.47
-DXZ开始搜索...
-Time: 5.030102 s
-Solutions: 2000351
-DXZ算法求解结束: grafo7625.47
+启用DLX算法求解: Syringa
+DLX开始搜索...
