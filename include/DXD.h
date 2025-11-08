@@ -56,6 +56,82 @@ struct DNNFNode {
 
 };
 
+// 轻量级结果结构
+struct DNNFResult {
+    uint64_t count;          // 精确计数（未溢出时使用）
+    bool overflowed;         // 是否溢出
+    ScientificCount sciCount; // 科学计数法（溢出后使用）
+    DNNFNode* node;              // 原有的节点指针
+    
+    // 从精确值构造
+    DNNFResult(uint64_t c) : count(c), overflowed(false), sciCount(c), node(nullptr) {}
+    
+    // 从科学计数法构造
+    DNNFResult(const ScientificCount& sc) : count(0), overflowed(true), sciCount(sc), node(nullptr) {}
+    
+    // 默认构造（零值）
+    DNNFResult() : count(0), overflowed(false), sciCount(0), node(nullptr) {}
+    
+    bool isZero() const {
+        return overflowed ? sciCount.isZero() : (count == 0);
+    }
+    
+    bool isFailure() const { 
+        return isZero() && node && node->label == -2; 
+    }
+    
+    std::string toString() const {
+        if (overflowed) {
+            return sciCount.toString();
+        } else {
+            return std::to_string(count);
+        }
+    }
+    
+    // 乘法操作
+    DNNFResult operator*(const DNNFResult& other) const {
+        if (this->isZero() || other.isZero()) {
+            return DNNFResult(0);
+        }
+        
+        // 如果任意一方已经溢出，使用科学计数法
+        if (this->overflowed || other.overflowed) {
+            ScientificCount result = this->sciCount * other.sciCount;
+            return DNNFResult(result);
+        }
+        
+        // 检查是否会溢出
+        if (this->count <= ULLONG_MAX / other.count) {
+            return DNNFResult(this->count * other.count);
+        } else {
+            // 溢出，转换为科学计数法
+            ScientificCount result = this->sciCount * other.sciCount;
+            return DNNFResult(result);
+        }
+    }
+    
+    // 加法操作
+    DNNFResult operator+(const DNNFResult& other) const {
+        if (this->isZero()) return other;
+        if (other.isZero()) return *this;
+        
+        // 如果任意一方已经溢出，使用科学计数法
+        if (this->overflowed || other.overflowed) {
+            ScientificCount result = this->sciCount + other.sciCount;
+            return DNNFResult(result);
+        }
+        
+        // 检查是否会溢出
+        if (this->count <= ULLONG_MAX - other.count) {
+            return DNNFResult(this->count + other.count);
+        } else {
+            // 溢出，转换为科学计数法
+            ScientificCount result = this->sciCount + other.sciCount;
+            return DNNFResult(result);
+        }
+    }
+};
+
 // 生成block hash key
 struct SetIntHash {
     std::size_t operator()(const std::pair<std::unordered_set<int>, int>& p) const {
@@ -173,7 +249,7 @@ class DanceDNNF : DancingMatrix {
                         bool useIG = false, bool useETT = false, int pool_size = 8, bool debug = false)
             : DancingMatrix(file_path, from, useIG, useETT), logger(l), debug(debug) {
 
-            if(useETT || useIG) {
+            if(pool_size > 1) {
                 omp_set_num_threads(pool_size); // 设置并行线程数
             }
             timer.setTimeBound(TIME_LIMIT_SECONDS);
@@ -183,13 +259,13 @@ class DanceDNNF : DancingMatrix {
 
         CStopWatch timer;   // 计时器
 
-        int MAX_P_COUNT = 1; // 最大并行搜索次数   
+        const int MAX_P_COUNT = 1; // 最大并行搜索次数   
         int p_count; // 记录并行搜索的次数
         int record_detect_count = 0; // 记录第几次检测
-        size_t MAX_B_COUNT = 1;
+        size_t MAX_B_COUNT;
         string cur_instance = ""; // 当前处理的实例名
         double searchTime = 0.0;
-        uint64_t solutionCount = 0; // 记录解的数量
+        string solutionCount; // 记录解的数量
         bool timeout = false; // 是否超时
         bool isParallelSearch = false; // 是否并行搜索
         double decomposeTime = 0.0;
@@ -209,15 +285,20 @@ class DanceDNNF : DancingMatrix {
         void batchCoverInBlock(Node* curC, Block& block);
         void batchUncoverInBlock(Block& block);
 
-        shared_ptr<DNNFNode> DXD(Block& block);
-        shared_ptr<DNNFNode> serialSearch(vector<Block>& blocks);
+        // 多线程DLX
+        uint64_t parallelSearchMDLX(vector<Block>& blocks);
+        void MDLX(vector<int>& sols, uint64_t& count, Block& block);
+
+        DNNFResult DXD(Block& block);
+        DNNFResult serialSearch(vector<Block>& blocks);
         shared_ptr<DNNFNode> parallelSearch(vector<Block>& blocks);
-        shared_ptr<DNNFNode> parallelSearchUseOmp(vector<Block>& blocks);
+        DNNFResult parallelSearchUseOmp(vector<Block>& blocks);
         shared_ptr<DNNFNode> parallelDXD(Block& blocks);
 
         // 启动搜索函数
-        shared_ptr<DXDResult> startDXD();
-        shared_ptr<DXDResult> startMultiThreadDXD();
+        void startDXD();
+        void startMultiThreadDXD();
+        void start_MDLX_Search();
 
         bool queryRecord (size_t key) {
             std::shared_lock<std::shared_mutex> readLock(recordMutex);
@@ -249,6 +330,21 @@ class DanceDNNF : DancingMatrix {
             }
         }
 
+        uint64_t getCacheCount(const size_t& key, bool& success){
+            std::shared_lock<std::shared_mutex> readLock(cacheMutex);
+            auto it = countCache.find(key);
+            if(it != countCache.end()){
+                return it->second;
+            }
+            success = false;
+            return 0;
+        }
+
+        void setCacheCount(const size_t& key, uint64_t count){
+            std::unique_lock<std::shared_mutex> writeLock(cacheMutex);
+            countCache[key] = count;
+        }
+
 
     private:
 
@@ -272,8 +368,8 @@ class DanceDNNF : DancingMatrix {
         unordered_map<size_t, shared_ptr<DNNFNode>> C;
         unordered_map<int, shared_ptr<DNNFNode>> V_Table; // 变量节点缓存
 
-        // Block缓存
-        std::unordered_map<std::pair<std::unordered_set<int>, int>, Block, SetIntHash> block_cache;; // 用于存储Block的缓存，key为行集合和列数的组合，value为Block对象
+        // 轻量级缓存：只存计数
+        unordered_map<size_t, uint64_t> countCache;
 
         // 操作栈用于批量回溯
         std::stack<CoverOperation> operationStack;

@@ -9,7 +9,7 @@
 #include <filesystem>
 #include <cudd.h>
 
-const int TIME_COLUMN_INDEX = 14; // 第13列（索引从0开始）
+const int TIME_COLUMN_INDEX = 15; 
 const std::string INSTANCE_COLUMN = "Instance";
 const std::string TIME_COLUMN = "zdd_compile(s)";
 
@@ -28,12 +28,12 @@ struct ZDDInfo {
 class CUDDMatrixCompiler {
 private:
     DdManager* mgr;  // CUDD管理器
-    int cols;
-    int rows;
     std::vector<std::set<int>> rowSets;
     std::map<int, std::vector<ZDDInfo>> zddTable; // 变量到节点信息的映射
 
 public:
+    int cols;
+    int rows;
     CUDDMatrixCompiler() {
         // 初始化CUDD管理器
         // 参数: numVars, numVarsZ, numSlots, cacheSize, maxMemory
@@ -468,7 +468,9 @@ void writeCSV(const std::string& filename,
 void updateRecord(  std::vector<std::string>& headers,
                     std::vector<std::vector<std::string>>& rows,
                     const std::string& instanceName,
-                    double compileTime) {
+                    double compileTime,
+                    int ROWS,
+                    int COLS) {
 
     // 查找是否已存在该实例（在第1列查找）
     bool found = false;
@@ -491,71 +493,43 @@ void updateRecord(  std::vector<std::string>& headers,
         std::vector<std::string> newRow(headers.size(), "");
         newRow[0] = instanceName; // 第1列：实例名
         newRow[TIME_COLUMN_INDEX] = std::to_string(compileTime); 
+        newRow[1] = std::to_string(COLS);
+        newRow[2] = std::to_string(ROWS);
         rows.push_back(newRow);
     }
     
 }
 
-void checkHeaders(std::vector<std::string>& headers) {
-
-    // 如果文件不存在或为空，创建表头
-    if (headers.empty()) {
-        // 创建13列的表头
-        for (int i = 0; i < 13; i++) {
-            if (i == 0) {
-                headers.push_back(INSTANCE_COLUMN);
-            } else if (i == TIME_COLUMN_INDEX) {
-                headers.push_back(TIME_COLUMN);
-            } else {
-                headers.push_back("col" + std::to_string(i + 1));
-            }
-        }
-    } else {
-        while (headers.size() < 13) {
-            headers.push_back("col" + std::to_string(headers.size() + 1));
-        }
-
-        // if (headers.size() > 0) headers[0] = INSTANCE_COLUMN;
-        // if (headers.size() > TIME_COLUMN_INDEX) headers[TIME_COLUMN_INDEX] = TIME_COLUMN;
-    }
-}
 
 int main(int argc, char* argv[]) {
 
-    if (argc < 4) {
-        std::cout << "Usage: " << argv[0] << " <input_matrix> <output_zdd> <read_mode> [output_dot]" << std::endl;
-        std::cout << "Example: " << argv[0] << " matrix.txt output.zdd 1 output.dot" << std::endl;
-        return 1;
-    }
-    
-    std::string inputFile = argv[1];
-    std::string outputFile = argv[2];
-    int read_mode = std::stoi(argv[3]);
-    std::string dotFile = (argc > 4) ? argv[4] : "";
-    bool batchExperiment = (argc > 5 && std::string(argv[5]) == "batch");
+    // if (argc < 4) {
+    //     std::cout << "Usage: " << argv[0] << " <input_matrix> <output_zdd> <read_mode> [output_dot]" << std::endl;
+    //     std::cout << "Example: " << argv[0] << " matrix.txt output.zdd 1 output.dot" << std::endl;
+    //     return 1;
+    // }
 
-    if (batchExperiment) {
+
+    if (argc < 3) {
         // 文件夹路径
         std::vector<std::string> filePaths;
         std::string folderPath1 = "../exact_cover_benchmark 1";
         std::string folderPath2 = "../set_partitioning_benchmarks 2";
         std::string folderPath3 = "../graph_matrix 3";
-        std::string folderPath4 = "../graph_matrix/partition 3";
-        std::string folderPath5 = "../graph_matrix/cycle 3";
+        std::string folderPath4 = "../graph_matrix/m_blocks 3";
+
         // filePaths.push_back(folderPath1);
         // filePaths.push_back(folderPath2);
         // filePaths.push_back(folderPath3);
-        // filePaths.push_back(folderPath4);
-        filePaths.push_back(folderPath5);
+        filePaths.push_back(folderPath4);
 
         // 读取csv文件
         std::vector<std::string> headers;
         std::vector<std::vector<std::string>> rows;
 
         const std::string table = "../../exp_results.csv";
-        const std::string outputPath = "../../../D3X/data/graphs/cycle/";
+        const std::string outputPath = "../../../D3X/data/blocks/";
         readCSV(table, headers, rows);
-        checkHeaders(headers);
 
         // 遍历文件夹中的文件
         std::string folderName;
@@ -589,8 +563,7 @@ int main(int argc, char* argv[]) {
                     double elapsed = std::chrono::duration<double>(end - start).count();
                     std::cout << "Compilation time: " << elapsed << " seconds" << std::endl;
 
-                    // 按文件名写入csv {instace(col1) == fileName, time(14) == elapsed}
-                    updateRecord(headers, rows, fileName, elapsed);
+                    updateRecord(headers, rows, fileName, elapsed, compiler.rows, compiler.cols);
                     
                     // 输出ZDD文件
                     compiler.outputZDD(zdd, outputFile);
@@ -602,6 +575,11 @@ int main(int argc, char* argv[]) {
 
         std::cout << "All compilations completed. Results saved to " << table << std::endl;
     } else {
+        
+        std::string inputFile = argv[1];
+        std::string outputFile = argv[2];
+        int read_mode = std::stoi(argv[3]);
+        std::string dotFile = (argc > 4) ? argv[4] : "";
 
         CUDDMatrixCompiler compiler;
 

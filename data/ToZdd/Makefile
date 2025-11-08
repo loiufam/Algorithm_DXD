@@ -28,14 +28,14 @@ static: $(SOURCE)
 
 # 测试
 test: $(TARGET)
-	@echo "Creating test matrix..."
-	@echo "7 6" > test_matrix.txt
-	@echo "3 1 4 7" >> test_matrix.txt
-	@echo "2 1 4" >> test_matrix.txt
-	@echo "3 4 5 7" >> test_matrix.txt
-	@echo "3 3 5 6" >> test_matrix.txt
-	@echo "4 2 3 6 7" >> test_matrix.txt
-	@echo "2 2 7" >> test_matrix.txt
+# 	@echo "Creating test matrix..."
+# 	@echo "7 6" > test_matrix.txt
+# 	@echo "3 1 4 7" >> test_matrix.txt
+# 	@echo "2 1 4" >> test_matrix.txt
+# 	@echo "1 2" >> test_matrix.txt
+# 	@echo "3 3 5 6" >> test_matrix.txt
+# 	@echo "5 2 3 5 6 7" >> test_matrix.txt
+# 	@echo "2 2 7" >> test_matrix.txt
 	@echo "Running compiler..."
 	./$(TARGET) test_matrix.txt test_output.zdd 3 test_output.dot
 	@echo "Test completed!"

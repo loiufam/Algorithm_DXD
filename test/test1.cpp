@@ -5,10 +5,10 @@
 
 static Logger logger("../dxz_exp_log.txt");  // 全局日志
 const string table_file = "../exp_results.csv"; // 结果表格文件
-const string result_file = "../exp_results_test1.csv"; // 结果文件
+const string result_file = "../test1_dlx_dxz.csv"; // 结果文件
 
-const int DLX_COLUMN_INDEX = 3;
-const int DXZ_COLUMN_INDEX = 4;
+const string DLX_COLUMN_NAME = "DLX";
+const string DXZ_COLUMN_NAME = "DXZ";
 
 // 使用分隔符分割字符串
 std::vector<std::string> split(const std::string& str, char delimiter) {
@@ -47,7 +47,7 @@ int main() {
         std::string folderPath2 = "../data/set_partitioning_benchmarks&2";
         std::string folderPath3 = "../data/graph_matrix&3";
         std::string folderPath4 = "../data/graph_matrix/partition&3";
-        std::string folderPath5 = "../data/graph_matrix/cycle&3";
+        std::string folderPath5 = "../data/graph_matrix/m_blocks&3";
         // filePaths.push_back(folderPath1);
         // filePaths.push_back(folderPath2);
         // filePaths.push_back(folderPath3);
@@ -76,21 +76,14 @@ int main() {
                     if (file_name == ".DS_Store") continue;
                     logger.logLine("文件名: " + file_name);
 
-                    int rows, cols;
-                    readMatrixInfo(entry.path().string(), rows, cols); // 读取矩阵信息
-                    experimentCSV.updateCount(file_name, cols, 1); // 更新列
-                    experimentCSV.updateCount(file_name, rows, 2); // 更新行
-                    // continue;
-
-
                     // DLX
                     {
                         DanceZDD dxzSolver(entry.path().string(), read_mode, logger);
                         dxzSolver.cur_instance = file_name;
                         shared_ptr<ExperimentResult> res = dxzSolver.startDLX();
                         // processor.processResultFile(res, AlgorithmType::DLX);
-                        experimentCSV.updateTime(file_name, dxzSolver.searchTime, DLX_COLUMN_INDEX, dxzSolver.timeout);
-                        
+                        experimentCSV.updateTime(file_name, dxzSolver.searchTime, DLX_COLUMN_NAME, dxzSolver.timeout);
+                        // experimentCSV.updateSols(file_name, dxzSolver.solutionCount, DLX_COLUMN_NAME);
                     }
 
                     logger.logLine("");
@@ -101,12 +94,13 @@ int main() {
                         dxzSolver.cur_instance = file_name;
                         shared_ptr<ExperimentResult> res = dxzSolver.startDXZ();
                         // processor.processResultFile(res, AlgorithmType::DXZ);
-                        experimentCSV.updateTime(file_name, dxzSolver.searchTime, DXZ_COLUMN_INDEX, dxzSolver.timeout);
+                        experimentCSV.updateTime(file_name, dxzSolver.searchTime, DXZ_COLUMN_NAME, dxzSolver.timeout);
+                        // experimentCSV.updateSols(file_name, dxzSolver.solutionCount, DXZ_COLUMN_NAME);
                     } 
 
                     logger.logLine("");
 
-                    if (++counter % 5 == 0) {
+                    if (++counter % 10 == 0) {
                         experimentCSV.writeCSV(result_file);
                     }
                 }

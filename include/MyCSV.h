@@ -97,10 +97,27 @@ public:
         return true;
     }
 
+    int findColumnIndex(const std::string& columnName) {
+        for (size_t i = 0; i < headers.size(); ++i) {
+            if (headers[i] == columnName) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     void updateTime(const std::string& instanceName, 
                         double time, 
-                        const int TIME_COLUMN_INDEX,
+                        const std::string& columnName,
                         bool isTimeout = false) {
+
+
+
+        int columnIndex = findColumnIndex(columnName);
+        if (columnIndex == -1) {
+            std::cerr << "Column not found: " << columnName << std::endl;
+            return;
+        }
 
         bool found = false;
         for (auto& row : rows) {
@@ -114,13 +131,13 @@ public:
                     std::ostringstream oss;
                     if (time < 0.001) {
                         // 小于 1ms 的情况
-                        row[TIME_COLUMN_INDEX] = "<1ms";
+                        row[columnIndex] = "<1ms";
                     } else {
                         oss << std::fixed << std::setprecision(4) << time; // 保留 4 位小数
-                        row[TIME_COLUMN_INDEX] = oss.str();
+                        row[columnIndex] = oss.str();
                     }
                 } else {
-                    row[TIME_COLUMN_INDEX] = "timeout";
+                    row[columnIndex] = "timeout";
                 }
                 found = true;
                 break;
@@ -135,21 +152,28 @@ public:
                 std::ostringstream oss;
                 if (time < 0.001) {
                     // 小于 1ms 的情况
-                    newRow[TIME_COLUMN_INDEX] = "<1ms";
+                    newRow[columnIndex] = "<1ms";
                 } else {
                     oss << std::fixed << std::setprecision(4) << time; // 保留 4 位小数
-                    newRow[TIME_COLUMN_INDEX] = oss.str();
+                    newRow[columnIndex] = oss.str();
                 }
             } else {
-                newRow[TIME_COLUMN_INDEX] = "timeout";
+                newRow[columnIndex] = "timeout";
             }
             rows.push_back(newRow);
         }
     }
 
-    void updateCount(const std::string& instanceName, 
-                        uint64_t count, 
-                        const int COLUMN_INDEX) {
+    void updateSols(const std::string& instanceName, 
+                        string& count, 
+                        const std::string& algName,
+                        const std::string& columnName = "#sols") {
+
+        int columnIndex = findColumnIndex(columnName);
+        if (columnIndex == -1) {
+            std::cerr << "Column not found: " << columnName << std::endl;
+            return;
+        }
 
         bool found = false;
         for (auto& row : rows) {
@@ -159,7 +183,19 @@ public:
             }
             
             if (!row.empty() && row[0] == instanceName) {
-                row[COLUMN_INDEX] = std::to_string(count);
+                // 先检查原有的的解
+                if (!row[columnIndex].empty() && (algName == "DLX" || algName == "DXZ")) {
+                    string existingCount = row[columnIndex];
+                    if (count != existingCount) {
+                        std::cerr << "Warning: solve failed for instance : " << instanceName << std::endl;
+                        int algIndex = findColumnIndex(algName);
+                        if (algIndex != -1) {
+                            row[algIndex] = "warning: solve failed";
+                        }
+                    }
+                } else {
+                    row[columnIndex] = count;
+                }
                 found = true;
                 break;
             }
@@ -169,10 +205,43 @@ public:
         if (!found) {
             std::vector<std::string> newRow(headers.size(), "");
             newRow[0] = instanceName; // 第1列：实例名
-            newRow[COLUMN_INDEX] = std::to_string(count);
+            newRow[columnIndex] = count;
             rows.push_back(newRow);
         }
     }
+
+    void updateMaxBlock(const std::string& instanceName, 
+                        size_t count, 
+                        const std::string& columnName = "#Max_B") {
+        
+        int columnIndex = findColumnIndex(columnName);
+        if (columnIndex == -1) {
+            std::cerr << "Column not found: " << columnName << std::endl;
+            return;
+        }
+
+        bool found = false;
+        for (auto& row : rows) {
+            // 确保行有足够的列
+            while (row.size() < headers.size()) {
+                row.push_back("");
+            }
+            
+            if (!row.empty() && row[0] == instanceName) {
+                row[columnIndex] = std::to_string(count);
+                found = true;
+                break;
+            }
+        }
+
+        // 如果不存在，添加新记录
+        if (!found) {
+            std::vector<std::string> newRow(headers.size(), "");
+            newRow[0] = instanceName; // 第1列：实例名
+            newRow[columnIndex] = std::to_string(count);
+            rows.push_back(newRow);
+        }
+    }    
 };
 
 

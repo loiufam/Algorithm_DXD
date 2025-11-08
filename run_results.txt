@@ -1,2 +1,6 @@
-启用DLX算法求解: Syringa
-DLX开始搜索...
+启用多线程DXD算法求解: Uunet
+开始多线程DXD搜索...
+Time: 5.335168 s
+Solutions: 86845911019032000
+Max Blocks: 20
+多线程DXD算法求解结束: Uunet

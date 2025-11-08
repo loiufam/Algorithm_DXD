@@ -1,0 +1,509 @@
+使用ETT进行独立块检测
+===========处理文件夹: ==========
+文件名: grafo206.12
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo301.17
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo342.16
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Uunet
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Renater2001
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: TLex
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo116.28
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Bandcon
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo200.11
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo8190.73
+开始多线程DLX搜索...
+Time: 0.280571 s
+Solutions: 0
+Max Blocks: 4
+
+文件名: Basnet
+开始多线程DLX搜索...
+Time: 1.212612 s
+Solutions: 0
+Max Blocks: 24
+
+文件名: grafo7625.47
+开始多线程DLX搜索...
+Time: 0.328370 s
+Solutions: 0
+Max Blocks: 3
+
+文件名: UniC
+开始多线程DLX搜索...
+Time: 0.766563 s
+Solutions: 0
+Max Blocks: 23
+
+文件名: grafo306.18
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo7627.57
+开始多线程DLX搜索...
+Time: 0.390963 s
+Solutions: 0
+Max Blocks: 4
+
+文件名: grafo305.16
+开始多线程DLX搜索...
+Time: 4.892181 s
+Solutions: 0
+Max Blocks: 29
+
+文件名: Grena
+开始多线程DLX搜索...
+Time: 1.426662 s
+Solutions: 0
+Max Blocks: 21
+
+文件名: Ans
+开始多线程DLX搜索...
+Time: 28.955711 s
+Solutions: 0
+Max Blocks: 21
+
+文件名: Amres
+开始多线程DLX搜索...
+Time: 92.286863 s
+Solutions: 0
+Max Blocks: 21
+
+文件名: Rediris
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo343.14
+开始多线程DLX搜索...
+Time: 6.374893 s
+Solutions: 0
+Max Blocks: 26
+
+文件名: Bellsouth
+开始多线程DLX搜索...
+Time: 99.792724 s
+Solutions: 0
+Max Blocks: 21
+
+文件名: grafo8226.90
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo8186.90
+开始多线程DLX搜索...
+Time: 0.303678 s
+Solutions: 0
+Max Blocks: 9
+
+文件名: grafo341.30
+开始多线程DLX搜索...
+Time: 2.465259 s
+Solutions: 0
+Max Blocks: 34
+
+文件名: grafo8039.65
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Cernet
+开始多线程DLX搜索...
+Time: 0.542343 s
+Solutions: 0
+Max Blocks: 24
+
+文件名: Savvis
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: GtsCe
+开始多线程DLX搜索...
+Time: 2.061716 s
+Solutions: 0
+Max Blocks: 21
+
+文件名: grafo309.26
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo8187.70
+开始多线程DLX搜索...
+Time: 0.357194 s
+Solutions: 0
+Max Blocks: 4
+
+文件名: grafo8188.62
+开始多线程DLX搜索...
+Time: 0.262024 s
+Solutions: 0
+Max Blocks: 7
+
+文件名: Harnet
+开始多线程DLX搜索...
+Time: 0.442126 s
+Solutions: 0
+Max Blocks: 27
+
+文件名: grafo303.11
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo7622.45
+开始多线程DLX搜索...
+Time: 0.259578 s
+Solutions: 0
+Max Blocks: 3
+
+文件名: grafo203.13
+开始多线程DLX搜索...
+Time: 94.350112 s
+Solutions: 0
+Max Blocks: 28
+
+文件名: grafo8025.82
+开始多线程DLX搜索...
+Time: 0.702850 s
+Solutions: 0
+Max Blocks: 5
+
+文件名: Airtel
+开始多线程DLX搜索...
+Time: 0.782238 s
+Solutions: 0
+Max Blocks: 25
+
+文件名: Grnet
+开始多线程DLX搜索...
+Time: 37.390475 s
+Solutions: 0
+Max Blocks: 21
+
+文件名: grafo340.15
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Abvt
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Arn
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Gridnet
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo7628.47
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Cesnet1997
+开始多线程DLX搜索...
+Time: 136.702744 s
+Solutions: 0
+Max Blocks: 21
+
+文件名: Abilene
+开始多线程DLX搜索...
+��: grafo7623.45
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo308.14
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Belnet2005
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Cynet
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo316.11
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo207.12
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Biznet
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo8189.85
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Telcove
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo114.26
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo8223.99
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Integra
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo205.30
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Oteglobe
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo317.13
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Arnes
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo210.10
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Surfnet
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: HiberniaCanada
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Bren
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo201.13
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo310.14
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo346.19
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo208.38
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo318.20
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo113.28
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Agis
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: BtAsiaPac
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Litnet
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo304.15
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Bics
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo344.36
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Ai3
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Syringa
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo8222.84
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo345.14
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Carnet
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Uninet
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Marwan
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Aarnet
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Bbnplanet
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo8224.100
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: BeyondTheNetwork
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo319.26
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Ntt
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Bellcanada
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: BsonetEurope
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo8225.88
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: AttMpls
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Oxford
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Heanet
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo7626.38
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo311.16
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo7624.41
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Sago
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo115.30
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo312.27
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo209.10
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: GtsCzechRepublic
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Azrena
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo204.15
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo300.13
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Canerie
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo320.35
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Ibm
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: grafo307.13
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Chinanet
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: Uran
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+文件名: BtEurope
+开始多线程DLX搜索...
+MDLX搜索超时: Time out
+
+处理文件夹完毕: 

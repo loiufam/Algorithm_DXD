@@ -5,13 +5,13 @@
 
 static Logger logger("../dxd_exp_log.txt");  // 全局日志
 const string table_file = "../exp_results.csv"; // 结果表格文件
-const string output_file = "../exp_results_test2.csv";
+const string output_ett_file = "../dxd_ett.csv";
+const string output_ig_file = "..dxd_ig.csv";
 
-const int DXD_COLUMN_INDEX = 6;
-const int MDXD_COLUMN_INDEX = 7;
-const int NEW_DXD_COLUMN_INDEX = 8;
-const int NEW_MDXD_COLUMN_INDEX = 9;
-const int MAX_BLOCK_COLUMN_INDEX = 13;
+const string DXD_COLUMN_NAME = "DXD_S";
+const string MDXD_COLUMN_NAME = "DXD_M";
+const string NEW_DXD_COLUMN_NAME = "IDXD_S";
+const string NEW_MDXD_COLUMN_NAME = "IDXD_M";
 
 // 使用分隔符分割字符串
 std::vector<std::string> split(const std::string& str, char delimiter) {
@@ -30,18 +30,23 @@ std::vector<std::string> split(const std::string& str, char delimiter) {
 int main(int argc, char* argv[]) { 
 
         bool useETT = std::string(argv[1]) == "ett"; // 是否使用ETT
+        string outputCSV;
+        
         if (useETT) {
+            outputCSV = output_ett_file;
             logger.logLine("使用ETT进行独立块检测");
         } else {
+            outputCSV = output_ig_file;
             logger.logLine("使用增量图进行独立块检测");
         }
+
         // 文件夹路径
         std::vector<std::string> filePaths;
         const std::string folderPath1 = "../data/exact_cover_benchmark&1";
         const std::string folderPath2 = "../data/set_partitioning_benchmarks&2";
         const std::string folderPath3 = "../data/graph_matrix&3";
         std::string folderPath4 = "../data/graph_matrix/partition&3";
-        std::string folderPath5 = "../data/graph_matrix/cycle&3";
+        std::string folderPath5 = "../data/graph_matrix/m_blocks&3";
 
         // filePaths.push_back(folderPath1);
         // filePaths.push_back(folderPath2);
@@ -63,7 +68,6 @@ int main(int argc, char* argv[]) {
             int read_mode = std::stoi(result[1]);
             std::string fileFolderName = file_path.substr(file_path.find_last_of("/\\") + 1);
             logger.logLine("===========处理文件夹: " + fileFolderName + "==========");
-            // logger2.logLine("===========处理文件夹: " + fileFolderName + "==========");
             // 遍历文件夹
             for (const auto& entry : fs::directory_iterator(file_path))
             {
@@ -75,15 +79,14 @@ int main(int argc, char* argv[]) {
 
 
                     logger.logLine("文件名: " + file_name);
-                    // logger2.logLine("文件名: " + file_name);
 
                     if (useETT) {
                         // 1. use ETT
                         {
                             DanceDNNF dxdSolver(entry.path().string(), read_mode, logger, false, true);
                             dxdSolver.cur_instance = file_name;
-                            shared_ptr<DXDResult> res = dxdSolver.startDXD();
-                            experimentCSV.updateTime(file_name, dxdSolver.searchTime, NEW_DXD_COLUMN_INDEX, dxdSolver.timeout);
+                            dxdSolver.startDXD();
+                            experimentCSV.updateTime(file_name, dxdSolver.searchTime, NEW_DXD_COLUMN_NAME, dxdSolver.timeout);
                         } 
                         
                         logger.logLine("");
@@ -91,10 +94,10 @@ int main(int argc, char* argv[]) {
                         {
                             DanceDNNF dxdSolver(entry.path().string(), read_mode, logger, false, true, 24);
                             dxdSolver.cur_instance = file_name;
-                            auto res = dxdSolver.startMultiThreadDXD();
-                            experimentCSV.updateTime(file_name, dxdSolver.searchTime, NEW_MDXD_COLUMN_INDEX, dxdSolver.timeout);
+                            dxdSolver.startMultiThreadDXD();
+                            experimentCSV.updateTime(file_name, dxdSolver.searchTime, NEW_MDXD_COLUMN_NAME, dxdSolver.timeout);
                             if (!dxdSolver.timeout) {
-                                experimentCSV.updateCount(file_name, dxdSolver.MAX_B_COUNT, MAX_BLOCK_COLUMN_INDEX);
+                                // experimentCSV.updateMaxBlock(file_name, dxdSolver.MAX_B_COUNT);
                             }
                         }
                         
@@ -104,8 +107,8 @@ int main(int argc, char* argv[]) {
                         {
                             DanceDNNF dxdSolver(entry.path().string(), read_mode, logger, true, false); 
                             dxdSolver.cur_instance = file_name;
-                            shared_ptr<DXDResult> res = dxdSolver.startDXD();
-                            experimentCSV.updateTime(file_name, dxdSolver.searchTime, DXD_COLUMN_INDEX, dxdSolver.timeout);
+                            dxdSolver.startDXD();
+                            experimentCSV.updateTime(file_name, dxdSolver.searchTime, DXD_COLUMN_NAME, dxdSolver.timeout);
                         } 
 
                         logger.logLine("");
@@ -113,18 +116,20 @@ int main(int argc, char* argv[]) {
                          {
                             DanceDNNF dxdSolver(entry.path().string(), read_mode, logger, true, false, 24); 
                             dxdSolver.cur_instance = file_name;
-                            auto res = dxdSolver.startMultiThreadDXD();
-                            experimentCSV.updateTime(file_name, dxdSolver.searchTime, MDXD_COLUMN_INDEX, dxdSolver.timeout);
+                            dxdSolver.startMultiThreadDXD(); 
+                            experimentCSV.updateTime(file_name, dxdSolver.searchTime, MDXD_COLUMN_NAME, dxdSolver.timeout);
                             if (!dxdSolver.timeout) {
-                                experimentCSV.updateCount(file_name, dxdSolver.MAX_B_COUNT, MAX_BLOCK_COLUMN_INDEX);
+                                experimentCSV.updateMaxBlock(file_name, dxdSolver.MAX_B_COUNT);
+                                experimentCSV.updateSols(file_name, dxdSolver.solutionCount, MDXD_COLUMN_NAME);
                             }
                         }
                     }
 
                     logger.logLine("");
 
-                    if (++counter % 2 == 0) {
-                        experimentCSV.writeCSV(output_file);
+                    if (++counter % 5 == 0) {
+                        logger.logLine("writing to csv: "+ outputCSV);
+                        experimentCSV.writeCSV(outputCSV);
                     }
   
                     // ExactCoverSolver ecSolver(entry.path().string(), read_mode, logger, 16);
@@ -132,7 +137,6 @@ int main(int argc, char* argv[]) {
                     // shared_ptr<ExperimentResult> res = ecSolver.searchEC();
                 }
             }
-            // experimentCSV.writeCSV(output_file);
             logger.logLine("处理文件夹完毕: " + fileFolderName);
             // processor.saveTable(table_file);
         }

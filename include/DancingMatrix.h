@@ -18,6 +18,7 @@
 #include <cmath>
 #include <shared_mutex>
 #include <utility>
+#include <limits>
 
 using namespace std;
 using col_id = int;
@@ -75,6 +76,98 @@ struct SignatureHash {
     }
 };
 
+// 科学计数法结构体
+struct ScientificCount {
+    long double mantissa;
+    int exponent;
+    
+    ScientificCount() : mantissa(1.0L), exponent(0) {}
+    ScientificCount(uint64_t value) {
+        if (value == 0) {
+            mantissa = 0.0L;
+            exponent = 0;
+        } else {
+            mantissa = static_cast<long double>(value);
+            exponent = 0;
+            normalize();
+        }
+    }
+    
+    void normalize() {
+        if (mantissa == 0.0L) {
+            exponent = 0;
+            return;
+        }
+        while (std::abs(mantissa) >= 10.0L) {
+            mantissa /= 10.0L;
+            exponent++;
+        }
+        while (std::abs(mantissa) < 1.0L && mantissa != 0.0L) {
+            mantissa *= 10.0L;
+            exponent--;
+        }
+    }
+    
+    bool isZero() const {
+        return mantissa == 0.0L;
+    }
+    
+    std::string toString(int precision = 6) const {
+        std::ostringstream oss;
+        oss << std::fixed << std::setprecision(precision) << mantissa;
+        if (exponent >= 0) {
+            oss << "e+" << exponent;
+        } else {
+            oss << "e" << exponent;
+        }
+        return oss.str();
+    }
+    
+    // 乘法操作
+    ScientificCount operator*(const ScientificCount& other) const {
+        ScientificCount result;
+        result.mantissa = this->mantissa * other.mantissa;
+        result.exponent = this->exponent + other.exponent;
+        result.normalize();
+        return result;
+    }
+    
+    ScientificCount operator*(uint64_t value) const {
+        if (value == 0) {
+            return ScientificCount(0);
+        }
+        ScientificCount result;
+        result.mantissa = this->mantissa * value;
+        result.exponent = this->exponent;
+        result.normalize();
+        return result;
+    }
+    
+    // 加法操作（用于同指数级的相加）
+    ScientificCount operator+(const ScientificCount& other) const {
+        if (this->isZero()) return other;
+        if (other.isZero()) return *this;
+        
+        ScientificCount result;
+        int expDiff = this->exponent - other.exponent;
+        
+        if (expDiff > 15 || expDiff < -15) {
+            // 指数差距太大，直接返回较大的那个
+            return (this->exponent > other.exponent) ? *this : other;
+        }
+        
+        if (expDiff >= 0) {
+            result.mantissa = this->mantissa * std::pow(10.0L, expDiff) + other.mantissa;
+            result.exponent = other.exponent;
+        } else {
+            result.mantissa = this->mantissa + other.mantissa * std::pow(10.0L, -expDiff);
+            result.exponent = this->exponent;
+        }
+        result.normalize();
+        return result;
+    }
+};
+
 struct Component{ 
     set<int> rows; 
     unordered_set<int> cols; 
@@ -97,7 +190,6 @@ struct Component{
         cout << endl; 
     }
 };
-
 
 struct ColumnComparator {
     bool operator()(const std::pair<int, ColumnHeader*>& a, const std::pair<int, ColumnHeader*>& b) const {

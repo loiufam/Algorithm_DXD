@@ -10,7 +10,8 @@ enum class algorithm_type {
     dlx,
     dxz,
     dxd,
-    mdxd
+    mdxd,
+    mdlx
 };
 
 // 将字符串转换为枚举
@@ -19,6 +20,7 @@ algorithm_type parseAlgorithmType(const std::string& name) {
     if (name == "dxz") return algorithm_type::dxz;
     if (name == "dxd") return algorithm_type::dxd;
     if (name == "mdxd") return algorithm_type::mdxd;
+    if (name == "mdlx") return algorithm_type::mdlx;
     throw std::invalid_argument("Unknown algorithm type: " + name);
 }
 
@@ -26,7 +28,7 @@ algorithm_type parseAlgorithmType(const std::string& name) {
 int main(int argc, char *argv[]){
     
     if (argc < 4) {
-            std::cout << "Usage: " << argv[0] << "<algorithm> <input> <read_mode> [pool_size]" << std::endl;
+            std::cout << "Usage: " << argv[0] << "<algorithm> <input> <read_mode>" << std::endl;
             return 1;
     }
     
@@ -68,12 +70,12 @@ int main(int argc, char *argv[]){
                     if (use_ett) {
                         logger.logLine("启用DXD算法求解: " + filename);
                         DanceDNNF danceDNNF(input_file, read_mode, logger, false, true);
-                        auto res = danceDNNF.startDXD();
+                        danceDNNF.startDXD();
                         logger.logLine("DXD算法求解结束: " + filename);
                     } else {
                         logger.logLine("启用DXD算法求解: " + filename);
                         DanceDNNF danceDNNF(input_file, read_mode, logger, true, false);
-                        auto res = danceDNNF.startDXD();
+                        danceDNNF.startDXD();
                         logger.logLine("DXD算法求解结束: " + filename);
                     }
                     break;
@@ -83,13 +85,28 @@ int main(int argc, char *argv[]){
                     if (use_ett) {
                         logger.logLine("启用多线程DXD算法求解: " + filename);
                         DanceDNNF danceDNNF(input_file, read_mode, logger, false, true, DEFAULT_THREADS, debug);
-                        auto res = danceDNNF.startMultiThreadDXD();
+                        danceDNNF.startMultiThreadDXD();
                         logger.logLine("多线程DXD算法求解结束: " + filename);
                     } else {
                         logger.logLine("启用多线程DXD算法求解: " + filename);
                         DanceDNNF danceDNNF(input_file, read_mode, logger, true, false, DEFAULT_THREADS, debug);
-                        auto res = danceDNNF.startMultiThreadDXD();
+                        danceDNNF.startMultiThreadDXD();
                         logger.logLine("多线程DXD算法求解结束: " + filename);
+                    }
+                    break;
+                }
+            case algorithm_type::mdlx:
+                {
+                    if (use_ett) {
+                        logger.logLine("启用多线程LX算法求解: " + filename);
+                        DanceDNNF danceDNNF(input_file, read_mode, logger, false, true, DEFAULT_THREADS, debug);
+                        danceDNNF.start_MDLX_Search();
+                        logger.logLine("多线程LX算法求解结束: " + filename);
+                    } else {
+                        logger.logLine("启用多线程LX算法求解: " + filename);
+                        DanceDNNF danceDNNF(input_file, read_mode, logger, true, false, DEFAULT_THREADS, debug);
+                        danceDNNF.start_MDLX_Search();
+                        logger.logLine("多线程LX算法求解结束: " + filename);
                     }
                     break;
                 }
@@ -98,8 +115,7 @@ int main(int argc, char *argv[]){
                 return 1;
         }
     }
-    catch (const std::exception& e)
-    {
+    catch (const std::exception& e) {
         std::cerr << "错误：" << e.what() << '\n';
     }
     
