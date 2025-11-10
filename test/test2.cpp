@@ -6,7 +6,7 @@
 static Logger logger("../dxd_exp_log.txt");  // 全局日志
 const string table_file = "../exp_results.csv"; // 结果表格文件
 const string output_ett_file = "../dxd_ett.csv";
-const string output_ig_file = "..dxd_ig.csv";
+const string output_ig_file = "../dxd_ig.csv";
 
 const string DXD_COLUMN_NAME = "DXD_S";
 const string MDXD_COLUMN_NAME = "DXD_M";
@@ -96,9 +96,9 @@ int main(int argc, char* argv[]) {
                             dxdSolver.cur_instance = file_name;
                             dxdSolver.startMultiThreadDXD();
                             experimentCSV.updateTime(file_name, dxdSolver.searchTime, NEW_MDXD_COLUMN_NAME, dxdSolver.timeout);
-                            if (!dxdSolver.timeout) {
-                                // experimentCSV.updateMaxBlock(file_name, dxdSolver.MAX_B_COUNT);
-                            }
+                            // if (!dxdSolver.timeout) {
+                            //     experimentCSV.updateMaxBlock(file_name, dxdSolver.MAX_B_COUNT);
+                            // }
                         }
                         
                         

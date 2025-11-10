@@ -246,7 +246,7 @@ class DanceDNNF : DancingMatrix {
         }
 
         DanceDNNF(const string& file_path, int from, Logger& l, 
-                        bool useIG = false, bool useETT = false, int pool_size = 8, bool debug = false)
+                       const bool useIG = false, const bool useETT = false, int pool_size = 8, bool debug = false)
             : DancingMatrix(file_path, from, useIG, useETT), logger(l), debug(debug) {
 
             if(pool_size > 1) {
@@ -286,8 +286,8 @@ class DanceDNNF : DancingMatrix {
         void batchUncoverInBlock(Block& block);
 
         // 多线程DLX
-        uint64_t parallelSearchMDLX(vector<Block>& blocks);
-        void MDLX(vector<int>& sols, uint64_t& count, Block& block);
+        DNNFResult parallelSearchMDLX(vector<Block>& blocks);
+        DNNFResult MDLX(vector<int>& sols, Block& block);
 
         DNNFResult DXD(Block& block);
         DNNFResult serialSearch(vector<Block>& blocks);

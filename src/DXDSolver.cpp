@@ -626,18 +626,19 @@ void DanceDNNF::startMultiThreadDXD() {
     }
 }
 
-uint64_t DanceDNNF::parallelSearchMDLX(vector<Block>& blocks) {
+DNNFResult DanceDNNF::parallelSearchMDLX(vector<Block>& blocks) {
     const int n = blocks.size();
     
     // 并行处理每个子块
-    std::vector<long long> results(n, 0);
+    std::vector<DNNFResult> results(n, 0);
     std::atomic<bool> has_timeout(false);
+    std::atomic<bool> has_failure(false);
     
     #pragma omp parallel for schedule(dynamic) if(n > 2)
     for (int i = 0; i < n; i++) {
         // 提前检查超时标志
-        if (has_timeout.load(std::memory_order_acquire)) {
-            results[i] = 0;
+        if (has_timeout.load(std::memory_order_acquire) ||
+             has_failure.load(std::memory_order_acquire)) {
             continue;
         }
         
@@ -645,22 +646,24 @@ uint64_t DanceDNNF::parallelSearchMDLX(vector<Block>& blocks) {
             // 每个线程使用block的副本和独立的sols
             Block blockCopy = blocks[i];
             vector<int> threadSols;
-            uint64_t threadCount = 0;
             
             // 递归调用MDLX（每个线程独立计数）
-            MDLX(threadSols, threadCount, blockCopy);
-            
-            results[i] = threadCount;
+            auto result = MDLX(threadSols, blockCopy);
+            if (result.isZero()) {
+                has_failure.store(true, std::memory_order_release);
+            } else {
+                results[i] = result;
+            }
             
         } catch (const std::runtime_error& e) {
             // 捕获超时异常
             if (std::string(e.what()).find("Time out") != std::string::npos) {
                 has_timeout.store(true, std::memory_order_release);
+            } else {
+                has_failure.store(true, std::memory_order_release);
             }
-            results[i] = 0;
         } catch (...) {
-            // 捕获其他异常
-            results[i] = 0;
+            has_failure.store(true, std::memory_order_release);
         }
     }
     
@@ -668,36 +671,29 @@ uint64_t DanceDNNF::parallelSearchMDLX(vector<Block>& blocks) {
     if (has_timeout.load()) {
         throw std::runtime_error("Time out");
     }
+
+    // 检查失败（在主线程重新抛出）
+    if (has_failure.load()) {
+        return DNNFResult(0);
+    }
     
     // 合并结果：计算所有子块解的笛卡尔积
-    long long totalCount = 1;
-    for (int i = 0; i < n; i++) {
-        if (results[i] == 0) {
-            // 如果某个子块无解，整体无解
-            return 0;
-        }
-        
-        // 检查乘法溢出
-        if (totalCount > LLONG_MAX / results[i]) {
-            // 发生溢出，返回错误标记
-            return -1;
-        }
-        
-        totalCount *= results[i];
+    DNNFResult totalCount(1);
+    for (const auto& result : results) {
+        totalCount = totalCount * result;
     }
     
     return totalCount;
 }
 
-void DanceDNNF::MDLX(vector<int>& sols, uint64_t& count, Block& block) {
+DNNFResult DanceDNNF::MDLX(vector<int>& sols, Block& block) {
 
     if (timer.timeBoundBroken()) {
         throw std::runtime_error("Time out");
     }
 
     if( block.cols.empty() ) {
-        count++;
-        return;
+        return DNNFResult(1);
     } 
 
     if(p_count < MAX_P_COUNT && block.rows.size() >= MIN_BLOCK_ROWS) {
@@ -711,25 +707,26 @@ void DanceDNNF::MDLX(vector<int>& sols, uint64_t& count, Block& block) {
 
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
         if (curBlock.size() > 1) {
+            
+            turnOffGraphSync(); // 关闭图同步，提升性能
+            p_count++;
 
             // 多线程搜索
-            uint64_t parallelCount = parallelSearchMDLX(curBlock);
-            if (parallelCount >= 0) {
-                count += parallelCount;
-                return;
-            }
-            // 如果并行搜索失败（返回-1），继续串行搜索
+            auto parallelCount = parallelSearchMDLX(curBlock);
+            return parallelCount;
         } 
     }
 
     ColumnHeader* choose = selectColumnHeuristic(block.cols);
     if( !choose || choose->size <= 0 ) {
-        return;  
+        return DNNFResult(0);  
     }
 
+    DNNFResult totalResult = DNNFResult(0);
 
     coverInBlock( choose->col, block );
     Node* curC = choose->down;  
+
     while( curC != choose )  
     {  
          
@@ -742,7 +739,10 @@ void DanceDNNF::MDLX(vector<int>& sols, uint64_t& count, Block& block) {
 
         sols.push_back(curC->row + 1); 
         // 递归搜索
-        MDLX(sols, count, block);
+        auto result = MDLX(sols, block);
+        if (!result.isZero()) {
+            totalResult = totalResult + result;
+        }
        
         sols.pop_back();  // 回溯，移除当前行
         curR = curC->left;  
@@ -754,7 +754,7 @@ void DanceDNNF::MDLX(vector<int>& sols, uint64_t& count, Block& block) {
         curC = curC->down;  
     }  
     uncoverInBlock( choose->col, block );  
-    return; 
+    return totalResult; 
 }
 
 void DanceDNNF::start_MDLX_Search() {
@@ -762,28 +762,27 @@ void DanceDNNF::start_MDLX_Search() {
     logger.logLine("开始多线程DLX搜索...");
 
     p_count = 0;
+    MAX_B_COUNT = 1;
     
-    try{
-        uint64_t count = 0; 
+    try {
         vector<int> sols;
 
         timer.reset();
         timer.markStartTime();
         auto start = std::chrono::high_resolution_clock::now();
-        MDLX(sols, count, InitBlock);
+        auto res = MDLX(sols, InitBlock);
         auto end = std::chrono::high_resolution_clock::now();
         timer.markStopTime();
-        timer.reset();
+
+        searchTime = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
+        logger.logLine("Time: " + std::to_string(searchTime) + " s");
         timeout = false;
 
-        searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
-        searchTime = searchTimeSeconds;
-        logger.logLine("Time: " + std::to_string(searchTimeSeconds) + " s");
-
-        logger.logLine("Solutions: " + std::to_string(count));
-        solutionCount = count;
+        solutionCount = res.toString();
+        logger.logLine("Solutions: " + solutionCount);
 
         logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
+        
         return;
     } catch (std::runtime_error &e) {
         timeout = true;

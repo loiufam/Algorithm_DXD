@@ -106,6 +106,19 @@ public:
         return -1;
     }
 
+    bool instancehasRun(const std::string& instanceName, const string& columnName) {
+        int columnIndex = findColumnIndex(columnName);
+        for (const auto& row : rows) {
+            if (row[0] == instanceName) {
+                if (row[columnIndex] != "")
+                    return true;
+                else
+                    return false;
+            }
+        }
+        return false;
+    }
+
     void updateTime(const std::string& instanceName, 
                         double time, 
                         const std::string& columnName,
@@ -165,7 +178,7 @@ public:
     }
 
     void updateSols(const std::string& instanceName, 
-                        string& count, 
+                        const string& count, 
                         const std::string& algName,
                         const std::string& columnName = "#sols") {
 

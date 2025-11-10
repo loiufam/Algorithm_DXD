@@ -1,6 +1,6 @@
-启用多线程DXD算法求解: Uunet
-开始多线程DXD搜索...
-Time: 5.335168 s
-Solutions: 86845911019032000
-Max Blocks: 20
-多线程DXD算法求解结束: Uunet
+启用多线程DLX算法求解: bell-09
+开始多线程DLX搜索...
+Time: 0.518553 s
+Solutions: 21147
+Max Blocks: 1
+多线程DLX算法求解结束: bell-09

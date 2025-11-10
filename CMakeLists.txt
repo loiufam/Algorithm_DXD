@@ -27,11 +27,12 @@ set(COMMON_SOURCES
 # Add executable target
 # Main target
 add_executable(main src/main.cpp ${COMMON_SOURCES})
+# add_executable(main_dxd src/main_dxd.cpp ${COMMON_SOURCES})
 
 # Optional test targets (enable manually if needed)
 # add_executable(test1 test/test1.cpp ${COMMON_SOURCES})
-add_executable(test2 test/test2.cpp ${COMMON_SOURCES})
-# add_executable(test3 test/test3.cpp ${COMMON_SOURCES})
+# add_executable(test2 test/test2.cpp ${COMMON_SOURCES})
+add_executable(test3 test/test3.cpp ${COMMON_SOURCES})
 # add_executable(test_ett test/test_ett.cpp ${COMMON_SOURCES})
 
 # AddressSanitizer only in Debug mode
@@ -49,8 +50,9 @@ endif()
 find_package(OpenMP REQUIRED)
 if(OpenMP_CXX_FOUND)
     target_link_libraries(main PUBLIC OpenMP::OpenMP_CXX)
+    # target_link_libraries(main_dxd PUBLIC OpenMP::OpenMP_CXX)
     # target_link_libraries(test1 PUBLIC OpenMP::OpenMP_CXX)
-    target_link_libraries(test2 PUBLIC OpenMP::OpenMP_CXX)
-    # target_link_libraries(test3 PUBLIC OpenMP::OpenMP_CXX)
+    # target_link_libraries(test2 PUBLIC OpenMP::OpenMP_CXX)
+    target_link_libraries(test3 PUBLIC OpenMP::OpenMP_CXX)
     # target_link_libraries(test_ett PUBLIC OpenMP::OpenMP_CXX)
 endif()

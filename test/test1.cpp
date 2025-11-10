@@ -58,7 +58,7 @@ int main() {
         // ExperimentProcessor processor; 
         // processor.loadTable(table_file);
         MyCSV experimentCSV; // 结果CSV处理器
-        experimentCSV.readCSV(table_file); // 读取结果表格
+        experimentCSV.readCSV(result_file); // 读取结果表格
         int counter = 0;
 
         for (auto& fp : filePaths) {
@@ -74,6 +74,10 @@ int main() {
                 { 
                     std::string file_name = entry.path().stem().string();        
                     if (file_name == ".DS_Store") continue;
+                    if (experimentCSV.instancehasRun(file_name, DLX_COLUMN_NAME) && experimentCSV.instancehasRun(file_name, DXZ_COLUMN_NAME)) {
+                        logger.logLine("跳过已处理文件: " + file_name);
+                        continue;
+                    }
                     logger.logLine("文件名: " + file_name);
 
                     // DLX

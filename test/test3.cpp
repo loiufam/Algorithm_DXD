@@ -18,14 +18,17 @@ int main(int argc, char* argv[]) {
         string filefolder = argv[1]; // 输入文件文件夹
         int read_mode = std::stoi(argv[2]); // 读取模式
 
+        string outputCSV;
+
         bool useETT = std::string(argv[3]) == "ett"; // 是否使用ETT
         if (useETT) {
+            outputCSV = output_ett_file;
             logger.logLine("使用ETT进行独立块检测");
         } else {
+            outputCSV = output_ig_file;
             logger.logLine("使用增量图进行独立块检测");
         }
 
-        string outputCSV = useETT ? output_ett_file : output_ig_file;
 
         MyCSV experimentCSV; // 结果CSV处理器
         experimentCSV.readCSV(table_file); // 读取结果表格
@@ -74,6 +77,7 @@ int main(int argc, char* argv[]) {
                 logger.logLine("");
 
                 if (++counter % 5 == 0) {
+                    logger.logLine("writing to CSV: " + outputCSV);
                     experimentCSV.writeCSV(outputCSV);
                 }
 

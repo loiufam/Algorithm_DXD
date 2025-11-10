@@ -1,692 +1,603 @@
-使用增量图进行独立块检测
-===========处理文件夹: m_blocks==========
-文件名: grafo206.12
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+浣跨敤ETT杩涜鐙珛鍧楁娴�
+===========澶勭悊鏂囦欢澶�: m_blocks==========
+鏂囦欢鍚�: grafo206.12
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
+寮€濮嬪绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-文件名: grafo301.17
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+鏂囦欢鍚�: grafo301.17
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
+寮€濮嬪绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-文件名: grafo342.16
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+鏂囦欢鍚�: grafo342.16
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
+寮€濮嬪绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-文件名: Uunet
-开始单线程DXD搜索...
-Time: 10.734475 s
-Solutions: 8107067191104372736
-Max Blocks: 20
+鏂囦欢鍚�: Uunet
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 11.638011 s
+Solutions: 0
+Max Blocks: 25
 
-开始多线程DXD搜索...
-Time: 8.203398 s
-Solutions: 74139216414529
-Max Blocks: 20
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 4.913970 s
+Solutions: 0
+Max Blocks: 25
 
-文件名: Renater2001
-开始单线程DXD搜索...
-Time: 9.977093 s
-Solutions: 8246510679096295424
-Max Blocks: 20
+鏂囦欢鍚�: Renater2001
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 0.155355 s
+Solutions: 0
+Max Blocks: 25
 
-开始多线程DXD搜索...
-Time: 5.800802 s
-Solutions: 1837783692113640
-Max Blocks: 20
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 2.982232 s
+Solutions: 0
+Max Blocks: 25
 
-文件名: TLex
-开始单线程DXD搜索...
-Time: 6.008495 s
-Solutions: 10811545194771513344
-Max Blocks: 20
+writing to csv: ../dxd_ett.csv
+鏂囦欢鍚�: TLex
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 6.050048 s
+Solutions: 0
+Max Blocks: 45
 
-开始多线程DXD搜索...
-Time: 3.513278 s
-Solutions: 8198725070835816
-Max Blocks: 20
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 3.376097 s
+Solutions: 0
+Max Blocks: 45
 
-文件名: grafo116.28
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+鏂囦欢鍚�: grafo116.28
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
+寮€濮嬪绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-文件名: Bandcon
-开始单线程DXD搜索...
-Time: 6.649933 s
-Solutions: 2593911582069096448
-Max Blocks: 20
+鏂囦欢鍚�: Bandcon
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 16.320988 s
+Solutions: 0
+Max Blocks: 51
 
-开始多线程DXD搜索...
-Time: 7.101180 s
-Solutions: 3020946420306648992
-Max Blocks: 20
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 2.182180 s
+Solutions: 0
+Max Blocks: 51
 
-文件名: grafo200.11
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+鏂囦欢鍚�: grafo200.11
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
+寮€濮嬪绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-文件名: grafo8190.73
-开始单线程DXD搜索...
-Time: 294.362452 s
-Solutions: 3629841628160176048
+鏂囦欢鍚�: grafo8190.73
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 0.012529 s
+Solutions: 0
+Max Blocks: 25
+
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 135.027257 s
+SolutioTime: 303.038809 s
+Solutions: 5.009174e+36
 Max Blocks: 3
 
-开始多线程DXD搜索...
-Time: 292.036174 s
-Solutions: 26939638959738
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 332.057640 s
+Solutions: 5.009174e+36
 Max Blocks: 3
 
-文件名: Basnet
-开始单线程DXD搜索...
-Time: 2.518124 s
-Solutions: 11030375584663339008
+writing to csv: ..dxd_ig.csv
+鏂囦欢鍚�: Basnet
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 2.760008 s
+Solutions: 2.486654e+89
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 1.404370 s
-Solutions: 1602602575438440
-Max Blocks: 20
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 2.472335 s
+Solutions: 2.486654e+89
+Time: 996.681690 s
+Solutions: 0
+Max Blocks: 25
 
-文件名: grafo7625.47
-开始单线程DXD搜索...
-Time: 789.734975 s
-Solutions: 6962301531266906744
+鏂囦欢鍚�: UniC
+寮€錞ime: 856.265020 s
+Solutions: 1.337459e+29
 Max Blocks: 2
 
-开始多线程DXD搜索...
-Time: 866.977483 s
-Solutions: 430052555491222
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 1018.564238 s
+Solutions: 1.337459e+29
 Max Blocks: 2
 
-文件名: UniC
-开始单线程DXD搜索...
-Time: 7.838007 s
-Solutions: 4379287277268893696
+鏂囦欢鍚�: UniC
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 8.696480 s
+Solutions: 8.595269e+107
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 8.281436 s
-Solutions: 466806606706
-Max Blocks: 20
+寮€濮嬪绾緿XD鎼滅储瓒呮椂: Time bound broken
 
-文件名: grafo306.18
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+鏂囦欢鍚�: grafo7627.57
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 0.013357 s
+Solutions: 0
+Max BlocDXD鎼滅储瓒呮椂: Time bound broken
 
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
+寮€濮嬪绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-文件名: grafo7627.57
-开始单线程DXD搜索...
-Time: 1016.333109 s
-Solutions: 3255938057974028585
+鏂囦欢鍚�: grafo7627.57
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 1000.262174 s
+Solutions: 3.772952e+35
 Max Blocks: 3
 
-开始多线程DXD搜索...
-Time: 1042.612803 s
-Solutions: 116634468063271
+寮€濮嬪绾跨▼DXDXD鎼滅储瓒Time: 940.776430 s
+Solutions: 3.772952e+35
 Max Blocks: 3
 
-文件名: grafo305.16
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+writing to csv: ..dxd_ig.csv
+鏂囦欢鍚�: grafo305.16
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
+寮€濮嬪绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-文件名: Grena
-开始单线程DXD搜索...
-Time: 4.361500 s
-Solutions: 16919769702532775936
+鏂囦欢鍚�: Grena
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 4.476480 s
+Solutions: 1.252015e+84
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 3.969647 s
-Solutions: 48161810975960
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 3.867516 s
+Solutions: 1.252015e+84
 Max Blocks: 20
 
-文件名: Ans
-开始单线程DXD搜索...
-Time: 12.313822 s
-Solutions: 17797183616963313664
+鏂囦欢鍚�: Ans
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 12.701705 s
+Solutions: 4.008388e+106
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 11.148260 s
-Solutions: 8313929979731040000
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 11.008754 s
+Solutions: 4.008388e+106
 Max Blocks: 20
 
-文件名: Amres
-开始单线程DXD搜索...
-Time: 7.467376 s
-Solutions: 13900655056128835584
+鏂囦欢鍚�: Amres
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 7.516103 s
+Solutions: 7.004742e+109
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 4.800471 s
-Solutions: 238685363490378
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 5.302623 s
+Solutions: 7.004742e+109
 Max Blocks: 20
 
-文件名: Rediris
-开始单线程DXD搜索...
-Time: 5.815914 s
-Solutions: 11472595277060050432
+鏂囦欢鍚�: Rediris
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 5.787391 s
+Solutions: 7.240818e+104
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 3.710631 s
-Solutions: 3150006949681467
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 3.167878 s
+Solutions: 7.240818e+104
 Max Blocks: 20
 
-文件名: grafo343.14
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+writing to csv: ..dxd_ig.csv
+鏂囦欢鍚�: grafo343.14
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
+寮€濮嬪绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-文件名: Bellsouth
-开始单线程DXD搜索...
-Time: 3.450679 s
-Solutions: 1222021418051436544
+鏂囦欢鍚�: Bellsouth
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 3.330108 s
+Solutions: 7.049215e+101
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 2.395531 s
-Solutions: 1094835634124020040
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 1.908464 s
+Solutions: 7.058979e+101
 Max Blocks: 20
 
-文件名: grafo8226.90
-开始单线程DXD搜索...
-Time: 323.708937 s
-Solutions: 15974658771286665728
+鏂囦欢鍚�: grafo8226.90
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 308.764151 s
+Solutions: 2.476583e+47
 Max Blocks: 4
 
-开始多线程DXD搜索...
-Time: 314.989091 s
-Solutions: 22481133925444
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 293.776357 s
+Solutions: 2.476583e+47
 Max Blocks: 4
 
-文件名: grafo8186.90
-开始单线程DXD搜索...
-Time: 869.110836 s
-Solutions: 7252752049838852280
+鏂囦欢鍚�: grafo8186.90
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 840.553565 s
+Solutions: 4.883039e+50
 Max Blocks: 4
 
-开始多线程DXD搜索...
-Time: 844.227572 s
-Solutions: 102964521991196
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 902.797864 s
+Solutions: 4.883039e+50
 Max Blocks: 4
 
-文件名: grafo341.30
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+鏂囦欢鍚�: grafo341.30
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
+寮€濮嬪绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-文件名: grafo8039.65
-开始单线程DXD搜索...
-Time: 64.292800 s
-Solutions: 17065087210951985724
+writing to csv: ..dxd_ig.csv
+鏂囦欢鍚�: grafo8039.65
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 56.745399 s
+Solutions: 1.558039e+33
 Max Blocks: 3
 
-开始多线程DXD搜索...
-Time: 62.935309 s
-Solutions: 605471766730
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 53.239827 s
+Solutions: 1.558039e+33
 Max Blocks: 3
 
-文件名: Cernet
-开始单线程DXD搜索...
-Time: 4.772525 s
-Solutions: 3052808114364252160
+鏂囦欢鍚�: Cernet
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 3.897484 s
+Solutions: 1.522197e+100
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 3.097115 s
-Solutions: 2140801901056022880
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 2.347871 s
+Solutions: 1.522197e+100
 Max Blocks: 20
 
-文件名: Savvis
-开始单线程DXD搜索...
-Time: 9.371169 s
-Solutions: 6775220040955510784
+鏂囦欢鍚�: Savvis
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 7.581233 s
+Solutions: 6.527813e+104
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 6.188978 s
-Solutions: 465604794064690
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 4.654317 s
+Solutions: 6.535950e+104
 Max Blocks: 20
 
-文件名: GtsCe
-开始单线程DXD搜索...
-Time: 8.244547 s
-Solutions: 9038459442618519552
+鏂囦欢鍚�: GtsCe
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 6.690763 s
+Solutions: 2.714340e+112
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 6.396555 s
-Solutions: 116030042757552540
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 4.899512 s
+Solutions: 2.715196e+112
 Max Blocks: 20
 
-文件名: grafo309.26
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+鏂囦欢鍚�: grafo309.26
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
+寮€濮嬪绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-文件名: grafo8187.70
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+writing to csv: ..dxd_ig.csv
+鏂囦欢鍚�: grafo8187.70
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
+寮€濮嬪绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-文件名: grafo8188.62
-开始单线程DXD搜索...
-Time: 455.904622 s
-Solutions: 17457090956653770666
+鏂囦欢鍚�: grafo8188.62
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 411.786769 s
+Solutions: 7.687587e+35
 Max Blocks: 3
 
-开始多线程DXD搜索...
-Time: 395.339128 s
-Solutions: 55430671096286
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 403.677507 s
+Solutions: 7.687587e+35
 Max Blocks: 3
 
-文件名: Harnet
-开始单线程DXD搜索...
-Time: 3.018264 s
-Solutions: 833954946553479168
+鏂囦欢鍚�: Harnet
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 3.110015 s
+Solutions: 1.133990e+97
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 1.953126 s
-Solutions: 5989737676000
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 1.936104 s
+Solutions: 1.151193e+97
 Max Blocks: 20
 
-文件名: grafo303.11
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+鏂囦欢鍚�: grafo303.11
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
+寮€濮嬪绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-文件名: grafo7622.45
-开始单线程DXD搜索...
-Time: 226.684550 s
-Solutions: 4168377783127717011
+鏂囦欢鍚�: grafo7622.45
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 263.836852 s
+Solutions: 4.226485e+24
 Max Blocks: 2
 
-开始多线程DXD搜索...
-Time: 225.596410 s
-Solutions: 45402606225457
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 260.564808 s
+Solutions: 4.226485e+24
 Max Blocks: 2
 
-文件名: grafo203.13
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+writing to csv: ..dxd_ig.csv
+鏂囦欢鍚�: grafo203.13
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
+寮€濮嬪绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-文件名: grafo8025.82
-开始单线程DXD搜索...
-Time: 869.016766 s
-Solutions: 10783436481287929212
+鏂囦欢鍚�: grafo8025.82
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 801.295419 s
+Solutions: 5.029981e+44
 Max Blocks: 4
 
-开始多线程DXD搜索...
-Time: 783.817922 s
-Solutions: 145436661690561
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 730.468156 s
+Solutions: 5.029981e+44
 Max Blocks: 4
 
-文件名: Airtel
-开始单线程DXD搜索...
-Time: 7.599098 s
-Solutions: 12620630339166312448
+鏂囦欢鍚�: Airtel
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 7.660164 s
+Solutions: 7.210597e+110
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 6.173865 s
-Solutions: 77481964180955880
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 6.127054 s
+Solutions: 7.146325e+110
 Max Blocks: 20
 
-文件名: Grnet
-开始单线程DXD搜索...
-Time: 3.407010 s
-Solutions: 7230971118507524096
+鏂囦欢鍚�: Grnet
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 3.475137 s
+Solutions: 3.965925e+96
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 2.312773 s
-Solutions: 733631539418
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 2.347130 s
+Solutions: 3.965925e+96
 Max Blocks: 20
 
-文件名: grafo340.15
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+鏂囦欢鍚�: grafo340.15
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
+寮€濮嬪绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-文件名: Abvt
-开始单线程DXD搜索...
-Time: 4.354247 s
-Solutions: 5669928130089844736
+writing to csv: ..dxd_ig.csv
+鏂囦欢鍚�: Abvt
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 5.836394 s
+Solutions: 3.706140e+101
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 4.082681 s
-Solutions: 7853527828981212048
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 5.406639 s
+Solutions: 3.719356e+101
 Max Blocks: 20
 
-文件名: Arn
-开始单线程DXD搜索...
-Time: 5.866672 s
-Solutions: 7656922587915091968
+鏂囦欢鍚�: Arn
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 8.217660 s
+Solutions: 1.483875e+108
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 4.451927 s
-Solutions: 165336783693696
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 5.774268 s
+Solutions: 1.483875e+108
 Max Blocks: 20
 
-文件名: Gridnet
-开始单线程DXD搜索...
-Time: 6.826756 s
-Solutions: 1119953465164365824
+鏂囦欢鍚�: Gridnet
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 8.009837 s
+Solutions: 1.147153e+116
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 3.217918 s
-Solutions: 2685692099148750
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 4.278292 s
+Solutions: 1.147169e+116
 Max Blocks: 20
 
-文件名: grafo7628.47
-开始单线程DXD搜索...
-Time: 194.451662 s
-Solutions: 8740109044729505431
+鏂囦欢鍚�: grafo7628.47
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 261.397007 s
+Solutions: 4.888366e+26
 Max Blocks: 2
 
-开始多线程DXD搜索...
-Time: 193.983356 s
-Solutions: 1889060194899957
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 257.777970 s
+Solutions: 4.888366e+26
 Max Blocks: 2
 
-文件名: Cesnet1997
-开始单线程DXD搜索...
-Time: 5.661271 s
-Solutions: 4958878105486753792
+鏂囦欢鍚�: Cesnet1997
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 7.593612 s
+Solutions: 5.882877e+104
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 5.543384 s
-Solutions: 735745270572
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 5.005956 s
+Solutions: 5.976313e+104
 Max Blocks: 20
 
-文件名: Abilene
-开始单线程DXD搜索...
-Time: 7.019370 s
-Solutions: 17716169145166888960
+writing to csv: ..dxd_ig.csv
+鏂囦欢鍚�: Abilene
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 8.332719 s
+Solutions: 2.947796e+87
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 3.557182 s
-Solutions: 67318980875170920
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 4.696824 s
+Solutions: 2.947796e+87
 Max Blocks: 20
 
-文件名: Cesnet1993
-开始单线程DXD搜索...
-Time: 3.351658 s
-Solutions: 17448121011938131968
+鏂囦欢鍚�: Cesnet1993
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 3.542102 s
+Solutions: 1.218507e+94
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 2.109158 s
-Solutions: 1510831524685886208
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 1.961679 s
+Solutions: 1.218507e+94
 Max Blocks: 20
 
-文件名: grafo8032.68
-开始单线程DXD搜索...
-Time: 406.113263 s
-Solutions: 14521745831767752578
+鏂囦欢鍚�: grafo8032.68
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 453.965245 s
+Solutions: 7.695075e+40
 Max Blocks: 3
 
-开始多线程DXD搜索...
-Time: 417.059244 s
-Solutions: 1318003278719810
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 384.578444 s
+Solutions: 7.695075e+40
 Max Blocks: 3
 
-文件名: grafo302.17
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+鏂囦欢鍚�: grafo302.17
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
+寮€濮嬪绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-文件名: grafo202.13
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+鏂囦欢鍚�: grafo202.13
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
+寮€濮嬪绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-文件名: Aconet
-开始单线程DXD搜索...
-Time: 5.407630 s
-Solutions: 5938081912504451072
+writing to csv: ..dxd_ig.csv
+鏂囦欢鍚�: Aconet
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 5.555882 s
+Solutions: 2.080236e+102
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 5.605899 s
-Solutions: 148047987649083867
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 5.622930 s
+Solutions: 2.080236e+102
 Max Blocks: 20
 
-文件名: grafo7623.45
-开始单线程DXD搜索...
-Time: 762.933431 s
-Solutions: 14639088366341962874
+鏂囦欢鍚�: grafo7623.45
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 736.065769 s
+Solutions: 2.549084e+27
 Max Blocks: 2
 
-开始多线程DXD搜索...
-Time: 734.930776 s
-Solutions: 3814321919725991
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 751.762395 s
+Solutions: 2.549084e+27
 Max Blocks: 2
 
-文件名: grafo308.14
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+鏂囦欢鍚�: grafo308.14
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
+寮€濮嬪绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-文件名: Belnet2005
-开始单线程DXD搜索...
-Time: 15.404886 s
-Solutions: 9383601442526908416
+鏂囦欢鍚�: Belnet2005
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 12.541336 s
+Solutions: 8.847647e+117
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 10.240322 s
-Solutions: 7390799990065582
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 8.098070 s
+Solutions: 8.851540e+117
 Max Blocks: 20
 
-文件名: Cynet
-开始单线程DXD搜索...
-Time: 14.017428 s
-Solutions: 5196803880838443008
+鏂囦欢鍚�: Cynet
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 11.342803 s
+Solutions: 6.014676e+98
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 9.964829 s
-Solutions: 578072508658120350
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 7.899620 s
+Solutions: 6.014676e+98
 Max Blocks: 20
 
-文件名: grafo316.11
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+writing to csv: ..dxd_ig.csv
+鏂囦欢鍚�: grafo316.11
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
+寮€濮嬪绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-文件名: grafo207.12
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+鏂囦欢鍚�: grafo207.12
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
+寮€濮嬪绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-文件名: Biznet
-开始单线程DXD搜索...
-Time: 4.915158 s
-Solutions: 4862100774262792192
+鏂囦欢鍚�: Biznet
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 4.546418 s
+Solutions: 4.306131e+109
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 4.945739 s
-Solutions: 26808165404027342
+寮€濮嬪绾跨▼DXD鎼滅储...
+Time: 4.516386 s
+Solutions: 4.306103e+109
 Max Blocks: 20
 
-文件名: grafo8189.85
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+鏂囦欢鍚�: grafo8189.85
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
+寮€濮嬪绾跨▼DXD鎼滅储...
+DXD鎼滅储瓒呮椂: Time bound broken
 
-文件名: Telcove
-开始单线程DXD搜索...
-Time: 2.685020 s
-Solutions: 11286457868420481024
+鏂囦欢鍚�: Telcove
+寮€濮嬪崟绾跨▼DXD鎼滅储...
+Time: 2.957049 s
+Solutions: 8.931537e+93
 Max Blocks: 20
 
-开始多线程DXD搜索...
-Time: 1.546654 s
-Solutions: 953622372788590640
-Max Blocks: 20
-
-文件名: grafo114.26
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+寮€濮嬪绾跨▼DXD鎼滅�Time: 59.978679 s
+Solutions: 0
+Max Blocks: 125
 
 开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
-
-文件名: grafo8223.99
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
-
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
-
-文件名: Integra
-开始单线程DXD搜索...
-Time: 17.210453 s
-Solutions: 7480077633794342912
-Max Blocks: 20
-
-开始多线程DXD搜索...
-Time: 12.001248 s
-Solutions: 479424704725460802
-Max Blocks: 20
-
-文件名: grafo205.30
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
-
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
-
-文件名: Oteglobe
-开始单线程DXD搜索...
-Time: 13.394521 s
-Solutions: 5020763556509908992
-Max Blocks: 20
-
-开始多线程DXD搜索...
-Time: 9.466462 s
-Solutions: 91377062521200500
-Max Blocks: 20
-
-文件名: grafo317.13
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
-
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
-
-文件名: Arnes
-开始单线程DXD搜索...
-Time: 6.322884 s
-Solutions: 16937560929237729280
-Max Blocks: 20
-
-开始多线程DXD搜索...
-Time: 6.967368 s
-Solutions: 30949213147776
-Max Blocks: 20
-
-文件名: grafo210.10
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
-
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
-
-文件名: Surfnet
-开始单线程DXD搜索...
-Time: 10.258497 s
-Solutions: 14713126510605107200
-Max Blocks: 20
-
-开始多线程DXD搜索...
-Time: 8.174282 s
-Solutions: 525973712611200
-Max Blocks: 20
-
-文件名: HiberniaCanada
-开始单线程DXD搜索...
-Time: 6.729216 s
-Solutions: 11045979585017217024
-Max Blocks: 20
-
-开始多线程DXD搜索...
-Time: 3.692209 s
-Solutions: 8156353181778082725
-Max Blocks: 20
-
-文件名: Bren
-开始单线程DXD搜索...
-Time: 5.550615 s
-Solutions: 9775140185191743488
-Max Blocks: 20
-
-开始多线程DXD搜索...
-Time: 3.877999 s
-Solutions: 286846946694568288
-Max Blocks: 20
-
-文件名: grafo201.13
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
-
-开始多线程DXD搜索...
-DXD搜索超时: Time bound broken
+Time: 24.102424 s
+SolutioDXD搜索超时: Time bound broken
 
 文件名: grafo310.14
 开始单线程DXD搜索...
@@ -709,6 +620,7 @@ DXD搜索超时: Time bound broken
 开始多线程DXD搜索...
 DXD搜索超时: Time bound broken
 
+writing to csv: ..dxd_ig.csv
 文件名: grafo318.20
 开始单线程DXD搜索...
 DXD搜索超时: Time bound broken
@@ -721,12 +633,100 @@ DXD搜索超时: Time bound broken
 DXD搜索超时: Time bound broken
 
 开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
 
+文件名: Agis
+开始单线程DXD搜索...
+Time: 14.053474 s
+Solutions: 5.283544e+90
+Max Blocks: 20
 
 开始多线程DXD搜索...
-Time: 299.278926 s
-Solutions: 0
-Max Blocks: 85
+Time: 10.611431 s
+Solutions: 5.283544e+90
+Max Blocks: 20
+
+文件名: BtAsiaPac
+开始单线程DXD搜索...
+Time: 9.872427 s
+Solutions: 1.594148e+115
+Max Blocks: 20
+
+开始多线程DXD搜索...
+Time: 6.015328 s
+Solutions: 1.594906e+115
+Max Blocks: 20
+
+文件名: Litnet
+开始单线程DXD搜索...
+Time: 18.809903 s
+Solutions: 8.270613e+123
+Max Blocks: 20
+
+开始多线程DXD搜索...
+Time: 12.309288 s
+Solutions: 8.270007e+123
+Max Blocks: 20
+
+writing to csv: ..dxd_ig.csv
+文件名: grafo304.15
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: Bics
+开始单线程DXD搜索...
+Time: 3.529722 s
+Solutions: 4.884831e+88
+Max Blocks: 20
+
+开始多线程DXD搜索...
+Time: 2.728518 s
+Solutions: 4.884831e+88
+Max Blocks: 20
+
+文件名: grafo344.36
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: Ai3
+开始单线程DXD搜索...
+Time: 5.443622 s
+Solutions: 7.897624e+107
+Max Blocks: 20
+
+开始多线程DXD搜索...
+Time: 5.266344 s
+Solutions: 7.460091e+107
+Max Blocks: 20
+
+文件名: Syringa
+开始单线程DXD搜索...
+Time: 19.444935 s
+Solutions: 1.486027e+122
+Max Blocks: 20
+
+开始多线程DXD搜索...
+Time: 11.395337 s
+Solutions: 1.507453e+122
+Max Blocks: 20
+
+writing to csv: ..dxd_ig.csv
+文件名: grafo8222.84
+开始单线程DXD搜索...
+Time: 531.851103 s
+Solutions: 2.858200e+44
+Max Blocks: 4
+
+开始多线程DXD搜索...
+Time: 522.345498 s
+Solutions: 2.858200e+44
+Max Blocks: 4
 
 文件名: grafo345.14
 开始单线程DXD搜索...
@@ -737,80 +737,81 @@ DXD搜索超时: Time bound broken
 
 文件名: Carnet
 开始单线程DXD搜索...
-Time: 0.021257 s
-Solutions: 0
-Max Blocks: 110
+Time: 37.899209 s
+Solutions: 6.062462e+128
+Max Blocks: 20
 
 开始多线程DXD搜索...
-Time: 16.714252 s
-Solutions: 0
-Max Blocks: 110
+Time: 21.749773 s
+Solutions: 6.099611e+128
+Max Blocks: 20
 
 文件名: Uninet
 开始单线程DXD搜索...
-Time: 0.008122 s
-Solutions: 0
-Max Blocks: 110
+Time: 3.386789 s
+Solutions: 1.143470e+100
+Max Blocks: 20
 
 开始多线程DXD搜索...
-Time: 2.396748 s
-Solutions: 0
-Max Blocks: 110
+Time: 2.580938 s
+Solutions: 1.143470e+100
+Max Blocks: 20
 
 文件名: Marwan
 开始单线程DXD搜索...
-Time: 11.007160 s
-Solutions: 0
-Max Blocks: 130
+Time: 16.852086 s
+Solutions: 3.135082e+103
+Max Blocks: 20
 
 开始多线程DXD搜索...
-Time: 7.170054 s
-Solutions: 0
-Max Blocks: 130
+Time: 10.987172 s
+Solutions: 3.135062e+103
+Max Blocks: 20
 
+writing to csv: ..dxd_ig.csv
 文件名: Aarnet
 开始单线程DXD搜索...
-Time: 5.600547 s
-Solutions: 0
-Max Blocks: 126
+Time: 3.952242 s
+Solutions: 3.111224e+99
+Max Blocks: 20
 
 开始多线程DXD搜索...
-Time: 0.169212 s
-Solutions: 0
-Max Blocks: 126
+Time: 3.336896 s
+Solutions: 3.111224e+99
+Max Blocks: 20
 
 文件名: Bbnplanet
 开始单线程DXD搜索...
-Time: 8.923436 s
-Solutions: 0
-Max Blocks: 140
+Time: 3.940201 s
+Solutions: 1.212102e+104
+Max Blocks: 20
 
 开始多线程DXD搜索...
-Time: 1.448682 s
-Solutions: 0
-Max Blocks: 140
+Time: 4.365118 s
+Solutions: 1.215364e+104
+Max Blocks: 20
 
 文件名: grafo8224.100
 开始单线程DXD搜索...
-Time: 1034.934924 s
-Solutions: 0
-Max Blocks: 85
+Time: 882.853632 s
+Solutions: 4.319972e+52
+Max Blocks: 4
 
 开始多线程DXD搜索...
-Time: 1009.619108 s
-Solutions: 0
-Max Blocks: 85
+Time: 765.465329 s
+Solutions: 4.319972e+52
+Max Blocks: 4
 
 文件名: BeyondTheNetwork
 开始单线程DXD搜索...
-Time: 9.764444 s
-Solutions: 0
-Max Blocks: 105
+Time: 7.368811 s
+Solutions: 1.963376e+99
+Max Blocks: 20
 
 开始多线程DXD搜索...
-Time: 2.750758 s
-Solutions: 0
-Max Blocks: 105
+Time: 9.092859 s
+Solutions: 1.963275e+99
+Max Blocks: 20
 
 文件名: grafo319.26
 开始单线程DXD搜索...
@@ -819,93 +820,95 @@ DXD搜索超时: Time bound broken
 开始多线程DXD搜索...
 DXD搜索超时: Time bound broken
 
+writing to csv: ..dxd_ig.csv
 文件名: Ntt
 开始单线程DXD搜索...
-Time: 0.019114 s
-Solutions: 0
-Max Blocks: 130
+Time: 11.090793 s
+Solutions: 2.987699e+120
+Max Blocks: 20
 
 开始多线程DXD搜索...
-Time: 0.957557 s
-Solutions: 0
-Max Blocks: 130
+Time: 8.532177 s
+Solutions: 2.987699e+120
+Max Blocks: 20
 
 文件名: Bellcanada
 开始单线程DXD搜索...
-Time: 1.371031 s
-Solutions: 0
-Max Blocks: 105
+Time: 2.888966 s
+Solutions: 1.939153e+99
+Max Blocks: 20
 
 开始多线程DXD搜索...
-Time: 4.720104 s
-Solutions: 0
-Max Blocks: 105
+Time: 1.492102 s
+Solutions: 1.954141e+99
+Max Blocks: 20
 
 文件名: BsonetEurope
 开始单线程DXD搜索...
-Time: 51.420763 s
-Solutions: 0
-Max Blocks: 125
+Time: 23.772208 s
+Solutions: 8.473891e+107
+Max Blocks: 20
 
 开始多线程DXD搜索...
-Time: 9.450073 s
-Solutions: 0
-Max Blocks: 125
+Time: 15.556769 s
+Solutions: 8.320872e+107
+Max Blocks: 20
 
 文件名: grafo8225.88
 开始单线程DXD搜索...
-Time: 0.006717 s
-Solutions: 0
-Max Blocks: 85
+Time: 499.310628 s
+Solutions: 2.235981e+48
+Max Blocks: 4
 
 开始多线程DXD搜索...
-Time: 328.291898 s
-Solutions: 0
-Max Blocks: 85
+Time: 510.468095 s
+Solutions: 2.235981e+48
+Max Blocks: 4
 
 文件名: AttMpls
 开始单线程DXD搜索...
-Time: 3.187151 s
-Solutions: 0
-Max Blocks: 105
+Time: 6.450422 s
+Solutions: 6.133352e+96
+Max Blocks: 20
 
 开始多线程DXD搜索...
-Time: 10.505534 s
-Solutions: 0
-Max Blocks: 105
+Time: 4.351246 s
+Solutions: 6.141025e+96
+Max Blocks: 20
 
+writing to csv: ..dxd_ig.csv
 文件名: Oxford
 开始单线程DXD搜索...
-Time: 15.053296 s
-Solutions: 0
-Max Blocks: 105
+Time: 10.094179 s
+Solutions: 5.136322e+100
+Max Blocks: 20
 
 开始多线程DXD搜索...
-Time: 0.032596 s
-Solutions: 0
-Max Blocks: 105
+Time: 6.779555 s
+Solutions: 5.136322e+100
+Max Blocks: 20
 
 文件名: Heanet
 开始单线程DXD搜索...
-Time: 6.171639 s
-Solutions: 0
-Max Blocks: 105
+Time: 3.595117 s
+Solutions: 6.983183e+88
+Max Blocks: 20
 
 开始多线程DXD搜索...
-Time: 1.264401 s
-Solutions: 0
-Max Blocks: 105
+Time: 2.406163 s
+Solutions: 6.983183e+88
+Max Blocks: 20
 
 文件名: grafo7626.38
 开始单线程DXD搜索...
-Time: 0.004039 s
-Solutions: 0
-Max Blocks: 25
+Time: 40.579333 s
+Solutions: 5.799022e+21
+Max Blocks: 2
 
 开始多线程DXD搜索...
-Time: 0.003832 s
-Solutions: 0
-Max Blocks: 25
+Time: 38.943150 s
+Solutions: 5.799022e+21
+Max Blocks: 2
 
 文件名: grafo311.16
 开始单线程DXD搜索...
@@ -916,29 +919,28 @@ DXD搜索超时: Time bound broken
 
 文件名: grafo7624.41
 开始单线程DXD搜索...
-Time: 0.014887 s
-Solutions: 0
-Max Blocks: 25
+Time: 26.374084 s
+Solutions: 3.378530e+21
+Max Blocks: 2
 
 开始多线程DXD搜索...
-Time: 0.003148 s
-Solutions: 0
-Max Blocks: 25
+Time: 28.253069 s
+Solutions: 3.378530e+21
+Max Blocks: 2
 
+writing to csv: ..dxd_ig.csv
 文件名: Sago
 开始单线程DXD搜索...
-Time: 1.036577 s
-Solutions: 0
-Max Blocks: 45
+Time: 3.781071 s
+Solutions: 3.143663e+89
+Max Blocks: 20
 
 开始多线程DXD搜索...
-Time: 0.960885 s
-Solutions: 0
-Max Blocks: 45
+TimeDXD搜索超时: Time bound broken
 
-文件名: grafo115.30
-开始单线程DXD搜索...
-DXD搜索超时: Time bound broken
+writing to csv: ../dxd_ett.csv
+文件名: Ibm
+开始单线程DXD搜�DXD搜索超时: Time bound broken
 
 开始多线程DXD搜索...
 DXD搜索超时: Time bound broken
@@ -955,3 +957,115 @@ DXD搜索超时: Time bound broken
 DXD搜索超时: Time bound broken
 
 开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: GtsCzechRepublic
+开始单线程DXD搜索...
+Time: 6.077525 s
+Solutions: 1.197764e+102
+Max Blocks: 20
+
+开始多线程DXD搜索...
+Time: 6.660410 s
+Solutions: 1.194144e+102
+Max Blocks: 20
+
+writing to csv: ..dxd_ig.csv
+文件名: Azrena
+开始单线程DXD搜索...
+Time: 6.532115 s
+Solutions: 3.536455e+115
+Max Blocks: 20
+
+开始多线程DXD搜索...
+Time: 4.118645 s
+Solutions: 3.502948e+115
+Max Blocks: 20
+
+文件名: grafo204.15
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: grafo300.13
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: Canerie
+开始单线程DXD搜索...
+Time: 4.475120 s
+Solutions: 8.360762e+102
+Max Blocks: 20
+
+开始多线程DXD搜索...
+Time: 4.307711 s
+Solutions: 8.343475e+102
+Max Blocks: 20
+
+文件名: grafo320.35
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+writing to csv: ..dxd_ig.csv
+文件名: Ibm
+开始单线程DXD搜索...
+Time: 11.286315 s
+Solutions: 1.894468e+106
+Max Blocks: 20
+
+开始多线程DXD搜索...
+Time: 9.377745 s
+Solutions: 1.894468e+106
+Max Blocks: 20
+
+文件名: grafo307.13
+开始单线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+开始多线程DXD搜索...
+DXD搜索超时: Time bound broken
+
+文件名: Chinanet
+开始单线程DXD搜索...
+Time: 9.941075 s
+Solutions: 3.683117e+113
+Max Blocks: 20
+
+开始多线程DXD搜索...
+Time: 6.801034 s
+Solutions: 3.683258e+113
+Max Blocks: 20
+
+文件名: Uran
+开始单线程DXD搜索...
+Time: 6.461683 s
+Solutions: 3.560167e+106
+Max Blocks: 20
+
+开始多线程DXD搜索...
+Time: 3.324360 s
+Solutions: 3.560103e+106
+Max Blocks: 20
+
+文件名: BtEurope
+开始单线程DXD搜索...
+Time: 10.308496 s
+Solutions: 9.497854e+112
+Max Blocks: 20
+
+开始多线程DXD搜索...
+Time: 6.326722 s
+Solutions: 9.520579e+112
+Max Blocks: 20
+
+writing to csv: ..dxd_ig.csv
+处理文件夹完毕: m_blocks
+所有文件处理完毕
