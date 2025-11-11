@@ -387,7 +387,8 @@ DNNFResult DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks) {
     std::atomic<bool> has_failure(false);
     std::atomic<bool> has_timeout(false);
     
-    
+    #pragma omp barrier
+
     #pragma omp parallel for schedule(dynamic) if(n > 4)
     for (int i = 0; i < n; i++) {
         if (has_failure.load(std::memory_order_acquire) || 
@@ -414,6 +415,7 @@ DNNFResult DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks) {
             has_failure.store(true, std::memory_order_release);
         }
     }
+    #pragma omp barrier
     
     if (has_timeout.load()) {
         throw std::runtime_error("Time bound broken");
@@ -446,23 +448,22 @@ DNNFResult DanceDNNF::DXD(Block& block) {
 
     // 先查缓存
     size_t state = hashBlockState(block.cols); 
-    // shared_ptr<DNNFNode> cacheRes = getCache(state);
-    // if(cacheRes != nullptr) {
-    //     return cacheRes;
-    // }
-    bool success = true;
-    auto cacheCount = getCacheCount(state, success);
-    if (success) {
-        return DNNFResult(cacheCount);
+
+    {
+        std::shared_lock<std::shared_mutex> readLock(cacheMutex);
+        auto it = countCache.find(state);
+        if (it != countCache.end()) {
+            return it->second;
+        }
     }
 
-    if(p_count < MAX_P_COUNT && block.rows.size() >= MIN_BLOCK_ROWS) {
+    if(omp_in_parallel() == 0 && p_count < MAX_P_COUNT && block.rows.size() >= MIN_BLOCK_ROWS) {
 
         vector<Block> curBlock;
         if (useETT) {
             curBlock = getComponentsByETT(block.rows);
         } else if (useIG) {
-            curBlock = getComponents(block.rows);
+            curBlock = getComponentsByIG(block.rows);
         }
         // if (debug) record_detect_count++;
 
@@ -477,40 +478,23 @@ DNNFResult DanceDNNF::DXD(Block& block) {
             //     }
             // }
             turnOffGraphSync(); // 关闭图同步，提升性能
-
-            // shared_ptr<DNNFNode> res_and_node;
             p_count++;
+            DNNFResult result;
 
             if (isParallelSearch) {
-                // res_and_node = parallelSearch(curBlock); 
-                auto result = parallelSearchUseOmp(curBlock);
-                // 缓存时只存储精确值或标记溢出
-                if (!result.overflowed) {
-                    setCacheCount(state, result.count);
-                } else {
-                    // 溢出的不缓存，或者存储特殊标记
-                    setCacheCount(state, ULLONG_MAX);
-                }
-                return result;
+                result = parallelSearchUseOmp(curBlock);
             } else {
-                auto result = serialSearch(curBlock);
-                // 缓存时只存储精确值或标记溢出
-                if (!result.overflowed) {
-                    setCacheCount(state, result.count);
-                } else {
-                    // 溢出的不缓存，或者存储特殊标记
-                    setCacheCount(state, ULLONG_MAX);
-                }
-                return result;
+                result = serialSearch(curBlock);
             }
-
+            setCacheCount(state, result);
+            return result;
         } 
     }
 
     ColumnHeader* choose = selectColumnHeuristic(block.cols); 
 
     if(!choose || choose->size <= 0) {
-        setCacheCount(state, 0);
+        setCacheCount(state, DNNFResult(0));
         return DNNFResult(0);
     }
 
@@ -536,7 +520,6 @@ DNNFResult DanceDNNF::DXD(Block& block) {
             totalResult = totalResult + result;
         }
         
-
         curR = curC->left;
         while (curR != curC) {
             uncoverInBlock(curR->col, block);
@@ -547,11 +530,7 @@ DNNFResult DanceDNNF::DXD(Block& block) {
     uncoverInBlock(choose->col, block);
 
     // 插入缓存
-    if (!totalResult.overflowed) {
-        setCacheCount(state, totalResult.count);
-    } else {
-        setCacheCount(state, ULLONG_MAX);
-    }
+    setCacheCount(state, totalResult);
 
     return totalResult;
 }
@@ -617,7 +596,6 @@ void DanceDNNF::startMultiThreadDXD() {
         logger.logLine("Solutions: " + solutionCount);
     
         logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
-
         return;
     } catch (std::runtime_error &e) {
         timeout = true;
@@ -634,7 +612,9 @@ DNNFResult DanceDNNF::parallelSearchMDLX(vector<Block>& blocks) {
     std::atomic<bool> has_timeout(false);
     std::atomic<bool> has_failure(false);
     
-    #pragma omp parallel for schedule(dynamic) if(n > 2)
+    #pragma omp barrier
+
+    #pragma omp parallel for schedule(dynamic) if(n > 4)
     for (int i = 0; i < n; i++) {
         // 提前检查超时标志
         if (has_timeout.load(std::memory_order_acquire) ||
@@ -666,6 +646,8 @@ DNNFResult DanceDNNF::parallelSearchMDLX(vector<Block>& blocks) {
             has_failure.store(true, std::memory_order_release);
         }
     }
+
+    #pragma omp barrier
     
     // 检查超时（在主线程重新抛出）
     if (has_timeout.load()) {
@@ -694,15 +676,15 @@ DNNFResult DanceDNNF::MDLX(vector<int>& sols, Block& block) {
 
     if( block.cols.empty() ) {
         return DNNFResult(1);
-    } 
-
-    if(p_count < MAX_P_COUNT && block.rows.size() >= MIN_BLOCK_ROWS) {
+    }
+    
+    if(omp_in_parallel() == 0 && p_count < MAX_P_COUNT && block.rows.size() >= MIN_BLOCK_ROWS) {
 
         vector<Block> curBlock;
         if (useETT) {
             curBlock = getComponentsByETT(block.rows);
         } else if (useIG) {
-            curBlock = getComponents(block.rows);
+            curBlock = getComponentsByIG(block.rows);
         }
 
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
@@ -782,7 +764,6 @@ void DanceDNNF::start_MDLX_Search() {
         logger.logLine("Solutions: " + solutionCount);
 
         logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
-        
         return;
     } catch (std::runtime_error &e) {
         timeout = true;

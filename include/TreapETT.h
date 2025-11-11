@@ -14,28 +14,19 @@
 using namespace std;
 
 struct Block {
-    unordered_set<int> rows;  // 舞蹈链行id集合 
-    unordered_set<int> cols;  // 从1开始编号,对应舞蹈链列数id
+    set<int> rows;  // 舞蹈链行id集合 
+    set<int> cols;  // 从1开始编号,对应舞蹈链列数id
     bool is_spilited = false;
     
     Block() = default;
 
     size_t size() const { return rows.size(); }
 
-    Block(const unordered_set<int>& r, const unordered_set<int>& c) :  rows(r), cols(c) {}
+    Block(const set<int>& r, const set<int>& c) :  rows(r), cols(c) {}
 
-    Block(const set<int>& r, const set<int>& c, bool is_spilited = true){
-        rows.insert(r.begin(), r.end());
-        cols.insert(c.begin(), c.end());
-    }
-
-    Block(const vector<int>& r, const unordered_set<int>& c) : cols(c) {
-        rows.insert(r.begin(), r.end());
-    }
-
-    Block(const set<int>& r, const unordered_set<int>& c) : cols(c) {
-        rows.insert(r.begin(), r.end());
-    }
+    template <typename RowsContainer, typename ColsContainer>
+    Block(const RowsContainer& r, const ColsContainer& c)
+        : rows(r.begin(), r.end()), cols(c.begin(), c.end()) {}
 
     Block(const Block& other) {
         cols = other.cols;
@@ -45,17 +36,14 @@ struct Block {
     void printBlock(int block_id) {
         if (rows.empty() || cols.empty()) return;
         cout << "Block " << block_id << ": { ";
-        vector<int> R(rows.begin(), rows.end());
-        vector<int> C(cols.begin(), cols.end());
-        sort(R.begin(), R.end());
-        sort(C.begin(), C.end());
+
         cout<< "cols: [ ";
-        for(int c : C){
+        for(int c : cols){
             cout << c << " ";
         }
         cout << "], ";
         cout<< "rows: [ ";
-        for(int r : R){
+        for(int r : rows){
             cout<< r << " ";
         }
         cout << "] }" << endl;
@@ -135,7 +123,7 @@ inline int treap_get_index(ETTreapNode *x) {
     return idx;
 }
 
-inline void collect_repr_rows(ETTreapNode *root, unordered_set<int> &out) {
+inline void collect_repr_rows(ETTreapNode *root, set<int> &out) {
     if (!root) return;
     vector<ETTreapNode *> st{root};
     while (!st.empty()) {
@@ -236,7 +224,7 @@ public:
         ETTreapNode *root = treap_get_root(node);
         auto it = component_info.find(root);
         if (it == component_info.end() || it->second.rows.empty()) {
-            Block b; unordered_set<int> rows;
+            Block b; set<int> rows;
             collect_repr_rows(root, rows);
             b.rows = std::move(rows);
             if (get_row_cols) for (int r : b.rows) {
@@ -255,7 +243,7 @@ public:
     inline bool isRowActive(int r) const { std::shared_lock lock(mutex_);  return active_rows.count(r); }
 
     // ================= findComponentsInBlock（增量式） =================
-    std::vector<Block> findComponentsInBlock(const std::unordered_set<int> &block_rows);
+    std::vector<Block> findComponentsInBlock(const std::set<int> &block_rows);
 
 private:
     unordered_map<int, ETTreapNode *> vertex_repr;

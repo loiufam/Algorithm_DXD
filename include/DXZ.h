@@ -67,7 +67,7 @@ class DanceZDD : DancingMatrix{
 
         string cur_instance = ""; // 当前处理的实例名
         double searchTime = 0.0;
-        uint64_t solutionCount = 0;
+        string solutionCount;
         bool timeout = false;
 
         // ZDD 相关方法
@@ -77,11 +77,11 @@ class DanceZDD : DancingMatrix{
         int makeZDDNode(int r, int lo, int hi);
         int search();
 
-        void DLX(std::vector<label_t>& solution);
+        Result DLX(std::vector<label_t>& solution);
         void X(uint64_t& count);  // 搜索但不记录解
         
-        shared_ptr<ExperimentResult> startDLX();
-        shared_ptr<ExperimentResult> startDXZ();
+        void startDLX();
+        void startDXZ();
 
         // 枚举所有解（深度优先遍历ZDD）
         void enumerate_solutions(std::shared_ptr<ZDDNode> node, 
@@ -143,7 +143,7 @@ class DanceZDD : DancingMatrix{
         }
 
         // 从ZDD计算解的数量
-        uint64_t countSolutions(int node, unordered_map<int, uint64_t >& memo);
+        Result countSolutions(int node, unordered_map<int, Result >& memo);
 
     private:
         Logger& logger;

@@ -53,7 +53,7 @@ int main(int argc, char *argv[]){
                 {
                     logger.logLine("启用DLX算法求解: " + filename);
                     DanceZDD danceZDD(input_file, read_mode, logger);
-                    auto res = danceZDD.startDLX();
+                    danceZDD.startDLX();
                     logger.logLine("DLX算法求解结束: " + filename);
                     break;
                 }
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]){
                 {
                     logger.logLine("启用DXZ算法求解: " + filename);
                     DanceZDD danceZDD(input_file, read_mode, logger);
-                    auto res = danceZDD.startDXZ();
+                    danceZDD.startDXZ();
                     logger.logLine("DXZ算法求解结束: " + filename);
                     break;
                 }
@@ -97,17 +97,17 @@ int main(int argc, char *argv[]){
                 }
             case algorithm_type::mdlx:
                 {
-                    if (use_ett) {
+                    // if (use_ett) {
                         logger.logLine("启用多线程DLX算法求解: " + filename);
                         DanceDNNF danceDNNF(input_file, read_mode, logger, false, true, DEFAULT_THREADS, debug);
                         danceDNNF.start_MDLX_Search();
                         logger.logLine("多线程DLX算法求解结束: " + filename);
-                    } else {
-                        logger.logLine("启用多线程DLX算法求解: " + filename);
-                        DanceDNNF danceDNNF(input_file, read_mode, logger, true, false, DEFAULT_THREADS, debug);
-                        danceDNNF.start_MDLX_Search();
-                        logger.logLine("多线程DLX算法求解结束: " + filename);
-                    }
+                    // } else {
+                    //     logger.logLine("启用多线程DLX算法求解: " + filename);
+                    //     DanceDNNF danceDNNF(input_file, read_mode, logger, true, false, DEFAULT_THREADS, debug);
+                    //     danceDNNF.start_MDLX_Search();
+                    //     logger.logLine("多线程DLX算法求解结束: " + filename);
+                    // }
                     break;
                 }
             default:

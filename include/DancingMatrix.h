@@ -168,6 +168,81 @@ struct ScientificCount {
     }
 };
 
+struct Result {
+    uint64_t count;          // 精确计数（未溢出时使用）
+    bool overflowed;         // 是否溢出
+    ScientificCount sciCount; // 科学计数法（溢出后使用）
+
+    
+    // 从精确值构造
+    Result(uint64_t c) : count(c), overflowed(false), sciCount(c) {}
+    
+    // 从科学计数法构造
+    Result(const ScientificCount& sc) : count(0), overflowed(true), sciCount(sc) {}
+    
+    // 默认构造（零值）
+    Result() : count(0), overflowed(false), sciCount(0) {}
+    
+    bool isZero() const {
+        return overflowed ? sciCount.isZero() : (count == 0);
+    }
+    
+    bool isFailure() const { 
+        return isZero(); 
+    }
+    
+    std::string toString() const {
+        if (overflowed) {
+            return sciCount.toString();
+        } else {
+            return std::to_string(count);
+        }
+    }
+    
+    // 乘法操作
+    Result operator*(const Result& other) const {
+        if (this->isZero() || other.isZero()) {
+            return Result(0);
+        }
+        
+        // 如果任意一方已经溢出，使用科学计数法
+        if (this->overflowed || other.overflowed) {
+            ScientificCount result = this->sciCount * other.sciCount;
+            return Result(result);
+        }
+        
+        // 检查是否会溢出
+        if (this->count <= ULLONG_MAX / other.count) {
+            return Result(this->count * other.count);
+        } else {
+            // 溢出，转换为科学计数法
+            ScientificCount result = this->sciCount * other.sciCount;
+            return Result(result);
+        }
+    }
+    
+    // 加法操作
+    Result operator+(const Result& other) const {
+        if (this->isZero()) return other;
+        if (other.isZero()) return *this;
+        
+        // 如果任意一方已经溢出，使用科学计数法
+        if (this->overflowed || other.overflowed) {
+            ScientificCount result = this->sciCount + other.sciCount;
+            return Result(result);
+        }
+        
+        // 检查是否会溢出
+        if (this->count <= ULLONG_MAX - other.count) {
+            return Result(this->count + other.count);
+        } else {
+            // 溢出，转换为科学计数法
+            ScientificCount result = this->sciCount + other.sciCount;
+            return Result(result);
+        }
+    }
+};
+
 struct Component{ 
     set<int> rows; 
     unordered_set<int> cols; 
@@ -267,8 +342,8 @@ class DancingMatrix
         bool useETT;
         bool useIG; // 使用增量图
         std::vector<std::vector<int>> solutions; 
-        unordered_set<int> rowsSet;  // 舞蹈链行id
-        unordered_set<int> colsSet;  // 原始矩阵列
+        set<int> rowsSet;  // 舞蹈链行id
+        set<int> colsSet;  // 原始矩阵列
         Block InitBlock;
 
         // 列状态
@@ -300,11 +375,10 @@ class DancingMatrix
         void uncoverInBlock(int c, Block& block);
 
         string encodeBlockState(const unordered_set<int>& cols);
-        size_t hashBlockState(const unordered_set<int>& cols);
-        size_t hashColState(unordered_set<int>& cols);
+        size_t hashBlockState(const set<int>& cols);
      
         ColumnHeader* selectCol();
-        ColumnHeader* selectColumnHeuristic(const unordered_set<int>& cols);
+        ColumnHeader* selectColumnHeuristic(const set<int>& cols);
         col_id getClosedSizeCol(const int expected_size);
         col_id getSmallestSizeCol();
         // ColumnHeader* fastSelect();
@@ -343,9 +417,9 @@ class DancingMatrix
         // IBD: Independent Block Detection
         vector<vector<int>> getComponents(set<int>& rows);
 
-        vector<Block> getComponents(const unordered_set<int> rows);
+        vector<Block> getComponentsByIG(const set<int> rows);
 
-        vector<Block> getComponentsByETT(const unordered_set<int> rows);
+        vector<Block> getComponentsByETT(const set<int> rows);
 
         void printGraph() const;
         void build_graph();

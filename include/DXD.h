@@ -330,17 +330,7 @@ class DanceDNNF : DancingMatrix {
             }
         }
 
-        uint64_t getCacheCount(const size_t& key, bool& success){
-            std::shared_lock<std::shared_mutex> readLock(cacheMutex);
-            auto it = countCache.find(key);
-            if(it != countCache.end()){
-                return it->second;
-            }
-            success = false;
-            return 0;
-        }
-
-        void setCacheCount(const size_t& key, uint64_t count){
+        void setCacheCount(const size_t& key, DNNFResult count){
             std::unique_lock<std::shared_mutex> writeLock(cacheMutex);
             countCache[key] = count;
         }
@@ -369,7 +359,7 @@ class DanceDNNF : DancingMatrix {
         unordered_map<int, shared_ptr<DNNFNode>> V_Table; // 变量节点缓存
 
         // 轻量级缓存：只存计数
-        unordered_map<size_t, uint64_t> countCache;
+        unordered_map<size_t, DNNFResult> countCache;
 
         // 操作栈用于批量回溯
         std::stack<CoverOperation> operationStack;

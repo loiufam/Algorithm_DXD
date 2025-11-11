@@ -74,17 +74,17 @@ int main() {
                 { 
                     std::string file_name = entry.path().stem().string();        
                     if (file_name == ".DS_Store") continue;
-                    if (experimentCSV.instancehasRun(file_name, DLX_COLUMN_NAME) && experimentCSV.instancehasRun(file_name, DXZ_COLUMN_NAME)) {
-                        logger.logLine("跳过已处理文件: " + file_name);
-                        continue;
-                    }
+                    // if (experimentCSV.instancehasRun(file_name, DLX_COLUMN_NAME) && experimentCSV.instancehasRun(file_name, DXZ_COLUMN_NAME)) {
+                    //     logger.logLine("跳过已处理文件: " + file_name);
+                    //     continue;
+                    // }
                     logger.logLine("文件名: " + file_name);
 
                     // DLX
                     {
                         DanceZDD dxzSolver(entry.path().string(), read_mode, logger);
                         dxzSolver.cur_instance = file_name;
-                        shared_ptr<ExperimentResult> res = dxzSolver.startDLX();
+                        dxzSolver.startDLX();
                         // processor.processResultFile(res, AlgorithmType::DLX);
                         experimentCSV.updateTime(file_name, dxzSolver.searchTime, DLX_COLUMN_NAME, dxzSolver.timeout);
                         // experimentCSV.updateSols(file_name, dxzSolver.solutionCount, DLX_COLUMN_NAME);
@@ -96,7 +96,7 @@ int main() {
                     {
                         DanceZDD dxzSolver(entry.path().string(), read_mode, logger);
                         dxzSolver.cur_instance = file_name;
-                        shared_ptr<ExperimentResult> res = dxzSolver.startDXZ();
+                        dxzSolver.startDXZ();
                         // processor.processResultFile(res, AlgorithmType::DXZ);
                         experimentCSV.updateTime(file_name, dxzSolver.searchTime, DXZ_COLUMN_NAME, dxzSolver.timeout);
                         // experimentCSV.updateSols(file_name, dxzSolver.solutionCount, DXZ_COLUMN_NAME);

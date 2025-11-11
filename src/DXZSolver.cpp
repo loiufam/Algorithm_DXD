@@ -1,6 +1,6 @@
 #include "../include/DXZ.h"
 
-void DanceZDD::DLX(std::vector<label_t>& solution)
+Result DanceZDD::DLX(std::vector<label_t>& solution)
 {
 
     if (timer.timeBoundBroken()) {
@@ -8,16 +8,17 @@ void DanceZDD::DLX(std::vector<label_t>& solution)
     }
 
     if( isSolved() ) {
-        count++;
+        // count++;
         // sols.push_back(solution);  
-        return;
+        return Result(1);
     } 
 
     ColumnHeader* choose = selectCol();
-    if( choose->size <= 0 ){
-        return;  
+    if( choose->size <= 0 ) {
+        return Result(0);  
     }
 
+    Result totalResult = Result(0);
 
     cover( choose->col );
     Node* curC = choose->down;  
@@ -34,7 +35,10 @@ void DanceZDD::DLX(std::vector<label_t>& solution)
 
         solution.push_back(curC->row + 1);  // 将当前行加入解集中
         // 递归搜索
-        DLX(solution);
+        auto result = DLX(solution);
+        if (!result.isZero()) {
+            totalResult = totalResult + result;
+        }
        
         solution.pop_back();  // 回溯，移除当前行
         curR = curC->left;  
@@ -46,7 +50,7 @@ void DanceZDD::DLX(std::vector<label_t>& solution)
         curC = curC->down;  
     }  
     uncover( choose->col );  
-    return; 
+    return totalResult; 
 }
 
 void DanceZDD::X(uint64_t& count)  
@@ -280,82 +284,79 @@ int DanceZDD::search() {
 }
 
 // 从ZDD计算解的数量
-uint64_t DanceZDD::countSolutions(int node, unordered_map<int, uint64_t >& memo) {
-    if (node == 0) return 0;
-    if (node == 1) return 1;
+Result DanceZDD::countSolutions(int node, unordered_map<int, Result >& memo) {
+    if (node == 0) return Result(0);
+    if (node == 1) return Result(1);
     
     auto it = memo.find(node);
     if (it != memo.end()) return it->second;
 
-    uint64_t  lo = countSolutions(zddNodes[node].lo, memo);
-    uint64_t  hi = countSolutions(zddNodes[node].hi, memo);
+    Result lo = countSolutions(zddNodes[node].lo, memo);
+    Result hi = countSolutions(zddNodes[node].hi, memo);
     
-    uint64_t  result = lo + hi;
+    Result result = lo + hi;
     memo[node] = result;
     return result;
 }
 
-shared_ptr<ExperimentResult> DanceZDD::startDLX(){
+void DanceZDD::startDLX(){
 
     logger.logLine("DLX开始搜索...");
     cur_result->instance_name = cur_instance;
     try{
         vector<label_t> solution;
+        timer.reset();
         timer.markStartTime();
         auto start = std::chrono::high_resolution_clock::now();
         // X(sol);
-        DLX(solution);
+        auto res = DLX(solution);
         auto end = std::chrono::high_resolution_clock::now();
-        timer.reset();
-        searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
-        logger.logLine("Time: " + std::to_string(searchTimeSeconds) + " s");
-        cur_result->runtime = std::to_string(searchTimeSeconds);
-        searchTime = searchTimeSeconds;
+
+        searchTime = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
+        logger.logLine("Time: " + std::to_string(searchTime) + " s");
+
         timeout = false;
 
-        logger.logLine("Solutions: " + std::to_string(count));
-        cur_result->solution_count = count;
-        solutionCount = count;
+        solutionCount = res.toString();
+        logger.logLine("Solutions: " + solutionCount);
 
-        return cur_result;
+        return;
     } catch (std::runtime_error& e) {
         timeout = true;
-        cur_result->runtime = "timeout";
         logger.logLine("DLX搜索超时: " + std::string(e.what()));
-        return cur_result;
+        return;
     }
 }
 
 
-shared_ptr<ExperimentResult> DanceZDD::startDXZ(){
+void DanceZDD::startDXZ(){
 
     logger.logLine("DXZ开始搜索...");
     cur_result->instance_name = cur_instance;
     try{
+        timer.reset();
         timer.markStartTime();
         auto startDXZ = std::chrono::high_resolution_clock::now();
         // auto root = DXZ();
         auto root = search();
         auto endDXZ = std::chrono::high_resolution_clock::now();
-        timer.reset();
-        searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(endDXZ - startDXZ).count();
-        cur_result->runtime = std::to_string(searchTimeSeconds);
-        searchTime = searchTimeSeconds;
-        logger.logLine("Time: " + std::to_string(searchTimeSeconds) + " s");
+
+        searchTime = std::chrono::duration_cast<std::chrono::duration<double>>(endDXZ - startDXZ).count();
+
+        logger.logLine("Time: " + std::to_string(searchTime) + " s");
         timeout = false;
 
-        unordered_map<int, uint64_t> countMemo;
-        count = countSolutions(root, countMemo);
-        cur_result->solution_count = count;
-        solutionCount = count;
-        logger.logLine("Solutions: " + std::to_string(count));
+        unordered_map<int, Result> countMemo;
+        auto count = countSolutions(root, countMemo);
 
-        return cur_result;
+        solutionCount = count.toString();
+        logger.logLine("Solutions: " + solutionCount);
+
+        return;
     } catch (std::runtime_error &e) {
         timeout = true;
-        cur_result->runtime = "timeout";
         logger.logLine("DXZ搜索超时: " + std::string(e.what()));
-        return cur_result;
+        return;
     }
 
 }

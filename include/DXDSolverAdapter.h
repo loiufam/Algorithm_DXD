@@ -35,16 +35,18 @@ public:
             result.serialTime = solver.searchTime;
             result.serialTimeout = solver.timeout;
             result.solutionCountStr = solver.solutionCount;
+            result.maxBlockCount = solver.MAX_B_COUNT;
             
             // 记录日志
             logger.logLine("  [串行] 完成 - 时间: " + 
                           ExperimentUtils::formatTime(result.serialTime) + 
                           ", 解数: " + result.solutionCountStr +
                           (result.serialTimeout ? " (TIMEOUT)" : ""));
-            
+            logger.logLine("");
         } catch (const std::exception& e) {
             logger.logLine("  [串行] 错误: " + std::string(e.what()));
             result.serialError = true;
+            logger.logLine("");
         }
         
         return result;
@@ -68,12 +70,11 @@ public:
             // 提取结果
             result.parallelTime = solver.searchTime;
             result.parallelTimeout = solver.timeout;
-            result.maxBlockCount = solver.MAX_B_COUNT;
             
             // 验证解数一致性
             if (!solver.timeout) {
                 
-                result.solutionCountStr = solver.solutionCount;
+                // result.solutionCountStr = solver.solutionCount;
  
                 // 计算加速比
                 double speedup = result.getSpeedup();
@@ -83,10 +84,12 @@ public:
                               ", 加速比: " + std::to_string(speedup) + "x" +
                               (result.parallelTimeout ? " (TIMEOUT)" : ""));
             }
+            logger.logLine("");
             
         } catch (const std::exception& e) {
             logger.logLine("  [并行] 错误: " + std::string(e.what()));
             result.parallelError = true;
+            logger.logLine("");
         }
     }
 };

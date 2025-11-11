@@ -106,7 +106,7 @@ private:
      * @param localComponentColumns 局部的分量列集合（输出）
      */
     void rebuildLocally(
-        const std::unordered_set<int>& restrictedRows,
+        const std::set<int>& restrictedRows,
         std::vector<int>& localParent,
         std::vector<int>& localRank,
         std::vector<std::unordered_set<int>>& localComponentColumns) const 
@@ -414,7 +414,7 @@ public:
      * @param rows 限定的行集合
      * @return 该行集合内的所有连通分量
      */
-    std::vector<Block> computeComponentsInRows(const std::unordered_set<int>& rows) const {
+    std::vector<Block> computeComponentsInRows(const std::set<int>& rows) const {
         // 过滤出有效的行
         // std::unordered_set<int> validRows;
         // for (int row : rows) {

@@ -13,7 +13,7 @@ declare -A COL_MAP=(
 ) 
 
 # 超时时间（秒） 
-TIMEOUT=1200 # 例如：每个任务最多运行20分钟 
+TIMEOUT=1500 # 例如：每个任务最多运行20分钟 
 
 # 初始化日志文件 
 mkdir -p "$(dirname "$LOG_FILE")" 

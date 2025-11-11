@@ -19,7 +19,9 @@ namespace fs = std::filesystem;
 enum class ExperimentType {
     DXD_ETT,      // DXD with ETT
     DXD_IG,       // DXD with Incremental Graph
-    CUSTOM        // 自定义实验
+    CUSTOM,        // 自定义实验
+    DLX,           // DLX算法
+    DXZ           // DXZ算法
 };
 
 // ==================== 配置管理 ====================
@@ -31,11 +33,14 @@ public:
     std::string logFile;
     std::string outputCSV;
     std::string baseTableFile;
+    std::string instanceListFile;
     
     // 算法参数
     int threadCount;
     bool useETT;
     bool useIG;
+    bool runFromList = false;
+    bool runDLX_DXZ = false;
     
     // 运行参数
     int saveBatchSize;
@@ -96,6 +101,28 @@ public:
         config.setupFiles();
         return config;
     }
+
+    static ExperimentConfig forDLX() {
+        ExperimentConfig config;
+        config.type = ExperimentType::DLX;
+        config.experimentName = "dlx";
+        config.serialColumnName = "DLX";
+        config.setBatchSize(5);
+        config.setTimeout(1200);
+        config.setupFiles();
+        return config;
+    };
+
+    static ExperimentConfig forDXZ() {
+        ExperimentConfig config;
+        config.type = ExperimentType::DXZ;
+        config.experimentName = "dxz";
+        config.serialColumnName = "DXZ";
+        config.setBatchSize(5);
+        config.setTimeout(1200);
+        config.setupFiles();
+        return config;
+    };
     
     // 设置文件路径
     void setupFiles() {
@@ -142,6 +169,11 @@ public:
     
     ExperimentConfig& setBaseTable(const std::string& file) {
         baseTableFile = file;
+        return *this;
+    }
+
+    ExperimentConfig& setInstanceFile(const std::string& file) {
+        instanceListFile = file;
         return *this;
     }
 };
@@ -293,6 +325,32 @@ public:
                 }
             }
         }
+        return files;
+    }
+
+    static std::vector<std::string> getFilesFromList(const std::string& listPath, const std::string& folderPath) {
+        std::vector<std::string> files;
+        std::unordered_set<std::string> names;
+
+        // 读取列表文件到集合中，提高查找效率
+        std::ifstream listFile(listPath);
+        if (!listFile.is_open()) return files;
+
+        std::string line;
+        while (std::getline(listFile, line)) {
+            if (!line.empty()) names.insert(line);
+        }
+        listFile.close();
+
+        for (const auto& entry : fs::directory_iterator(folderPath)) {
+            if (!entry.is_regular_file()) continue;
+
+            std::string fileName = entry.path().stem().string();
+            if (names.count(fileName) && fileName != ".DS_Store") {
+                files.push_back(entry.path().string());
+            }
+        }
+
         return files;
     }
 };

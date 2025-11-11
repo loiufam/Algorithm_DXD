@@ -62,7 +62,13 @@ public:
         logger.logLine("开始处理文件夹: " + folderInfo.name);
         logger.logLine(ExperimentUtils::separator());
         
-        auto files = ExperimentUtils::getFilesInFolder(folderInfo.path);
+        std::vector<std::string> files;
+        if (config.runFromList) {
+            files = ExperimentUtils::getFilesFromList(config.instanceListFile, folderInfo.path);
+        } else {
+            files = ExperimentUtils::getFilesInFolder(folderInfo.path);
+        }
+
         int folderInstanceCount = 0;
         
         for (const auto& filePath : files) {
@@ -99,7 +105,9 @@ public:
             auto result = runSerialInstance(filePath, instanceName, readMode);
             
             // 运行并行版本
-            runParallelInstance(result, filePath, readMode);
+            if (!config.runDLX_DXZ) {
+                runParallelInstance(result, filePath, readMode);
+            }
             
             // 更新统计
             stats.addResult(result);

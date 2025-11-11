@@ -171,11 +171,11 @@ vector<vector<int>> DancingMatrix::getComponents(set<int>& rows) {
     return graph->getComponents(rows);
 };
 
-vector<Block> DancingMatrix::getComponents(const unordered_set<int> rows) {
+vector<Block> DancingMatrix::getComponentsByIG(const set<int> rows) {
     return incrementalGraph->computeComponentsInRows(rows);
 };
 
-vector<Block> DancingMatrix::getComponentsByETT(const unordered_set<int> rows) {
+vector<Block> DancingMatrix::getComponentsByETT(const set<int> rows) {
     return etTree->findComponentsInBlock(rows);
 }
 
@@ -258,23 +258,10 @@ string DancingMatrix::encodeBlockState(const unordered_set<int>& cols){
     return state;
 }
 
-size_t DancingMatrix::hashBlockState(const unordered_set<int>& cols) {
+size_t DancingMatrix::hashBlockState(const set<int>& cols) {
     size_t hash = 0;
     for(int col : cols) {
         hash ^= std::hash<int>()(col) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-    }
-    return hash;
-}
-
-size_t DancingMatrix::hashColState(unordered_set<int>& cols) {
-    size_t hash = 0;
-    cols.clear();
-    ColumnHeader* curCol = (ColumnHeader *)root->right;
-    while(curCol != root) {
-        int col = curCol->col;
-        hash ^= std::hash<int>()(col) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-        cols.insert(col);
-        curCol = (ColumnHeader *)curCol->right;
     }
     return hash;
 }
@@ -537,7 +524,7 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
     block.cols.insert(c);
 }
 
-ColumnHeader* DancingMatrix::selectColumnHeuristic(const unordered_set<int>& cols) {
+ColumnHeader* DancingMatrix::selectColumnHeuristic(const set<int>& cols) {
     ColumnHeader* chosen = nullptr;
     int minSize = INT_MAX;
 

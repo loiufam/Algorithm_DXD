@@ -61,18 +61,20 @@ void runDXD_IG_Experiment(int threads = 24, int batchSize = 5) {
     runner.finalize();
 }
 
-// ==================== 实验场景3: 自定义实验 ====================
+// ==================== 实验场景3: 自定义实验(用于跑特定的实例，检查结果) ====================
 void runCustomExperiment() {
     // 完全自定义配置
     auto config = ExperimentConfig::custom("my_custom_exp")
-        .setThreads(32)
-        .setBatchSize(10)
-        .setTimeout(7200)
-        .setColumns("MY_SERIAL", "MY_PARALLEL")
-        .setVerbose(true);
+        .setThreads(24)
+        .setInstanceFile("../instances.txt")
+        .setBatchSize(5)
+        .setTimeout(1200)
+        .setColumns("IDXD_S", "IDXD_M")
+        .setVerbose(false);
     
     config.useETT = true;
     config.useIG = false;
+    config.runFromList = true;
     
     Logger baseLogger(config.logFile);
     MyCSV baseCSV;
@@ -100,8 +102,7 @@ void runCustomExperiment() {
     });
     
     std::vector<std::string> folders = {
-        "../data/exact_cover_benchmark&1",
-        "../data/set_partitioning_benchmarks&2"
+        "../data/graph_matrix/m_blocks&3"
     };
     
     runner.runExperiment(folders);

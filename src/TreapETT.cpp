@@ -5,7 +5,7 @@ thread_local unordered_map<ETTreapNode *, Block> cached_root_blocks;
 thread_local unordered_map<int, ETTreapNode *> cached_row_root;
 thread_local unordered_set<int> cached_block_rows;
 
-std::vector<Block> ETTree::findComponentsInBlock(const std::unordered_set<int> &block_rows)
+std::vector<Block> ETTree::findComponentsInBlock(const std::set<int> &block_rows)
 {
         vector<int> added, removed;
         for (int r : block_rows) if (!cached_block_rows.count(r)) added.push_back(r);
