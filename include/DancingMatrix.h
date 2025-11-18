@@ -2,29 +2,11 @@
 #define DANCINGMATRIX_H
 
 #include "ThreadPool.h"
-#include "../utils/ResProcessor.h"
-#include "TreapETT.h"
-#include <string>
-#include <set>
-#include <map>
-#include <bitset>
-#include <filesystem>
-#include <unordered_map>
-#include <unordered_set>
-#include <deque>
-#include <stack>
-#include <algorithm>
-#include <numeric>
-#include <cmath>
-#include <shared_mutex>
-#include <utility>
-#include <limits>
+#include "ComponentDetector.h"
+#include "common.h"
 
-using namespace std;
 using col_id = int;
 using row_id = int;
-
-namespace fs = std::filesystem;
 
 const unsigned int MAX_ROW = 250000;
 
@@ -56,276 +38,6 @@ struct RowNode : public Node
 
 };
 
-// 签名用于Memo Cache
-struct Signature {
-    vector<bool> covered;  // 哪些列已被覆盖
-    
-    bool operator==(const Signature& other) const {
-        return covered == other.covered;
-    }
-};
-
-// 哈希函数
-struct SignatureHash {
-    size_t operator()(const Signature& sig) const {
-        size_t h = 0;
-        for (size_t i = 0; i < sig.covered.size(); i++) {
-            if (sig.covered[i]) h ^= (i + 1) * 2654435761u;
-        }
-        return h;
-    }
-};
-
-// 科学计数法结构体
-struct ScientificCount {
-    long double mantissa;
-    int exponent;
-    
-    ScientificCount() : mantissa(1.0L), exponent(0) {}
-    ScientificCount(uint64_t value) {
-        if (value == 0) {
-            mantissa = 0.0L;
-            exponent = 0;
-        } else {
-            mantissa = static_cast<long double>(value);
-            exponent = 0;
-            normalize();
-        }
-    }
-    
-    void normalize() {
-        if (mantissa == 0.0L) {
-            exponent = 0;
-            return;
-        }
-        while (std::abs(mantissa) >= 10.0L) {
-            mantissa /= 10.0L;
-            exponent++;
-        }
-        while (std::abs(mantissa) < 1.0L && mantissa != 0.0L) {
-            mantissa *= 10.0L;
-            exponent--;
-        }
-    }
-    
-    bool isZero() const {
-        return mantissa == 0.0L;
-    }
-    
-    std::string toString(int precision = 6) const {
-        std::ostringstream oss;
-        oss << std::fixed << std::setprecision(precision) << mantissa;
-        if (exponent >= 0) {
-            oss << "e+" << exponent;
-        } else {
-            oss << "e" << exponent;
-        }
-        return oss.str();
-    }
-    
-    // 乘法操作
-    ScientificCount operator*(const ScientificCount& other) const {
-        ScientificCount result;
-        result.mantissa = this->mantissa * other.mantissa;
-        result.exponent = this->exponent + other.exponent;
-        result.normalize();
-        return result;
-    }
-    
-    ScientificCount operator*(uint64_t value) const {
-        if (value == 0) {
-            return ScientificCount(0);
-        }
-        ScientificCount result;
-        result.mantissa = this->mantissa * value;
-        result.exponent = this->exponent;
-        result.normalize();
-        return result;
-    }
-    
-    // 加法操作（用于同指数级的相加）
-    ScientificCount operator+(const ScientificCount& other) const {
-        if (this->isZero()) return other;
-        if (other.isZero()) return *this;
-        
-        ScientificCount result;
-        int expDiff = this->exponent - other.exponent;
-        
-        if (expDiff > 15 || expDiff < -15) {
-            // 指数差距太大，直接返回较大的那个
-            return (this->exponent > other.exponent) ? *this : other;
-        }
-        
-        if (expDiff >= 0) {
-            result.mantissa = this->mantissa * std::pow(10.0L, expDiff) + other.mantissa;
-            result.exponent = other.exponent;
-        } else {
-            result.mantissa = this->mantissa + other.mantissa * std::pow(10.0L, -expDiff);
-            result.exponent = this->exponent;
-        }
-        result.normalize();
-        return result;
-    }
-};
-
-struct Result {
-    uint64_t count;          // 精确计数（未溢出时使用）
-    bool overflowed;         // 是否溢出
-    ScientificCount sciCount; // 科学计数法（溢出后使用）
-
-    
-    // 从精确值构造
-    Result(uint64_t c) : count(c), overflowed(false), sciCount(c) {}
-    
-    // 从科学计数法构造
-    Result(const ScientificCount& sc) : count(0), overflowed(true), sciCount(sc) {}
-    
-    // 默认构造（零值）
-    Result() : count(0), overflowed(false), sciCount(0) {}
-    
-    bool isZero() const {
-        return overflowed ? sciCount.isZero() : (count == 0);
-    }
-    
-    bool isFailure() const { 
-        return isZero(); 
-    }
-    
-    std::string toString() const {
-        if (overflowed) {
-            return sciCount.toString();
-        } else {
-            return std::to_string(count);
-        }
-    }
-    
-    // 乘法操作
-    Result operator*(const Result& other) const {
-        if (this->isZero() || other.isZero()) {
-            return Result(0);
-        }
-        
-        // 如果任意一方已经溢出，使用科学计数法
-        if (this->overflowed || other.overflowed) {
-            ScientificCount result = this->sciCount * other.sciCount;
-            return Result(result);
-        }
-        
-        // 检查是否会溢出
-        if (this->count <= ULLONG_MAX / other.count) {
-            return Result(this->count * other.count);
-        } else {
-            // 溢出，转换为科学计数法
-            ScientificCount result = this->sciCount * other.sciCount;
-            return Result(result);
-        }
-    }
-    
-    // 加法操作
-    Result operator+(const Result& other) const {
-        if (this->isZero()) return other;
-        if (other.isZero()) return *this;
-        
-        // 如果任意一方已经溢出，使用科学计数法
-        if (this->overflowed || other.overflowed) {
-            ScientificCount result = this->sciCount + other.sciCount;
-            return Result(result);
-        }
-        
-        // 检查是否会溢出
-        if (this->count <= ULLONG_MAX - other.count) {
-            return Result(this->count + other.count);
-        } else {
-            // 溢出，转换为科学计数法
-            ScientificCount result = this->sciCount + other.sciCount;
-            return Result(result);
-        }
-    }
-};
-
-struct Component{ 
-    set<int> rows; 
-    unordered_set<int> cols; 
-
-    Component() = default;
-
-    void printComponent() {
-        cout<< "row_id: ";
-        // sort(rows.begin(), rows.end());
-        for(auto& r : rows) {
-            cout<< r << " ";
-        }
-        cout << endl;
-        vector<int> sortedCols(cols.begin(), cols.end());
-        sort(sortedCols.begin(), sortedCols.end());
-        cout << "col_id: ";
-        for(auto& c : sortedCols) {
-            cout<< c << " ";
-        }
-        cout << endl; 
-    }
-};
-
-struct ColumnComparator {
-    bool operator()(const std::pair<int, ColumnHeader*>& a, const std::pair<int, ColumnHeader*>& b) const {
-        if (a.first != b.first) {
-            return a.first < b.first;  // 一级排序：size从小到大
-        }
-        return a.second->col < b.second->col;  // 二级排序：列id从小到大
-    }
-};
-
-// 并查集结构
-class UnionFind {
-private:
-    std::vector<int> parent;
-    std::vector<int> rank;
-    int numComponents;
-    
-public:
-    UnionFind(int n) : parent(n), rank(n, 0), numComponents(n) {
-        for (int i = 0; i < n; ++i) {
-            parent[i] = i;
-        }
-    }
-    
-    // 路径压缩的查找
-    int find(int x) {
-        if (parent[x] != x) {
-            parent[x] = find(parent[x]); // 路径压缩
-        }
-        return parent[x];
-    }
-    
-    // 按秩合并
-    bool unite(int x, int y) {
-        int rootX = find(x);
-        int rootY = find(y);
-        
-        if (rootX == rootY) return false;
-        
-        if (rank[rootX] < rank[rootY]) {
-            parent[rootX] = rootY;
-        } else if (rank[rootX] > rank[rootY]) {
-            parent[rootY] = rootX;
-        } else {
-            parent[rootY] = rootX;
-            rank[rootX]++;
-        }
-        numComponents--;
-        return true;
-    }
-    
-    bool connected(int x, int y) {
-        return find(x) == find(y);
-    }
-    
-    int getNumComponents() const {
-        return numComponents;
-    }
-};
-
-class ConnectedGraph;
 class IncrementalConnectedGraph;
 
 class DancingMatrix 
@@ -336,6 +48,7 @@ class DancingMatrix
         
         std::uint64_t count = 0;  // 统计精确覆盖解
         std::uint64_t ONE_COUNT = 0; // 统计矩阵中1的个数
+        uint64_t main_thread_id;  // 主线程ID
         
         double searchTimeSeconds = 0.0;
         double countTimeSeconds = 0.0;
@@ -344,6 +57,7 @@ class DancingMatrix
         std::vector<std::vector<int>> solutions; 
         set<int> rowsSet;  // 舞蹈链行id
         set<int> colsSet;  // 原始矩阵列
+        unordered_set<int> active_rows;
         Block InitBlock;
 
         // 列状态
@@ -354,6 +68,9 @@ class DancingMatrix
         //接收矩阵其及维度  
         DancingMatrix( int rows, int cols, int** matrix, bool verbose = false);  
         DancingMatrix( const string& file_path, int from, bool use_ig = false, bool use_ett = false);
+
+        // 检测器，用于检测矩阵中的连通性
+        std::unique_ptr<ComponentDetector> detector;
 
         // 禁用拷贝和赋值
         DancingMatrix(const DancingMatrix&) = delete;
@@ -366,9 +83,9 @@ class DancingMatrix
         
         void build_mapping_from_cols(const unordered_set<int>& blockCols, unordered_map<int, set<int>>& rowToCols, unordered_map<int, set<int>>& colToRows);
         void insert( int r, int c );  
-        void add_connection(int r, int c);
-        void remove_connection(int r, int c);
+
         void printMatrix() const; 
+        void printBlocks( vector<Block>& blocks) const;
         void cover( int c );  
         void uncover( int c ); 
         void coverInBlock(int c, Block& block);
@@ -415,14 +132,11 @@ class DancingMatrix
         }
 
         // IBD: Independent Block Detection
-        vector<vector<int>> getComponents(set<int>& rows);
-
         vector<Block> getComponentsByIG(const set<int> rows);
 
-        vector<Block> getComponentsByETT(const set<int> rows);
+        vector<Block> findComponents(const set<int>& block_rows);
 
-        void printGraph() const;
-        void build_graph();
+        void dumpETTState() const;
 
         void turnOnGraphSync() {
             enableGraphSync = true;
@@ -438,88 +152,27 @@ class DancingMatrix
         std::unique_ptr<RowNode[]> RowIndex;
         std::vector<std::unique_ptr<Node>> dataNodes;
 
-        std::unique_ptr<ConnectedGraph> graph;
         std::unique_ptr<IncrementalConnectedGraph> incrementalGraph;
-        std::unique_ptr<ETTree> etTree;  // 欧拉回路树
+
+        std::shared_ptr<ETTree> etTree;  // 欧拉回路树
         mutable std::shared_mutex mutex_;  // 读写锁
 
         // 行 -> 包含该行的列集合
         unordered_map<int, set<int>> row_to_cols;
 
-        // 列到行的反向索引：col_to_rows[col] = {row1, row2, ...}
-        map<int, set<int>> col_to_rows;
-        
-        // 记录两行之间共享的列：shared_cols[{row1, row2}] = {col1, col2, ...}
-        std::map<std::pair<int, int>, std::set<int>> shared_cols;
-        
+        // 追踪每行当前被cover的列（用于判断是否完全被删除）
+        unordered_map<int, set<int>> row_covered_cols;
+
+        // 关键数据结构：列 -> 激活行集合的反向索引
+        unordered_map<int, set<int>> col_to_rows;
+
         // 生成行对的规范化键
         std::pair<int, int> make_row_pair(int r1, int r2) {
             return r1 < r2 ? std::make_pair(r1, r2) : std::make_pair(r2, r1);
         }
+
         bool enableGraphSync = true; // 是否启用图同步
         
-};
-
-class Logger 
-{
-    private:
-        std::ofstream logFile;
-        bool enableConsole;
-    
-    public:
-        Logger(const std::string& filename, bool console = true) 
-            : enableConsole(console) {
-            logFile.open(filename, std::ios::out | std::ios::trunc);
-        }
-        
-        ~Logger() {
-            if (logFile.is_open()) {
-                logFile.close();
-            }
-        }
-        
-        template<typename T>
-        void log(const T& message) {
-            if (logFile.is_open()) {
-                logFile << message;
-                logFile.flush();
-            }
-            if (enableConsole) {
-                std::cout << message;
-            }
-        }
-        
-        template<typename T>
-        void logLine(const T& message) {
-            log(message);
-            if (logFile.is_open()) {
-                logFile << std::endl;
-            }
-            if (enableConsole) {
-                std::cout << std::endl;
-            }
-        }
-        
-        void enableConsoleOutput(bool enable) {
-            enableConsole = enable;
-        }
-};
-
-class PreProccess
-{
-    public:
-        //构造函数
-        PreProccess() {};
-        //处理exact_cover_benchmark文件
-        static int** processFileToMatrix1(const std::string& filename, int& r, int& c);
-        //释放内存
-        static void freeMatrix(int** matrix, int rows);
-        //从字符串中提取n和m的值
-        static void extractNM(const std::string& line, int& n, int& m);
-        //处理set_partitioning_benchmarks文件
-        static int** processFileToMatrix2(const fs::path& filename, int& r, int& c);
-        // 处理d3x数据集
-        static int** processFileToMatrix3(const std::string& filename, int& r, int& c);
 };
 
 #endif

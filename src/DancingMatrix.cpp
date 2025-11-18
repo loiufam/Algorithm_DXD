@@ -1,5 +1,4 @@
 #include "../include/DancingMatrix.h"
-#include "../include/ConnectedGraph.h"
 #include "DynamicGraph.cpp"
 
 //构造函数
@@ -44,7 +43,7 @@ DancingMatrix::DancingMatrix( int rows, int cols, int** matrix, bool verbose )
     }
 
     InitBlock = Block(rowsSet, colsSet);
-    if(verbose) graph = make_unique<ConnectedGraph>(*this);
+    // if(verbose) graph = make_unique<ConnectedGraph>(*this);
     std::cout<< "初始化舞蹈链完成." << endl;
 }
 
@@ -78,10 +77,16 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool useIg , bo
         throw runtime_error("time out");
     }
 
-    if (useETT) {
-        etTree = make_unique<ETTree>(); 
-    }
     // cout << "处理矩阵维度: " << rows << " 行, " << cols << " 列." << endl;
+    if (useETT) {
+
+        // 初始化检测器
+        detector = make_unique<ComponentDetector>([this](int r) -> const set<int>& {
+                static set<int> empty;
+                auto it = row_to_cols.find(r);
+                return (it != row_to_cols.end()) ? it->second : empty;
+        });
+    }
 
     ColIndex = std::make_unique<ColumnHeader[]>(cols + 1);  
     RowIndex = std::make_unique<RowNode[]>(rows);  
@@ -127,16 +132,16 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool useIg , bo
                 exit(1);
             }
             insert(currentRow, currentCol); // 插入节点
-            col_to_rows[currentCol].insert(currentRow); // 更新列到行的映射
-            if(useETT) {
-                row_to_cols[currentRow].insert(currentCol); // 更新行到列的映射
-                etTree->make_tree(currentRow); // 构建ETT顶点
-            }
+            col_to_rows[currentCol].insert(currentRow);
+            row_to_cols[currentRow].insert(currentCol);
             ONE_COUNT++; // 统计矩阵中1的个数
             rowsSet.insert(currentRow);
             colsSet.insert(currentCol); 
         }
 
+        // 初始化ETT节点
+        if (useETT) detector->add_row(currentRow);
+        active_rows.insert(currentRow);
         currentRow++;
         
         if (currentRow >= rows) break; // 防止超过预期行数
@@ -145,19 +150,11 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool useIg , bo
     InitBlock = Block(rowsSet, colsSet);
 
     if(useETT){
-        etTree->set_row_cols_getter([this](int row) -> const std::set<int>& {
-            static std::set<int> empty;
-            auto it = row_to_cols.find(row);
-            return (it != row_to_cols.end()) ? it->second : empty;
-        });
-
-
-        build_graph();
-
+        main_thread_id = detector->allocate_thread_id();  // 分配主线程ID
+        cout << "ETT initialization complete." << endl;
     }
 
     if (useIg) {
-        // graph = make_unique<ConnectedGraph>(*this);
         incrementalGraph = make_unique<IncrementalConnectedGraph>(rows);
         incrementalGraph->initialize(*this);
     }
@@ -167,45 +164,54 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool useIg , bo
 
 DancingMatrix::~DancingMatrix() = default;
 
-vector<vector<int>> DancingMatrix::getComponents(set<int>& rows) {
-    return graph->getComponents(rows);
-};
-
 vector<Block> DancingMatrix::getComponentsByIG(const set<int> rows) {
     return incrementalGraph->computeComponentsInRows(rows);
+    // return findComponents(rows);
 };
 
-vector<Block> DancingMatrix::getComponentsByETT(const set<int> rows) {
-    return etTree->findComponentsInBlock(rows);
-}
-
-
-/**
- * 构建初始图：有列交集的行之间建边
- */
-void DancingMatrix::build_graph() {
-    // 遍历所有列，找到包含该列的行，它们之间建边
-    for (const auto& [col, rows] : col_to_rows) {
-        if (rows.size() < 2) continue;
-
-        vector<int> row_vec(rows.begin(), rows.end());
-
-        // sort(row_vec.begin(), row_vec.end(), [&](int a, int b){ return row_to_cols[a].size() > row_to_cols[b].size(); }); // 按行大小排序
+vector<Block> DancingMatrix::findComponents(const set<int>& block_rows) {
+    if (block_rows.empty()) return {};
     
-        for (size_t i = 1; i < row_vec.size(); ++i) {
-            int u = row_vec[i-1];
-            int v = row_vec[i];
-            if (!etTree->isRowActive(u) || !etTree->isRowActive(v)) continue;
-            if (!etTree->connected(u, v)) {
-                // cout << "add rows: " << u << " " << v << endl;
-                etTree->link(u, v);
+    UnionFind uf;
+    
+    // 1. 初始化所有活跃行
+    for (int row : block_rows) {
+        uf.make_set(row);
+    }
+    
+    // 2. 通过共享列建立连接
+    for (int row : block_rows) {
+
+        const auto& cols = row_to_cols[row];
+        for (int col : cols) {
+            // 找到共享此列的其他行
+            for (int neighbor : col_to_rows[col]) {
+                if (neighbor != row && 
+                    block_rows.count(neighbor)) {
+                    uf.unite(row, neighbor);
+                }
             }
         }
     }
+    
+    // 3. 收集分量并计算列
+    auto components_map = uf.get_components();
+    vector<Block> result;
+    
+    for (const auto& [root, comp_rows] : components_map) {
+        set<int> comp_cols;
+        for (int row : comp_rows) {
+            const auto& cols = row_to_cols[row];
+            comp_cols.insert(cols.begin(), cols.end());
+        }
+        result.emplace_back(comp_rows, comp_cols);
+    }
+    
+    return result;
 }
 
-void DancingMatrix::printGraph() const {
-    graph->printGraph();
+void DancingMatrix::dumpETTState () const {
+    detector->debug_dump_state();
 }
 
 //插入元素到双向十字链表中
@@ -334,62 +340,10 @@ void DancingMatrix::printMatrix() const
     std::cout << std::endl;
 }
 
-void DancingMatrix::add_connection(int r, int c)
-{
-    // 获取该列已有的其他行
-    std::set<int> other_rows = col_to_rows[c];
-    
-    // 将当前行添加到列索引
-    col_to_rows[c].insert(r);
-    
-    // 检查是否需要与其他行建立连接
-    for (int other_row : other_rows) {
-        if (other_row == r) continue;
-        
-        auto row_pair = make_row_pair(r, other_row);
-        
-        // 记录共享列
-        shared_cols[row_pair].insert(c);
-        
-        // 如果这是第一个共享列，建立连接
-        if (shared_cols[row_pair].size() == 1) {
-            etTree->link(r, other_row);
-        }
-    }
-}
-
-void DancingMatrix::remove_connection(int r, int c)
-{ 
-    // 获取该列的其他行
-    auto it = col_to_rows.find(c);
-    if (it == col_to_rows.end()) return;
-    
-    std::set<int> other_rows = it->second;
-    other_rows.erase(r);
-    
-    // 从列索引删除
-    col_to_rows[c].erase(r);
-    if (col_to_rows[c].empty()) {
-        col_to_rows.erase(c);
-    }
-    
-    // 检查是否需要断开与其他行的连接
-    for (int other_row : other_rows) {
-        auto row_pair = make_row_pair(r, other_row);
-        
-        // 从共享列中删除
-        if (shared_cols.find(row_pair) != shared_cols.end()) {
-            shared_cols[row_pair].erase(c);
-            
-            // 如果没有共享列了，断开连接
-            if (shared_cols[row_pair].empty()) {
-                shared_cols.erase(row_pair);
-                
-                if (etTree->has_edge(r, other_row)) {
-                    etTree->cut(r, other_row);
-                }
-            }
-        }
+void DancingMatrix::printBlocks( vector<Block>& blocks) const {
+    int i = 1;
+    for (auto& block : blocks) {
+        block.printBlock(i++);
     }
 }
 
@@ -459,25 +413,23 @@ void DancingMatrix::coverInBlock(int c, Block& block){
 
     while( curC != col )  
     {    
-        block.rows.erase(curC->row);
+        int row_id = curC->row;
 
         if (enableGraphSync) {
             if (useETT) {
-                etTree->deactivateRow(curC->row);
+                detector->remove_row(row_id);
             } else if (useIG) {
-                incrementalGraph->deactivateRow(curC->row);
+                incrementalGraph->deactivateRow(row_id);
             }
         }
+        block.rows.erase(row_id); // 从块中移除行
 
         curR = curC->right;  
         while( curR != curC )  
         {          
-
             curR->down->up = curR->up;  
             curR->up->down = curR->down;  
-
             --ColIndex[curR->col].size;
-
             curR = curR->right;  
         }  
 
@@ -486,32 +438,29 @@ void DancingMatrix::coverInBlock(int c, Block& block){
 }
 
 void DancingMatrix::uncoverInBlock(int c, Block& block){ 
-    
-    Node* curR, *curC;  
     ColumnHeader* col = &ColIndex[c];  
-    curC = col->up;  
+    Node* curC = col->up; 
 
     while( curC != col )  
     {  
-        Node* noteR = curC;  
-        curR = curC->left;  
-
-        while( curR != noteR )  
+        int row_id = curC->row;
+ 
+        Node* curR = curC->left;  
+        while( curR != curC )  
         {  
-
             ++ColIndex[curR->col].size;
             curR->down->up = curR;  
             curR->up->down = curR;  
-
             curR = curR->left;  
         }  
 
-        block.rows.insert(curC->row);
+        block.rows.insert(row_id); // 将行添加到块中
+
         if (enableGraphSync) {
             if (useETT) {
-                etTree->reactivateRow(curC->row);
+                detector->add_row(row_id);
             } else if (useIG) {
-                incrementalGraph->reactivateRow(curC->row);
+                incrementalGraph->reactivateRow(row_id);
             }
         }
 
@@ -520,7 +469,6 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
 
     col->right->left = col;  
     col->left->right = col;  
-
     block.cols.insert(c);
 }
 

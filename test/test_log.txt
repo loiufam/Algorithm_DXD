@@ -1,4 +1,4 @@
 开始多线程DXD搜索...
-Time: 0.578911 s
-Solutions: 3006974471354708352
-Max Blocks: 6
+Time: 0.003588 s
+Solutions: 2
+Max Blocks: 2

@@ -5,11 +5,9 @@ thread_local unordered_map<ETTreapNode *, Block> cached_root_blocks;
 thread_local unordered_map<int, ETTreapNode *> cached_row_root;
 thread_local unordered_set<int> cached_block_rows;
 
-std::vector<Block> ETTree::findComponentsInBlock(const std::set<int> &block_rows)
-{
-        vector<int> added, removed;
-        for (int r : block_rows) if (!cached_block_rows.count(r)) added.push_back(r);
-        for (int r : cached_block_rows) if (!block_rows.count(r)) removed.push_back(r);
+//         vector<int> added, removed;
+//         for (int r : block_rows) if (!cached_block_rows.count(r)) added.push_back(r);
+//         for (int r : cached_block_rows) if (!block_rows.count(r)) removed.push_back(r);
 
         // bool small_delta = (added.size() + removed.size()) * 5 < block_rows.size();
 
@@ -33,7 +31,13 @@ std::vector<Block> ETTree::findComponentsInBlock(const std::set<int> &block_rows
         //         }
         //         cached_row_root[row] = root;
         //     }
-        // } else {
+
+
+std::vector<Block> ETTree::findComponentsInBlock(const std::set<int> &block_rows)
+{
+        vector<int> added, removed;
+        for (int r : block_rows) if (!cached_block_rows.count(r)) added.push_back(r);
+        for (int r : cached_block_rows) if (!block_rows.count(r)) removed.push_back(r);
             for (int r : removed) {
                 auto it = cached_row_root.find(r);
                 if (it != cached_row_root.end()) {
@@ -44,13 +48,11 @@ std::vector<Block> ETTree::findComponentsInBlock(const std::set<int> &block_rows
                 }
                 cached_block_rows.erase(r);
             }
-
             for (int r : added) {
                 if (!isRowActive(r)) continue;
                 auto it = vertex_repr.find(r);
                 if (it == vertex_repr.end()) continue;
                 auto *root = treap_get_root(it->second);
-
                 Block &blk = cached_root_blocks[root];
                 blk.rows.insert(r);
                 if (get_row_cols) {
@@ -60,7 +62,6 @@ std::vector<Block> ETTree::findComponentsInBlock(const std::set<int> &block_rows
                 cached_row_root[r] = root;
                 cached_block_rows.insert(r);
             }
-        // }
 
         vector<Block> result;
         result.reserve(cached_root_blocks.size());
@@ -69,3 +70,4 @@ std::vector<Block> ETTree::findComponentsInBlock(const std::set<int> &block_rows
         }
         return result;
 };
+

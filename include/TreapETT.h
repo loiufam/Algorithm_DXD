@@ -22,7 +22,7 @@ struct Block {
 
     size_t size() const { return rows.size(); }
 
-    Block(const set<int>& r, const set<int>& c) :  rows(r), cols(c) {}
+    Block(set<int> r, set<int> c) : rows(move(r)), cols(move(c)) {}
 
     template <typename RowsContainer, typename ColsContainer>
     Block(const RowsContainer& r, const ColsContainer& c)
@@ -134,6 +134,50 @@ inline void collect_repr_rows(ETTreapNode *root, set<int> &out) {
     }
 }
 
+class UnionFind {
+public:
+    std::unordered_map<int, int> parent;
+    std::unordered_map<int, int> rank;
+    
+    void make_set(int x) {
+        if (parent.find(x) == parent.end()) {
+            parent[x] = x;
+            rank[x] = 0;
+        }
+    }
+    
+    int find(int x) {
+        if (parent[x] != x) {
+            parent[x] = find(parent[x]);
+        }
+        return parent[x];
+    }
+    
+    void unite(int x, int y) {
+        int px = find(x);
+        int py = find(y);
+        if (px == py) return;
+        
+        if (rank[px] < rank[py]) {
+            parent[px] = py;
+        } else if (rank[px] > rank[py]) {
+            parent[py] = px;
+        } else {
+            parent[py] = px;
+            rank[px]++;
+        }
+    }
+
+    unordered_map<int, set<int>> get_components() {
+        unordered_map<int, set<int>> components;
+        for (const auto& [node, _] : parent) {
+            int root = find(node);
+            components[root].insert(node);
+        }
+        return components;
+    }
+};
+
 // ------------------- ETTree Class -------------------
 class ETTree {
 public:
@@ -170,8 +214,9 @@ public:
     }
 
     inline bool link(int u, int v) {
+        std::unique_lock lock(mutex_);
         if (connected(u, v)) return false;
-        make_tree(u); make_tree(v);
+        // make_tree(u); make_tree(v);
         auto *ru = treap_get_root(vertex_repr[u]);
         auto *rv = treap_get_root(vertex_repr[v]);
 
@@ -182,16 +227,17 @@ public:
         merged = treap_merge(merged, rv);
 
         auto *root = treap_get_root(merged);
-        component_info.erase(ru);
-        component_info.erase(rv);
-        component_info[root];
+        // component_info.erase(ru);
+        // component_info.erase(rv);
+        // component_info[root];
 
-        row_adjacency[u].insert(v);
-        row_adjacency[v].insert(u);
+        // row_adjacency[u].insert(v);
+        // row_adjacency[v].insert(u);
         return true;
     }
 
     inline bool cut(int u, int v) {
+        std::unique_lock lock(mutex_);
         long long eid = edge_id(u, v);
         auto it = edge_nodes.find(eid);
         if (it == edge_nodes.end()) return false;
@@ -206,17 +252,16 @@ public:
         auto *right = p2.second;
 
         edge_nodes.erase(it);
-        delete edge;
 
         if (left) left->p = nullptr;
         if (right) right->p = nullptr;
 
-        row_adjacency[u].erase(v);
-        row_adjacency[v].erase(u);
+        // row_adjacency[u].erase(v);
+        // row_adjacency[v].erase(u);
 
-        component_info.erase(root);
-        component_info[left];
-        component_info[right];
+        // component_info.erase(root);
+        // component_info[left];
+        // component_info[right];
         return true;
     }
 

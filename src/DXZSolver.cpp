@@ -302,7 +302,7 @@ Result DanceZDD::countSolutions(int node, unordered_map<int, Result >& memo) {
 void DanceZDD::startDLX(){
 
     logger.logLine("DLX开始搜索...");
-    cur_result->instance_name = cur_instance;
+
     try{
         vector<label_t> solution;
         timer.reset();
@@ -332,7 +332,7 @@ void DanceZDD::startDLX(){
 void DanceZDD::startDXZ(){
 
     logger.logLine("DXZ开始搜索...");
-    cur_result->instance_name = cur_instance;
+
     try{
         timer.reset();
         timer.markStartTime();

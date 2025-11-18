@@ -1,4 +1,3 @@
-#include "../include/DancingMatrix.h"
 #include "../include/DXD.h"
 
 static Logger logger("../test/test_log.txt");  // 全局日志
@@ -22,31 +21,6 @@ int main(int argc, char* argv[]) {
 
     try
     {
-
-        // DancingMatrix matrix(input_file, 3, false, true); 
-        // auto block = matrix.InitBlock;
-
-        // cout << "cover cols 4, 5 in initial block:" << endl;
-        // matrix.coverInBlock(4, block);
-        // matrix.coverInBlock(5, block);
-
-        // auto components = matrix.getComponentsByETT(block.rows);
-        // int i = 1;
-        // for(auto& component : components){
-        //     component.printBlock(i++);
-        // }
-        // cout << endl;
-
-        // matrix.uncoverInBlock(5, block);
-        // matrix.uncoverInBlock(4, block);
-        // cout << "uncover cols 4, 5 :" << endl;
-
-        // components = matrix.getComponentsByETT(block.rows);
-        // i = 1;
-        // for(auto& component : components){
-        //     component.printBlock(i++);
-        // }
-        // cout << endl;
         if (useEtt) {
             cout << "使用ETT方法" << endl;
             DanceDNNF dxd(input_file, 3, logger, false, true, 12, debug);
@@ -56,6 +30,7 @@ int main(int argc, char* argv[]) {
             DanceDNNF dxd(input_file, 3, logger, true, false, 12, debug);
             dxd.startMultiThreadDXD();
         }
+        cout << endl;
 
     }
     catch (const std::exception& e) {

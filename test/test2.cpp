@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
                         // 1. use ETT
                         {
                             DanceDNNF dxdSolver(entry.path().string(), read_mode, logger, false, true);
-                            dxdSolver.cur_instance = file_name;
+
                             dxdSolver.startDXD();
                             experimentCSV.updateTime(file_name, dxdSolver.searchTime, NEW_DXD_COLUMN_NAME, dxdSolver.timeout);
                         } 
@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
 
                         {
                             DanceDNNF dxdSolver(entry.path().string(), read_mode, logger, false, true, 24);
-                            dxdSolver.cur_instance = file_name;
+
                             dxdSolver.startMultiThreadDXD();
                             experimentCSV.updateTime(file_name, dxdSolver.searchTime, NEW_MDXD_COLUMN_NAME, dxdSolver.timeout);
                             // if (!dxdSolver.timeout) {
@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
                         // 2. use IG
                         {
                             DanceDNNF dxdSolver(entry.path().string(), read_mode, logger, true, false); 
-                            dxdSolver.cur_instance = file_name;
+
                             dxdSolver.startDXD();
                             experimentCSV.updateTime(file_name, dxdSolver.searchTime, DXD_COLUMN_NAME, dxdSolver.timeout);
                         } 
@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
 
                          {
                             DanceDNNF dxdSolver(entry.path().string(), read_mode, logger, true, false, 24); 
-                            dxdSolver.cur_instance = file_name;
+
                             dxdSolver.startMultiThreadDXD(); 
                             experimentCSV.updateTime(file_name, dxdSolver.searchTime, MDXD_COLUMN_NAME, dxdSolver.timeout);
                             if (!dxdSolver.timeout) {

@@ -148,9 +148,7 @@ class DanceZDD : DancingMatrix{
     private:
         Logger& logger;
 
-        shared_ptr<ExperimentResult> cur_result = make_shared<ExperimentResult>();
 
-        // ZDD
         std::unordered_map<size_t, shared_ptr<ZDDNode>> Z; // ZDD缓存
         std::unordered_map<std::string, shared_ptr<ZDDNode>> Z_; // ZDD缓存（线程安全）
 

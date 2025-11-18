@@ -1,344 +1,12 @@
 #include "../include/DXD.h"
-#include "../include/ConnectedGraph.h"
-
-void DanceDNNF::batchCover(const std::vector<int>& columns) {
-    CoverOperation batchOp;
-    batchOp.columns = columns; // 标记为批量操作
-    
-    for(int c : columns) {
-        ColumnHeader* col = getColumnHeader(c);
-        
-        // 列头节点连接信息
-        batchOp.columnLinks.push_back({(ColumnHeader*)col->left, (ColumnHeader*)col->right});
-        
-        // 从链表中移除列头
-        col->right->left = col->left;
-        col->left->right = col->right;
-        // removeColumn(c);
-
-        // 覆盖该列中的所有行
-        Node* curR, *curC = col->down;
-        while(curC != col) {
-            Node* noteR = curC;
-            curR = noteR->right;
-            while(curR != noteR) {
-                curR->down->up = curR->up;
-                curR->up->down = curR->down;
-                decColSize(curR->col);
-                batchOp.coveredNodes.push_back(curR);
-                curR = curR->right;
-            }
-            curC = curC->down;
-        }
-    }
-
-    
-    operationStack.push(batchOp);
-}
-
-void DanceDNNF::batchUncover() {
-    if(operationStack.empty()) return;
-    
-    CoverOperation batchOp = operationStack.top();
-    operationStack.pop();
-    
-    // 步骤1: 逆序恢复所有被覆盖的节点
-    // 这一步必须按照覆盖的逆序进行，以正确恢复双向链表
-    for(auto it = batchOp.coveredNodes.rbegin(); 
-        it != batchOp.coveredNodes.rend(); ++it) {
-        Node* curR = *it;
-        incColSize(curR->col);    // 恢复列的大小计数
-        curR->down->up = curR;          // 恢复下方节点的上指针
-        curR->up->down = curR;          // 恢复上方节点的下指针
-    }
-    
-    // 步骤2: 逆序恢复列头的链接
-    // 必须逆序，因为cover时是正序进行的
-    for(int i = batchOp.columns.size() - 1; i >= 0; --i) {
-        int colIndex = batchOp.columns[i];
-        ColumnHeader* col = getColumnHeader(colIndex);
-        
-        // 从保存的链接信息中恢复
-        ColumnHeader* leftCol = batchOp.columnLinks[i].first;
-        ColumnHeader* rightCol = batchOp.columnLinks[i].second;
-        
-        // 将当前列重新插入到列头链表中
-        leftCol->right = col;           // 左邻居指向当前列
-        rightCol->left = col;           // 右邻居指向当前列
-        col->left = leftCol;            // 当前列指向左邻居
-        col->right = rightCol;          // 当前列指向右邻居s
-    }
-    
-}
-
-std::shared_ptr<ORNode> DanceDNNF::make_node(int row) {
-    auto left = std::make_shared<ANDNode>(row);
-    auto right = std::make_shared<ANDNode>();
-    return std::make_shared<ORNode>(row, left, right);
-}
-
-std::shared_ptr<ORNode> DanceDNNF::Search(Node* curC) {
-    
-    int c = curC->col;
-    if(curC == getColumnHeader(c)) {
-        return std::make_shared<ORNode>(-2);
-    }
-    
-    size_t state = getColumnState();
-    // vector<Block> blocks = detectBlocks();
-    // if(blocks.size() > 1){
-    //     matrix_is_decomposed.insert({state, true});
-    // } 
-    
-    // 检查缓存
-    auto cacheIt = Cache.find(state);
-    if(cacheIt != Cache.end()) {
-        return cacheIt->second;
-    }
-
-    auto X = make_node(curC->row); 
-
-    // 覆盖矩阵 递归
-    std::vector<int> columnsToCover;
-    columnsToCover.push_back(c);
-    
-    Node* curR = curC->right;
-    while(curR != curC) {
-        columnsToCover.push_back(curR->col);
-        curR = curR->right;
-    }
-    
-    // 批量覆盖
-    batchCover(columnsToCover);
-
-
-    // 先处理选择的情况
-    if(isSolved()){
-        // count++;
-        X->left->next = std::make_shared<ORNode>(-1); // 找到解，返回T
-    } else {
-        ColumnHeader* choose = selectCol();  
-        X->left->next = Search(choose->down); // 选择该行，递归搜索
-    }
-    
-    // 恢复矩阵 回溯
-    // 批量恢复
-    batchUncover();
-
-
-    X->right->next = Search(curC->down); // 不选择该行的情况
-    
-    
-    Cache[state] = X;
-    return X;
-}
-
-void DanceDNNF::startSearch(bool g)
-{
-    ColumnHeader* choose = selectCol();
-    if( choose->size <= 0 ){
-        std::cout << "没有可选列，无精确覆盖解，搜索结束。" << std::endl;
-        return;  
-    }
-    auto start = std::chrono::high_resolution_clock::now();
-    rootOR = Search(choose->down);
-    auto end = std::chrono::high_resolution_clock::now();
-
-    searchTimeSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
-
-    std::cout << "搜索完成，耗时: " << searchTimeSeconds << " 秒。" << std::endl;
-}
-
-void mergeSets(vector<set<int>>& merged_sets, const set<int>& new_set) {
-    vector<size_t> to_erase_indices;
-    set<int> merged = new_set;
-
-    for (size_t i = 0; i < merged_sets.size(); ++i) {
-        set<int> intersection;
-        set_intersection(merged_sets[i].begin(), merged_sets[i].end(),
-                              new_set.begin(), new_set.end(),
-                              inserter(intersection, intersection.begin()));
-        if (!intersection.empty()) {
-            merged.insert(merged_sets[i].begin(), merged_sets[i].end());
-            to_erase_indices.push_back(i);
-        }
-    }
-
-    // 删除被合并的集合（从后往前删除避免下标混乱）
-    for (auto it = to_erase_indices.rbegin(); it != to_erase_indices.rend(); ++it) {
-        merged_sets.erase(merged_sets.begin() + *it);
-    }
-
-    merged_sets.push_back(std::move(merged));
-}
-
-// 合并相交的集合
-vector<set<int>> DanceDNNF::mergeRowSets(Block& block){
-    
-    vector<set<int>> merged_sets;
-
-    for(int col : block.cols){
-        ColumnHeader* colHead = getColumnHeader(col);
-        
-        if(merged_sets.empty()){
-            merged_sets.push_back(colHead->rows);
-            continue;
-        }
-
-        mergeSets(merged_sets, colHead->rows);
-    }
-
-    return merged_sets;
-}
-
-vector<Block> DanceDNNF::spilitBlock(const vector<set<int>>& mergeRowSets){
-    
-    vector<Block> blocks;
-    for(int i = 0; i < mergeRowSets.size(); ++i) {
-        const set<int>& rows = mergeRowSets[i];
-        set<int> cols;
-        // 获取所有行涉及的列的并集
-        for(int row : rows) {
-            const RowNode* rowHead = getRowHeader(row);
-            cols.insert(rowHead->cols.begin(), rowHead->cols.end());
-        }
-
-        // 过滤：只保留在当前行集合中实际存在的列
-        set<int> validCols;
-        for(int col : cols) {
-            const ColumnHeader* colHead = getColumnHeader(col);
-            set<int> intersection;
-            set_intersection(rows.begin(), rows.end(),
-                           colHead->rows.begin(), colHead->rows.end(),
-                           inserter(intersection, intersection.begin()));
-            if(!intersection.empty()) {
-                validCols.insert(col);
-            }
-        }
-        Block newBlock(rows, cols);
-        blocks.push_back(newBlock);
-    }
-    return blocks;
-}
-
-vector<Block> DanceDNNF::spilitBlockParallel(const vector<set<int>>& mergeRowSets) {
-   
-    vector<std::future<Block>> futures;
-    
-    // 创建异步任务
-    for(const auto& rows : mergeRowSets) {
-        futures.push_back(std::async(std::launch::async, [this, rows]() -> Block {
-            set<int> cols;
-            
-            // 获取所有行涉及的列的并集
-            for(int row : rows) {
-                const RowNode* rowHead = getRowHeader(row);
-                cols.insert(rowHead->cols.begin(), rowHead->cols.end());
-            }
-            
-            // 过滤：只保留在当前行集合中实际存在的列
-            set<int> validCols;
-            for(int col : cols) {
-                const ColumnHeader* colHead = getColumnHeader(col);
-                set<int> intersection;
-                set_intersection(rows.begin(), rows.end(),
-                               colHead->rows.begin(), colHead->rows.end(),
-                               inserter(intersection, intersection.begin()));
-                if(!intersection.empty()) {
-                    validCols.insert(col);
-                }
-            }
-            
-            return Block(rows, validCols);
-        }));
-    }
-    
-    // 收集结果
-    vector<Block> blocks;
-    blocks.reserve(futures.size());
-    for(auto& future : futures) {
-        blocks.push_back(future.get());
-    }
-    
-    return blocks;
-
-}
-
-vector<DXD_Block> DanceDNNF::detectBlocks(const DXD_Block& currentBlock) {
-        // 使用BFS找连通分量
-        unordered_set<int> visitedRows;
-        unordered_set<int> visitedCols;
-        vector<unordered_set<int>> tmp_blocks;  // 临时块，放连通分量的列id
-        vector<DXD_Block> blocks;
-
-        for (const auto& [startRow, _] : currentBlock.rowToCols) {
-            if (visitedRows.count(startRow)) continue;
-
-            // unordered_set<int> blockRows;
-            unordered_set<int> blockCols;
-            queue<pair<bool, int>> q; // true: row, false: col
-            q.emplace(true, startRow);
-
-            while (!q.empty()) {
-                auto [isRow, id] = q.front();
-                q.pop();
-
-                if (isRow) {
-                    if (visitedRows.count(id)) continue;
-                    visitedRows.insert(id);
-                    // blockRows.insert(id);
-
-                    // 安全访问映射
-                    auto it = currentBlock.rowToCols.find(id);
-                    if (it != currentBlock.rowToCols.end()) {
-                        for (int col : it->second) {
-                            if (!visitedCols.count(col)) {
-                                q.emplace(false, col);
-                            }
-                        }
-                    }
-                } else {
-                    if (visitedCols.count(id)) continue;
-                    visitedCols.insert(id);
-                    blockCols.insert(id);
-
-                    // 安全访问映射
-                    auto it = currentBlock.colToRows.find(id);
-                    if (it != currentBlock.colToRows.end()) {
-                        for (int row : it->second) {
-                            if (!visitedRows.count(row)) {
-                                q.emplace(true, row);
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (blockCols.size() >= 1) {
-                tmp_blocks.push_back(blockCols);
-            }
-        }
-
-        if(tmp_blocks.size() > 1){
-            for(auto &blockCols: tmp_blocks){
-                unordered_map<int, set<int>> newRowToCols;
-                unordered_map<int, set<int>> newColToRows;
-                build_mapping_from_cols(blockCols, newRowToCols, newColToRows);
-                blocks.push_back(DXD_Block(blockCols, newRowToCols, newColToRows));
-            }
-        }
-
-        return blocks;
-}
-
 
 // 串行处理每个子块，组合为 分解 节点
-DNNFResult DanceDNNF::serialSearch(vector<Block>& blocks) {
+DNNFResult DanceDNNF::serialSearch(vector<Block>& blocks, uint64_t thread_id, int parent_depth) {
 
     DNNFResult totalResult(1);
     
     for (auto& b : blocks) {
-        auto result = DXD(b);
+        auto result = DXD(b, thread_id, parent_depth + 1);
         if (result.isZero()) {
             return DNNFResult(0);
         }
@@ -349,57 +17,40 @@ DNNFResult DanceDNNF::serialSearch(vector<Block>& blocks) {
     return totalResult;
 }
 
+// 开启多线程并行搜索，多个子线程继承父线程的检测结果，并求解其中一个分块
+DNNFResult DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks, uint64_t parent_thread_id, int parent_depth) {
 
-shared_ptr<DNNFNode> DanceDNNF::parallelSearch(vector<Block>& blocks) {
-
-    std::vector<std::future<std::shared_ptr<DNNFNode>>> futures;
-
-    for (auto& block : blocks) {
-
-        // futures.push_back(pool.enqueue([this, b = Block(block)]() mutable {
-        //     return DXD(b);
-        // }));
-        // futures.push_back(async(launch::async, [this, block]() {  
-        //     Block blockCopy = block;  // 或直接使用 block
-        //     return DXD(blockCopy);
-        // }));
-    }
-
-    // 收集结果并创建Decomposed节点
-    auto andNode = std::make_shared<DNNFNode>(NodeType::Decomposed, -1, 1);
-
-    for (auto& future : futures) {
-        auto result = future.get();
-
-        if (!result || result->label == -2) { 
-            return F;
-        }
-        andNode->children.push_back(result);
-        andNode->count *= result->count;
-    }
-    
-    return andNode;
-}
-
-DNNFResult DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks) {
     const int n = blocks.size();
     std::vector<DNNFResult> results(n);
     std::atomic<bool> has_failure(false);
     std::atomic<bool> has_timeout(false);
     
-    #pragma omp barrier
+    // cout << "父线程ID: " << parent_thread_id << "开始并行搜索" << endl;
 
-    #pragma omp parallel for schedule(dynamic) if(n > 4)
+    #pragma omp parallel for
     for (int i = 0; i < n; i++) {
         if (has_failure.load(std::memory_order_acquire) || 
             has_timeout.load(std::memory_order_acquire)) {
             continue;
         }
-        
+
+        uint64_t child_id;
+        if (useETT) {
+            child_id = detector->allocate_thread_id();
+            // 子线程继承父线程在parent_depth的缓存
+            // 这样子线程的第一次detect_incremental可以直接使用父缓存
+            detector->inherit_context(parent_thread_id, child_id, parent_depth, i);
+        } else if (useIG) {
+            child_id = parent_thread_id + 1;
+        }
+
+        // cout << "子线程ID: " << child_id << "开始搜索" << endl;
         try {
-            Block blockCopy = blocks[i];
-            auto result = DXD(blockCopy);
-            
+            // 子线程的depth从parent_depth+1开始
+            auto result = DXD(blocks[i], child_id, parent_depth + 1);
+            // 子线程结束时清理缓存
+            if(useETT) detector->cleanup_thread(child_id);
+
             if (result.isZero()) {
                 has_failure.store(true, std::memory_order_release);
             } else {
@@ -414,8 +65,8 @@ DNNFResult DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks) {
         } catch (...) {
             has_failure.store(true, std::memory_order_release);
         }
+        // cout << "子线程ID: " << child_id << "结束搜索" << endl;
     }
-    #pragma omp barrier
     
     if (has_timeout.load()) {
         throw std::runtime_error("Time bound broken");
@@ -436,7 +87,7 @@ DNNFResult DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks) {
 
 
 // DXD单线程（要体现分解性）
-DNNFResult DanceDNNF::DXD(Block& block) {
+DNNFResult DanceDNNF::DXD(Block& block, uint64_t thread_id, int depth) {
     
     if(timer.timeBoundBroken()) {
         throw std::runtime_error("Time bound broken");
@@ -448,7 +99,6 @@ DNNFResult DanceDNNF::DXD(Block& block) {
 
     // 先查缓存
     size_t state = hashBlockState(block.cols); 
-
     {
         std::shared_lock<std::shared_mutex> readLock(cacheMutex);
         auto it = countCache.find(state);
@@ -457,34 +107,52 @@ DNNFResult DanceDNNF::DXD(Block& block) {
         }
     }
 
-    if(omp_in_parallel() == 0 && p_count < MAX_P_COUNT && block.rows.size() >= MIN_BLOCK_ROWS) {
+    if(p_count.load() < max_threads && block.rows.size() > MIN_BLOCK_ROWS) {
+        // 
+        // if (debug) {
+        //     cout << "线程" << thread_id << " 开始第 " << getRecordCount()
+        //             << " 次检测（depth=" << depth << "）..." << endl;
+        // }
 
         vector<Block> curBlock;
         if (useETT) {
-            curBlock = getComponentsByETT(block.rows);
+            if (depth == 0) {
+                // 第一层：全量检测
+                curBlock = detector->detect_full(block.rows, thread_id, depth);
+            } else {
+                // 子层：增量检测
+                curBlock = detector->detect_incremental(
+                block.rows, thread_id, depth - 1, depth);
+            }
         } else if (useIG) {
             curBlock = getComponentsByIG(block.rows);
         }
-        // if (debug) record_detect_count++;
 
-        MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
+        // if (debug) {
+        //     cout << "线程" << thread_id << " 检测结束，共 " << curBlock.size() 
+        //             << " 个独立分块" << endl;
+        //     printBlocks(curBlock);
+        //     cout << endl;
+        // }
+
         if (curBlock.size() > 1) {
-            // if (debug) {
-            //     cout << "第 " << record_detect_count << " 次检测到块分解。" << endl;
-            //     cout << "块分解为 " << curBlock.size() << " 个子块" << endl;
-            //     int i = 1;
-            //     for (auto& b : curBlock) {
-            //         b.printBlock(i++);
-            //     }
-            // }
-            turnOffGraphSync(); // 关闭图同步，提升性能
-            p_count++;
+
+            MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
+            p_count.fetch_add(MAX_B_COUNT, std::memory_order_relaxed);
+
+            if (p_count.load(std::memory_order_relaxed) >= max_threads) {
+                // if (debug) {
+                //     cout << "当前线程数: " << p_count << " ,达到最大线程, 停止同步更新" << endl;
+                // }
+                turnOnGraphSync(); // 提前停止同步更新
+            }
+
             DNNFResult result;
 
             if (isParallelSearch) {
-                result = parallelSearchUseOmp(curBlock);
+                result = parallelSearchUseOmp(curBlock, thread_id, depth);
             } else {
-                result = serialSearch(curBlock);
+                result = serialSearch(curBlock, thread_id, depth);
             }
             setCacheCount(state, result);
             return result;
@@ -499,8 +167,7 @@ DNNFResult DanceDNNF::DXD(Block& block) {
     }
 
     // 将choose列下的行节点作为Decision节点加入children
-    // shared_ptr<DNNFNode> orNode = buildTree ? 
-    //         make_shared<DNNFNode>(NodeType::OR, choose->col, 0) : nullptr;
+
     DNNFResult totalResult(0);
 
     coverInBlock(choose->col, block);
@@ -514,7 +181,7 @@ DNNFResult DanceDNNF::DXD(Block& block) {
             curR = curR->right;
         }
  
-        auto result = DXD(block);
+        auto result = DXD(block, thread_id, depth + 1);
 
         if(!result.isZero()) {
             totalResult = totalResult + result;
@@ -540,7 +207,6 @@ void DanceDNNF::startDXD() {
 
     logger.logLine("开始单线程DXD搜索...");
 
-    p_count = 0;
     isParallelSearch = false; // 单线程搜索
     MAX_B_COUNT = 1;
     
@@ -549,7 +215,7 @@ void DanceDNNF::startDXD() {
         timer.reset();
         timer.markStartTime();
         auto start = std::chrono::high_resolution_clock::now();
-        auto ResSols = DXD(InitBlock);  
+        auto ResSols = DXD(InitBlock, main_thread_id, 0);  
         auto end = std::chrono::high_resolution_clock::now();
         timer.markStopTime();
 
@@ -575,7 +241,6 @@ void DanceDNNF::startMultiThreadDXD() {
 
     logger.logLine("开始多线程DXD搜索...");
     
-    p_count = 0;
     isParallelSearch = true;  // 开启多线程搜索标志
     MAX_B_COUNT = 1;
 
@@ -584,7 +249,7 @@ void DanceDNNF::startMultiThreadDXD() {
         timer.reset();
         timer.markStartTime();
         auto start = std::chrono::high_resolution_clock::now();
-        auto ResSols = DXD(InitBlock);  // 多线程DXD搜索
+        auto ResSols = DXD(InitBlock, main_thread_id, 0);  // 多线程DXD搜索
         auto end = std::chrono::high_resolution_clock::now();
         timer.markStopTime();
    
@@ -612,9 +277,8 @@ DNNFResult DanceDNNF::parallelSearchMDLX(vector<Block>& blocks) {
     std::atomic<bool> has_timeout(false);
     std::atomic<bool> has_failure(false);
     
-    #pragma omp barrier
 
-    #pragma omp parallel for schedule(dynamic) if(n > 4)
+    #pragma omp parallel for
     for (int i = 0; i < n; i++) {
         // 提前检查超时标志
         if (has_timeout.load(std::memory_order_acquire) ||
@@ -647,7 +311,6 @@ DNNFResult DanceDNNF::parallelSearchMDLX(vector<Block>& blocks) {
         }
     }
 
-    #pragma omp barrier
     
     // 检查超时（在主线程重新抛出）
     if (has_timeout.load()) {
@@ -678,11 +341,11 @@ DNNFResult DanceDNNF::MDLX(vector<int>& sols, Block& block) {
         return DNNFResult(1);
     }
     
-    if(omp_in_parallel() == 0 && p_count < MAX_P_COUNT && block.rows.size() >= MIN_BLOCK_ROWS) {
+    if(p_count.load() < MAX_P_COUNT && block.rows.size() >= MIN_BLOCK_ROWS) {
 
         vector<Block> curBlock;
         if (useETT) {
-            curBlock = getComponentsByETT(block.rows);
+            curBlock = findComponents(block.rows);
         } else if (useIG) {
             curBlock = getComponentsByIG(block.rows);
         }
@@ -691,7 +354,7 @@ DNNFResult DanceDNNF::MDLX(vector<int>& sols, Block& block) {
         if (curBlock.size() > 1) {
             
             turnOffGraphSync(); // 关闭图同步，提升性能
-            p_count++;
+            p_count.fetch_add(1);
 
             // 多线程搜索
             auto parallelCount = parallelSearchMDLX(curBlock);
@@ -773,343 +436,4 @@ void DanceDNNF::start_MDLX_Search() {
 }
 
 
-shared_ptr<DNNFNode> DecisionDNNF::solveSingle(DancingMatrix& matrix, unordered_map<size_t, shared_ptr<DNNFNode>>& localCache)
-{
-    if (matrix.isSolved()) {
-        return T; // 所有列都被覆盖，找到一个解
-    }
-
-    size_t state = matrix.getColumnState();
-    auto cacheIt = localCache.find(state);
-    if (cacheIt != localCache.end()) {
-        return cacheIt->second; 
-    }
-
-    ColumnHeader* chosenCol = matrix.selectCol();
-
-    if (chosenCol->size <= 0) {
-        return F; // 没有可选列，返回F
-    }
-
-    auto orNode = make_shared<DNNFNode>(NodeType::OR, chosenCol->col, 0);
-
-    matrix.cover(chosenCol->col);
-    Node* curC = chosenCol->down;
-    while (curC != chosenCol) {
-        Node* curR = curC->right;
-        while (curR != curC) {
-            matrix.cover(curR->col);
-            curR = curR->right;
-        }
-
-        auto node = solveSingle(matrix, localCache); // 递归左分支
-
-        if (node->label != -2) {
-            // auto var = make_shared<DNNFNode>(NodeType::Variable, curC->row + 1);
-            auto and_node = make_shared<DNNFNode>(curC->row + 1, node, node->count);
-            orNode->count += node->count; // 累加当前Decision节点的计数
-            orNode->children.push_back(and_node);
-        }
-
-        curR = curC->left;
-        while (curR != curC) {
-            matrix.uncover(curR->col);
-            curR = curR->left;     
-        }
-
-        curC = curC->down;
-    }
-    matrix.uncover(chosenCol->col);
-
-    if (orNode->children.empty()) {
-        orNode = F;
-    }
-
-    localCache[state] = orNode; // 缓存结果
-    return orNode;
-}
-
-// 多线程并发搜索独立子矩阵
-shared_ptr<DNNFNode> DecisionDNNF::solve() {
-
-    vector<std::future<shared_ptr<DNNFNode>>> futures;
-    // futures.reserve(matrices.size());
-
-    // for (auto& matrixPtr : matrices) {
-    //     // 使用move避免拷贝，每个线程获得独立所有权
-    //     futures.push_back(pool.enqueue([this](unique_ptr<DancingMatrix> matrix) {
-    //         unordered_map<size_t, shared_ptr<DNNFNode>> localCache;
-    //         return solveSingle(*matrix, localCache);
-    //     }, std::move(matrixPtr)));
-    // }
-
-    // auto rootNode = make_shared<DNNFNode>();
-    // rootNode->count = 0;
-
-    // for (auto& future : futures) {
-    //     auto result = future.get();
-    //     rootNode->children.push_back(result);
-    //     rootNode->count += result->count;
-    // }
-
-    // Semaphore semaphore(maxConcurrentMatrices);  // 控制并发数
-        
-    for (const auto& task : tasks) {
-        auto future = pool.enqueue([this, task]() -> shared_ptr<DNNFNode> {
-            // semaphore.acquire();  // 获取资源
-            
-            try {
-                // 按需创建矩阵
-                auto matrix = make_unique<DancingMatrix>(task.input_file, task.from);
-                
-                // 应用行选择和列覆盖
-                applyRowSelection(*matrix, task.selectedRow);
-                
-                unordered_map<size_t, shared_ptr<DNNFNode>> localCache;
-                auto result = solveSingle(*matrix, localCache);
-                
-                // 矩阵使用完立即释放
-                matrix.reset();
-                
-                // semaphore.release();  // 释放资源
-                return result;
-            } catch (const std::exception& e) {
-                // semaphore.release();
-                throw std::runtime_error(e.what());
-            }
-        });
-        futures.push_back(std::move(future));
-    }
-    
-    // 合并结果
-    return mergeResults(futures);
-}
-
-shared_ptr<ExperimentResult> ExactCoverSolver::searchEC() {
-    cur_result->instance_name = cur_instance;
-    
-    try{
-        logger.logLine("最大线程数: " + to_string(poolSize));
-
-        // DancingMatrix dm(input_file, from);
-
-        // getClosedSizeCol(poolSize)
-        col_id selectCol;
-        auto assignRows = getAssignCol(selectCol);
-        int size = assignRows.size();
-        // ColumnHeader* colHead = dm.getColumnHeader(selectCol);
-        std::cout << "选择列: " << selectCol << " size: " << size << std::endl;
-
-        vector<SubMatrixTask> tasks;
-        tasks.reserve(size);
-        
-        for (auto& row : assignRows) {
-            tasks.emplace_back(row, input_file, from);
-
-        }
-
-
-        int maxConcurrent = std::min(poolSize, size);  // 最多同时4个矩阵
-        DecisionDNNF solver(std::move(tasks), maxConcurrent);
-
-        auto start = std::chrono::high_resolution_clock::now();
-        shared_ptr<DNNFNode> result = solver.solve();
-        auto end = std::chrono::high_resolution_clock::now();
-
-        double elapsedSeconds = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
-        // cout << "搜索完成，耗时: " << elapsedSeconds << " 秒。" << endl;
-        logger.logLine("多线程DXD搜索完成, 耗时: " + to_string(elapsedSeconds) + " 秒。");
-        cur_result->runtime = to_string(elapsedSeconds);
-        // cout << "搜索到的解个数: " << result->count << endl;
-        logger.logLine("搜索到的解个数: " + to_string(result->count));
-        cur_result->solution_count = result->count;
-
-        return cur_result;
-    } catch (const std::exception& e) {
-        cur_result->runtime = "failed";
-        logger.logLine(string(e.what()));
-        return cur_result;
-    }
-
-}
-
-const std::vector<row_id>& ExactCoverSolver::getAssignCol(col_id& selectedCol) { 
-    
-    if (matrix.size() <= 1) {
-        throw std::runtime_error("矩阵未初始化");
-    }
-    
-    // 使用标准算法查找最小元素
-    auto min_it = std::min_element(
-        matrix.begin() + 1, 
-        matrix.end(),
-        [](const std::vector<row_id>& a, const std::vector<row_id>& b) {
-            return a.size() < b.size();
-        }
-    );
-    
-    selectedCol = std::distance(matrix.begin(), min_it);
-    return *min_it;
-}
-
-// 主搜索函数(多线程版本)
-shared_ptr<DNNFNode> DanceDNNF::parallelDXD(Block& block) {
-    if (block.cols.empty()) {
-        return T; 
-    }
-
-    size_t state = hashBlockState(block.cols); // 编码当前块状态
-
-    // 检查缓存
-    auto cachedResult = getCache(state);
-    if (cachedResult) {
-        return cachedResult;
-    }
-
-    // if(block.cols.size() < MAX_BLOCK_COLS && detect_records.find(state) == detect_records.end()) {
-
-    //     vector<DXD_Block> blocks = detectBlocks(block);
-
-    //     if(blocks.size() > 1){
-    //         p_count++; // 分解成功次数
-    //         auto res_and_node = parallelSearch(blocks); // 多线程实现不同块搜索
-    //         setCachedResult(state, res_and_node); // 缓存结果
-    //         return res_and_node; // 返回分解节点
-    //     }else{
-    //         detect_records.insert(state);
-    //     }
-    // }
-    
-    ColumnHeader* selected_col = selectColumnHeuristic(block.cols);  
-
-    if(selected_col->size <= 0) {
-        return F; // 如果没有可选列，返回F
-    }
-
-    auto orNode = make_shared<DNNFNode>(NodeType::OR, selected_col->col, 0);
-
-    coverInBlock(selected_col->col, block); 
-    Node* curC = selected_col->down;
-    while(curC != selected_col) {
-
-        Node* noteR = curC; 
-        Node* curR = noteR->right; 
-        while(curR != noteR) {
-            coverInBlock(curR->col, block); 
-            curR = curR->right; 
-        }
-
-        auto node = parallelDXD(block); // 递归左分支
-
-        if(node->label != -2){
-            auto it = V_Table.find(curC->row);
-            shared_ptr<DNNFNode> var;
-            if (it != V_Table.end()) {
-                var = it->second;
-            } else {
-                var = make_shared<DNNFNode>(NodeType::Variable, curC->row + 1);
-                V_Table[curC->row] = var;
-            }
-            auto and_node = make_shared<DNNFNode>(NodeType::Decision, var, node);
-            and_node->count = node->count;
-            orNode->count += and_node->count; // 累加当前Decision节点的计数
-            orNode->children.push_back(and_node);
-        }
-        
-        
-        curR = noteR->left; 
-        while(curR != noteR) {
-            uncoverInBlock(curR->col, block); 
-            curR = curR->left; 
-        }
-        curC = curC->down;
-    }
-    uncoverInBlock(selected_col->col, block);
-
-    if(orNode->children.empty()) {
-        orNode = F;
-    }   
-    // 插入缓存
-    setCache(state, orNode);
-    return orNode;
-}
-
-
-// 批量处理舞蹈链，并更新block状态
-void DanceDNNF::batchCoverInBlock(Node* curC, Block& block) 
-{
-    BatchOperation batchOp;
-
-    Node* curNode = curC;
-    Node* startNode = curNode;
-    do {  // 遍历该行所有列
-        ColumnHeader* col = getColumnHeader(curNode->col);
-        
-        // 从链表中移除列头
-        col->right->left = col->left;
-        col->left->right = col->right;
-
-        block.cols.erase(col->col); // 从块中移除列
-
-        Node* rowNode = col->down, *curR;
-        while(rowNode != col){  // 遍历列中的行节点
-            Node* noteR = rowNode;
-            curR = noteR->right;
-            while(curR != noteR){
-                curR->down->up = curR->up;
-                curR->up->down = curR->down;
-                decColSize(curR->col);
-
-                // 更新列头和行头的元素集合
-                // ColIndex[curR->col].rows.erase(curR->row);  // 从列的行集合中移除该行
-                // RowIndex[curR->row].cols.erase(curR->col);  // 从行的列集合中移除该列
-
-                curR = curR->right;
-            }
-
-            // 更新block信息
-            // block.rows.erase(rowNode->row); // 从块中移除行 
-            
-            rowNode = rowNode->down;
-        }
-
-        curNode = curNode->right; // 移动到下一个列
-    }while(curNode != startNode);
-
-    block.is_spilited = false;  // 重置块状态
-    // batchOperationStack.push(batchOp);
-    batchOpStack.push_back(batchOp);
-}
-
-// 批量恢复舞蹈链和块
-void DanceDNNF::batchUncoverInBlock(Block& block)
-{ 
-    if(batchOpStack.empty()) return;
-
-    BatchOperation batchOp = batchOpStack.back();
-    batchOpStack.pop_back();
-
-    for(auto it = batchOp.coveredRows.rbegin(); 
-    it != batchOp.coveredRows.rend(); ++it) {
-        Node* curR = getRowHeader(*it);
-        incColSize(curR->col);     // 恢复列的大小计数
-        curR->down->up = curR;          // 恢复下方节点的上指针
-        curR->up->down = curR;          // 恢复上方节点的下指针
-
-        // 恢复列头和行头的元素集合
-        // ColIndex[curR->col].rows.insert(curR->row);  // 恢复列的行集合
-        // RowIndex[curR->row].cols.insert(curR->col);  // 恢复行的列集合
-    }
-
-    for(int i = batchOp.coveredCols.size() - 1; i >= 0; --i) {
-        int colIndex = batchOp.coveredCols[i];
-        ColumnHeader* col = getColumnHeader(colIndex);
-        
-        
-        // 将当前列重新插入到列头链表中
-        col->left->right = col;           // 左邻居指向当前列
-        col->right->left = col;           // 右邻居指向当前列
-    }
-
-}
 
