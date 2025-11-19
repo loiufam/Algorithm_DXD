@@ -78,16 +78,6 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool useIg , bo
     }
 
     // cout << "处理矩阵维度: " << rows << " 行, " << cols << " 列." << endl;
-    if (useETT) {
-
-        // 初始化检测器
-        detector = make_unique<ComponentDetector>([this](int r) -> const set<int>& {
-                static set<int> empty;
-                auto it = row_to_cols.find(r);
-                return (it != row_to_cols.end()) ? it->second : empty;
-        });
-    }
-
     ColIndex = std::make_unique<ColumnHeader[]>(cols + 1);  
     RowIndex = std::make_unique<RowNode[]>(rows);  
     root = &ColIndex[0];  
@@ -140,8 +130,8 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool useIg , bo
         }
 
         // 初始化ETT节点
-        if (useETT) detector->add_row(currentRow);
-        active_rows.insert(currentRow);
+        // if (useETT) detector->add_row(currentRow);
+        // active_rows.insert(currentRow);
         currentRow++;
         
         if (currentRow >= rows) break; // 防止超过预期行数
@@ -150,6 +140,7 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool useIg , bo
     InitBlock = Block(rowsSet, colsSet);
 
     if(useETT){
+        detector = make_unique<ComponentDetector>(col_to_rows, ROWS, COLS); // 初始化ETT检测器
         main_thread_id = detector->allocate_thread_id();  // 分配主线程ID
         cout << "ETT initialization complete." << endl;
     }
@@ -210,9 +201,6 @@ vector<Block> DancingMatrix::findComponents(const set<int>& block_rows) {
     return result;
 }
 
-void DancingMatrix::dumpETTState () const {
-    detector->debug_dump_state();
-}
 
 //插入元素到双向十字链表中
 void DancingMatrix::insert( int r, int c )  
@@ -415,7 +403,7 @@ void DancingMatrix::coverInBlock(int c, Block& block){
     {    
         int row_id = curC->row;
 
-        if (enableGraphSync) {
+        if (isGraphSyncEnabled()) {
             if (useETT) {
                 detector->remove_row(row_id);
             } else if (useIG) {
@@ -456,7 +444,7 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
 
         block.rows.insert(row_id); // 将行添加到块中
 
-        if (enableGraphSync) {
+        if (isGraphSyncEnabled()) {
             if (useETT) {
                 detector->add_row(row_id);
             } else if (useIG) {

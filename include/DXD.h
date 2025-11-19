@@ -5,9 +5,10 @@
 #include "../include/DXDTime.h"
 
 const int MIN_BLOCK_ROWS = 20;
-const int MAX_BLOCK_ROWS = 150;
+const int MAX_BLOCK_ROWS = 200;
 const int TIME_LIMIT_SECONDS = 1200; 
 const int TIME_LIMIT_BUILDING_SECONDS = 1200;
+const int MAX_DECOMPOSE_TIMES = 10;
 using namespace std;
 
 enum class NodeType { OR, Decision, Decomposed, Variable, Terminal };  // 节点类型 AND node 分为Decision和Decomposed两种
@@ -118,7 +119,12 @@ class DanceDNNF : DancingMatrix {
 
         int getRecordCount(){
             std::shared_lock<std::shared_mutex> readLock(recordMutex);
-            return ++detect_record;
+            return detect_record;
+        }
+
+        void addRecordCount(){
+            std::unique_lock<std::shared_mutex> writeLock(recordMutex);
+            detect_record++;
         }
 
     private:

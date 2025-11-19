@@ -48,7 +48,7 @@ class DancingMatrix
         
         std::uint64_t count = 0;  // 统计精确覆盖解
         std::uint64_t ONE_COUNT = 0; // 统计矩阵中1的个数
-        uint64_t main_thread_id;  // 主线程ID
+        uint64_t main_thread_id = 1;  // 主线程ID
         
         double searchTimeSeconds = 0.0;
         double countTimeSeconds = 0.0;
@@ -136,14 +136,20 @@ class DancingMatrix
 
         vector<Block> findComponents(const set<int>& block_rows);
 
-        void dumpETTState() const;
 
         void turnOnGraphSync() {
+            std::unique_lock lock(mutex_);
             enableGraphSync = true;
         }
 
         void turnOffGraphSync() {
+            std::unique_lock lock(mutex_);
             enableGraphSync = false;
+        }
+
+        bool isGraphSyncEnabled() const {
+            std::shared_lock lock(mutex_);
+            return enableGraphSync;
         }
 
     private:  

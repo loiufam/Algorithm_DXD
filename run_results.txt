@@ -1,6 +1,6 @@
-启用多线程DXD算法求解: bell-09
+启用多线程DXD算法求解: Aarnet
 开始多线程DXD搜索...
-Time: 131.211888 s
-Solutions: 21147
-Max Blocks: 1
-多线程DXD算法求解结束: bell-09
+Time: 3.536657 s
+Solutions: 3.110516e+99
+Max Blocks: 6
+多线程DXD算法求解结束: Aarnet

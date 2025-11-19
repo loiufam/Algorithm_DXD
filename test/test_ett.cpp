@@ -1,41 +1,34 @@
-#include "../include/DXD.h"
+#include "../include/DancingMatrix.h"
 
-static Logger logger("../test/test_log.txt");  // 全局日志
+using namespace std;
 
-int main(int argc, char* argv[]) {
+int main() {
 
-    string input_file = "../input_matrix.txt";
-    if (argc > 1) {
-        input_file = std::string(argv[1]);
+    string file_path = "../blocks_matrix.txt";
+
+    try {
+        DancingMatrix matrix(file_path, 3, false, true);
+
+        auto block = matrix.InitBlock;
+
+        cout << "start....." << endl;
+        auto components = matrix.detector->detect_full_subset(block.rows);
+        cout << "检测初始分块的连通分量: " << endl;
+        matrix.printBlocks(components);
+
+        matrix.coverInBlock(6, block);
+        matrix.coverInBlock(9, block);
+        components = matrix.detector->detect_full_subset(block.rows);
+        cout << "检测覆盖第5行后的连通分量: " << endl;
+        matrix.printBlocks(components);
+
+        matrix.uncoverInBlock(9,block);
+        matrix.uncoverInBlock(6, block);
+        components = matrix.detector->detect_full_subset(block.rows);
+        cout << "检测取消覆盖第5行后的连通分量: " << endl;
+        matrix.printBlocks(components);
+
+    }catch (const exception &e) {
+        cout << e.what() << endl;
     }
-
-    bool useEtt = true; // 是否使用ETT
-    if (argc > 2) {
-        useEtt = std::string(argv[2]) == "ett";
-    }
-
-    bool debug = false;
-    if (argc > 3) {
-        debug = std::string(argv[3]) == "debug";
-    }
-
-    try
-    {
-        if (useEtt) {
-            cout << "使用ETT方法" << endl;
-            DanceDNNF dxd(input_file, 3, logger, false, true, 12, debug);
-            dxd.startMultiThreadDXD();
-        } else {
-            cout << "使用原方法" << endl;
-            DanceDNNF dxd(input_file, 3, logger, true, false, 12, debug);
-            dxd.startMultiThreadDXD();
-        }
-        cout << endl;
-
-    }
-    catch (const std::exception& e) {
-        std::cerr << "An error occurred: " << e.what() << std::endl;
-    }
-
-    return 0;
 }

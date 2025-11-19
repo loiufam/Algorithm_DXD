@@ -39,7 +39,7 @@ DNNFResult DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks, uint64_t paren
             child_id = detector->allocate_thread_id();
             // 子线程继承父线程在parent_depth的缓存
             // 这样子线程的第一次detect_incremental可以直接使用父缓存
-            detector->inherit_context(parent_thread_id, child_id, parent_depth, i);
+            // detector->inherit_context(parent_thread_id, child_id, parent_depth, i);
         } else if (useIG) {
             child_id = parent_thread_id + 1;
         }
@@ -48,8 +48,6 @@ DNNFResult DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks, uint64_t paren
         try {
             // 子线程的depth从parent_depth+1开始
             auto result = DXD(blocks[i], child_id, parent_depth + 1);
-            // 子线程结束时清理缓存
-            if(useETT) detector->cleanup_thread(child_id);
 
             if (result.isZero()) {
                 has_failure.store(true, std::memory_order_release);
@@ -107,45 +105,19 @@ DNNFResult DanceDNNF::DXD(Block& block, uint64_t thread_id, int depth) {
         }
     }
 
-    if(p_count.load() < max_threads && block.rows.size() > MIN_BLOCK_ROWS) {
-        // 
-        // if (debug) {
-        //     cout << "线程" << thread_id << " 开始第 " << getRecordCount()
-        //             << " 次检测（depth=" << depth << "）..." << endl;
-        // }
-
+    if ( block.rows.size() > MIN_BLOCK_ROWS && block.rows.size() < MAX_BLOCK_ROWS) {
+        
         vector<Block> curBlock;
-        if (useETT) {
-            if (depth == 0) {
-                // 第一层：全量检测
-                curBlock = detector->detect_full(block.rows, thread_id, depth);
-            } else {
-                // 子层：增量检测
-                curBlock = detector->detect_incremental(
-                block.rows, thread_id, depth - 1, depth);
-            }
+        if (useETT ) {
+            curBlock = detector->detect_full_subset(block.rows);
         } else if (useIG) {
             curBlock = getComponentsByIG(block.rows);
         }
 
-        // if (debug) {
-        //     cout << "线程" << thread_id << " 检测结束，共 " << curBlock.size() 
-        //             << " 个独立分块" << endl;
-        //     printBlocks(curBlock);
-        //     cout << endl;
-        // }
+        MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
 
-        if (curBlock.size() > 1) {
-
-            MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
-            p_count.fetch_add(MAX_B_COUNT, std::memory_order_relaxed);
-
-            if (p_count.load(std::memory_order_relaxed) >= max_threads) {
-                // if (debug) {
-                //     cout << "当前线程数: " << p_count << " ,达到最大线程, 停止同步更新" << endl;
-                // }
-                turnOnGraphSync(); // 提前停止同步更新
-            }
+        if (!curBlock.empty() && curBlock.size() > 1) {
+            // 检测到多个独立分块，则并行处理
 
             DNNFResult result;
 
@@ -157,6 +129,9 @@ DNNFResult DanceDNNF::DXD(Block& block, uint64_t thread_id, int depth) {
             setCacheCount(state, result);
             return result;
         } 
+        // 如果只有一个分块，则直接求解
+    } else if(isGraphSyncEnabled()) {
+        turnOffGraphSync();
     }
 
     ColumnHeader* choose = selectColumnHeuristic(block.cols); 

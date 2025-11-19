@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "splay_tree_ett.hpp"
 #include "TreapETT.h"
 #include "SplayETT.h"
 #include <vector>
@@ -15,13 +16,11 @@
 #include <optional>
 #include <cstdint>
 
-
 // 检测上下文 - 存储某个递归层的检测结果
 struct DetectionContext {
     set<int> block_rows;                          // 当前块包含的所有行
     vector<Block> components;                     // 检测到的连通分量
     unordered_map<int, size_t> row_to_component;  // 行 -> 分量索引的映射
-    unordered_map<size_t, unordered_set<int>> bridge_nodes; // 分量索引 -> 该分量的桥梁节点集合
     int depth;                                    // 递归深度
     
     DetectionContext(int d = 0) : depth(d) {}
@@ -48,93 +47,122 @@ struct ThreadContext {
 
 class ComponentDetector {
 private:
+
+    // ===============================================================
+    // Dancing Links
+    // ===============================================================
+    int num_rows;
+    int num_cols;
+    // 存储每行覆盖的列
+    vector<vector<int>> row_to_cols;
+    // Adjacency list: row -> set of adjacent rows
+    std::vector<std::set<int>> adj_list;
+
+    // Track which rows are currently active (not removed)
+    std::unordered_set<int> active_rows;
+
     // ===============================================================
     // SplayETT
     // ===============================================================
+    std::unique_ptr<splay_tree_ett::EulerTourTree> ett;
     unique_ptr<SplayETT> splay_ett;
-    unordered_map<int, unordered_set<int>> col_rows; // column -> rows present
-    unordered_map<long long, int> edge_count; // multiplicity of edges between rows
+    unordered_map<int, set<int>> col_to_rows; // column -> rows present
+    // 记录每条边对应的列集合
+    // edge_cols[(u,v)] = 同时包含u和v的所有列的集合
+    map<pair<int, int>, set<int>> edge_cols;
+
     function<const set<int>&(int)> get_row_cols;
 
     // 多线程保护
     mutable shared_mutex ett_mutex;          // 保护ETT结构
     mutable shared_mutex col_rows_mutex;     // 保护col_rows和edge_count
+    mutable shared_mutex active_rows_mutex;  // 保护active_rows
+    mutable shared_mutex adj_list_mutex;     // 保护adj_list
     
     // 线程上下文管理
     mutable shared_mutex thread_ctx_mutex;
     unordered_map<uint64_t, shared_ptr<ThreadContext>> thread_contexts; // thread_id -> context
     atomic<uint64_t> next_thread_id{1};  // 自增的线程ID分配器
 
-    // ===============================================================
-    // TreapETT
-    // ===============================================================
-    shared_ptr<ETTree> ett;
+    mutable shared_mutex bridge_nodes_mutex;
+    unordered_set<int> bridge_nodes; // 桥节点集合
 
-    uint64_t global_version = 0;  // 全局版本号，每次ETT修改时递增
-
+    // // Helper: Build initial adjacency list from column-to-rows mapping
+    void BuildAdjacencyList(const std::unordered_map<int, std::set<int>>& col_to_rows);
+  
 public:
-    ComponentDetector(shared_ptr<ETTree> ett_ptr, function<const set<int>&(int)> cols_getter)
-        : ett(ett_ptr), get_row_cols(cols_getter) {}
 
-    ComponentDetector( function<const set<int>&(int)> cols_getter)
-        : splay_ett(make_unique<SplayETT>()), get_row_cols(cols_getter) {}
+    ComponentDetector(const std::unordered_map<int, std::set<int>>& col_to_rows, const int n, const int m);
+  
+    ~ComponentDetector() = default;
 
-    static long long edge_key(int a, int b) {
-        if (a > b) swap(a,b);
-        return ( (long long)a << 32 ) | (unsigned long long)b;
+    // 辅助函数：规范化边的表示 (确保 u < v)
+    pair<int, int> normalize_edge(int u, int v) const {
+        return u < v ? make_pair(u, v) : make_pair(v, u);
     }
 
     void add_row(int r) {
-        // 多线程加锁
+        std::vector<int> cols_to_link;
         {
-            unique_lock ett_lock(ett_mutex);
-            splay_ett->make_vertex(r);
+            std::unique_lock<std::shared_mutex> lk(active_rows_mutex);
+            if (active_rows.find(r) != active_rows.end()) return; // 已活跃
+            // 把 r 标记为活跃
+            active_rows.insert(r);
+
+            // 收集 r 对应的所有列（row_to_cols[r]）
+            for (int col : row_to_cols[r]) {
+            cols_to_link.push_back(num_rows + col); // 列节点 id = offset
+            }
         }
 
-        const auto& cols = get_row_cols(r);
-        unique_lock col_lock(col_rows_mutex);
-
-        for (int c : cols) {
-            auto &s = col_rows[c];
-            for (int other : s) {
-                if (other == r) continue;
-                long long k = edge_key(r, other);
-                if (++edge_count[k] == 1) {
-                    unique_lock ett_lock(ett_mutex);
-                    splay_ett->link(r, other);
-                }
-            }
-            s.insert(r);
+        std::unique_lock<std::shared_mutex> ett_lk(ett_mutex);
+        for (int col_node : cols_to_link) {
+            // link r -- col_node
+            ett->Link(r, col_node);
         }
     }
 
     void remove_row(int r) {
-        // 多线程加锁
-        const auto& cols = get_row_cols(r);
-        unique_lock col_lock(col_rows_mutex);
-        for (int c : cols) {
-            auto it = col_rows.find(c);
-            if (it == col_rows.end()) continue; // 跳过不存在的列
-            auto &s = it->second;
-            for (int other : s) {
-                if (other == r) continue;
-                long long k = edge_key(r, other);
-                auto eit = edge_count.find(k);
-                if (eit == edge_count.end()) continue; // 跳过不存在的边
-                if (--(eit->second) == 0) {
-                    edge_count.erase(eit);
-                    unique_lock ett_lock(ett_mutex);
-                    splay_ett->cut(r, other);
-                }
+        std::vector<int> cols_to_cut;
+        {
+            std::unique_lock<std::shared_mutex> lk(active_rows_mutex);
+            if (active_rows.find(r) == active_rows.end()) return;
+            active_rows.erase(r);
+
+            for (int col : row_to_cols[r]) {
+            cols_to_cut.push_back(num_rows + col);
             }
-            s.erase(r);
-            if (s.empty()) col_rows.erase(it);
         }
 
-        {
-            unique_lock ett_lock(ett_mutex);
-            splay_ett->remove_vertex(r);
+
+        std::unique_lock<std::shared_mutex> ett_lk(ett_mutex);
+        for (int col_node : cols_to_cut) {
+            ett->Cut(r, col_node);
         }
+    }
+
+    inline bool IsConnected(int u, int v) {
+        shared_lock active_lock(active_rows_mutex);
+        // 检查两个节点是否都是活跃的
+        if (active_rows.find(u) == active_rows.end() || 
+            active_rows.find(v) == active_rows.end()) {
+            return false;
+        }
+        active_lock.unlock();
+        
+        shared_lock ett_lock(ett_mutex);
+        return ett->IsConnected(u, v);
+    }
+
+    int GetComponentId(int r) {
+        shared_lock active_lock(active_rows_mutex);
+        if (active_rows.find(r) == active_rows.end()) {
+            return -1;
+        }
+        active_lock.unlock();
+        
+        shared_lock ett_lock(ett_mutex);
+        return ett->GetComponentId(r);
     }
 
     // 获取或创建线程上下文
@@ -155,12 +183,9 @@ public:
     }
 
     // 并行找到所有桥梁节点
-    unordered_map<size_t, unordered_set<int>> compute_all_bridges(const vector<Block>& components) {
-        unordered_map<size_t, unordered_set<int>> bridges;
-        int n = components.size();
+    void compute_all_bridges(const vector<Block>& components) {
 
-        // 用 vector 存储结果，避免并发写 unordered_map
-        vector<unordered_set<int>> local_results(n);
+        int n = components.size();
 
         // --- 并行处理每个 component ---
         #pragma omp parallel for schedule(dynamic)
@@ -189,8 +214,8 @@ public:
                     int r = nodes[i];
                     const auto &cols = get_row_cols(r);
                     for (int c : cols) {
-                        auto it = col_rows.find(c);
-                        if (it == col_rows.end()) continue;
+                        auto it = col_to_rows.find(c);
+                        if (it == col_to_rows.end()) continue;
                         for (int other : it->second) {
                             auto jt = id.find(other);
                             if (jt != id.end()) {
@@ -203,7 +228,6 @@ public:
             }
 
             // 3. bridge node detection: 对每个节点 i 检查删除 i 并删除其邻居后的连通性
-            unordered_set<int> comp_bridges;
 
             // 遍历每个节点
             for (int i = 0; i < m; ++i) {
@@ -247,81 +271,60 @@ public:
                 }
 
                 if (reached < remaining) {
+                    unique_lock lock(bridge_nodes_mutex);
                     // 删除 i 及其冲突行会导致分裂
-                    comp_bridges.insert(nodes[i]); // 插入真实 row id
+                    bridge_nodes.insert(nodes[i]); // 插入真实 row id
+                    lock.unlock();
                 }
-            }
-
-            if (!comp_bridges.empty()) {
-                local_results[idx] = std::move(comp_bridges);
             }
 
         } // end of parallel region
 
-        // 4. 将结果合并到 unordered_map（串行，O(n)）
-        for (int i = 0; i < n; ++i) {
-            if (!local_results[i].empty()) {
-                bridges[i] = move(local_results[i]);
-                // cout << "Bridge nodes of component " << i << ": { ";
-                // for (int node : bridges[i]) {
-                //     cout << node << " ";
-                // }
-                // cout << "}" << endl;
-            }
-        }
-        
-        return bridges;
     }
 
-    unordered_map<size_t, unordered_set<int>> allocateIndexForBridges(const vector<Block>& components, const unordered_set<int>& currentBridges) {
-        unordered_map<size_t, unordered_set<int>> result;
-
-        // 如果没有bridge，直接返回空
-        if (currentBridges.empty()) {
-            return result;
-        }
-
-        for (int bridge : currentBridges) {
-            for (size_t compIdx = 0; compIdx < components.size(); ++compIdx) {
-                if (components[compIdx].rows.count(bridge)) {
-                    result[compIdx].insert(bridge);
-                    break; // 一个bridge只属于唯一组件
-                }
-            }
-        }
-        
-        return result;
-    }
 
     // 对子集进行全量检测
     vector<Block> detect_full_subset(const set<int>& rows) {
         if (rows.empty()) return {};
                 
-        shared_lock ett_lock(ett_mutex);
-
-        unordered_map<intptr_t, vector<int>> component_groups;
-        for (int r : rows) {
-            intptr_t comp_id = splay_ett->get_component_id(r);
-            if (comp_id != -1) {
-                component_groups[comp_id].push_back(r);
-            } 
+        std::unordered_set<int> active_snapshot;
+        {
+            std::shared_lock<std::shared_mutex> lk(active_rows_mutex);
+            for (int r : rows) {
+            if (active_rows.find(r) != active_rows.end())
+                active_snapshot.insert(r);
+            }
         }
-        ett_lock.unlock();
-        
+
         vector<Block> result;
-        result.reserve(component_groups.size());
-        
-        for (auto& [comp_id, rows_vec] : component_groups) {
-            set<int> rows_set(rows_vec.begin(), rows_vec.end());
+        if (active_snapshot.empty()) return result;
+
+        std::unordered_set<int> visited;
+        for (int start : active_snapshot) {
+            if (visited.count(start)) continue;
+ 
+            std::vector<int> stack;
+            stack.push_back(start);
+            visited.insert(start);
+            for (size_t idx = 0; idx < stack.size(); ++idx) {
+                int u = stack[idx];
+                for (int v : adj_list[u]) {
+                    if (active_snapshot.count(v) && !visited.count(v)) {
+                        visited.insert(v);
+                        stack.push_back(v);
+                    }
+                }
+            }
+            // stack contains rows in this component
+            set<int> rows_set(stack.begin(), stack.end());
+            // collect cols covering these rows
             set<int> cols_set;
-            
-            for (int r : rows_vec) {
-                const auto& rc = get_row_cols(r);
-                cols_set.insert(rc.begin(), rc.end());
+            for (int r : stack) {
+                for (int c : row_to_cols[r]) cols_set.insert(c);
             }
             result.emplace_back(move(rows_set), move(cols_set));
         }
-        
+
         return result;
     }
 
@@ -366,82 +369,17 @@ public:
         // 子线程的components只有一个元素：它要处理的分块
         child_det_ctx->components = {target_block};
         
-        // 子线程只继承它要处理的那个分量
-        child_det_ctx->bridge_nodes[0] = parent_context->bridge_nodes[block_index];
-        
         child_det_ctx->build_index();
         // 存入子线程的缓存
         auto child_ctx = get_thread_context(child_thread_id);
         unique_lock child_lock(child_ctx->mutex);
         child_ctx->cache[depth] = child_det_ctx;
     }
-    
-    // 清理指定深度之后的缓存（回溯时可选调用）
-    void cleanup_depth_after(uint64_t thread_id, int depth) {
-        auto thread_ctx = get_thread_context(thread_id);
-        unique_lock lock(thread_ctx->mutex);
-        
-        for (auto it = thread_ctx->cache.begin(); it != thread_ctx->cache.end();) {
-            if (it->first > depth) {
-                it = thread_ctx->cache.erase(it);
-            } else {
-                ++it;
-            }
-        }
-    }
-    
+
     // 清理整个线程的缓存（线程结束时调用）
     void cleanup_thread(uint64_t thread_id) {
         unique_lock lock(thread_ctx_mutex);
         thread_contexts.erase(thread_id);
-    }
-
-    // ===============================================
-    // 调试
-    // ===============================================
-    // 打印当前边表与分量概览
-    void debug_dump_state() {
-        cerr << "=== BlockDetector dump ===\n";
-        cerr << "col_rows:\n";
-        for (auto &p : col_rows) {
-            cerr << " col " << p.first << ":";
-            for (int r : p.second) cerr << ' ' << r;
-            cerr << '\n';
-        }
-        cerr << "edge_count (pair -> cnt):\n";
-        for (auto &e : edge_count) {
-            long long k = e.first;
-            int a = int(k >> 32);
-            int b = int(k & 0xffffffff);
-            cerr << " (" << a << "," << b << ") -> " << e.second << '\n';
-        }
-        cerr << "ETT vertex_occurrence keys:\n";
-        for (auto &v : splay_ett->vertex_occurrence) cerr << v.first << ' ';
-        cerr << '\n';
-        cerr << "ETT edges (edge_map):\n";
-        for (auto &em : splay_ett->edge_map) {
-            auto k = em.first;
-            int a = k.first;
-            int b = k.second;
-            cerr << " (" << a << "," << b << ")\n";
-        }
-        cerr << "=========================\n";
-    }
-
-    // 获取桥梁节点信息（调试用）
-    unordered_set<int> get_bridges(uint64_t thread_id, int depth) {
-        auto thread_ctx = get_thread_context(thread_id);
-        shared_lock lock(thread_ctx->mutex);
-        
-        unordered_set<int> bridges;
-        auto it = thread_ctx->cache.find(depth);
-        if (it != thread_ctx->cache.end()) {
-            // 收集所有组件的桥梁节点
-            for (auto &[index, bridge_nodes] : it->second->bridge_nodes) {
-                bridges.insert(bridge_nodes.begin(), bridge_nodes.end());
-            }
-        }
-        return bridges;
     }
 
 };

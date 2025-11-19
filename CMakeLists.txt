@@ -18,11 +18,12 @@ set(COMMON_SOURCES
     src/DancingMatrix.cpp
     src/DXZSolver.cpp
     src/DXDSolver.cpp
-    # src/ConnectedGraph.cpp
     src/DynamicGraph.cpp
     src/TreapETT.cpp
     src/DXDTime.cpp
     src/ComponentDetector.cpp
+    src/splay_tree.cpp
+    src/splay_tree_ett.cpp
 )
 
 # Add executable target
