@@ -1,6 +1,8 @@
 #include "../include/splay_tree.hpp"
 #include <cassert>
 #include <utility>
+#include <unordered_set>
+#include <iostream>
 
 using std::pair;
 
@@ -45,7 +47,13 @@ void Node::Rotate() {
 }
 
 void Node::Splay() {
+
   while (parent != nullptr) {
+    if (parent->child[0] != this && parent->child[1] != this) {
+      std::cerr << "Error: node is not child of its parent" << std::endl;
+      parent = nullptr;
+      break;
+    }
     Node* p = parent;
     Node* g = p->parent;
     if (g == nullptr) {
@@ -73,7 +81,6 @@ Node* Node::GetExtreme(int i) {
   Node* cur = this;
   while (cur->child[i] != nullptr)
     cur = cur->child[i];
-  cur->Splay();
   return cur;
 }
 
@@ -95,6 +102,7 @@ Node* Node::GetSuccessor() {
   if (child[1] == nullptr) return nullptr;
   Node* cur = child[1];
   while (cur->child[0] != nullptr) cur = cur->child[0];
+  cur->Splay(); // cur is the min in the right subtree
   return cur;
 }
 

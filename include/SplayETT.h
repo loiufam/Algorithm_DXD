@@ -160,7 +160,6 @@ public:
         
         ETTNodePtr v_node = it->second;
         
-        // Simple case: isolated vertex
         if (!v_node->parent() && !v_node->l && !v_node->r) {
             vertex_map.erase(it);
             return;

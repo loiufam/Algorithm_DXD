@@ -16,18 +16,15 @@ EulerTourTree::EulerTourTree(int _num_verts) : num_verts(_num_verts) {
 
 EulerTourTree::~EulerTourTree() {
   delete[] verts;
-  for (splay_tree::Node* p : allocated_edges) {
-    delete p;
-  }
-  allocated_edges.clear();
-  // for (auto it : edges)
-  //   delete it.second;
-    edges.clear();
-    node_to_vertex.clear();
+  edges.clear();
+  node_to_vertex.clear();
 }
 
 bool EulerTourTree::IsConnected(int u, int v) {
+  if (u == v) return true;
+
   if (u < 0 || u >= num_verts || v < 0 || v >= num_verts) return false;
+
   // If two vertices share the same splay tree representative, they are connected.
   Node* ru = verts[u].GetRep();
   Node* rv = verts[v].GetRep();
@@ -38,52 +35,68 @@ void EulerTourTree::Link(int u, int v) {
   if (u == v) return; // ignoring self-loop
   if (u < 0 || u >= num_verts || v < 0 || v >= num_verts) return;
 
-  // If already connected, linking would create a cycle in tree structure.
-  // ETT used for dynamic forest typically assumes Link only between different components.
   if (IsConnected(u, v)) {
-    // For a forest ETT, you should not link vertices already connected.
-    // We'll ignore the request silently (or you can assert/throw depending on caller expectations).
     return;
   }
 
-  // create two new nodes representing directed edges
-  Node* uv = new Node();
-  Node* vu = new Node();
-  allocated_edges.push_back(uv);
-  allocated_edges.push_back(vu);
+  // 创建 unique_ptr 管理的新节点
+  auto uv = std::make_unique<Node>();
+  auto vu = std::make_unique<Node>();
+  // allocated_edges.push_back(uv);
+  // allocated_edges.push_back(vu);
 
-  // record reverse mapping for potential GetComponentId: map uv/vu to something invalid (-1)
-  // But we only map vertex nodes (verts[]) to vertex ids. If needed, can map uv/vu to -1
-  node_to_vertex[uv] = -1;
-  node_to_vertex[vu] = -1;
+  // 获取裸指针用于后续操作
+  Node* uv_ptr = uv.get();
+  Node* vu_ptr = vu.get();
 
-  edges[make_pair(u, v)] = uv;
-  edges[make_pair(v, u)] = vu;
+  edges[make_pair(u, v)] = std::move(uv);
+  edges[make_pair(v, u)] = std::move(vu);
 
   // Split after u and after v
-  Node* U_left;
-  Node* U_right;
+  Node* U_left; Node* U_right;
   tie(U_left, U_right) = verts[u].Split(); // splits right after verts[u], left contains upto u
 
-  Node* V_left;
-  Node* V_right;
+  Node* V_left; Node* V_right;
   tie(V_left, V_right) = verts[v].Split();
 
-  // Now merge using the ordering described above.
-  // Steps:
+  // 合并序列：
+  // 原 U 序列: ... u ... -> [ ... u ] (U_left) 和 [ ... ] (U_right)
+  // 原 V 序列: ... v ... -> [ ... v ] (V_left) 和 [ ... ] (V_right)
+  // 目标序列: (U左 ... u) -> (u,v) -> (V右 ...) -> (V左 ... v) -> (v,u) -> (U右 ...)
+
   // temp1 = Join(U_left, uv)
-  Node* temp1 = Node::Join(U_left, uv);
+  Node* temp1 = Node::Join(U_left, uv_ptr);
   // temp2 = Join(temp1, V_right)
   Node* temp2 = Node::Join(temp1, V_right);
   // temp3 = Join(temp2, V_left)
   Node* temp3 = Node::Join(temp2, V_left);
   // temp4 = Join(temp3, vu)
-  Node* temp4 = Node::Join(temp3, vu);
+  Node* temp4 = Node::Join(temp3, vu_ptr);
   // final = Join(temp4, U_right)
   Node* final_root = Node::Join(temp4, U_right);
 
-  // final_root is root of merged splay tree; nothing to return.
-  // No extra bookkeeping required; verts[] nodes are part of this splay forest now.
+}
+
+Node* EulerTourTree::RemoveNode(Node* node) {
+  if (!node) return nullptr;
+  
+  // Splay 该节点到根
+  node->Splay();
+  
+  // 现在 node 是根，移除它并合并左右子树
+  Node* left = node->child[0];
+  Node* right = node->child[1];
+  
+  // 断开连接
+  node->child[0] = nullptr;
+  node->child[1] = nullptr;
+  node->parent = nullptr;
+  
+  if (left) left->parent = nullptr;
+  if (right) right->parent = nullptr;
+  
+  // 合并左右子树
+  return Node::Join(left, right);
 }
 
 void EulerTourTree::Cut(int u, int v) {
@@ -93,53 +106,80 @@ void EulerTourTree::Cut(int u, int v) {
   auto it_uv = edges.find(make_pair(u, v));
   auto it_vu = edges.find(make_pair(v, u));
   if (it_uv == edges.end() || it_vu == edges.end()) {
-    // edge not present
     return;
   }
 
-  Node* e_uv = it_uv->second;
-  Node* e_vu = it_vu->second;
-
-  // Split right after e_uv and e_vu
-  Node* A; Node* B;
-  tie(A, B) = e_uv->Split(); // A ends with e_uv
-  Node* C; Node* D;
-  tie(C, D) = e_vu->Split(); // C ends with e_vu
-
-  // Determine relative order: check if A and C are in same tree root
-  // We want to know whether e_uv appears before e_vu in the Euler sequence.
-  bool uv_before_vu = (A->GetMin() == C->GetMin()) ? false : true;
-  // A conservative, robust test: compare pointers to minima. If minima equal, we are in same base,
-  // but pointer equality can be used to infer ordering when split results differ.
-  // (Different implementations use different tests; below we handle both cases.)
-
-  // Erase map entries first
+  std::unique_ptr<Node> uv_holder = std::move(it_uv->second);
+  std::unique_ptr<Node> vu_holder = std::move(it_vu->second);
+  
+  // 从 map 中删除
   edges.erase(it_uv);
   edges.erase(it_vu);
-
-  // Delete the edge nodes from their respective left parts (A and C end with the edge nodes)
-  // We want to remove the maximum (the last node) from A (which is e_uv)
-  if (A) {
-    A = A->DeleteMax();
+  
+  Node* uv = uv_holder.get();
+  Node* vu = vu_holder.get();
+  
+  // ===== 标准 ETT Cut 算法 =====
+  
+  // 步骤 1: 移除边节点 uv
+  // Splay uv 到根，然后移除它
+  uv->Splay();
+  Node* left1 = uv->child[0];   // uv 左边的序列
+  Node* right1 = uv->child[1];  // uv 右边的序列
+  
+  uv->child[0] = nullptr;
+  uv->child[1] = nullptr;
+  uv->parent = nullptr;
+  
+  if (left1) left1->parent = nullptr;
+  if (right1) right1->parent = nullptr;
+  
+  // 步骤 2: 在 right1 中找到并移除 vu
+  // 注意：vu 一定在 right1 中（因为 Link 时的顺序）
+  if (right1) {
+    // 在 right1 子树中 Splay vu
+    vu->Splay();
+    
+    Node* left2 = vu->child[0];   // vu 左边的序列
+    Node* right2 = vu->child[1];  // vu 右边的序列
+    
+    vu->child[0] = nullptr;
+    vu->child[1] = nullptr;
+    vu->parent = nullptr;
+    
+    if (left2) left2->parent = nullptr;
+    if (right2) right2->parent = nullptr;
+    
+    // 步骤 3: 重组两个连通分量
+    // 原始序列是：left1 | uv | left2 | vu | right2
+    // 移除 uv 和 vu 后，需要连接：
+    // - 组件1：left1 + right2
+    // - 组件2：left2（独立）
+    
+    Node::Join(left1, right2);
+    // left2 已经是独立的树了
+  } else {
+    // 如果 right1 为空，说明 vu 可能在 left1 中（不应该发生）
+    // 或者树结构异常
+    // 这种情况下，尝试在 left1 中找 vu
+    if (left1) {
+      vu->Splay();
+      
+      Node* left2 = vu->child[0];
+      Node* right2 = vu->child[1];
+      
+      vu->child[0] = nullptr;
+      vu->child[1] = nullptr;
+      vu->parent = nullptr;
+      
+      if (left2) left2->parent = nullptr;
+      if (right2) right2->parent = nullptr;
+      
+      Node::Join(left2, right2);
+    }
   }
-  if (C) {
-    C = C->DeleteMax();
-  }
-
-  // Now rejoin to form the two resulting trees.
-  // Two possibilities depending on the relative order in the tour before deletions.
-  // The goal is to connect the remaining pieces such that we obtain two separate Euler tours.
-
-  // We attempt to join (A, D) and (C, B) which is a standard reconstruction when
-  // e_uv was before e_vu in the tour; otherwise join (C, B) and (A, D) — effectively symmetric.
-  // We'll detect by checking whether A and D are non-null and the tree roots differ.
-
-  // Attempt 1: Join(A, D) and Join(C, B)
-  Node* first = Node::Join(A, D);
-  Node* second = Node::Join(C, B);
-
-  // No need to store resultant roots; verts[] nodes remain pointing into their splay trees.
-  (void)first; (void)second;
+  
+  // uv_holder 和 vu_holder 在函数结束时自动释放
 }
 
 int EulerTourTree::GetComponentId(int u) {
@@ -155,8 +195,7 @@ int EulerTourTree::GetComponentId(int u) {
 
 splay_tree::Node* EulerTourTree::GetComponentRoot(int u) {
   // We use the minimum node in the splay tree that contains verts[u] as canonical root
-  Node* rep = verts[u].GetRep();
-  return rep->GetMin();
+  return verts[u].GetRep();
 }
 
 bool* EulerTourTree::BatchConnected(pair<int, int>* queries, int len) {

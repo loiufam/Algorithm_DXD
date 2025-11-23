@@ -21,9 +21,9 @@ ALGORITHMS = [
     ("IDXD_M", ["mdxd", "ett"], 10, True, "IDXD_M_results.csv"),
     ("DXD_S", ["dxd", "ig"], 7, True, "DXD_S_results.csv"),
     ("DXD_M", ["mdxd", "ig"], 8, True, "DXD_M_results.csv"),
-    ("MDLX", ["mdlx", "ett"], 11, True, "MDLX_results.csv"),
-    ("DLX", ["dlx"], 4, False, "DLX_results.csv"),
-    ("DXZ", ["dxz"], 5, False, "DXZ_results.csv"),
+    # ("MDLX", ["mdlx", "ett"], 11, True, "MDLX_results.csv"),
+    # ("DLX", ["dlx"], 4, False, "DLX_results.csv"),
+    # ("DXZ", ["dxz"], 5, False, "DXZ_results.csv"),
 ]
 
 def parse_log_output(output):
@@ -185,8 +185,8 @@ def main():
         '''
     )
     
-    parser.add_argument('-r', '--read-mode', type=int, default=1,
-                        help='读取模式，默认为1')
+    parser.add_argument('-r', '--read-mode', type=int, default=3,
+                        help='读取模式，默认为3')
     parser.add_argument('-i', '--input-folder', type=str, default=INPUT_FOLDER,
                         help=f'输入文件夹路径，默认为{INPUT_FOLDER}')
     parser.add_argument('-o', '--output-folder', type=str, default=RESULTS_FOLDER,

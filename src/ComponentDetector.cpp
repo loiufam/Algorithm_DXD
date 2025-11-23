@@ -1,187 +1,215 @@
 #include "../include/ComponentDetector.h"
 
-ComponentDetector::ComponentDetector(const std::unordered_map<int, std::set<int>>& col_to_rows, const int n, const int m) : col_to_rows(col_to_rows), 
-                                        num_rows(n),  num_cols(m), row_to_cols(n) {
+// 定义 thread_local 静态成员
+thread_local std::vector<CoverHistory> ComponentDetector::cover_stack_;
+
+ComponentDetector::ComponentDetector(const int n, const int m) : num_rows(n),  num_cols(m), global_parent(n) {
+    ett = std::make_unique<SplayETT>();
+    for (int i = 0; i < n; i++) {
+        ett->make_vertex(i);
+    }
+    std::iota(global_parent.begin(), global_parent.end(), 0);
+}
+
+void ComponentDetector::Cover(int c) {
+    // 执行 Cover 操作并获取历史记录
+    CoverHistory history = DoCover(c);
     
-    for (const auto& [col, rows] : col_to_rows) {
-        for (int row : rows) {
-            row_to_cols[row].push_back(col);
-        }
+    // 压入线程私有栈
+    cover_stack_.push_back(std::move(history));
+}
+
+void ComponentDetector::Uncover() {
+    // 检查栈是否为空
+    if (cover_stack_.empty()) {
+        throw std::runtime_error("Cannot uncover: cover stack is empty");
     }
+    
+    // 取出栈顶元素
+    CoverHistory history = std::move(cover_stack_.back());
+    cover_stack_.pop_back();
+    
+    // 执行 Uncover 操作
+    DoUncover(history);
+}
 
-    // Initially all rows are active
-    for (int i = 0; i < num_rows; i++) {
-        active_rows.insert(i);
-    }
-  
-    adj_list.assign(num_rows, set<int>());
+CoverHistory ComponentDetector::DoCover(int c) {
+    CoverHistory history;
+    history.col = c;
 
-    for (const auto& [col, rows] : col_to_rows) {
-        if (rows.empty()) continue;
-        vector<int> row_vec(rows.begin(), rows.end());
-
-        const size_t k = row_vec.size();
-        // 其他所有行都连接到代表行
-        for (size_t i = 0; i < k; i++) {
-            for (size_t j = i + 1; j < k; j++) {
-                adj_list[row_vec[i]].insert(row_vec[j]);
-                adj_list[row_vec[j]].insert(row_vec[i]);
-            }
-        }
-    }
-
-    ett = std::make_unique<splay_tree_ett::EulerTourTree>(num_rows + num_cols);
-
-    // 在 ETT 中建立所有边
+    // 1. 快速检查列是否有效 (读锁)
     {
-        std::unique_lock<std::shared_mutex> lock(ett_mutex);
-        for (const auto& [col, rows] : col_to_rows) {
-            int col_node = num_rows + col;
-            for (int r : rows) {
-                // Link row r with its column node
-                ett->Link(r, col_node);
+        std::shared_lock<std::shared_mutex> lock(state_mutex);
+        if (active_cols.find(c) == active_cols.end()) {
+            return history; // 无效操作
+        }
+    }
+
+    // 获取该列包含的行 (读锁，col_to_rows 初始化后不变)
+    // col_to_rows 是静态的，这里不需要锁
+    const auto& rows = col_to_rows.at(c); 
+
+    // 2. 更新图连通性 (写锁)
+    // 必须锁住 ETT 和 edge_columns，防止并发修改导致状态不一致
+    {
+        std::unique_lock<std::shared_mutex> lock(ett_graph_mutex);
+        
+        // 遍历该列产生的所有边
+        for (size_t i = 0; i < rows.size(); i++) {
+            for (size_t j = i + 1; j < rows.size(); j++) {
+                int r1 = rows[i], r2 = rows[j];
+                if (r1 > r2) std::swap(r1, r2);
+                auto edge = std::make_pair(r1, r2);
+
+                history.edges_affected.push_back(edge);
+                
+                auto& cols = edge_columns[edge];
+                cols.erase(c); // 移除该列对边的贡献
+                
+                if (cols.empty()) {
+                    // 如果没有列支撑这条边了，则断开
+                    edge_columns.erase(edge); // 节省内存
+                    history.edges_removed.push_back(edge);
+                    ett->cut(r1, r2);
+                    ett->remove_vertex(r1);
+                    ett->remove_vertex(r2);
+                }
+            }
+        }
+    } // 释放 ett 锁
+
+    // 3. 更新矩阵状态 (写锁)
+    {
+        std::unique_lock<std::shared_mutex> lock(state_mutex);
+        active_cols.erase(c);
+        
+        for (int r : rows) {
+            row_to_cols[r].erase(c);
+            if (row_to_cols[r].empty()) {
+                active_rows.erase(r);
+                history.rows_deactivated.push_back(r);
             }
         }
     }
+
+    return history;
 }
 
-void ComponentDetector::BuildAdjacencyList(const std::unordered_map<int, std::set<int>>& col_to_rows) {
-  
-  // For each column, connect all pairs of rows that cover it
-  for (const auto& [col, rows] : col_to_rows) {
-    if (rows.size() <= 1) continue; // Skip columns with less than 2 rows
-
-    std::vector<int> row_vec(rows.begin(), rows.end());
-    
-    // Connect each pair of rows covering the same column
-    for (size_t i = 0; i < row_vec.size(); i++) {
-      for (size_t j = i + 1; j < row_vec.size(); j++) {
-        int u = row_vec[i];
-        int v = row_vec[j];
-        
-        // Add bidirectional edge
-        adj_list[u].insert(v);
-        adj_list[v].insert(u);
-      }
+void ComponentDetector::DoUncover(const CoverHistory& history) {
+    int c = history.col;
+    // 如果 history 为空（例如 Cover 时列不活跃），直接返回
+    if (history.edges_affected.empty() && history.rows_deactivated.empty() && history.edges_removed.empty()) {
+        bool was_active;
+        {
+            std::shared_lock<std::shared_mutex> lock(state_mutex);
+            was_active = active_cols.count(c);
+        }
+        if(was_active) return; // 并没有真正执行过 Cover
     }
-  }
+
+    // 1. 恢复 ETT 和 边数据 (写锁)
+    {
+        std::unique_lock<std::shared_mutex> lock(ett_graph_mutex);
+        
+        // 恢复 edge_columns
+        for (const auto& edge : history.edges_affected) {
+            edge_columns[edge].insert(c);
+        }
+        
+        // 恢复被切断的边
+        // 注意：必须按与 Cut 相反的顺序或任意顺序 Link 均可，因为图是无向的
+        for (const auto& edge : history.edges_removed) {
+            ett->make_vertex(edge.first);
+            ett->make_vertex(edge.second);
+            ett->link(edge.first, edge.second);
+        }
+    }
+
+    // 2. 恢复矩阵状态 (写锁)
+    {
+        std::unique_lock<std::shared_mutex> lock(state_mutex);
+        
+        for (int r : history.rows_deactivated) {
+            active_rows.insert(r);
+        }
+        
+        // 这里的 col_to_rows 需要保证只读或受保护
+        if (col_to_rows.count(c)) {
+            for (int r : col_to_rows.at(c)) {
+                row_to_cols[r].insert(c);
+            }
+        }
+        active_cols.insert(c);
+    }
 }
 
-// 应该保证只有一次全量检测，由主线程调用
-vector<Block> ComponentDetector::detect_full(const set<int>& block_rows, uint64_t thread_id, int depth) {
-    
+vector<Block> ComponentDetector::detect_in_block(const set<int>& block_rows){
     if (block_rows.empty()) return {};
-
-    // 执行全量检测
-    auto components = detect_full_subset(block_rows);
-
-    auto det_ctx = make_shared<DetectionContext>(depth);
-    det_ctx->block_rows = block_rows;
-    det_ctx->components = components;
-
-    // if (depth == 0) {
-    //     compute_all_bridges(components); // 应当计算所有组件内部的桥梁节点
-    // }
-
-    det_ctx->build_index();
     
-    // 存入线程的缓存
-    auto thread_ctx = get_thread_context(thread_id);
-    unique_lock lock(thread_ctx->mutex);
-    thread_ctx->cache[depth] = det_ctx;
+    // 1. 构建并查集
+    UnionFind uf;
+    std::unordered_set<int> active_set(block_rows.begin(), block_rows.end());
     
-    return components;
-}
-
-// 增量检测：基于父层检测结果和删除的行进行快速判断
-// parent_depth: 父Block的递归深度
-// current_rows: 当前Block的行集合（已经删除了某些行）
-// current_depth: 当前Block的递归深度
-vector<Block> ComponentDetector::detect_incremental(const set<int>& current_rows, 
-                                    uint64_t thread_id,                                 
-                                    int parent_depth, 
-                                    int current_depth) {  
-                                        
-    if (bridge_nodes.empty()) return detect_full(current_rows, thread_id, current_depth);
-                                        
-    // 获取该线程的上下文
-    auto thread_ctx = get_thread_context(thread_id);
-        
-    // 获取父层上下文,必须确保继承时正确复制
-    shared_ptr<DetectionContext> parent_ctx;
-    {
-        shared_lock lock(thread_ctx->mutex);
-        auto it = thread_ctx->cache.find(parent_depth);
-        
-        // if (it == thread_ctx->cache.end()) {
-        //     throw runtime_error("Parent context not found for depth " + to_string(parent_depth));
-        // }
-        parent_ctx = it->second;
+    for (int row : block_rows) {
+        uf.make_set(row);
     }
-
-    assert(parent_ctx->components.size() == 1);
-
-    // 计算删除的行（只会删除，不会添加）
-    set<int> removed_rows;
-    set_difference(parent_ctx->block_rows.begin(), parent_ctx->block_rows.end(),
-                    current_rows.begin(), current_rows.end(),
-                    inserter(removed_rows, removed_rows.begin()));
     
-    // 如果没有变化，直接返回缓存结果(子线程首次执行会直接返回缓存结果)
-    if (removed_rows.empty()) {
-        // 即使没有变化，也要为当前depth创建缓存，供下一层使用
-        auto det_ctx = make_shared<DetectionContext>(current_depth);
-        det_ctx->block_rows = current_rows;
-        det_ctx->components = parent_ctx->components;
-        det_ctx->build_index();
-
-        unique_lock lock(thread_ctx->mutex);
-        thread_ctx->cache[current_depth] = det_ctx;
-        return parent_ctx->components;
-    }
-
-    // 检查remove是否有bridge_nodes
-    unordered_set<int> removed_bridge = {};
-    {
-        shared_lock lock(bridge_nodes_mutex);
-        for (int r : removed_rows) {
-            if (bridge_nodes.count(r)) {
-                removed_bridge.insert(r);
+    // 2. 合并连通的节点 - 只需遍历一次边
+    for (int u : block_rows) {
+        for (int v : adj_list[u]) {
+            if (active_set.count(v)) {
+                uf.unite(u, v);
             }
+        }
+    }
+    
+    // 3. 按根节点分组
+    std::unordered_map<int, vector<int>> components;
+    for (int row : block_rows) {
+        int root = uf.find(row);
+        components[root].push_back(row);
+    }
+    
+    // 4. 构建结果
+    vector<Block> result;
+    result.reserve(components.size());
+    
+    for (auto& [root, component] : components) {
+        set<int> rows_set(component.begin(), component.end());
+        set<int> cols_set;
+        
+        for (int r : component) {
+            const auto& cols = row_to_cols[r];
+            cols_set.insert(cols.begin(), cols.end());
+        }
+        
+        result.emplace_back(std::move(rows_set), std::move(cols_set));
+    }
+    
+    return result;
+};
+
+vector<Block> ComponentDetector::detect_by_ett(const set<int>& block_rows){
+    if (block_rows.empty()) return {}; 
+
+    unordered_map<int, set<int>> components_group;
+    for (int row : block_rows) {
+        int comp_id = GetComponentId(row);
+        if (comp_id != -1) {
+            components_group[comp_id].insert(row);
         }
     }
 
     vector<Block> result;
-
-    // 如果没有删除桥梁节点，连通分量不变
-    if (removed_bridge.empty()) {
-        // const auto& parent_comp = parent_ctx->components[0];
-        
-        // set<int> remaining_rows;
-        // set_intersection(parent_comp.rows.begin(), parent_comp.rows.end(),
-        //                 current_rows.begin(), current_rows.end(),
-        //                 inserter(remaining_rows, remaining_rows.begin()));
-        
+    for (auto& [comp_id, rows] : components_group) {
         set<int> cols_set;
-        for (int r : current_rows) {
-            const auto& rc = get_row_cols(r);
-            cols_set.insert(rc.begin(), rc.end());
+        for (int row : rows) {
+            const auto& cols = row_to_cols[row];
+            cols_set.insert(cols.begin(), cols.end());
         }
-        result.emplace_back(move(current_rows), move(cols_set));
-        
-        // 缓存结果（继承桥梁信息）
-        auto det_ctx = make_shared<DetectionContext>(current_depth);
-        det_ctx->block_rows = current_rows;
-        det_ctx->components = result;
-        det_ctx->build_index();
-        
-        unique_lock lock(thread_ctx->mutex);
-        thread_ctx->cache[current_depth] = det_ctx;
-        
-        return result;
-    } else {
-        // 如果删除了桥梁节点，连通分量可能改变
-        return detect_full(current_rows, thread_id, current_depth);
+        result.emplace_back(std::move(rows), std::move(cols_set));
     }
 
-}
+    return result;
+};
+

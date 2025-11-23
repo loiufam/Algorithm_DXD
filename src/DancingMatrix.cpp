@@ -122,7 +122,7 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool useIg , bo
                 exit(1);
             }
             insert(currentRow, currentCol); // 插入节点
-            col_to_rows[currentCol].insert(currentRow);
+            col_to_rows[currentCol].push_back(currentRow);
             row_to_cols[currentRow].insert(currentCol);
             ONE_COUNT++; // 统计矩阵中1的个数
             rowsSet.insert(currentRow);
@@ -140,8 +140,8 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool useIg , bo
     InitBlock = Block(rowsSet, colsSet);
 
     if(useETT){
-        detector = make_unique<ComponentDetector>(col_to_rows, ROWS, COLS); // 初始化ETT检测器
-        main_thread_id = detector->allocate_thread_id();  // 分配主线程ID
+        detector = make_unique<ComponentDetector>(ROWS, COLS); 
+        detector->Initialize(col_to_rows);
         cout << "ETT initialization complete." << endl;
     }
 
@@ -395,6 +395,9 @@ void DancingMatrix::coverInBlock(int c, Block& block){
     col->left->right = col->right;  
     
     block.cols.erase(c); // 从块中移除列
+    if (isGraphSyncEnabled() && useETT) {
+        detector->Cover(c);
+    }
 
     Node* curR, *curC;  
     curC = col->down;  
@@ -403,12 +406,8 @@ void DancingMatrix::coverInBlock(int c, Block& block){
     {    
         int row_id = curC->row;
 
-        if (isGraphSyncEnabled()) {
-            if (useETT) {
-                detector->remove_row(row_id);
-            } else if (useIG) {
-                incrementalGraph->deactivateRow(row_id);
-            }
+        if (isGraphSyncEnabled() && useIG) {
+            incrementalGraph->deactivateRow(row_id);
         }
         block.rows.erase(row_id); // 从块中移除行
 
@@ -423,6 +422,7 @@ void DancingMatrix::coverInBlock(int c, Block& block){
 
         curC = curC->down;  
     }  
+
 }
 
 void DancingMatrix::uncoverInBlock(int c, Block& block){ 
@@ -444,17 +444,16 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
 
         block.rows.insert(row_id); // 将行添加到块中
 
-        if (isGraphSyncEnabled()) {
-            if (useETT) {
-                detector->add_row(row_id);
-            } else if (useIG) {
-                incrementalGraph->reactivateRow(row_id);
-            }
+        if (isGraphSyncEnabled() && useIG) {
+            incrementalGraph->reactivateRow(row_id); 
         }
 
         curC = curC->up;  
     }  
 
+    if (isGraphSyncEnabled() && useETT) {
+        detector->Uncover();
+    }
     col->right->left = col;  
     col->left->right = col;  
     block.cols.insert(c);

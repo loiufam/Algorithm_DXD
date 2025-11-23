@@ -21,10 +21,10 @@ class Node {
   Node* DeleteMin();
   Node* DeleteMax();
 
- private:
   Node* parent;
   Node* child[2];
 
+ public:
   Node(Node* _parent, Node* left, Node *right);
 
   void AssignChild(int i, Node* v);

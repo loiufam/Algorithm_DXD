@@ -48,7 +48,6 @@ class DancingMatrix
         
         std::uint64_t count = 0;  // 统计精确覆盖解
         std::uint64_t ONE_COUNT = 0; // 统计矩阵中1的个数
-        uint64_t main_thread_id = 1;  // 主线程ID
         
         double searchTimeSeconds = 0.0;
         double countTimeSeconds = 0.0;
@@ -170,7 +169,7 @@ class DancingMatrix
         unordered_map<int, set<int>> row_covered_cols;
 
         // 关键数据结构：列 -> 激活行集合的反向索引
-        unordered_map<int, set<int>> col_to_rows;
+        unordered_map<int, vector<int>> col_to_rows;
 
         // 生成行对的规范化键
         std::pair<int, int> make_row_pair(int r1, int r2) {

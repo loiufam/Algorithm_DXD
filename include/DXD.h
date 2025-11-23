@@ -8,7 +8,7 @@ const int MIN_BLOCK_ROWS = 20;
 const int MAX_BLOCK_ROWS = 200;
 const int TIME_LIMIT_SECONDS = 1200; 
 const int TIME_LIMIT_BUILDING_SECONDS = 1200;
-const int MAX_DECOMPOSE_TIMES = 10;
+const int MAX_DECOMPOSE_TIMES = 5;
 using namespace std;
 
 enum class NodeType { OR, Decision, Decomposed, Variable, Terminal };  // 节点类型 AND node 分为Decision和Decomposed两种
@@ -73,9 +73,9 @@ class DanceDNNF : DancingMatrix {
         DNNFResult parallelSearchMDLX(vector<Block>& blocks);
         DNNFResult MDLX(vector<int>& sols, Block& block);
 
-        DNNFResult DXD(Block& block, uint64_t thread_id, int depth);
-        DNNFResult serialSearch(vector<Block>& blocks, uint64_t thread_id, int depth);
-        DNNFResult parallelSearchUseOmp(vector<Block>& blocks, uint64_t thread_id, int depth);
+        DNNFResult DXD(Block& block, int depth);
+        DNNFResult serialSearch(vector<Block>& blocks, int depth);
+        DNNFResult parallelSearchUseOmp(vector<Block>& blocks, int depth);
 
         // 启动搜索函数
         void startDXD();

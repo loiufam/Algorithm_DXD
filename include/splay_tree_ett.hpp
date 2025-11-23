@@ -2,6 +2,10 @@
 
 #include <algorithm>
 #include <unordered_map>
+#include <vector>
+#include <tuple>
+#include <cassert>
+#include <memory>
 
 #include "splay_tree.hpp"
 #include "hash_pair.hpp"
@@ -28,15 +32,17 @@ class EulerTourTree {
  private:
   int num_verts;
   splay_tree::Node* verts;
-  std::unordered_map<std::pair<int, int>, splay_tree::Node*, HashIntPairStruct> edges;
+  std::unordered_map<std::pair<int, int>, std::unique_ptr<splay_tree::Node>, HashIntPairStruct> edges;
 
   // Reverse mapping: Node pointer -> vertex ID
   std::unordered_map<splay_tree::Node*, int> node_to_vertex;
 
-  std::vector<splay_tree::Node*> allocated_edges; // For memory management
-  
+  // std::vector<splay_tree::Node*> allocated_edges; // For memory management
+
   // Helper function to get the representative node of a component
   splay_tree::Node* GetComponentRoot(int u);
+  // 辅助函数：从树中移除一个节点，返回剩余的树
+  splay_tree::Node* RemoveNode(splay_tree::Node* node);
 };
 
 } //namespace splay_tree_ett

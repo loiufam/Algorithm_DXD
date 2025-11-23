@@ -1,12 +1,12 @@
 #include "../include/DXD.h"
 
 // 串行处理每个子块，组合为 分解 节点
-DNNFResult DanceDNNF::serialSearch(vector<Block>& blocks, uint64_t thread_id, int parent_depth) {
+DNNFResult DanceDNNF::serialSearch(vector<Block>& blocks, int parent_depth) {
 
     DNNFResult totalResult(1);
     
     for (auto& b : blocks) {
-        auto result = DXD(b, thread_id, parent_depth + 1);
+        auto result = DXD(b, parent_depth + 1);
         if (result.isZero()) {
             return DNNFResult(0);
         }
@@ -18,15 +18,13 @@ DNNFResult DanceDNNF::serialSearch(vector<Block>& blocks, uint64_t thread_id, in
 }
 
 // 开启多线程并行搜索，多个子线程继承父线程的检测结果，并求解其中一个分块
-DNNFResult DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks, uint64_t parent_thread_id, int parent_depth) {
+DNNFResult DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks, int parent_depth) {
 
     const int n = blocks.size();
     std::vector<DNNFResult> results(n);
     std::atomic<bool> has_failure(false);
     std::atomic<bool> has_timeout(false);
     
-    // cout << "父线程ID: " << parent_thread_id << "开始并行搜索" << endl;
-
     #pragma omp parallel for
     for (int i = 0; i < n; i++) {
         if (has_failure.load(std::memory_order_acquire) || 
@@ -34,20 +32,9 @@ DNNFResult DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks, uint64_t paren
             continue;
         }
 
-        uint64_t child_id;
-        if (useETT) {
-            child_id = detector->allocate_thread_id();
-            // 子线程继承父线程在parent_depth的缓存
-            // 这样子线程的第一次detect_incremental可以直接使用父缓存
-            // detector->inherit_context(parent_thread_id, child_id, parent_depth, i);
-        } else if (useIG) {
-            child_id = parent_thread_id + 1;
-        }
-
-        // cout << "子线程ID: " << child_id << "开始搜索" << endl;
         try {
             // 子线程的depth从parent_depth+1开始
-            auto result = DXD(blocks[i], child_id, parent_depth + 1);
+            auto result = DXD(blocks[i], parent_depth + 1);
 
             if (result.isZero()) {
                 has_failure.store(true, std::memory_order_release);
@@ -63,7 +50,6 @@ DNNFResult DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks, uint64_t paren
         } catch (...) {
             has_failure.store(true, std::memory_order_release);
         }
-        // cout << "子线程ID: " << child_id << "结束搜索" << endl;
     }
     
     if (has_timeout.load()) {
@@ -85,7 +71,7 @@ DNNFResult DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks, uint64_t paren
 
 
 // DXD单线程（要体现分解性）
-DNNFResult DanceDNNF::DXD(Block& block, uint64_t thread_id, int depth) {
+DNNFResult DanceDNNF::DXD(Block& block, int depth) {
     
     if(timer.timeBoundBroken()) {
         throw std::runtime_error("Time bound broken");
@@ -105,33 +91,35 @@ DNNFResult DanceDNNF::DXD(Block& block, uint64_t thread_id, int depth) {
         }
     }
 
-    if ( block.rows.size() > MIN_BLOCK_ROWS && block.rows.size() < MAX_BLOCK_ROWS) {
+    if ( isGraphSyncEnabled() && block.rows.size() > MIN_BLOCK_ROWS) {
         
         vector<Block> curBlock;
         if (useETT ) {
-            curBlock = detector->detect_full_subset(block.rows);
+            curBlock = detector->GetBlocks(block.rows);
         } else if (useIG) {
             curBlock = getComponentsByIG(block.rows);
         }
 
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
 
-        if (!curBlock.empty() && curBlock.size() > 1) {
+        if (curBlock.size() > 1) {
             // 检测到多个独立分块，则并行处理
+            p_count.fetch_add(1);
+            if (p_count.load() > MAX_DECOMPOSE_TIMES) {
+                turnOffGraphSync();
+            }
 
             DNNFResult result;
 
             if (isParallelSearch) {
-                result = parallelSearchUseOmp(curBlock, thread_id, depth);
+                result = parallelSearchUseOmp(curBlock, depth);
             } else {
-                result = serialSearch(curBlock, thread_id, depth);
+                result = serialSearch(curBlock, depth);
             }
             setCacheCount(state, result);
             return result;
         } 
         // 如果只有一个分块，则直接求解
-    } else if(isGraphSyncEnabled()) {
-        turnOffGraphSync();
     }
 
     ColumnHeader* choose = selectColumnHeuristic(block.cols); 
@@ -156,7 +144,7 @@ DNNFResult DanceDNNF::DXD(Block& block, uint64_t thread_id, int depth) {
             curR = curR->right;
         }
  
-        auto result = DXD(block, thread_id, depth + 1);
+        auto result = DXD(block, depth + 1);
 
         if(!result.isZero()) {
             totalResult = totalResult + result;
@@ -190,7 +178,7 @@ void DanceDNNF::startDXD() {
         timer.reset();
         timer.markStartTime();
         auto start = std::chrono::high_resolution_clock::now();
-        auto ResSols = DXD(InitBlock, main_thread_id, 0);  
+        auto ResSols = DXD(InitBlock, 0);  
         auto end = std::chrono::high_resolution_clock::now();
         timer.markStopTime();
 
@@ -224,7 +212,7 @@ void DanceDNNF::startMultiThreadDXD() {
         timer.reset();
         timer.markStartTime();
         auto start = std::chrono::high_resolution_clock::now();
-        auto ResSols = DXD(InitBlock, main_thread_id, 0);  // 多线程DXD搜索
+        auto ResSols = DXD(InitBlock, 0);  // 多线程DXD搜索
         auto end = std::chrono::high_resolution_clock::now();
         timer.markStopTime();
    

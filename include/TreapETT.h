@@ -134,50 +134,6 @@ inline void collect_repr_rows(ETTreapNode *root, set<int> &out) {
     }
 }
 
-class UnionFind {
-public:
-    std::unordered_map<int, int> parent;
-    std::unordered_map<int, int> rank;
-    
-    void make_set(int x) {
-        if (parent.find(x) == parent.end()) {
-            parent[x] = x;
-            rank[x] = 0;
-        }
-    }
-    
-    int find(int x) {
-        if (parent[x] != x) {
-            parent[x] = find(parent[x]);
-        }
-        return parent[x];
-    }
-    
-    void unite(int x, int y) {
-        int px = find(x);
-        int py = find(y);
-        if (px == py) return;
-        
-        if (rank[px] < rank[py]) {
-            parent[px] = py;
-        } else if (rank[px] > rank[py]) {
-            parent[py] = px;
-        } else {
-            parent[py] = px;
-            rank[px]++;
-        }
-    }
-
-    unordered_map<int, set<int>> get_components() {
-        unordered_map<int, set<int>> components;
-        for (const auto& [node, _] : parent) {
-            int root = find(node);
-            components[root].insert(node);
-        }
-        return components;
-    }
-};
-
 // ------------------- ETTree Class -------------------
 class ETTree {
 public:
