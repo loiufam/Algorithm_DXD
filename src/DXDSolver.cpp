@@ -99,15 +99,13 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
         } else if (useIG) {
             curBlock = getComponentsByIG(block.rows);
         }
+        addRecordCount();
 
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
 
         if (curBlock.size() > 1) {
             // 检测到多个独立分块，则并行处理
-            p_count.fetch_add(1);
-            if (p_count.load() > MAX_DECOMPOSE_TIMES) {
-                turnOffGraphSync();
-            }
+            turnOffGraphSync();
 
             DNNFResult result;
 
@@ -119,6 +117,10 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
             setCacheCount(state, result);
             return result;
         } 
+        
+        if (getRecordCount() > MAX_DECOMPOSE_TIMES) {
+            turnOffGraphSync();
+        }
         // 如果只有一个分块，则直接求解
     }
 

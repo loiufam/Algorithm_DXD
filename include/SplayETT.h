@@ -1,318 +1,380 @@
-#include <memory>
+#ifndef SPLAY_ETT_H
+#define SPLAY_ETT_H
+
+#include <vector>
 #include <unordered_map>
 #include <functional>
-#include <cassert>
+#include <iostream>
+#include <climits>
 
-using namespace std;
-
-struct SplayETTNode;
-using ETTNodePtr = shared_ptr<SplayETTNode>;
-
-struct SplayETTNode {
-    ETTNodePtr l = nullptr, r = nullptr;
-    weak_ptr<SplayETTNode> p;
-    int vertex;      // vertex id (-1 for edge-occurrence)
-    int edge_u, edge_v;  // edge endpoints for edge-occurrence
-    int sz = 1;
-    
-    SplayETTNode(int vertex_ = -1, int u = -1, int v = -1)
-        : vertex(vertex_), edge_u(u), edge_v(v), sz(1) {}
-    
-    ETTNodePtr parent() const { return p.lock(); }
-    
-    void update_size() {
-        sz = 1;
-        if (l) sz += l->sz;
-        if (r) sz += r->sz;
-    }
-};
-
+/**
+ * Splay-based Euler Tour Tree (ETT) 实现
+ * 
+ * 时间复杂度：所有操作 O(log n) 摊还
+ */
 class SplayETT {
 private:
-    // Mapping from vertex id to its first occurrence node in the ETT
-    unordered_map<int, ETTNodePtr> vertex_map;
+    struct Node {
+        Node *left, *right, *parent;
+        int vertex;      // 对应的顶点编号（-1表示边节点）
+        unsigned long long edgeKey;  // 边的唯一标识 (u,v) -> key
+        bool reversed;
+        
+        Node(int v = -1, unsigned long long key = 0) 
+            : left(nullptr), right(nullptr), parent(nullptr),
+              vertex(v), edgeKey(key), reversed(false) {}
+    };
     
-    // Mapping from edge (u,v) to its occurrence node  
-    unordered_map<long long, ETTNodePtr> edge_map;
+    struct Edge {
+        Node *first, *second;
+        int u, v;
+    };
     
-    static constexpr long long MAX_VERTEX = 1000000LL;
+    std::vector<Node*> vertexNodes;
+    std::unordered_map<unsigned long long, Edge> edges;
+    std::vector<Node*> nodePool;
     
-    long long edge_key(int u, int v) const {
-        if (u > v) swap(u, v);
-        return (long long)u * MAX_VERTEX + v;
+    // 辅助函数：将边(u,v)编码为唯一键
+    inline unsigned long long makeEdgeKey(int u, int v) const {
+        if (u > v) std::swap(u, v);
+        return (static_cast<unsigned long long>(u) << 32) | static_cast<unsigned long long>(v);
     }
     
-    // Splay operations
-    void set_child(ETTNodePtr p, ETTNodePtr ch, bool is_left) {
-        if (p) {
-            if (is_left) p->l = ch;
-            else p->r = ch;
+    inline void pushDown(Node* x) {
+        if (!x || !x->reversed) return;
+        std::swap(x->left, x->right);
+        if (x->left) x->left->reversed ^= true;
+        if (x->right) x->right->reversed ^= true;
+        x->reversed = false;
+    }
+    
+    void rotate(Node* x) {
+        Node* p = x->parent;
+        Node* g = p->parent;
+        
+        pushDown(p);
+        pushDown(x);
+        
+        if (p->left == x) {
+            p->left = x->right;
+            if (x->right) x->right->parent = p;
+            x->right = p;
+        } else {
+            p->right = x->left;
+            if (x->left) x->left->parent = p;
+            x->left = p;
         }
-        if (ch) ch->p = p;
+        
+        x->parent = g;
+        p->parent = x;
+        
+        if (g) {
+            if (g->left == p) g->left = x;
+            else g->right = x;
+        }
     }
     
-    void rotate(ETTNodePtr x) {
-        if (!x) return;
-        ETTNodePtr p = x->parent();
-        if (!p) return;
-        
-        ETTNodePtr g = p->parent();
-        bool x_is_left = (p->l == x);
-        
-        set_child(p, x_is_left ? x->r : x->l, x_is_left);
-        set_child(x, p, !x_is_left);
-        set_child(g, x, g && g->l == p);
-        
-        p->update_size();
-        x->update_size();
-    }
-    
-    void splay(ETTNodePtr x) {
-        if (!x) return;
-        
-        while (x->parent()) {
-            ETTNodePtr p = x->parent();
-            ETTNodePtr g = p->parent();
+    void splay(Node* x) {
+        while (x->parent) {
+            Node* p = x->parent;
+            Node* g = p->parent;
+            
+            if (g) pushDown(g);
+            pushDown(p);
+            pushDown(x);
             
             if (!g) {
                 rotate(x);
+            } else if ((g->left == p) == (p->left == x)) {
+                rotate(p);
+                rotate(x);
             } else {
-                bool x_is_left = (p->l == x);
-                bool p_is_left = (g->l == p);
-                
-                if (x_is_left == p_is_left) {
-                    rotate(p);
-                    rotate(x);
-                } else {
-                    rotate(x);
-                    rotate(x);
-                }
+                rotate(x);
+                rotate(x);
             }
         }
+        pushDown(x);
     }
     
-    // Get the root of the tree containing node x
-    ETTNodePtr get_root(ETTNodePtr x) {
-        if (!x) return nullptr;
-        while (x->parent()) x = x->parent();
+    inline Node* getRoot(Node* x) {
+        while (x->parent) x = x->parent;
         return x;
     }
     
-    // Join two trees: all elements in left < all elements in right
-    ETTNodePtr join(ETTNodePtr left, ETTNodePtr right) {
+    Node* split(Node* x) {
+        splay(x);
+        pushDown(x);
+        Node* right = x->right;
+        if (right) {
+            right->parent = nullptr;
+            x->right = nullptr;
+        }
+        return right;
+    }
+    
+    Node* merge(Node* left, Node* right) {
         if (!left) return right;
         if (!right) return left;
         
-        // Splay the rightmost node in left tree
-        ETTNodePtr curr = left;
-        while (curr->r) curr = curr->r;
+        Node* curr = left;
+        while (curr->right) {
+            pushDown(curr);
+            curr = curr->right;
+        }
         splay(curr);
+        pushDown(curr);
         
-        // Now curr is root with no right child
-        curr->r = right;
-        right->p = curr;
-        curr->update_size();
-        
+        curr->right = right;
+        right->parent = curr;
         return curr;
     }
     
-    // Find vertex occurrence in tree by DFS
-    ETTNodePtr find_vertex_dfs(ETTNodePtr node, int v) {
-        if (!node) return nullptr;
-        
-        ETTNodePtr left_result = find_vertex_dfs(node->l, v);
-        if (left_result) return left_result;
-        
-        if (node->vertex == v) return node;
-        
-        return find_vertex_dfs(node->r, v);
+    inline Node* allocNode(int v = -1, unsigned long long key = 0) {
+        Node* node = new Node(v, key);
+        nodePool.push_back(node);
+        return node;
     }
     
-    // Find edge occurrence in tree by DFS
-    ETTNodePtr find_edge_dfs(ETTNodePtr node, int u, int v) {
-        if (!node) return nullptr;
+public:
+    explicit SplayETT(int n) {
+        vertexNodes.resize(n);
+        nodePool.reserve(n * 4);
+        edges.reserve(n * 2);
         
-        ETTNodePtr left_result = find_edge_dfs(node->l, u, v);
-        if (left_result) return left_result;
+        for (int i = 0; i < n; i++) {
+            vertexNodes[i] = allocNode(i);
+        }
+    }
+    
+    ~SplayETT() {
+        for (Node* node : nodePool) {
+            delete node;
+        }
+    }
+    
+    /**
+     * 连接两个顶点 - 返回void以提升性能
+     * @param u 顶点u
+     * @param v 顶点v
+     * @return 是否成功连接（false表示已连通）
+     */
+    bool link(int u, int v) {
+        if (u == v) return false;
+        if (connected(u, v)) return false;
         
-        if (node->vertex == -1 && node->edge_u == u && node->edge_v == v) {
-            return node;
+        unsigned long long edgeKey = makeEdgeKey(u, v);
+        
+        Node* e1 = allocNode(-1, edgeKey);
+        Node* e2 = allocNode(-1, edgeKey);
+        
+        Node* rootU = getRoot(vertexNodes[u]);
+        Node* rootV = getRoot(vertexNodes[v]);
+        
+        Node* rightU = split(vertexNodes[u]);
+        
+        Node* newRoot = merge(vertexNodes[u], e1);
+        newRoot = merge(newRoot, rootV);
+        newRoot = merge(newRoot, e2);
+        newRoot = merge(newRoot, rightU);
+        
+        edges[edgeKey] = {e1, e2, u, v};
+        return true;
+    }
+    
+    /**
+     * 删除一条边 - 直接通过顶点对删除
+     * @param u 顶点u
+     * @param v 顶点v
+     * @return 是否成功删除
+     */
+    bool cut(int u, int v) {
+        if (u == v) return false;
+        
+        unsigned long long edgeKey = makeEdgeKey(u, v);
+        auto it = edges.find(edgeKey);
+        if (it == edges.end()) return false;
+        
+        Edge& edge = it->second;
+        Node* e1 = edge.first;
+        Node* e2 = edge.second;
+        
+        splay(e1);
+        splay(e2);
+        if (e2->parent) {
+            std::swap(e1, e2);
+            splay(e1);
         }
         
-        return find_edge_dfs(node->r, u, v);
+        Node* right = split(e2);
+        Node* middle = split(e1);
+        
+        Node* left = e1->left;
+        if (left) left->parent = nullptr;
+        
+        merge(left, middle);
+        
+        edges.erase(it);
+        return true;
+    }
+    
+    /**
+     * 快速连通性查询 - 内联优化
+     */
+    inline bool connected(int u, int v) {
+        if (u == v) return true;
+        return getRoot(vertexNodes[u]) == getRoot(vertexNodes[v]);
     }
 
-public:
-    SplayETT() = default;
-    
-    // Create a new isolated vertex
-    void make_vertex(int v) {
-        if (vertex_map.count(v)) return;
-        
-        auto node = make_shared<SplayETTNode>(v);
-        vertex_map[v] = node;
-    }
-    
-    // Remove vertex and all its incident edges
-    void remove_vertex(int v) {
-        auto it = vertex_map.find(v);
-        if (it == vertex_map.end()) return;
-        
-        ETTNodePtr v_node = it->second;
-        
-        if (!v_node->parent() && !v_node->l && !v_node->r) {
-            vertex_map.erase(it);
-            return;
+    /**
+     * 获取节点所在连通分量节点id
+     */
+    int getComponentId(int u) {
+        if (u < 0 || u >= static_cast<int>(vertexNodes.size())) {
+            return -1;
         }
         
-        // Remove from tree structure
-        splay(v_node);
-        ETTNodePtr new_root = join(v_node->l, v_node->r);
-        
-        if (v_node->l) v_node->l->p.reset();
-        if (v_node->r) v_node->r->p.reset();
-        
-        vertex_map.erase(it);
+        Node* root = getRoot(vertexNodes[u]);
+        return getComponentIdFromRoot(root);
     }
-    
-    // Check if two vertices are in the same connected component
-    bool connected(int u, int v) {
-        auto u_it = vertex_map.find(u);
-        auto v_it = vertex_map.find(v);
+
+    /**
+     * 批量获取连通分量ID - 优化版本
+     * 利用访问局部性，缓存已访问的根节点
+     * 适合查询大量可能在同一连通分量的节点
+     */
+    std::vector<int> batchGetComponentId(const std::vector<int>& vertices) {
+        std::vector<int> result;
+        result.reserve(vertices.size());
         
-        if (u_it == vertex_map.end() || v_it == vertex_map.end()) {
-            return false;
+        std::unordered_map<Node*, int> root_cache;
+        
+        for (int v : vertices) {
+            Node* root = getRoot(vertexNodes[v]);
+            
+            auto it = root_cache.find(root);
+            if (it != root_cache.end()) {
+                result.push_back(it->second);
+            } else {
+                int comp_id = getComponentIdFromRoot(root);
+                result.push_back(comp_id);
+                root_cache[root] = comp_id;
+            }
         }
         
-        ETTNodePtr u_root = get_root(u_it->second);
-        ETTNodePtr v_root = get_root(v_it->second);
-        
-        return u_root == v_root;
+        return result;
     }
-    
-    // Link two vertices with an edge
-    void link(int u, int v) {
-        auto u_it = vertex_map.find(u);
-        auto v_it = vertex_map.find(v);
+
+    /**
+     * 批量查询连通性 - 返回分组信息
+     * 直接返回 {comp_id -> vertices} 的映射
+     */
+    std::unordered_map<int, std::vector<int>> batchGroupByComponent(
+        const std::vector<int>& vertices) {
+        std::unordered_map<int, std::vector<int>> groups;
+        std::unordered_map<Node*, int> root_cache;
         
-        if (u_it == vertex_map.end() || v_it == vertex_map.end()) {
-            return;
+        for (int v : vertices) {
+            Node* root = getRoot(vertexNodes[v]);
+            
+            int comp_id;
+            auto it = root_cache.find(root);
+            if (it != root_cache.end()) {
+                comp_id = it->second;
+            } else {
+                comp_id = getComponentIdFromRoot(root);
+                root_cache[root] = comp_id;
+            }
+            
+            groups[comp_id].push_back(v);
         }
         
-        long long key = edge_key(u, v);
-        if (edge_map.count(key)) return;
-        
-        ETTNodePtr u_node = u_it->second;
-        ETTNodePtr v_node = v_it->second;
-        
-        // Create edge occurrences
-        auto edge_uv = make_shared<SplayETTNode>(-1, u, v);
-        auto edge_vu = make_shared<SplayETTNode>(-1, v, u);
-        
-        edge_map[key] = edge_uv;
-        
-        // Make both nodes roots of their trees
-        splay(u_node);
-        splay(v_node);
-        
-        // Build: Tu + (u->v) + Tv + (v->u)
-        // This creates Euler tour: u ... u, u->v, v ... v, v->u, (back to u)
-        ETTNodePtr tree1 = join(u_node, edge_uv);
-        ETTNodePtr tree2 = join(tree1, v_node);
-        ETTNodePtr final_tree = join(tree2, edge_vu);
+        return groups;
     }
     
-    // Cut the edge between u and v
-    void cut(int u, int v) {
-        long long key = edge_key(u, v);
-        auto edge_it = edge_map.find(key);
-        
-        if (edge_it == edge_map.end()) return;
-        
-        ETTNodePtr edge_uv = edge_it->second;
-        
-        // Find root and locate both edge occurrences
-        ETTNodePtr root = get_root(edge_uv);
-        ETTNodePtr edge_vu = find_edge_dfs(root, v, u);
-        
-        if (!edge_vu) return;
-        
-        // Splay edge_uv to root
-        splay(edge_uv);
-        
-        // Tree is now:  [A] edge_uv [B + edge_vu + C]
-        ETTNodePtr A = edge_uv->l;
-        ETTNodePtr BvuC = edge_uv->r;
-        
-        // Detach A
-        if (A) A->p.reset();
-        if (BvuC) BvuC->p.reset();
-        
-        // Find edge_vu in BvuC
-        edge_vu = find_edge_dfs(BvuC, v, u);
-        if (!edge_vu) {
-            // edge_vu must be in A
-            edge_vu = find_edge_dfs(A, v, u);
-            if (!edge_vu) return;
-            
-            // Splay edge_vu in A
-            splay(edge_vu);
-            
-            // Now: [A1] edge_vu [A2]
-            ETTNodePtr A1 = edge_vu->l;
-            ETTNodePtr A2 = edge_vu->r;
-            
-            if (A1) A1->p.reset();
-            if (A2) A2->p.reset();
-            
-            // Reconnect: A1 + BvuC and A2
-            join(A1, BvuC);
-            
-        } else {
-            // edge_vu is in BvuC
-            // Splay it
-            splay(edge_vu);
-            
-            // Now: [B] edge_vu [C]
-            ETTNodePtr B = edge_vu->l;
-            ETTNodePtr C = edge_vu->r;
-            
-            if (B) B->p.reset();
-            if (C) C->p.reset();
-            
-            // Reconnect: A + C and B
-            join(A, C);
+    /**
+     * 批量link操作 - 减少函数调用开销
+     */
+    void batchLink(const std::vector<std::pair<int, int>>& edges_to_add) {
+        for (const auto& [u, v] : edges_to_add) {
+            link(u, v);
         }
-        
-        edge_map.erase(edge_it);
     }
     
-    // Get component representative for vertex v
-    intptr_t get_component_id(int v) {
-        auto it = vertex_map.find(v);
-        if (it == vertex_map.end()) return -1;
-        
-        ETTNodePtr root = get_root(it->second);
-        return find_first_vertex(root);
+    /**
+     * 批量cut操作
+     */
+    void batchCut(const std::vector<std::pair<int, int>>& edges_to_remove) {
+        for (const auto& [u, v] : edges_to_remove) {
+            cut(u, v);
+        }
     }
 
 private:
-    // Find the first vertex id in the Euler tour
-    int find_first_vertex(ETTNodePtr root) {
-        if (!root) return -1;
+    /**
+     * 从根节点找到连通分量的代表元
+     * 遍历整个欧拉回路，找到第一个（最小的）顶点节点
+     */
+    int getComponentIdFromRoot(Node* root) {
+        int min_vertex = INT_MAX;
         
-        if (root->l) {
-            int left_v = find_first_vertex(root->l);
-            if (left_v != -1) return left_v;
-        }
+        std::function<void(Node*)> findMinVertex = [&](Node* node) {
+            if (!node) return;
+            pushDown(node);
+            
+            findMinVertex(node->left);
+            
+            if (node->vertex != -1 && node->vertex < min_vertex) {
+                min_vertex = node->vertex;
+            }
+            
+            findMinVertex(node->right);
+        };
         
-        if (root->vertex != -1) return root->vertex;
+        splay(root);
+        findMinVertex(root);
         
-        if (root->r) {
-            return find_first_vertex(root->r);
-        }
+        return min_vertex;
+    }
+
+public:
+    /**
+     * 获取连通分量大小 - 可选功能
+     */
+    int componentSize(int u) {
+        Node* root = getRoot(vertexNodes[u]);
+        splay(root);
         
-        return -1;
+        int size = 0;
+        std::function<void(Node*)> dfs = [&](Node* x) {
+            if (!x) return;
+            pushDown(x);
+            dfs(x->left);
+            if (x->vertex != -1) size++;
+            dfs(x->right);
+        };
+        dfs(root);
+        
+        return size;
     }
     
+    /**
+     * 清空所有边但保留顶点结构
+     */
+    void reset() {
+        // 释放所有边节点，保留顶点节点
+        for (size_t i = vertexNodes.size(); i < nodePool.size(); i++) {
+            delete nodePool[i];
+        }
+        nodePool.resize(vertexNodes.size());
+        
+        // 重置顶点节点
+        for (auto* node : vertexNodes) {
+            node->left = node->right = node->parent = nullptr;
+            node->reversed = false;
+        }
+        
+        edges.clear();
+    }
 };
+
+#endif // SPLAY_ETT_H
