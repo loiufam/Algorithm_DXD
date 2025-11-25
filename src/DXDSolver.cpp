@@ -306,14 +306,9 @@ DNNFResult DanceDNNF::MDLX(vector<int>& sols, Block& block) {
         return DNNFResult(1);
     }
     
-    if(p_count.load() < MAX_P_COUNT && block.rows.size() >= MIN_BLOCK_ROWS) {
+    if(isGraphSyncEnabled() && block.rows.size() >= MIN_BLOCK_ROWS) {
 
-        vector<Block> curBlock;
-        if (useETT) {
-            curBlock = findComponents(block.rows);
-        } else if (useIG) {
-            curBlock = getComponentsByIG(block.rows);
-        }
+        vector<Block> curBlock = getComponentsByIG(block.rows);
 
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
         if (curBlock.size() > 1) {

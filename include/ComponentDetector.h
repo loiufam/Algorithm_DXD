@@ -11,6 +11,7 @@
 #include <vector>
 #include <unordered_set>
 #include <unordered_map>
+#include <thread>
 #include <shared_mutex>
 #include <memory>
 #include <atomic>
@@ -159,7 +160,9 @@ private:
     unordered_map<uint64_t, shared_ptr<ThreadContext>> thread_contexts; // thread_id -> context
     atomic<uint64_t> next_thread_id{1};  // 自增的线程ID分配器
 
-private:
+    // 添加调试标志
+    bool debug_mode = false;
+    std::ofstream debug_log;
 
     /**
      * 添加一条边到邻接表（双向）
@@ -190,49 +193,87 @@ private:
             }
         }
 
+        // if (debug_mode) {
+        //     debug_log << "initial adjacency list:" << std::endl;
+        // }
+
         vector<pair<int,int>> edges;
         for (int u = 0; u < num_rows; u++) {
             for (int v : adj_list[u]) {
                 if (v > u) {  // 只添加一次
                     edges.push_back({u, v});
+                    // if (debug_mode) {
+                    //     debug_log << " Add Edge (" << u << ", " << v << ")" << std::endl;
+                    // }
                 }
             }
         }
 
-        ett->batchLink(edges);
+        std::cout << "Initial ETT graph built with " << edges.size() << " edges." << std::endl;
+        ett->batchLinkFast(edges);
+        // if (debug_mode) ett->debugPrintEdges(debug_log);
     }
 
-    void RebuildGlobalUnionFind() const {
-        if (global_uf_valid) return;
+    void BuildInitialGraphParallel() {
+        const int num_threads = std::thread::hardware_concurrency();
         
-        global_parent.resize(num_rows);
-        std::iota(global_parent.begin(), global_parent.end(), 0);
+        // 将列分成多个批次
+        std::vector<std::vector<std::pair<int, std::vector<int>>>> batches(num_threads);
+        int idx = 0;
+        for (const auto& col_rows : col_to_rows) {
+            batches[idx % num_threads].push_back(col_rows);
+            idx++;
+        }
         
-        for (const auto& [edge, cols] : edge_columns) {
-            int r1 = edge.first;
-            int r2 = edge.second;
-            
-            if (row_active[r1] && row_active[r2]) {
-                GlobalUnite(r1, r2);
+        // 每个线程的局部边集合
+        std::vector<std::vector<std::pair<int,int>>> thread_edges(num_threads);
+        std::vector<std::unordered_set<uint64_t>> thread_edge_sets(num_threads);
+        
+        // 并行处理
+        std::vector<std::thread> threads;
+        for (int t = 0; t < num_threads; t++) {
+            threads.emplace_back([&, t]() {
+                auto& local_edges = thread_edges[t];
+                auto& local_edge_set = thread_edge_sets[t];
+                
+                for (const auto& [col, rows] : batches[t]) {
+                    for (size_t i = 0; i < rows.size(); i++) {
+                        for (size_t j = i + 1; j < rows.size(); j++) {
+                            int u = rows[i], v = rows[j];
+                            if (u > v) std::swap(u, v);
+                            
+                            uint64_t edge_key = (static_cast<uint64_t>(u) << 32) | v;
+                            if (local_edge_set.insert(edge_key).second) {
+                                local_edges.push_back({u, v});
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 等待所有线程完成
+        for (auto& thread : threads) {
+            thread.join();
+        }
+        
+        // 合并结果（需要再次去重）
+        std::unordered_set<uint64_t> final_edge_set;
+        std::vector<std::pair<int,int>> edges;
+        
+        for (int t = 0; t < num_threads; t++) {
+            for (const auto& [u, v] : thread_edges[t]) {
+                uint64_t edge_key = (static_cast<uint64_t>(u) << 32) | v;
+                if (final_edge_set.insert(edge_key).second) {
+                    edges.push_back({u, v});
+                    adj_list[u].insert(v);
+                    adj_list[v].insert(u);
+                }
             }
         }
         
-        global_uf_valid = true;
-    }
-    
-    int GlobalFind(int x) const {
-        if (global_parent[x] != x) {
-            global_parent[x] = GlobalFind(global_parent[x]);
-        }
-        return global_parent[x];
-    }
-    
-    void GlobalUnite(int x, int y) const {
-        x = GlobalFind(x);
-        y = GlobalFind(y);
-        if (x != y) {
-            global_parent[x] = y;
-        }
+        std::cout << "Initial ETT graph built with " << edges.size() << " edges (parallel)." << std::endl;
+        ett->batchLink(edges);
     }
 
     // 内部cover/uncover操作
@@ -247,16 +288,30 @@ public:
         col_to_rows = col_rows_map;
        
         // 构建 row_to_cols
+        // if (debug_mode) debug_log << "printing intitial matrix state:" << std::endl;
         for (const auto& [col, rows] : col_to_rows) {
+            // if (debug_mode) {
+            //     debug_log << "Column " << col << " has rows: { ";
+            //     for (int row : rows) {
+            //         debug_log << row << " ";
+            //     }
+            //     debug_log << "}" << std::endl;
+            // }
             for (int row : rows) {
                 row_to_cols[row].insert(col);
             }
         }
+        // if (debug_mode) debug_log << "=== End of initial matrix state ===" << std::endl;
         BuildInitialGraph();
     };
   
     ~ComponentDetector() = default;
 
+    void enableDebug(const std::string& log_file = "../logs/ett_debug.log") {
+        debug_mode = true;
+        debug_log.open(log_file);
+        debug_log << "=== ETT Debug Log ===" << std::endl;
+    }
 
     void Cover(int c);
     
@@ -265,7 +320,7 @@ public:
     // 在特定行集合内部寻找分块(统一对外接口)
     std::vector<Block> GetBlocks(const std::set<int>& block_rows) {
         // return detect_by_ett(block_rows);
-        return detect_by_uf(block_rows);
+        return detect_blocks(block_rows);
     }
 
     // 此函数需要独占锁，因为内部有 Splay 操作
@@ -282,8 +337,93 @@ public:
     vector<Block> detect_by_ett(const set<int>& block_rows);
 
     // 增量检测：基于上次结果和变化的行进行增量更新
-    vector<Block> detect_by_uf(const set<int>& block_rows);
+    vector<Block> detect_blocks(const set<int>& block_rows);
 
+    // 验证ETT状态的一致性
+    void validateETTState(const std::string& operation, int col = -1) {
+        if (!debug_mode) return;
+        
+        debug_log << "\n--- After " << operation;
+        if (col >= 0) debug_log << " (col=" << col << ")";
+        debug_log << " ---" << std::endl;
+        
+        // 1. 统计激活的行数
+        int active_count = 0;
+        for (size_t i = 0; i < row_active.size(); i++) {
+            if (row_active[i]) active_count++;
+        }
+        debug_log << "Active rows: " << active_count << std::endl;
+        
+        // 2. 检查每对激活行之间的连通性
+        std::vector<int> active_rows;
+        for (size_t i = 0; i < row_active.size(); i++) {
+            if (row_active[i]) active_rows.push_back(i);
+        }
+        
+        // 3. 验证图的连通分量
+        auto components = ett->batchGroupByComponent(active_rows);
+        debug_log << "ETT reports " << components.size() << " components:" << std::endl;
+        
+        for (auto& [comp_id, rows] : components) {
+            debug_log << "  Component " << comp_id << ": {";
+            for (size_t i = 0; i < rows.size(); i++) {
+                if (i > 0) debug_log << ", ";
+                debug_log << rows[i];
+            }
+            debug_log << "}" << std::endl;
+        }
+        
+        // 4. 手动验证连通性（通过邻接表DFS）
+        std::vector<bool> visited(row_active.size(), false);
+        std::vector<std::vector<int>> manual_components;
+        
+        for (int start : active_rows) {
+            if (visited[start]) continue;
+            
+            std::vector<int> component;
+            std::vector<int> stack = {start};
+            visited[start] = true;
+            
+            while (!stack.empty()) {
+                int u = stack.back();
+                stack.pop_back();
+                component.push_back(u);
+                
+                for (int v : adj_list[u]) {
+                    if (row_active[v] && !visited[v]) {
+                        visited[v] = true;
+                        stack.push_back(v);
+                    }
+                }
+            }
+            
+            std::sort(component.begin(), component.end());
+            manual_components.push_back(component);
+        }
+        
+        debug_log << "Manual DFS finds " << manual_components.size() 
+                  << " components:" << std::endl;
+        
+        for (size_t i = 0; i < manual_components.size(); i++) {
+            debug_log << "  Component " << i << ": {";
+            for (size_t j = 0; j < manual_components[i].size(); j++) {
+                if (j > 0) debug_log << ", ";
+                debug_log << manual_components[i][j];
+            }
+            debug_log << "}" << std::endl;
+        }
+        
+        // 5. 比较结果
+        if (components.size() != manual_components.size()) {
+            debug_log << "❌ MISMATCH: ETT reports " << components.size() 
+                      << " components but DFS finds " << manual_components.size() 
+                      << std::endl;
+        } else {
+            debug_log << "✓ Component count matches" << std::endl;
+        }
+        
+        debug_log.flush();
+    }
 
     // 获取或创建线程上下文
     shared_ptr<ThreadContext> get_thread_context(uint64_t thread_id) {
@@ -340,6 +480,41 @@ public:
     void cleanup_thread(uint64_t thread_id) {
         unique_lock lock(thread_ctx_mutex);
         thread_contexts.erase(thread_id);
+    }
+
+private:
+
+    void RebuildGlobalUnionFind() const {
+        if (global_uf_valid) return;
+        
+        global_parent.resize(num_rows);
+        std::iota(global_parent.begin(), global_parent.end(), 0);
+        
+        for (const auto& [edge, cols] : edge_columns) {
+            int r1 = edge.first;
+            int r2 = edge.second;
+            
+            if (row_active[r1] && row_active[r2]) {
+                GlobalUnite(r1, r2);
+            }
+        }
+        
+        global_uf_valid = true;
+    }
+    
+    int GlobalFind(int x) const {
+        if (global_parent[x] != x) {
+            global_parent[x] = GlobalFind(global_parent[x]);
+        }
+        return global_parent[x];
+    }
+    
+    void GlobalUnite(int x, int y) const {
+        x = GlobalFind(x);
+        y = GlobalFind(y);
+        if (x != y) {
+            global_parent[x] = y;
+        }
     }
 
 };

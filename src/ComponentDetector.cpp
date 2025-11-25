@@ -41,6 +41,10 @@ void ComponentDetector::Uncover() {
 }
 
 CoverHistory ComponentDetector::DoCover(int c) {
+    // if (debug_mode) {
+    //     debug_log << "\n>>> DoCover(col=" << c << ")" << std::endl;
+    // }
+
     CoverHistory history;
     history.col = c;
 
@@ -48,8 +52,35 @@ CoverHistory ComponentDetector::DoCover(int c) {
     auto it = col_to_rows.find(c);
     const auto& rows = it->second;  // 获取与列 c 相连的所有行
 
+    // if (debug_mode) {
+    //     debug_log << "  Rows containing col " << c << ": {";
+    //     for (size_t i = 0; i < rows.size(); i++) {
+    //         if (i > 0) debug_log << ", ";
+    //         debug_log << rows[i];
+    //     }
+    //     debug_log << "}" << std::endl;
+    // }
+
     for (int row : rows) {
-        if (!row_active[row]) continue;
+        if (!row_active[row]) {
+            // if (debug_mode) {
+            //     debug_log << "  Row " << row << " already inactive, skipping" 
+            //                 << std::endl;
+            // }
+            continue;
+        }
+
+        // if (debug_mode) {
+        //     debug_log << "  Processing row " << row << std::endl;
+        //     debug_log << "    Neighbors: {";
+        //     bool first = true;
+        //     for (int neighbor : adj_list[row]) {
+        //         if (!first) debug_log << ", ";
+        //         debug_log << neighbor << (row_active[neighbor] ? "(active)" : "(inactive)");
+        //         first = false;
+        //     }
+        //     debug_log << "}" << std::endl;
+        // }
         
         // Cut该行的所有边
         for (int neighbor : adj_list[row]) {
@@ -57,14 +88,40 @@ CoverHistory ComponentDetector::DoCover(int c) {
                 int u = row, v = neighbor;
                 if (u > v) std::swap(u, v);
                 
+                // 检查边是否存在
+                // bool edge_exists = ett->hasEdge(u, v);
+                // if (debug_mode) {
+                //     debug_log << "  Attempting to cut edge (" << u << ", " << v << ")";
+                //     if (!edge_exists) {
+                //         debug_log << " [EDGE NOT FOUND IN ETT!]";
+                //     }
+                //     debug_log << std::endl;
+                // }
+
                 history.cut_edges.push_back({u, v});
                 ett->cut(u, v);
+                // if (edge_exists) {
+                //     history.cut_edges.push_back({u, v});
+                //     bool cut_success = ett->cut(u, v);
+                    
+                    // if (debug_mode && !cut_success) {
+                    //     debug_log << "    ❌ Cut failed!" << std::endl;
+                    // }
+                // }
+
+                // if (debug_mode) {
+                //     debug_log << "    Cut edge (" << u << ", " << v << ")" << std::endl;
+                // }
             }
         }
         
         // 标记为非激活
         row_active[row] = false;
         history.removed_rows.push_back(row);
+
+        // if (debug_mode) {
+        //     debug_log << "    Deactivated row " << row << std::endl;
+        // }
     }
 
     return history;
@@ -76,11 +133,24 @@ void ComponentDetector::DoUncover(const CoverHistory& history) {
         return;
     }
 
+    // if (debug_mode) {
+    //     debug_log << "\n<<< Uncover(col=" << history.col << ")" << std::endl;
+    // }
+    // 重新连接边
+    // for (const auto& [u, v] : history.cut_edges) {
+    //     if (debug_mode) {
+    //         debug_log << "  Re-linked edge (" << u << ", " << v << ")" << std::endl;
+    //     }
+    // }
+
     // 第一步：恢复所有被cut的边
     ett->batchLink(history.cut_edges);
     
     // 第二步：恢复行的激活状态
     for (int row : history.removed_rows) {
+        // if (debug_log) {
+        //     debug_log << "  Reactivating row " << row << std::endl;
+        // }
         row_active[row] = true;
     }
 }
@@ -88,11 +158,45 @@ void ComponentDetector::DoUncover(const CoverHistory& history) {
 vector<Block> ComponentDetector::detect_by_ett(const set<int>& block_rows){
     if (block_rows.empty()) return {}; 
 
+    // if (debug_mode) {
+    //     debug_log << "\n=== detect_by_ett called ===" << std::endl;
+    //     debug_log << "Input rows: {";
+    //     bool first = true;
+    //     for (int r : block_rows) {
+    //         if (!first) debug_log << ", ";
+    //         debug_log << r;
+    //         first = false;
+    //     }
+    //     debug_log << "}" << std::endl;
+    // }
+
     // 转换为 vector 以使用批量接口
     std::vector<int> rows_vec(block_rows.begin(), block_rows.end());
+
+    // 在调用ETT之前，先验证这些行是否应该连通
+    // if (debug_mode) {
+    //     debug_log << "Checking connectivity via adj_list:" << std::endl;
+    //     for (int row : rows_vec) {
+    //         debug_log << "  Row " << row << " neighbors: {";
+    //         bool first = true;
+    //         for (int neighbor : adj_list[row]) {
+    //             if (block_rows.count(neighbor)) {
+    //                 if (!first) debug_log << ", ";
+    //                 debug_log << neighbor;
+    //                 first = false;
+    //             }
+    //         }
+    //         debug_log << "}" << std::endl;
+    //     }
+    // }
     
     // 批量获取连通分量分组
     auto components_map = ett->batchGroupByComponent(rows_vec);
+
+    // if (debug_mode) {
+    //     debug_log << "ETT returned " << components_map.size() << " components" 
+    //               << std::endl;
+    // }
 
     vector<Block> result;
     result.reserve(components_map.size());
@@ -109,7 +213,7 @@ vector<Block> ComponentDetector::detect_by_ett(const set<int>& block_rows){
     return result;
 };
 
-vector<Block> ComponentDetector::detect_by_uf(const set<int> &block_rows) {
+vector<Block> ComponentDetector::detect_blocks(const set<int> &block_rows) {
     if (block_rows.empty()) return {}; // 如果没有行，则返回空集合
     std::shared_lock<std::shared_mutex> lock(state_mutex);
 

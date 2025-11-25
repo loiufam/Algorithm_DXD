@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <functional>
 #include <iostream>
 #include <climits>
@@ -33,6 +34,14 @@ private:
     std::vector<Node*> vertexNodes;
     std::unordered_map<unsigned long long, Edge> edges;
     std::vector<Node*> nodePool;
+
+    // 添加一个映射:树根 -> 连通分量ID
+    std::unordered_map<Node*, int> rootToComponentId;
+    int nextComponentId = 0;
+
+    // 延迟合并优化：记录哪些边只是逻辑存在，还未真正link到ETT
+    std::unordered_set<unsigned long long> virtual_edges;
+    bool use_virtual_edges = false;
     
     // 辅助函数：将边(u,v)编码为唯一键
     inline unsigned long long makeEdgeKey(int u, int v) const {
@@ -134,6 +143,47 @@ private:
         nodePool.push_back(node);
         return node;
     }
+
+    // 获取或创建连通分量ID
+    int getOrCreateComponentId(Node* root) {
+        auto it = rootToComponentId.find(root);
+        if (it != rootToComponentId.end()) {
+            return it->second;
+        }
+        
+        // 新连通分量,分配ID
+        int compId = nextComponentId++;
+        rootToComponentId[root] = compId;
+        return compId;
+    }
+    
+    // 更新rootToComponentId映射
+    void updateComponentMapping(Node* oldRoot1, Node* oldRoot2, Node* newRoot) {
+        int compId1 = -1, compId2 = -1;
+        
+        auto it1 = rootToComponentId.find(oldRoot1);
+        if (it1 != rootToComponentId.end()) {
+            compId1 = it1->second;
+            rootToComponentId.erase(it1);
+        }
+        
+        auto it2 = rootToComponentId.find(oldRoot2);
+        if (it2 != rootToComponentId.end()) {
+            compId2 = it2->second;
+            rootToComponentId.erase(it2);
+        }
+        
+        // 使用较小的ID
+        int finalId = (compId1 != -1 && compId2 != -1) ? 
+                      std::min(compId1, compId2) : 
+                      (compId1 != -1 ? compId1 : compId2);
+        
+        if (finalId == -1) {
+            finalId = nextComponentId++;
+        }
+        
+        rootToComponentId[newRoot] = finalId;
+    }
     
 public:
     explicit SplayETT(int n) {
@@ -160,9 +210,13 @@ public:
      */
     bool link(int u, int v) {
         if (u == v) return false;
-        if (connected(u, v)) return false;
+        // if (connected(u, v)) return false;
         
         unsigned long long edgeKey = makeEdgeKey(u, v);
+        // 只检查边是否已存在，不检查连通性
+        if (edges.find(edgeKey) != edges.end()) {
+            return false;  // 边已存在，不重复添加
+        }
         
         Node* e1 = allocNode(-1, edgeKey);
         Node* e2 = allocNode(-1, edgeKey);
@@ -176,6 +230,9 @@ public:
         newRoot = merge(newRoot, rootV);
         newRoot = merge(newRoot, e2);
         newRoot = merge(newRoot, rightU);
+
+        // 更新连通分量映射
+        updateComponentMapping(rootU, rootV, newRoot);
         
         edges[edgeKey] = {e1, e2, u, v};
         return true;
@@ -195,8 +252,18 @@ public:
         if (it == edges.end()) return false;
         
         Edge& edge = it->second;
+        // 如果是虚拟边，直接删除
+        if (use_virtual_edges && virtual_edges.count(edgeKey)) {
+            virtual_edges.erase(edgeKey);
+            edges.erase(it);
+            return true;
+        }
+
         Node* e1 = edge.first;
         Node* e2 = edge.second;
+
+        // 记录旧根
+        Node* oldRoot = getRoot(e1);    
         
         splay(e1);
         splay(e2);
@@ -211,10 +278,38 @@ public:
         Node* left = e1->left;
         if (left) left->parent = nullptr;
         
-        merge(left, middle);
+        Node* newRoot1 = merge(left, middle);
+        Node* newRoot2 = right;
+
+        // 更新连通分量映射
+        auto rootIt = rootToComponentId.find(oldRoot);
+        if (rootIt != rootToComponentId.end()) {
+            int oldCompId = rootIt->second;
+            rootToComponentId.erase(rootIt);
+            
+            if (newRoot1) {
+                rootToComponentId[newRoot1] = oldCompId;
+            }
+        }
         
         edges.erase(it);
         return true;
+    }
+
+    void debugPrintEdges(std::ostream& os) const {
+        os << "=== ETT Edges ===" << std::endl;
+        os << "Total edges: " << edges.size() << std::endl;
+        for (const auto& [key, edge] : edges) {
+            os << "  Edge (" << edge.u << ", " << edge.v 
+               << ") key=" << key << std::endl;
+        }
+        os << "=================" << std::endl;
+    }
+
+    // 检查特定边是否存在
+    bool hasEdge(int u, int v) const {
+        unsigned long long key = makeEdgeKey(u, v);
+        return edges.find(key) != edges.end();
     }
     
     /**
@@ -234,7 +329,7 @@ public:
         }
         
         Node* root = getRoot(vertexNodes[u]);
-        return getComponentIdFromRoot(root);
+        return getOrCreateComponentId(root);
     }
 
     /**
@@ -246,19 +341,8 @@ public:
         std::vector<int> result;
         result.reserve(vertices.size());
         
-        std::unordered_map<Node*, int> root_cache;
-        
         for (int v : vertices) {
-            Node* root = getRoot(vertexNodes[v]);
-            
-            auto it = root_cache.find(root);
-            if (it != root_cache.end()) {
-                result.push_back(it->second);
-            } else {
-                int comp_id = getComponentIdFromRoot(root);
-                result.push_back(comp_id);
-                root_cache[root] = comp_id;
-            }
+            result.push_back(getComponentId(v));
         }
         
         return result;
@@ -271,21 +355,10 @@ public:
     std::unordered_map<int, std::vector<int>> batchGroupByComponent(
         const std::vector<int>& vertices) {
         std::unordered_map<int, std::vector<int>> groups;
-        std::unordered_map<Node*, int> root_cache;
         
         for (int v : vertices) {
-            Node* root = getRoot(vertexNodes[v]);
-            
-            int comp_id;
-            auto it = root_cache.find(root);
-            if (it != root_cache.end()) {
-                comp_id = it->second;
-            } else {
-                comp_id = getComponentIdFromRoot(root);
-                root_cache[root] = comp_id;
-            }
-            
-            groups[comp_id].push_back(v);
+            int compId = getComponentId(v);
+            groups[compId].push_back(v);
         }
         
         return groups;
@@ -299,6 +372,104 @@ public:
             link(u, v);
         }
     }
+
+    /**
+     * 超快速批量link - 使用并查集预处理 + 只link生成树边
+     * 对于初始化场景，不需要在ETT中存储所有边，只需要保证连通性
+     */
+    void batchLinkFast(const std::vector<std::pair<int, int>>& edges_to_add) {
+        if (edges_to_add.empty()) return;
+    
+        use_virtual_edges = true;
+        
+        // std::cout << "Starting fast batch link of " << edges_to_add.size() << " edges..." << std::endl;
+        
+        int n = vertexNodes.size();
+        
+        // 使用并查集找出连通分量的生成树
+        std::vector<int> parent(n);
+        std::vector<int> rank(n, 0);
+        
+        for (int i = 0; i < n; i++) {
+            parent[i] = i;
+        }
+        
+        std::function<int(int)> find = [&](int x) {
+            if (parent[x] != x) {
+                parent[x] = find(parent[x]);
+            }
+            return parent[x];
+        };
+        
+        auto unite = [&](int x, int y) -> bool {
+            x = find(x);
+            y = find(y);
+            if (x == y) return false;
+            
+            if (rank[x] < rank[y]) std::swap(x, y);
+            parent[y] = x;
+            if (rank[x] == rank[y]) rank[x]++;
+            return true;
+        };
+        
+        // 分类边：生成树边 vs 非树边
+        std::vector<std::pair<int, int>> tree_edges;
+        tree_edges.reserve(n);
+        
+        for (const auto& [u, v] : edges_to_add) {
+            if (u == v) continue;
+            
+            unsigned long long edgeKey = makeEdgeKey(u, v);
+            
+            // 记录所有边（包括虚拟边）
+            if (unite(u, v)) {
+                // 这是生成树边，需要真正link
+                tree_edges.push_back({u, v});
+            } else {
+                // 非树边，只记录不真正link（减少merge操作）
+                virtual_edges.insert(edgeKey);
+                // 创建虚拟边标记
+                edges[edgeKey] = {nullptr, nullptr, u, v};
+            }
+        }
+        
+        // std::cout << "Identified " << tree_edges.size() << " tree edges, " 
+        //         << virtual_edges.size() << " virtual edges" << std::endl;
+
+        // 只link生成树边（O(n)条，而不是O(n^2)条）
+        int progress = 0;
+        int total = tree_edges.size();
+        
+        for (const auto& [u, v] : tree_edges) {
+            progress++;
+            // if (progress % 1000 == 0) {
+            //     std::cout << "Linking tree edges: " << progress << "/" << total << std::endl;
+            // }
+            
+            unsigned long long edgeKey = makeEdgeKey(u, v);
+            
+            Node* e1 = allocNode(-1, edgeKey);
+            Node* e2 = allocNode(-1, edgeKey);
+            
+            Node* rootU = getRoot(vertexNodes[u]);
+            Node* rootV = getRoot(vertexNodes[v]);
+            
+            Node* rightU = split(vertexNodes[u]);
+            
+            Node* newRoot = merge(vertexNodes[u], e1);
+            newRoot = merge(newRoot, rootV);
+            newRoot = merge(newRoot, e2);
+            newRoot = merge(newRoot, rightU);
+            
+            updateComponentMapping(rootU, rootV, newRoot);
+            
+            edges[edgeKey] = {e1, e2, u, v};
+        }
+        
+        // std::cout << "Fast batch link complete: " << tree_edges.size() 
+        //         << " physical edges, " << virtual_edges.size() 
+        //         << " virtual edges" << std::endl;
+    }
     
     /**
      * 批量cut操作
@@ -309,34 +480,6 @@ public:
         }
     }
 
-private:
-    /**
-     * 从根节点找到连通分量的代表元
-     * 遍历整个欧拉回路，找到第一个（最小的）顶点节点
-     */
-    int getComponentIdFromRoot(Node* root) {
-        int min_vertex = INT_MAX;
-        
-        std::function<void(Node*)> findMinVertex = [&](Node* node) {
-            if (!node) return;
-            pushDown(node);
-            
-            findMinVertex(node->left);
-            
-            if (node->vertex != -1 && node->vertex < min_vertex) {
-                min_vertex = node->vertex;
-            }
-            
-            findMinVertex(node->right);
-        };
-        
-        splay(root);
-        findMinVertex(root);
-        
-        return min_vertex;
-    }
-
-public:
     /**
      * 获取连通分量大小 - 可选功能
      */
@@ -374,6 +517,10 @@ public:
         }
         
         edges.clear();
+        rootToComponentId.clear();
+        nextComponentId = 0;
+        virtual_edges.clear();
+        use_virtual_edges = false;
     }
 };
 

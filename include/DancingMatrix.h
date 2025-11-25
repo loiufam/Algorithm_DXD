@@ -3,6 +3,7 @@
 
 #include "ThreadPool.h"
 #include "ComponentDetector.h"
+#include "BlockDetector.h"
 #include "common.h"
 
 using col_id = int;
@@ -70,6 +71,7 @@ class DancingMatrix
 
         // 检测器，用于检测矩阵中的连通性
         std::unique_ptr<ComponentDetector> detector;
+        std::unique_ptr<BlockDetector> block_detector;
 
         // 禁用拷贝和赋值
         DancingMatrix(const DancingMatrix&) = delete;
@@ -133,9 +135,6 @@ class DancingMatrix
         // IBD: Independent Block Detection
         vector<Block> getComponentsByIG(const set<int> rows);
 
-        vector<Block> findComponents(const set<int>& block_rows);
-
-
         void turnOnGraphSync() {
             std::unique_lock lock(mutex_);
             enableGraphSync = true;
@@ -171,10 +170,7 @@ class DancingMatrix
         // 关键数据结构：列 -> 激活行集合的反向索引
         unordered_map<int, vector<int>> col_to_rows;
 
-        // 生成行对的规范化键
-        std::pair<int, int> make_row_pair(int r1, int r2) {
-            return r1 < r2 ? std::make_pair(r1, r2) : std::make_pair(r2, r1);
-        }
+        Graph build_graph_from_columns(const unordered_map<int, vector<int>>& col2rows, int num_rows, bool deduplicate = true);
 
         bool enableGraphSync = true; // 是否启用图同步
         

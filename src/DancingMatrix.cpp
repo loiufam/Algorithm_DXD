@@ -142,6 +142,8 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool useIg , bo
     if(useETT){
         detector = make_unique<ComponentDetector>(ROWS, COLS); 
         detector->Initialize(col_to_rows);
+        // Graph graph = build_graph_from_columns(col_to_rows, ROWS, true);
+        // block_detector = make_unique<BlockDetector>(graph, row_to_cols);
         cout << "ETT initialization complete." << endl;
     }
 
@@ -160,47 +162,27 @@ vector<Block> DancingMatrix::getComponentsByIG(const set<int> rows) {
     // return findComponents(rows);
 };
 
-vector<Block> DancingMatrix::findComponents(const set<int>& block_rows) {
-    if (block_rows.empty()) return {};
+Graph DancingMatrix::build_graph_from_columns(const unordered_map<int, vector<int>>& col2rows, int num_rows, bool deduplicate) {
     
-    UnionFind uf;
+    Graph graph(num_rows);
     
-    // 1. 初始化所有活跃行
-    for (int row : block_rows) {
-        uf.make_set(row);
-    }
-    
-    // 2. 通过共享列建立连接
-    for (int row : block_rows) {
-
-        const auto& cols = row_to_cols[row];
-        for (int col : cols) {
-            // 找到共享此列的其他行
-            for (int neighbor : col_to_rows[col]) {
-                if (neighbor != row && 
-                    block_rows.count(neighbor)) {
-                    uf.unite(row, neighbor);
-                }
-            }
+    for (const auto& [col, rows_in_column] : col2rows) {
+        if (rows_in_column.empty()) continue;
+        
+        // Use first row as star center
+        int center_row = rows_in_column[0];
+        for (size_t i = 1; i < rows_in_column.size(); ++i) {
+            cout << "Adding edge " << center_row << " -> " << rows_in_column[i] << endl;
+            graph.add_edge(center_row, rows_in_column[i]);
         }
     }
     
-    // 3. 收集分量并计算列
-    auto components_map = uf.get_components();
-    vector<Block> result;
+    // if (deduplicate) {
+    //     graph.normalize();
+    // }
     
-    for (const auto& [root, comp_rows] : components_map) {
-        set<int> comp_cols;
-        for (int row : comp_rows) {
-            const auto& cols = row_to_cols[row];
-            comp_cols.insert(cols.begin(), cols.end());
-        }
-        result.emplace_back(comp_rows, comp_cols);
-    }
-    
-    return result;
+    return graph;
 }
-
 
 //插入元素到双向十字链表中
 void DancingMatrix::insert( int r, int c )  
@@ -395,9 +377,9 @@ void DancingMatrix::coverInBlock(int c, Block& block){
     col->left->right = col->right;  
     
     block.cols.erase(c); // 从块中移除列
-    if (isGraphSyncEnabled() && useETT) {
-        detector->Cover(c);
-    }
+    // if (isGraphSyncEnabled() && useETT) {
+    //     detector->Cover(c);
+    // }
 
     Node* curR, *curC;  
     curC = col->down;  
@@ -451,9 +433,9 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
         curC = curC->up;  
     }  
 
-    if (isGraphSyncEnabled() && useETT) {
-        detector->Uncover();
-    }
+    // if (isGraphSyncEnabled() && useETT) {
+    //     detector->Uncover();
+    // }
     col->right->left = col;  
     col->left->right = col;  
     block.cols.insert(c);
