@@ -10,6 +10,8 @@ using col_id = int;
 using row_id = int;
 
 const unsigned int MAX_ROW = 250000;
+const int TARGET_SIZE = 20;
+const int NEAR_TARGET_THRESHOLD = 18;
 
 struct Node  
 {  
@@ -97,6 +99,7 @@ class DancingMatrix
      
         ColumnHeader* selectCol();
         ColumnHeader* selectColumnHeuristic(const set<int>& cols);
+        ColumnHeader* selectOptimalColumn(const set<int>& cols);
         col_id getClosedSizeCol(const int expected_size);
         col_id getSmallestSizeCol();
         // ColumnHeader* fastSelect();

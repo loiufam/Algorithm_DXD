@@ -103,6 +103,21 @@ def get_input_files(folder):
     
     return sorted(files)
 
+def filter_input_files(input_files, list_file):
+
+    # 读取指定的文件名（无扩展名）
+    with open(list_file, 'r', encoding='utf-8') as f:
+        specified = set(line.strip() for line in f if line.strip())
+
+    matched = []
+    for file in input_files:
+        base = os.path.basename(file)
+        name_no_ext, _ = os.path.splitext(base)   # → 去掉扩展名
+        if name_no_ext in specified:
+            matched.append(file)
+
+    return sorted(matched)
+
 def read_existing_csv(csv_path):
     """读取已有的CSV文件，返回字典格式"""
     if not os.path.exists(csv_path):
@@ -191,12 +206,15 @@ def main():
                         help=f'输入文件夹路径，默认为{INPUT_FOLDER}')
     parser.add_argument('-o', '--output-folder', type=str, default=RESULTS_FOLDER,
                         help=f'结果输出文件夹路径，默认为{RESULTS_FOLDER}')
+    parser.add_argument('-f', '--list_file', type=str, default='',
+                        help='包含要处理的特定文件列表的文本文件路径（可选）')
     
     args = parser.parse_args()
     
     read_mode = args.read_mode
     input_folder = args.input_folder
     results_folder = args.output_folder
+    list_file = args.list_file
     
     print("=" * 60)
     print("批量算法测试脚本")
@@ -220,7 +238,12 @@ def main():
     if not os.path.exists(MAIN_EXECUTABLE):
         print(f"错误：可执行文件不存在: {MAIN_EXECUTABLE}")
         return
-    
+
+    # 从列表文件中过滤输入文件（如果提供）
+    if list_file:
+        input_files = filter_input_files(input_files, list_file)
+        print(f"\n过滤后找到 {len(input_files)} 个输入文件\n")
+
     # 对每个算法运行测试
     for algo_name, algo_params, col_id, include_solutions, output_file in ALGORITHMS:
         print(f"\n{'=' * 60}")

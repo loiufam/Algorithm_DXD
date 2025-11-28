@@ -2,7 +2,8 @@
 
 // 定义 thread_local 静态成员
 thread_local std::vector<CoverHistory> ComponentDetector::cover_stack_;
-thread_local std::vector<CoverHistory> ComponentDetector::history_pool_;
+thread_local std::vector<Block> ComponentDetector::block_cache_;
+// thread_local bool ComponentDetector::need_rebuild = true;
 
 ComponentDetector::ComponentDetector(const int n, const int m) : num_rows(n),  num_cols(m), global_parent(n) {
     ett = std::make_unique<SplayETT>(n);
@@ -50,68 +51,56 @@ CoverHistory ComponentDetector::DoCover(int c) {
 
     // col_to_rows 是静态的，这里不需要锁
     auto it = col_to_rows.find(c);
-    const auto& rows = it->second;  // 获取与列 c 相连的所有行
 
-    // if (debug_mode) {
-    //     debug_log << "  Rows containing col " << c << ": {";
-    //     for (size_t i = 0; i < rows.size(); i++) {
-    //         if (i > 0) debug_log << ", ";
-    //         debug_log << rows[i];
-    //     }
-    //     debug_log << "}" << std::endl;
-    // }
+    const auto& rows = it->second;  // 获取与列 c 相连的所有行
+    if (rows.size() < 2) return history;
+
+
 
     for (int row : rows) {
         if (!row_active[row]) {
-            // if (debug_mode) {
-            //     debug_log << "  Row " << row << " already inactive, skipping" 
-            //                 << std::endl;
-            // }
             continue;
         }
 
-        // if (debug_mode) {
-        //     debug_log << "  Processing row " << row << std::endl;
-        //     debug_log << "    Neighbors: {";
-        //     bool first = true;
-        //     for (int neighbor : adj_list[row]) {
-        //         if (!first) debug_log << ", ";
-        //         debug_log << neighbor << (row_active[neighbor] ? "(active)" : "(inactive)");
-        //         first = false;
-        //     }
-        //     debug_log << "}" << std::endl;
-        // }
         
         // Cut该行的所有边
         for (int neighbor : adj_list[row]) {
             if (row_active[neighbor]) {
                 int u = row, v = neighbor;
-                if (u > v) std::swap(u, v);
                 
-                // 检查边是否存在
-                // bool edge_exists = ett->hasEdge(u, v);
-                // if (debug_mode) {
-                //     debug_log << "  Attempting to cut edge (" << u << ", " << v << ")";
-                //     if (!edge_exists) {
-                //         debug_log << " [EDGE NOT FOUND IN ETT!]";
-                //     }
-                //     debug_log << std::endl;
-                // }
+                unsigned long long key = makeEdgeKey(u, v);
+                if (tree_edges.count(key)) {
+                    if (u > v) std::swap(u, v);
 
-                history.cut_edges.push_back({u, v});
-                ett->cut(u, v);
-                // if (edge_exists) {
-                //     history.cut_edges.push_back({u, v});
-                //     bool cut_success = ett->cut(u, v);
-                    
-                    // if (debug_mode && !cut_success) {
-                    //     debug_log << "    ❌ Cut failed!" << std::endl;
+                    history.cut_edges.push_back({u, v});
+                    ett->cut(u, v);
+                    tree_edges.erase(key);
+
+                    // 寻找替代边
+                    int repl_u, repl_v;
+                    if (findReplacementEdge(u, v, repl_u, repl_v)) {
+                        unsigned long long repl_key = makeEdgeKey(repl_u, repl_v);
+                        
+                        // 将替代边升级为树边
+                        ett->link(repl_u, repl_v);
+                        non_tree_edges.erase(repl_key);
+                        tree_edges.insert(repl_key);
+
+                        // need_rebuild = false;
+                        // std::cout << "Replaced tree edge (" << u << "," << v 
+                        //           << ") with (" << repl_u << "," << repl_v << ")" << std::endl;
+                    } 
+                    // else {
+                        // need_rebuild = true;
+                        // 没有替代边，树真的分裂了
+                        // std::cout << "Tree split after cutting (" << u << "," << v << ")" << std::endl;
                     // }
-                // }
 
-                // if (debug_mode) {
-                //     debug_log << "    Cut edge (" << u << ", " << v << ")" << std::endl;
-                // }
+                } else if (non_tree_edges.count(key)) {
+                    // 非树边，直接删除
+                    non_tree_edges.erase(key);
+                }
+
             }
         }
         
@@ -119,9 +108,6 @@ CoverHistory ComponentDetector::DoCover(int c) {
         row_active[row] = false;
         history.removed_rows.push_back(row);
 
-        // if (debug_mode) {
-        //     debug_log << "    Deactivated row " << row << std::endl;
-        // }
     }
 
     return history;
@@ -133,71 +119,34 @@ void ComponentDetector::DoUncover(const CoverHistory& history) {
         return;
     }
 
-    // if (debug_mode) {
-    //     debug_log << "\n<<< Uncover(col=" << history.col << ")" << std::endl;
-    // }
-    // 重新连接边
-    // for (const auto& [u, v] : history.cut_edges) {
-    //     if (debug_mode) {
-    //         debug_log << "  Re-linked edge (" << u << ", " << v << ")" << std::endl;
-    //     }
-    // }
-
     // 第一步：恢复所有被cut的边
-    ett->batchLink(history.cut_edges);
+    for (auto& edge : history.cut_edges) {
+        int u = edge.first;
+        int v = edge.second;
+        
+        unsigned long long key = makeEdgeKey(u, v);
+        
+        if (!ett->connected(u, v)) {
+            // 不连通，link回去作为树边
+            ett->link(u, v);
+            tree_edges.insert(key);
+        } else {
+            // 已经连通，作为非树边恢复
+            non_tree_edges.insert(key);
+        }
+    }
     
     // 第二步：恢复行的激活状态
     for (int row : history.removed_rows) {
-        // if (debug_log) {
-        //     debug_log << "  Reactivating row " << row << std::endl;
-        // }
         row_active[row] = true;
     }
 }
 
-vector<Block> ComponentDetector::detect_by_ett(const set<int>& block_rows){
-    if (block_rows.empty()) return {}; 
+vector<Block> ComponentDetector::incMatrixDecompose(const set<int>& block_rows){
 
-    // if (debug_mode) {
-    //     debug_log << "\n=== detect_by_ett called ===" << std::endl;
-    //     debug_log << "Input rows: {";
-    //     bool first = true;
-    //     for (int r : block_rows) {
-    //         if (!first) debug_log << ", ";
-    //         debug_log << r;
-    //         first = false;
-    //     }
-    //     debug_log << "}" << std::endl;
-    // }
-
-    // 转换为 vector 以使用批量接口
-    std::vector<int> rows_vec(block_rows.begin(), block_rows.end());
-
-    // 在调用ETT之前，先验证这些行是否应该连通
-    // if (debug_mode) {
-    //     debug_log << "Checking connectivity via adj_list:" << std::endl;
-    //     for (int row : rows_vec) {
-    //         debug_log << "  Row " << row << " neighbors: {";
-    //         bool first = true;
-    //         for (int neighbor : adj_list[row]) {
-    //             if (block_rows.count(neighbor)) {
-    //                 if (!first) debug_log << ", ";
-    //                 debug_log << neighbor;
-    //                 first = false;
-    //             }
-    //         }
-    //         debug_log << "}" << std::endl;
-    //     }
-    // }
-    
     // 批量获取连通分量分组
-    auto components_map = ett->batchGroupByComponent(rows_vec);
-
-    // if (debug_mode) {
-    //     debug_log << "ETT returned " << components_map.size() << " components" 
-    //               << std::endl;
-    // }
-
+    auto components_map = ett->batchGroupByComponent(block_rows);
+    
     vector<Block> result;
     result.reserve(components_map.size());
 
@@ -306,3 +255,87 @@ vector<Block> ComponentDetector::detect_blocks(const set<int> &block_rows) {
     return blocks;
 };
 
+void ComponentDetector::validateETTState(const std::string& operation, int col) {
+    if (!debug_mode) return;
+    
+    debug_log << "\n--- After " << operation;
+    if (col >= 0) debug_log << " (col=" << col << ")";
+    debug_log << " ---" << std::endl;
+    
+    // 1. 统计激活的行数
+    int active_count = 0;
+    for (size_t i = 0; i < row_active.size(); i++) {
+        if (row_active[i]) active_count++;
+    }
+    debug_log << "Active rows: " << active_count << std::endl;
+    
+    // 2. 检查每对激活行之间的连通性
+    std::set<int> active_rows;
+    for (size_t i = 0; i < row_active.size(); i++) {
+        if (row_active[i]) active_rows.insert(i);
+    }
+    
+    // 3. 验证图的连通分量
+    auto components = ett->batchGroupByComponent(active_rows);
+    debug_log << "ETT reports " << components.size() << " components:" << std::endl;
+    
+    for (auto& [comp_id, rows] : components) {
+        debug_log << "  Component " << comp_id << ": {";
+        for (size_t i = 0; i < rows.size(); i++) {
+            if (i > 0) debug_log << ", ";
+            debug_log << rows[i];
+        }
+        debug_log << "}" << std::endl;
+    }
+    
+    // 4. 手动验证连通性（通过邻接表DFS）
+    std::vector<bool> visited(row_active.size(), false);
+    std::vector<std::vector<int>> manual_components;
+    
+    for (int start : active_rows) {
+        if (visited[start]) continue;
+        
+        std::vector<int> component;
+        std::vector<int> stack = {start};
+        visited[start] = true;
+        
+        while (!stack.empty()) {
+            int u = stack.back();
+            stack.pop_back();
+            component.push_back(u);
+            
+            for (int v : adj_list[u]) {
+                if (row_active[v] && !visited[v]) {
+                    visited[v] = true;
+                    stack.push_back(v);
+                }
+            }
+        }
+        
+        std::sort(component.begin(), component.end());
+        manual_components.push_back(component);
+    }
+    
+    debug_log << "Manual DFS finds " << manual_components.size() 
+                << " components:" << std::endl;
+    
+    for (size_t i = 0; i < manual_components.size(); i++) {
+        debug_log << "  Component " << i << ": {";
+        for (size_t j = 0; j < manual_components[i].size(); j++) {
+            if (j > 0) debug_log << ", ";
+            debug_log << manual_components[i][j];
+        }
+        debug_log << "}" << std::endl;
+    }
+    
+    // 5. 比较结果
+    if (components.size() != manual_components.size()) {
+        debug_log << "❌ MISMATCH: ETT reports " << components.size() 
+                    << " components but DFS finds " << manual_components.size() 
+                    << std::endl;
+    } else {
+        debug_log << "✓ Component count matches" << std::endl;
+    }
+    
+    debug_log.flush();
+}

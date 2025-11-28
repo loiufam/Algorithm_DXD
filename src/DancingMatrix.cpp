@@ -457,6 +457,26 @@ ColumnHeader* DancingMatrix::selectColumnHeuristic(const set<int>& cols) {
     return chosen;
 }
 
+ColumnHeader* DancingMatrix::selectOptimalColumn(const set<int>& cols) {
+    
+    vector<int> columns(cols.begin(), cols.end());
+
+    ColumnHeader* bestCol = getColumnHeader(columns[0]); // 保底选择第一列
+    int bestSize = getColSize(columns[0]);
+    
+    for (size_t i = 1; i < columns.size(); ++i) {
+        int colId = columns[i];
+        int size = getColSize(colId);
+        
+        if (size < bestSize) {
+            bestCol = getColumnHeader(colId);
+            bestSize = size;
+        }
+    }
+    
+    return bestCol; // 保证非空返回
+}
+
 ColumnHeader* DancingMatrix::selectCol()
 {
     ColumnHeader* choose = getColumnHeader(root->right->col), *cur=choose;  

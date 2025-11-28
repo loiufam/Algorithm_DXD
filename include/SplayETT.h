@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <set>
 #include <functional>
 #include <iostream>
 #include <climits>
@@ -253,11 +254,11 @@ public:
         
         Edge& edge = it->second;
         // 如果是虚拟边，直接删除
-        if (use_virtual_edges && virtual_edges.count(edgeKey)) {
-            virtual_edges.erase(edgeKey);
-            edges.erase(it);
-            return true;
-        }
+        // if (use_virtual_edges && virtual_edges.count(edgeKey)) {
+        //     virtual_edges.erase(edgeKey);
+        //     edges.erase(it);
+        //     return true;
+        // }
 
         Node* e1 = edge.first;
         Node* e2 = edge.second;
@@ -352,8 +353,7 @@ public:
      * 批量查询连通性 - 返回分组信息
      * 直接返回 {comp_id -> vertices} 的映射
      */
-    std::unordered_map<int, std::vector<int>> batchGroupByComponent(
-        const std::vector<int>& vertices) {
+    std::unordered_map<int, std::vector<int>> batchGroupByComponent(const std::set<int>& vertices) {
         std::unordered_map<int, std::vector<int>> groups;
         
         for (int v : vertices) {

@@ -19,6 +19,8 @@
 #include <cstdint>
 #include <stdexcept>
 
+using comps = vector<Block>;
+
 // 检测上下文 - 存储某个递归层的检测结果
 struct DetectionContext {
     set<int> block_rows;                          // 当前块包含的所有行
@@ -133,7 +135,9 @@ private:
 
     // 图的邻接表
     vector<unordered_set<int>> adj_list;  // adj_list[row] = {邻居}
-
+    std::unordered_set<unsigned long long> tree_edges;      // ETT中的实际树边
+    std::unordered_set<unsigned long long> non_tree_edges;  // 逻辑存在但不在ETT中的边
+    
     // Track which rows are currently active (not removed)
     vector<bool> row_active;               // O(1)查询和修改
     std::unordered_set<int> active_cols;
@@ -152,8 +156,8 @@ private:
     // 线程私有的历史栈
     static thread_local std::vector<CoverHistory> cover_stack_;
 
-    // 历史记录对象池
-    static thread_local std::vector<CoverHistory> history_pool_;
+    static thread_local std::vector<Block> block_cache_;
+    static thread_local bool need_rebuild; // 用于标记是否需要重新计算
     
     // 线程上下文管理
     mutable shared_mutex thread_ctx_mutex;
@@ -163,6 +167,12 @@ private:
     // 添加调试标志
     bool debug_mode = false;
     std::ofstream debug_log;
+
+    inline unsigned long long makeEdgeKey(int u, int v) const {
+        if (u > v) std::swap(u, v);
+        return (static_cast<unsigned long long>(u) << 32) | 
+               static_cast<unsigned long long>(v);
+    }
 
     /**
      * 添加一条边到邻接表（双向）
@@ -186,10 +196,12 @@ private:
         
         // 构建邻接表和 ETT
         for (const auto& [col, rows] : col_to_rows) {
-            for (size_t i = 0; i < rows.size(); i++) {
-                for (size_t j = i + 1; j < rows.size(); j++) {
-                    addEdgeToAdjList(rows[i], rows[j]);
-                }
+            if (rows.size() < 2) continue;
+            
+            // 选择第一个行作为中心
+            int center = rows[0];
+            for (size_t i = 1; i < rows.size(); i++) {
+                addEdgeToAdjList(center, rows[i]);
             }
         }
 
@@ -210,7 +222,38 @@ private:
         }
 
         std::cout << "Initial ETT graph built with " << edges.size() << " edges." << std::endl;
-        ett->batchLinkFast(edges);
+
+        std::vector<int> parent(num_rows);
+        for (int i = 0; i < num_rows; i++) parent[i] = i;
+        
+        std::function<int(int)> find = [&](int x) {
+            return parent[x] == x ? x : (parent[x] = find(parent[x]));
+        };
+        
+        auto unite = [&](int x, int y) -> bool {
+            x = find(x); y = find(y);
+            if (x == y) return false;
+            parent[y] = x;
+            return true;
+        };
+        
+        // 分类边
+        std::vector<std::pair<int, int>> tree_edge_list;
+        
+        for (const auto& [u, v] : edges) {
+            unsigned long long key = makeEdgeKey(u, v);
+            
+            if (unite(u, v)) {
+                // 树边
+                tree_edge_list.push_back({u, v});
+                tree_edges.insert(key);
+            } else {
+                // 非树边
+                non_tree_edges.insert(key);
+            }
+        }
+
+        ett->batchLink(tree_edge_list);
         // if (debug_mode) ett->debugPrintEdges(debug_log);
     }
 
@@ -280,6 +323,56 @@ private:
     CoverHistory DoCover(int c);
     void DoUncover(const CoverHistory& history);
 
+    /**
+     * 在两个连通分量之间寻找替代边
+     * 使用BFS遍历较小的分量，检查是否有边连到另一个分量
+     */
+    bool findReplacementEdge(int comp1_node, int comp2_node, 
+                            int& out_u, int& out_v) {
+        int comp1_id = ett->getComponentId(comp1_node);
+        int comp2_id = ett->getComponentId(comp2_node);
+        
+        if (comp1_id == comp2_id) return false; // 已经连通
+        
+        // BFS遍历comp1，寻找连到comp2的非树边
+        std::queue<int> q;
+        std::unordered_set<int> visited;
+        
+        q.push(comp1_node);
+        visited.insert(comp1_node);
+        
+        while (!q.empty()) {
+            int u = q.front();
+            q.pop();
+            
+            // 检查u的所有邻居
+            for (int v : adj_list[u]) {
+                unsigned long long key = makeEdgeKey(u, v);
+                
+                // 如果是非树边，且连到comp2
+                if (non_tree_edges.count(key) && 
+                    ett->getComponentId(v) == comp2_id) {
+                    out_u = u;
+                    out_v = v;
+                    return true;
+                }
+                
+                // 继续BFS（只通过树边）
+                if (!visited.count(v) && 
+                    tree_edges.count(key) && 
+                    ett->getComponentId(v) == comp1_id) {
+                    visited.insert(v);
+                    q.push(v);
+                }
+            }
+            
+            // 限制搜索规模，避免超时
+            // if (visited.size() > 1000) break;
+        }
+        
+        return false;
+    }
+
 public:
 
     ComponentDetector(const int n, const int m);
@@ -290,13 +383,6 @@ public:
         // 构建 row_to_cols
         // if (debug_mode) debug_log << "printing intitial matrix state:" << std::endl;
         for (const auto& [col, rows] : col_to_rows) {
-            // if (debug_mode) {
-            //     debug_log << "Column " << col << " has rows: { ";
-            //     for (int row : rows) {
-            //         debug_log << row << " ";
-            //     }
-            //     debug_log << "}" << std::endl;
-            // }
             for (int row : rows) {
                 row_to_cols[row].insert(col);
             }
@@ -319,8 +405,8 @@ public:
 
     // 在特定行集合内部寻找分块(统一对外接口)
     std::vector<Block> GetBlocks(const std::set<int>& block_rows) {
-        // return detect_by_ett(block_rows);
-        return detect_blocks(block_rows);
+        return incMatrixDecompose(block_rows);
+        // return detect_blocks(block_rows);
     }
 
     // 此函数需要独占锁，因为内部有 Splay 操作
@@ -334,96 +420,12 @@ public:
         return ett->getComponentId(u);
     }
 
-    vector<Block> detect_by_ett(const set<int>& block_rows);
-
-    // 增量检测：基于上次结果和变化的行进行增量更新
+    vector<Block> incMatrixDecompose(const set<int>& block_rows);
+    
     vector<Block> detect_blocks(const set<int>& block_rows);
 
     // 验证ETT状态的一致性
-    void validateETTState(const std::string& operation, int col = -1) {
-        if (!debug_mode) return;
-        
-        debug_log << "\n--- After " << operation;
-        if (col >= 0) debug_log << " (col=" << col << ")";
-        debug_log << " ---" << std::endl;
-        
-        // 1. 统计激活的行数
-        int active_count = 0;
-        for (size_t i = 0; i < row_active.size(); i++) {
-            if (row_active[i]) active_count++;
-        }
-        debug_log << "Active rows: " << active_count << std::endl;
-        
-        // 2. 检查每对激活行之间的连通性
-        std::vector<int> active_rows;
-        for (size_t i = 0; i < row_active.size(); i++) {
-            if (row_active[i]) active_rows.push_back(i);
-        }
-        
-        // 3. 验证图的连通分量
-        auto components = ett->batchGroupByComponent(active_rows);
-        debug_log << "ETT reports " << components.size() << " components:" << std::endl;
-        
-        for (auto& [comp_id, rows] : components) {
-            debug_log << "  Component " << comp_id << ": {";
-            for (size_t i = 0; i < rows.size(); i++) {
-                if (i > 0) debug_log << ", ";
-                debug_log << rows[i];
-            }
-            debug_log << "}" << std::endl;
-        }
-        
-        // 4. 手动验证连通性（通过邻接表DFS）
-        std::vector<bool> visited(row_active.size(), false);
-        std::vector<std::vector<int>> manual_components;
-        
-        for (int start : active_rows) {
-            if (visited[start]) continue;
-            
-            std::vector<int> component;
-            std::vector<int> stack = {start};
-            visited[start] = true;
-            
-            while (!stack.empty()) {
-                int u = stack.back();
-                stack.pop_back();
-                component.push_back(u);
-                
-                for (int v : adj_list[u]) {
-                    if (row_active[v] && !visited[v]) {
-                        visited[v] = true;
-                        stack.push_back(v);
-                    }
-                }
-            }
-            
-            std::sort(component.begin(), component.end());
-            manual_components.push_back(component);
-        }
-        
-        debug_log << "Manual DFS finds " << manual_components.size() 
-                  << " components:" << std::endl;
-        
-        for (size_t i = 0; i < manual_components.size(); i++) {
-            debug_log << "  Component " << i << ": {";
-            for (size_t j = 0; j < manual_components[i].size(); j++) {
-                if (j > 0) debug_log << ", ";
-                debug_log << manual_components[i][j];
-            }
-            debug_log << "}" << std::endl;
-        }
-        
-        // 5. 比较结果
-        if (components.size() != manual_components.size()) {
-            debug_log << "❌ MISMATCH: ETT reports " << components.size() 
-                      << " components but DFS finds " << manual_components.size() 
-                      << std::endl;
-        } else {
-            debug_log << "✓ Component count matches" << std::endl;
-        }
-        
-        debug_log.flush();
-    }
+    void validateETTState(const std::string& operation, int col = -1);
 
     // 获取或创建线程上下文
     shared_ptr<ThreadContext> get_thread_context(uint64_t thread_id) {
@@ -480,41 +482,6 @@ public:
     void cleanup_thread(uint64_t thread_id) {
         unique_lock lock(thread_ctx_mutex);
         thread_contexts.erase(thread_id);
-    }
-
-private:
-
-    void RebuildGlobalUnionFind() const {
-        if (global_uf_valid) return;
-        
-        global_parent.resize(num_rows);
-        std::iota(global_parent.begin(), global_parent.end(), 0);
-        
-        for (const auto& [edge, cols] : edge_columns) {
-            int r1 = edge.first;
-            int r2 = edge.second;
-            
-            if (row_active[r1] && row_active[r2]) {
-                GlobalUnite(r1, r2);
-            }
-        }
-        
-        global_uf_valid = true;
-    }
-    
-    int GlobalFind(int x) const {
-        if (global_parent[x] != x) {
-            global_parent[x] = GlobalFind(global_parent[x]);
-        }
-        return global_parent[x];
-    }
-    
-    void GlobalUnite(int x, int y) const {
-        x = GlobalFind(x);
-        y = GlobalFind(y);
-        if (x != y) {
-            global_parent[x] = y;
-        }
     }
 
 };

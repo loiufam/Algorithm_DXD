@@ -91,7 +91,7 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
         }
     }
 
-    if ( isGraphSyncEnabled() && block.rows.size() > MIN_BLOCK_ROWS) {
+    if (block.rows.size() > MIN_BLOCK_ROWS) {
         
         vector<Block> curBlock;
         if (useETT ) {
@@ -99,13 +99,13 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
         } else if (useIG) {
             curBlock = getComponentsByIG(block.rows);
         }
-        addRecordCount();
+        // addRecordCount();
 
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
 
         if (curBlock.size() > 1) {
             // 检测到多个独立分块，则并行处理
-            turnOffGraphSync();
+            // turnOffGraphSync();
 
             DNNFResult result;
 
@@ -118,15 +118,15 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
             return result;
         } 
         
-        if (getRecordCount() > MAX_DECOMPOSE_TIMES) {
-            turnOffGraphSync();
-        }
+        // if (getRecordCount() > MAX_DECOMPOSE_TIMES) {
+        //     turnOffGraphSync();
+        // }
         // 如果只有一个分块，则直接求解
     }
 
-    ColumnHeader* choose = selectColumnHeuristic(block.cols); 
+    ColumnHeader* choose = selectOptimalColumn(block.cols); 
 
-    if(!choose || choose->size <= 0) {
+    if(choose->size <= 0) {
         setCacheCount(state, DNNFResult(0));
         return DNNFResult(0);
     }
