@@ -10,8 +10,8 @@ using col_id = int;
 using row_id = int;
 
 const unsigned int MAX_ROW = 250000;
-const int TARGET_SIZE = 20;
-const int NEAR_TARGET_THRESHOLD = 18;
+const int TARGET_THRESHOLD = 5;
+const int HEAP_THRESHOLD = 50;  // 列数超过50时使用堆排序
 
 struct Node  
 {  
@@ -39,6 +39,18 @@ struct RowNode : public Node
     set<int> cols;
     RowNode() :  size(0) {}
 
+};
+
+// 列信息结构体，用于堆排序
+struct ColumnInfo {
+    int colId;
+    int size;
+    ColumnHeader* header;
+    
+    // 小根堆比较器：size小的优先
+    bool operator>(const ColumnInfo& other) const {
+        return size > other.size;
+    }
 };
 
 class IncrementalConnectedGraph;
@@ -99,6 +111,8 @@ class DancingMatrix
      
         ColumnHeader* selectCol();
         ColumnHeader* selectColumnHeuristic(const set<int>& cols);
+        ColumnHeader* selectColumnByLinear(const set<int>& cols, int threshold);
+        ColumnHeader* selectColumnByMinHeap(const set<int>& cols, int threshold);
         ColumnHeader* selectOptimalColumn(const set<int>& cols);
         col_id getClosedSizeCol(const int expected_size);
         col_id getSmallestSizeCol();

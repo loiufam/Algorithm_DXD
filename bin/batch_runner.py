@@ -12,18 +12,18 @@ from datetime import datetime
 
 # 配置
 MAIN_EXECUTABLE = "./main"
-INPUT_FOLDER = "../data/graph_matrix/m_blocks"  
+INPUT_FOLDER = "../data/graph_matrix/15_blocks_matrices"  
 RESULTS_FOLDER = "../results/Main"
 
 # 算法配置：(算法名, 命令参数, 列ID, 是否使用ett, 输出文件名)
 ALGORITHMS = [
-    ("IDXD_S", ["dxd", "ett"], 9, True, "IDXD_S_results.csv"),
-    ("IDXD_M", ["mdxd", "ett"], 10, True, "IDXD_M_results.csv"),
-    ("DXD_S", ["dxd", "ig"], 7, True, "DXD_S_results.csv"),
-    ("DXD_M", ["mdxd", "ig"], 8, True, "DXD_M_results.csv"),
-    # ("MDLX", ["mdlx", "ett"], 11, True, "MDLX_results.csv"),
-    # ("DLX", ["dlx"], 4, False, "DLX_results.csv"),
-    # ("DXZ", ["dxz"], 5, False, "DXZ_results.csv"),
+    ("IDXD_S", ["dxd", "ett"], 9, True, "IDXD_S_results_11_28.csv"),
+    ("IDXD_M", ["mdxd", "ett"], 10, True, "IDXD_M_results_11_28.csv"),
+    ("DXD_S", ["dxd", "ig"], 7, True, "DXD_S_results_11_28.csv"),
+    ("DXD_M", ["mdxd", "ig"], 8, True, "DXD_M_results_11_28.csv"),
+    ("MDLX", ["mdlx", "ett"], 11, True, "MDLX_results_11_28.csv"),
+    ("DLX", ["dlx"], 4, False, "DLX_results_11_28.csv"),
+    ("DXZ", ["dxz"], 5, False, "DXZ_results_11_28.csv"),
 ]
 
 def parse_log_output(output):

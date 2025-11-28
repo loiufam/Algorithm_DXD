@@ -377,9 +377,7 @@ void DancingMatrix::coverInBlock(int c, Block& block){
     col->left->right = col->right;  
     
     block.cols.erase(c); // 从块中移除列
-    // if (isGraphSyncEnabled() && useETT) {
-    //     detector->Cover(c);
-    // }
+
 
     Node* curR, *curC;  
     curC = col->down;  
@@ -433,9 +431,7 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
         curC = curC->up;  
     }  
 
-    // if (isGraphSyncEnabled() && useETT) {
-    //     detector->Uncover();
-    // }
+
     col->right->left = col;  
     col->left->right = col;  
     block.cols.insert(c);
@@ -457,15 +453,12 @@ ColumnHeader* DancingMatrix::selectColumnHeuristic(const set<int>& cols) {
     return chosen;
 }
 
-ColumnHeader* DancingMatrix::selectOptimalColumn(const set<int>& cols) {
+ColumnHeader* DancingMatrix::selectColumnByLinear(const set<int>& cols, int threshold) {
     
-    vector<int> columns(cols.begin(), cols.end());
-
-    ColumnHeader* bestCol = getColumnHeader(columns[0]); // 保底选择第一列
-    int bestSize = getColSize(columns[0]);
+    ColumnHeader* bestCol = getColumnHeader(*cols.begin()); // 保底选择第一列
+    int bestSize = getColSize(bestCol->col);
     
-    for (size_t i = 1; i < columns.size(); ++i) {
-        int colId = columns[i];
+    for (int colId : cols) {
         int size = getColSize(colId);
         
         if (size < bestSize) {
@@ -475,6 +468,57 @@ ColumnHeader* DancingMatrix::selectOptimalColumn(const set<int>& cols) {
     }
     
     return bestCol; // 保证非空返回
+}
+
+ColumnHeader* DancingMatrix::selectColumnByMinHeap(const set<int>& cols, int threshold) {
+    
+    // 使用小根堆选择最小列
+    priority_queue<ColumnInfo, vector<ColumnInfo>, greater<ColumnInfo>> minHeap;
+    
+    for (int colId : cols) {
+        int size = getColSize(colId);
+        minHeap.push({colId, size, getColumnHeader(colId)});
+    }
+    
+    // 保底返回：记录第一个（最小size）列
+    ColumnInfo firstCol = minHeap.top();
+    ColumnHeader* bestCol = firstCol.header;
+    int bestDistance = abs(firstCol.size - threshold);
+    
+    // 从小到大取出元素，寻找最接近阈值的列
+    while (!minHeap.empty()) {
+        ColumnInfo current = minHeap.top();
+        minHeap.pop();
+        
+        int distance = abs(current.size - threshold);
+        
+        // 更新最优列
+        if (distance < bestDistance) {
+            bestDistance = distance;
+            bestCol = current.header;
+        }
+        
+        // 早期退出优化：
+        // 1. 找到精确匹配
+        if (distance == 0) break;
+        
+        // 2. 当前size已经超过阈值，且距离开始增大时停止
+        //    因为后续元素size更大，距离只会越来越大
+        if (current.size > threshold && distance > bestDistance) {
+            break;
+        }
+    }
+    
+    return bestCol;  // 保证非空
+}
+
+ColumnHeader* DancingMatrix::selectOptimalColumn(const set<int>& cols) {
+    
+    // if (cols.size() <= HEAP_THRESHOLD) {
+    //     return selectColumnByLinear(cols, TARGET_THRESHOLD);
+    // }
+
+    return selectColumnByLinear(cols, TARGET_THRESHOLD);
 }
 
 ColumnHeader* DancingMatrix::selectCol()

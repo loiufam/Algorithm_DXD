@@ -62,7 +62,7 @@ CoverHistory ComponentDetector::DoCover(int c) {
             continue;
         }
 
-        
+        unique_lock ett_lock(ett_graph_mutex);
         // Cut该行的所有边
         for (int neighbor : adj_list[row]) {
             if (row_active[neighbor]) {
@@ -103,6 +103,7 @@ CoverHistory ComponentDetector::DoCover(int c) {
 
             }
         }
+        ett_lock.unlock();
         
         // 标记为非激活
         row_active[row] = false;
@@ -119,6 +120,7 @@ void ComponentDetector::DoUncover(const CoverHistory& history) {
         return;
     }
 
+    unique_lock lock(ett_graph_mutex);
     // 第一步：恢复所有被cut的边
     for (auto& edge : history.cut_edges) {
         int u = edge.first;
@@ -135,6 +137,7 @@ void ComponentDetector::DoUncover(const CoverHistory& history) {
             non_tree_edges.insert(key);
         }
     }
+    lock.unlock();
     
     // 第二步：恢复行的激活状态
     for (int row : history.removed_rows) {
@@ -144,6 +147,7 @@ void ComponentDetector::DoUncover(const CoverHistory& history) {
 
 vector<Block> ComponentDetector::incMatrixDecompose(const set<int>& block_rows){
 
+    shared_lock lock(ett_graph_mutex);
     // 批量获取连通分量分组
     auto components_map = ett->batchGroupByComponent(block_rows);
     
