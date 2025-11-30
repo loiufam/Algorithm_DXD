@@ -350,11 +350,11 @@ if __name__ == "__main__":
         # ("../exact_cover_benchmark", 1),
         # ("../set_partitioning_benchmarks", 2),
         # ("../graph_matrix/partition", 3),
-        ("../graph_matrix/15_blocks_matrices", 3)
+        ("../graph_matrix/10_blocks", 3)
     ]
 
     table = "../../exp_results.csv"
-    output_path = "../../../Share_Data/15_blocks_cnf"
+    output_path = "../../../Share_Data/10_blocks_cnf"
 
     headers, rows = read_csv(table)
 

@@ -1,6 +1,2 @@
-启用多线程DXD算法求解: Aarnet
+启用多线程DXD算法求解: grafo318.20
 开始多线程DXD搜索...
-Time: 0.671846 s
-Solutions: 3.110586e+99
-Max Blocks: 20
-多线程DXD算法求解结束: Aarnet

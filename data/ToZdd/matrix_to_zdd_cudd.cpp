@@ -516,7 +516,7 @@ int main(int argc, char* argv[]) {
         // std::string folderPath1 = "../exact_cover_benchmark 1";
         // std::string folderPath2 = "../set_partitioning_benchmarks 2";
         // std::string folderPath3 = "../graph_matrix 3";
-        std::string folderPath4 = "../graph_matrix/15_blocks_matrices 3";
+        std::string folderPath4 = "../graph_matrix/10_blocks 3";
 
         // filePaths.push_back(folderPath1);
         // filePaths.push_back(folderPath2);
@@ -528,7 +528,7 @@ int main(int argc, char* argv[]) {
         std::vector<std::vector<std::string>> rows;
 
         const std::string table = "../../exp_results.csv";
-        const std::string outputPath = "../../../D3X/data/15_blocks/";
+        const std::string outputPath = "../../../D3X/data/10_blocks/";
         readCSV(table, headers, rows);
 
         // 遍历文件夹中的文件
