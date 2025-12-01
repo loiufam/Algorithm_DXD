@@ -1,2 +1,6 @@
-启用多线程DXD算法求解: grafo318.20
+启用多线程DXD算法求解: grafo8226.90
 开始多线程DXD搜索...
+Time: 149.107084 s
+Solutions: 2.479640e+47
+Max Blocks: 7
+多线程DXD算法求解结束: grafo8226.90
