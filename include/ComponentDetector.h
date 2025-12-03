@@ -99,14 +99,22 @@ public:
 
 // 用于保存 Cover 操作的历史记录，由调用线程持有
 struct CoverHistory {
-    int col;                                      // 被cover的列
-    std::vector<int> removed_rows;                 // 被删除的行
-    std::vector<std::pair<int, int>> cut_edges;   // 被cut的边 (保证 u < v)
+    int col;                                      
+    std::vector<int> removed_rows;                
+    
+    // 分别记录树边和非树边的操作
+    std::vector<std::pair<int, int>> cut_tree_edges;     // 被cut的树边
+    std::vector<std::pair<int, int>> removed_nontree_edges; // 被删除的非树边
+    
+    // 记录替代边的操作（用于回滚）
+    std::vector<std::pair<int, int>> added_replacement_edges;  // 新增的替代边
     
     void clear() {
         col = -1;
         removed_rows.clear();
-        cut_edges.clear();
+        cut_tree_edges.clear();
+        removed_nontree_edges.clear();
+        added_replacement_edges.clear();
     }
     
     bool isEmpty() const {

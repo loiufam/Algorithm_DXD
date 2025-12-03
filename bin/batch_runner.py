@@ -12,18 +12,25 @@ from datetime import datetime
 
 # 配置
 MAIN_EXECUTABLE = "./main"
-INPUT_FOLDER = "../data/graph_matrix/10_blocks"  
-RESULTS_FOLDER = "../results/Main"
+INPUT_FOLDER = "../data/comparison_test"  
+RESULTS_FOLDER = "../results/Main_Threads"
 
 # 算法配置：(算法名, 命令参数, 列ID, 是否使用ett, 输出文件名)
 ALGORITHMS = [
-    ("IDXD_S", ["dxd", "ett"], 9, True, "IDXD_S_results_11_30.csv"),
-    ("IDXD_M", ["mdxd", "ett"], 10, True, "IDXD_M_results_11_30.csv"),
-    ("DXD_S", ["dxd", "ig"], 7, True, "DXD_S_results_11_30.csv"),
-    ("DXD_M", ["mdxd", "ig"], 8, True, "DXD_M_results_11_30.csv"),
-    ("MDLX", ["mdlx", "ett"], 11, True, "MDLX_results_11_30.csv"),
-    ("DLX", ["dlx"], 4, True, "DLX_results_11_30.csv"),
-    ("DXZ", ["dxz"], 5, True, "DXZ_results_11_30.csv"),
+    # ("IDXD_S", ["dxd", "ett"], 9, True, "IDXD_S_results_11_30.csv"),
+    ("IDXD_M", ["mdxd", "ett"], 10, True, "IDXD_M_results_.csv"),
+    # ("DXD_S", ["dxd", "ig"], 7, True, "DXD_S_results_11_30.csv"),
+    ("DXD_M", ["mdxd", "ig"], 8, True, "DXD_M_results_.csv"),
+    ("MDLX", ["mdlx", "ett"], 11, True, "MDLX_results_.csv"),
+    # ("DLX", ["dlx"], 4, True, "DLX_results_11_30.csv"),
+    # ("DXZ", ["dxz"], 5, True, "DXZ_results_11_30.csv"),
+]
+
+# 多线程算法配置：(算法名, 命令参数, 是否使用ett, 线程数列表, 输出文件名)
+THREAD_ALGORITHMS = [
+    ("DXD_M", ["mdxd", "ig"], True, [4, 8, 16], "DXD_M_threads.csv"),
+    ("IDXD_M", ["mdxd", "ett"], True, [4, 8, 16], "IDXD_M_threads.csv"),
+    ("MDLX", ["mdlx", "ett"], True, [4, 8, 16], "MDLX_threads.csv"),
 ]
 
 def parse_log_output(output):
@@ -63,12 +70,12 @@ def parse_log_output(output):
     
     return result
 
-def run_algorithm(algo_name, algo_params, input_file, read_mode):
+def run_algorithm(algo_name, algo_params, input_file, read_mode, num_threads=24):
     """运行单个算法"""
     if len(algo_params) == 1:
         cmd = [MAIN_EXECUTABLE] + [algo_params[0], input_file, str(read_mode)]
     else:
-        cmd = [MAIN_EXECUTABLE] + [algo_params[0], input_file, str(read_mode), algo_params[1]]
+        cmd = [MAIN_EXECUTABLE] + [algo_params[0], input_file, str(read_mode), algo_params[1], str(num_threads)]
     
     print(f"  运行命令: {' '.join(cmd)}")
     
@@ -187,6 +194,65 @@ def write_csv_results(csv_path, results_data, col_id, include_solutions=False):
         for filename in sorted(existing_data.keys()):
             writer.writerow(existing_data[filename])
 
+def write_thread_csv_results(csv_path, results_data, thread_nums):
+    """将多线程结果写入CSV文件"""
+    # 读取现有数据
+    existing_data = read_existing_csv(csv_path)
+    
+    # 确定列数：Instance + 每个线程数1列(Time)
+    num_cols = 1 + len(thread_nums) * 3  # 每个线程数占3列(Time, Solutions, Max Blocks)
+    
+    # 合并新结果
+    for filename, thread_results in results_data.items():
+        if filename not in existing_data:
+            existing_data[filename] = [''] * num_cols
+            existing_data[filename][0] = filename
+        
+        # 确保行有足够的列
+        while len(existing_data[filename]) < num_cols:
+            existing_data[filename].append('')
+        
+        # 写入每个线程数的结果
+        for idx, num_threads in enumerate(thread_nums):
+            if num_threads in thread_results:
+                result = thread_results[num_threads]
+                col = 1 + idx * 3  # 每个线程数占1列
+                
+                # Time列
+                if result['timeout']:
+                    existing_data[filename][col] = 'timeout'
+                elif result['time'] is not None:
+                    time_str = f"{result['time']:.4f}"
+                    # if result['status'] == 'warning':
+                    #     time_str += " (WARNING: 0 solutions)"
+                    existing_data[filename][col] = time_str
+
+                # Solutions列
+                if result['solutions'] is not None:
+                    existing_data[filename][col + 1] = result['solutions']
+                
+                # Max Blocks列
+                if result['max_blocks'] is not None:
+                    existing_data[filename][col + 2] = str(result['max_blocks'])
+    
+    # 写入文件
+    with open(csv_path, 'w', encoding='utf-8', newline='') as f:
+        writer = csv.writer(f)
+        
+        # 写表头
+        header = ['Instance']
+        for num_threads in thread_nums:
+            header.extend([
+                f'{num_threads}_threads_time',
+                f'{num_threads}_threads_solutions',
+                f'{num_threads}_threads_max_blocks'
+            ])
+        writer.writerow(header)
+        
+        # 写数据行
+        for filename in sorted(existing_data.keys()):
+            writer.writerow(existing_data[filename])
+
 def main():
     """主函数"""
     # 解析命令行参数
@@ -245,25 +311,51 @@ def main():
         print(f"\n过滤后找到 {len(input_files)} 个输入文件\n")
 
     # 对每个算法运行测试
-    for algo_name, algo_params, col_id, include_solutions, output_file in ALGORITHMS:
+    # for algo_name, algo_params, col_id, include_solutions, output_file in ALGORITHMS:
+    #     print(f"\n{'=' * 60}")
+    #     print(f"运行算法: {algo_name}")
+    #     print(f"{'=' * 60}")
+        
+    #     results_data = {}
+    #     csv_path = os.path.join(results_folder, output_file)
+    #     col_id = col_id - 1
+
+    #     for i, input_file in enumerate(input_files, 1):
+    #         filename = os.path.basename(input_file)
+    #         print(f"\n[{i}/{len(input_files)}] 处理文件: {filename}")
+            
+    #         result = run_algorithm(algo_name, algo_params, input_file, read_mode)
+    #         results_data[filename] = result
+            
+    #         # 实时写入结果
+    #         write_csv_results(csv_path, results_data, col_id, include_solutions)
+
+    # 对每个算法运行测试
+    for algo_name, algo_params, use_ett, thread_nums, output_file in THREAD_ALGORITHMS:
         print(f"\n{'=' * 60}")
-        print(f"运行算法: {algo_name}")
+        print(f"运行算法: {algo_name} (线程数: {thread_nums})")
         print(f"{'=' * 60}")
         
         results_data = {}
         csv_path = os.path.join(results_folder, output_file)
-        col_id = col_id - 1
 
         for i, input_file in enumerate(input_files, 1):
             filename = os.path.basename(input_file)
             print(f"\n[{i}/{len(input_files)}] 处理文件: {filename}")
             
-            result = run_algorithm(algo_name, algo_params, input_file, read_mode)
-            results_data[filename] = result
+            # 存储该文件在不同线程数下的结果
+            results_data[filename] = {}
+            
+            for num_threads in thread_nums:
+                print(f"  测试 {num_threads} 线程...")
+                result = run_algorithm(
+                    algo_name, algo_params, input_file, read_mode, num_threads
+                )
+                results_data[filename][num_threads] = result
             
             # 实时写入结果
-            write_csv_results(csv_path, results_data, col_id, include_solutions)
-        
+            write_thread_csv_results(csv_path, results_data, thread_nums)  
+
         print(f"\n算法 {algo_name} 完成，结果已保存到: {csv_path}")
     
     print("\n" + "=" * 60)

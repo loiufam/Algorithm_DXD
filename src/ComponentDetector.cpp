@@ -42,9 +42,6 @@ void ComponentDetector::Uncover() {
 }
 
 CoverHistory ComponentDetector::DoCover(int c) {
-    // if (debug_mode) {
-    //     debug_log << "\n>>> DoCover(col=" << c << ")" << std::endl;
-    // }
 
     CoverHistory history;
     history.col = c;
@@ -55,52 +52,51 @@ CoverHistory ComponentDetector::DoCover(int c) {
     const auto& rows = it->second;  // 获取与列 c 相连的所有行
     if (rows.size() < 2) return history;
 
-
-
+    unique_lock ett_lock(ett_graph_mutex);
     for (int row : rows) {
         if (!row_active[row]) {
             continue;
         }
 
-        unique_lock ett_lock(ett_graph_mutex);
         // Cut该行的所有边
         for (int neighbor : adj_list[row]) {
-            if (row_active[neighbor]) {
-                int u = row, v = neighbor;
+
+            // 只处理激活的邻居，且保证边的方向一致性（避免重复处理）
+            if (!row_active[neighbor] || row > neighbor) {
+                continue;
+            }
+            int u = row, v = neighbor;
+            
+            unsigned long long key = makeEdgeKey(u, v);
+
+            // 处理树边
+            if (tree_edges.count(key)) {
+                // 记录被cut的树边
+                history.cut_tree_edges.push_back({u, v});
                 
-                unsigned long long key = makeEdgeKey(u, v);
-                if (tree_edges.count(key)) {
-                    if (u > v) std::swap(u, v);
-
-                    history.cut_edges.push_back({u, v});
-                    ett->cut(u, v);
-                    tree_edges.erase(key);
-
-                    // 寻找替代边
-                    int repl_u, repl_v;
-                    if (findReplacementEdge(u, v, repl_u, repl_v)) {
-                        unsigned long long repl_key = makeEdgeKey(repl_u, repl_v);
-                        
-                        // 将替代边升级为树边
-                        ett->link(repl_u, repl_v);
-                        non_tree_edges.erase(repl_key);
-                        tree_edges.insert(repl_key);
-
-                        // need_rebuild = false;
-                        // std::cout << "Replaced tree edge (" << u << "," << v 
-                        //           << ") with (" << repl_u << "," << repl_v << ")" << std::endl;
-                    } 
-                    // else {
-                        // need_rebuild = true;
-                        // 没有替代边，树真的分裂了
-                        // std::cout << "Tree split after cutting (" << u << "," << v << ")" << std::endl;
-                    // }
-
-                } else if (non_tree_edges.count(key)) {
-                    // 非树边，直接删除
-                    non_tree_edges.erase(key);
+                // 执行cut
+                ett->cut(u, v);
+                tree_edges.erase(key);
+                
+                // 寻找替代边
+                int repl_u, repl_v;
+                if (findReplacementEdge(u, v, repl_u, repl_v)) {
+                    unsigned long long repl_key = makeEdgeKey(repl_u, repl_v);
+                    
+                    // 记录替代边的添加
+                    history.added_replacement_edges.push_back({repl_u, repl_v});
+                    
+                    // 将替代边升级为树边
+                    ett->link(repl_u, repl_v);
+                    non_tree_edges.erase(repl_key);
+                    tree_edges.insert(repl_key);
                 }
-
+            }
+            // 处理非树边
+            else if (non_tree_edges.count(key)) {
+                // 记录被删除的非树边（重要！）
+                history.removed_nontree_edges.push_back({u, v});
+                non_tree_edges.erase(key);
             }
         }
         ett_lock.unlock();
@@ -121,25 +117,35 @@ void ComponentDetector::DoUncover(const CoverHistory& history) {
     }
 
     unique_lock lock(ett_graph_mutex);
-    // 第一步：恢复所有被cut的边
-    for (auto& edge : history.cut_edges) {
-        int u = edge.first;
-        int v = edge.second;
-        
+    for (auto it = history.added_replacement_edges.rbegin(); 
+         it != history.added_replacement_edges.rend(); ++it) {
+        int u = it->first, v = it->second;
         unsigned long long key = makeEdgeKey(u, v);
         
-        if (!ett->connected(u, v)) {
-            // 不连通，link回去作为树边
-            ett->link(u, v);
-            tree_edges.insert(key);
-        } else {
-            // 已经连通，作为非树边恢复
-            non_tree_edges.insert(key);
-        }
+        // 将替代边从树边降级为非树边
+        ett->cut(u, v);
+        tree_edges.erase(key);
+        non_tree_edges.insert(key);
+    }
+
+    for (auto& edge : history.cut_tree_edges) {
+        int u = edge.first, v = edge.second;
+        unsigned long long key = makeEdgeKey(u, v);
+        
+        // 恢复树边
+        ett->link(u, v);
+        tree_edges.insert(key);
+    }
+    
+    for (auto& edge : history.removed_nontree_edges) {
+        int u = edge.first, v = edge.second;
+        unsigned long long key = makeEdgeKey(u, v);
+        
+        non_tree_edges.insert(key);
     }
     lock.unlock();
     
-    // 第二步：恢复行的激活状态
+    // 恢复行的激活状态
     for (int row : history.removed_rows) {
         row_active[row] = true;
     }

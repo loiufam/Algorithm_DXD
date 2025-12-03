@@ -9,11 +9,7 @@
 #include <iostream>
 #include <climits>
 
-/**
- * Splay-based Euler Tour Tree (ETT) 实现
- * 
- * 时间复杂度：所有操作 O(log n) 摊还
- */
+
 class SplayETT {
 private:
     struct Node {
