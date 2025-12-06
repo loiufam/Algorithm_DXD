@@ -1,6 +1,2 @@
-启用多线程DLX算法求解: grid_4x4
-开始多线程DLX搜索...
-Time: 0.005371 s
-Solutions: 3000
-Max Blocks: 15
-多线程DLX算法求解结束: grid_4x4
+启用DLX算法求解: matrix
+DLX开始搜索...

@@ -22,8 +22,7 @@ set(COMMON_SOURCES
     src/TreapETT.cpp
     src/DXDTime.cpp
     src/ComponentDetector.cpp
-    # src/splay_tree.cpp
-    # src/splay_tree_ett.cpp
+    # src/DynamicHypergraphCC.cpp
 )
 
 # Add executable target
@@ -36,7 +35,7 @@ add_executable(main src/main.cpp ${COMMON_SOURCES})
 # add_executable(test1 test/test1.cpp ${COMMON_SOURCES})
 # add_executable(test2 test/test2.cpp ${COMMON_SOURCES})
 # add_executable(test3 test/test3.cpp ${COMMON_SOURCES})
-add_executable(test_ett test/test_ett.cpp ${COMMON_SOURCES})
+# add_executable(test_ett test/test_ett.cpp ${COMMON_SOURCES})
 
 # AddressSanitizer only in Debug mode
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -57,5 +56,5 @@ if(OpenMP_CXX_FOUND)
     # target_link_libraries(test1 PUBLIC OpenMP::OpenMP_CXX)
     # target_link_libraries(test2 PUBLIC OpenMP::OpenMP_CXX)
     # target_link_libraries(test3 PUBLIC OpenMP::OpenMP_CXX)
-    target_link_libraries(test_ett PUBLIC OpenMP::OpenMP_CXX)
+    # target_link_libraries(test_ett PUBLIC OpenMP::OpenMP_CXX)
 endif()

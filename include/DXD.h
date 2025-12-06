@@ -127,9 +127,17 @@ class DanceDNNF : DancingMatrix {
             detect_record++;
         }
 
+        void runDXZ() {
+            turnOffGraphSync();
+            controlOUTPUT = true;
+            zdd_mode = true;
+            startDXD();
+        }
+
     private:
         // ThreadPool& pool;
         Logger& logger;
+        bool controlOUTPUT = false;
         
         // DNNF相关
         vector<string> cache_input_order; // 记录缓存的输入顺序，便于输出

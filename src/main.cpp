@@ -3,7 +3,7 @@
 
 static Logger logger("../run_results.txt");  // 全局日志
 // const string muti_thread_dxd_log_file = "../muti_thread_dxd_log.csv";
-static const int DEFAULT_THREADS = 24;  // 线程数
+static const int DEFAULT_THREADS = 16;  // 线程数
 
 // 算法类型枚举
 enum class algorithm_type {
@@ -59,8 +59,10 @@ int main(int argc, char *argv[]){
             case algorithm_type::dxz:
                 {
                     logger.logLine("启用DXZ算法求解: " + filename);
-                    DanceZDD danceZDD(input_file, read_mode, logger);
-                    danceZDD.startDXZ();
+                    // DanceZDD danceZDD(input_file, read_mode, logger);
+                    // danceZDD.startDXZ();
+                    DanceDNNF danceDNNF(input_file, read_mode, logger);
+                    danceDNNF.runDXZ();
                     logger.logLine("DXZ算法求解结束: " + filename);
                     break;
                 }

@@ -101,6 +101,14 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool useIg , bo
     }  
     ColIndex[0].down = &RowIndex[0]; 
 
+    // if(useETT) {
+    //     DynamicHypergraphCC::Config config;
+    //     config.enable_parallel = true;
+    //     config.enable_persistence = true;
+    //     config.num_threads = 4;
+    //     dynamic_hypergraph_cc = make_unique<DynamicHypergraphCC>(config);
+    // }
+
     dataNodes.reserve(rows * cols / 2);
     int currentRow = 0;
     while (getline(file, line)) {
@@ -116,6 +124,7 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool useIg , bo
         }
 
         int currentCol; 
+        // std::vector<int> rowCols;
         while(iss >> currentCol) {
             if (currentCol < 1 || currentCol > cols) {
                 cerr << "无效的列索引: " << currentCol << " 在行 " << currentRow + 1 << endl;
@@ -127,11 +136,15 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool useIg , bo
             ONE_COUNT++; // 统计矩阵中1的个数
             rowsSet.insert(currentRow);
             colsSet.insert(currentCol); 
+            // rowCols.push_back(currentCol);
         }
 
         // 初始化ETT节点
         // if (useETT) detector->add_row(currentRow);
         // active_rows.insert(currentRow);
+        // if (useETT) {
+        //     dynamic_hypergraph_cc->addRow(currentRow, rowCols);
+        // }
         currentRow++;
         
         if (currentRow >= rows) break; // 防止超过预期行数
@@ -142,8 +155,7 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool useIg , bo
     if(useETT){
         detector = make_unique<ComponentDetector>(ROWS, COLS); 
         detector->Initialize(col_to_rows);
-        // Graph graph = build_graph_from_columns(col_to_rows, ROWS, true);
-        // block_detector = make_unique<BlockDetector>(graph, row_to_cols);
+
         cout << "ETT initialization complete." << endl;
     }
 
@@ -162,27 +174,6 @@ vector<Block> DancingMatrix::getComponentsByIG(const set<int> rows) {
     // return findComponents(rows);
 };
 
-Graph DancingMatrix::build_graph_from_columns(const unordered_map<int, vector<int>>& col2rows, int num_rows, bool deduplicate) {
-    
-    Graph graph(num_rows);
-    
-    for (const auto& [col, rows_in_column] : col2rows) {
-        if (rows_in_column.empty()) continue;
-        
-        // Use first row as star center
-        int center_row = rows_in_column[0];
-        for (size_t i = 1; i < rows_in_column.size(); ++i) {
-            cout << "Adding edge " << center_row << " -> " << rows_in_column[i] << endl;
-            graph.add_edge(center_row, rows_in_column[i]);
-        }
-    }
-    
-    // if (deduplicate) {
-    //     graph.normalize();
-    // }
-    
-    return graph;
-}
 
 //插入元素到双向十字链表中
 void DancingMatrix::insert( int r, int c )  
@@ -517,6 +508,9 @@ ColumnHeader* DancingMatrix::selectOptimalColumn(const set<int>& cols) {
     // if (cols.size() <= HEAP_THRESHOLD) {
     //     return selectColumnByLinear(cols, TARGET_THRESHOLD);
     // }
+    if (zdd_mode) {
+        return selectColumnByMinHeap(cols, 3);
+    }
 
     return selectColumnByLinear(cols, TARGET_THRESHOLD);
 }

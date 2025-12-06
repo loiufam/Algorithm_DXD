@@ -3,7 +3,7 @@
 
 #include "ThreadPool.h"
 #include "ComponentDetector.h"
-#include "BlockDetector.h"
+// #include "BlockDetector.h"
 #include "common.h"
 
 using col_id = int;
@@ -74,6 +74,8 @@ class DancingMatrix
         unordered_set<int> active_rows;
         Block InitBlock;
 
+        bool zdd_mode = false; // 是否为ZDD模式
+
         // 列状态
         size_t getColumnState() const;
         Signature getColumnSignature() const;
@@ -85,7 +87,8 @@ class DancingMatrix
 
         // 检测器，用于检测矩阵中的连通性
         std::unique_ptr<ComponentDetector> detector;
-        std::unique_ptr<BlockDetector> block_detector;
+        // std::unique_ptr<DynamicHypergraphCC> dynamic_hypergraph_cc;
+        // std::unique_ptr<BlockDetector> block_detector;
 
         // 禁用拷贝和赋值
         DancingMatrix(const DancingMatrix&) = delete;
@@ -153,12 +156,12 @@ class DancingMatrix
         vector<Block> getComponentsByIG(const set<int> rows);
 
         void turnOnGraphSync() {
-            std::unique_lock lock(mutex_);
+            // std::unique_lock lock(mutex_);
             enableGraphSync = true;
         }
 
         void turnOffGraphSync() {
-            std::unique_lock lock(mutex_);
+            // std::unique_lock lock(mutex_);
             enableGraphSync = false;
         }
 
@@ -187,10 +190,9 @@ class DancingMatrix
         // 关键数据结构：列 -> 激活行集合的反向索引
         unordered_map<int, vector<int>> col_to_rows;
 
-        Graph build_graph_from_columns(const unordered_map<int, vector<int>>& col2rows, int num_rows, bool deduplicate = true);
+        // Graph build_graph_from_columns(const unordered_map<int, vector<int>>& col2rows, int num_rows, bool deduplicate = true);
 
-        bool enableGraphSync = true; // 是否启用图同步
-        
+        bool enableGraphSync = true; // 是否启用图同步        
 };
 
 #endif

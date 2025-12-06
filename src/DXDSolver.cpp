@@ -91,7 +91,7 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
         }
     }
 
-    if (block.rows.size() > MIN_BLOCK_ROWS) {
+    if (block.rows.size() > MIN_BLOCK_ROWS && isGraphSyncEnabled()) {
         
         vector<Block> curBlock;
         if (useETT ) {
@@ -105,7 +105,7 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
 
         if (curBlock.size() > 1) {
             // 检测到多个独立分块，则并行处理
-            // turnOffGraphSync();
+            if(useETT && isParallelSearch) turnOffGraphSync();
 
             DNNFResult result;
 
@@ -170,7 +170,7 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
 
 void DanceDNNF::startDXD() {
 
-    logger.logLine("开始单线程DXD搜索...");
+    if(!controlOUTPUT)  logger.logLine("开始单线程DXD搜索...");
 
     isParallelSearch = false; // 单线程搜索
     MAX_B_COUNT = 1;
@@ -191,12 +191,12 @@ void DanceDNNF::startDXD() {
         solutionCount = ResSols.toString();
         logger.logLine("Solutions: " + solutionCount);
     
-        logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
+        if(!controlOUTPUT) logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
 
         return;
     } catch (std::runtime_error &e) {
         timeout = true;
-        logger.logLine("DXD搜索超时: " + std::string(e.what()));
+        if(!controlOUTPUT) logger.logLine("DXD搜索超时: " + std::string(e.what()));
         return;
     }
 
