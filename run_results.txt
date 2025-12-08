@@ -1,2 +1,2 @@
-启用DLX算法求解: matrix
+启用DLX算法求解: Eenet
 DLX开始搜索...

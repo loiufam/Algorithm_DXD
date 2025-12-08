@@ -130,7 +130,7 @@ class DanceDNNF : DancingMatrix {
         void runDXZ() {
             turnOffGraphSync();
             controlOUTPUT = true;
-            zdd_mode = true;
+            dxz_mode = true;
             startDXD();
         }
 

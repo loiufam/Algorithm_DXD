@@ -91,7 +91,7 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
         }
     }
 
-    if (block.rows.size() > MIN_BLOCK_ROWS && isGraphSyncEnabled()) {
+    if (block.rows.size() > 2 && isGraphSyncEnabled()) {
         
         vector<Block> curBlock;
         if (useETT ) {
@@ -174,6 +174,9 @@ void DanceDNNF::startDXD() {
 
     isParallelSearch = false; // 单线程搜索
     MAX_B_COUNT = 1;
+    if(!dxz_mode) {
+        single_thread_mode = true; // 启用单线程模式
+    }
     
     try{
 

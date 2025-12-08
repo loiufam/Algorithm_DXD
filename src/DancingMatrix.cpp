@@ -508,8 +508,8 @@ ColumnHeader* DancingMatrix::selectOptimalColumn(const set<int>& cols) {
     // if (cols.size() <= HEAP_THRESHOLD) {
     //     return selectColumnByLinear(cols, TARGET_THRESHOLD);
     // }
-    if (zdd_mode) {
-        return selectColumnByMinHeap(cols, 3);
+    if (single_thread_mode) {
+        return selectColumnByMinHeap(cols, TARGET_THRESHOLD);
     }
 
     return selectColumnByLinear(cols, TARGET_THRESHOLD);

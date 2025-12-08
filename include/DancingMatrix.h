@@ -74,7 +74,8 @@ class DancingMatrix
         unordered_set<int> active_rows;
         Block InitBlock;
 
-        bool zdd_mode = false; // 是否为ZDD模式
+        bool dxz_mode = false; // 选择列模式
+        bool single_thread_mode = false; // 单线程模式
 
         // 列状态
         size_t getColumnState() const;

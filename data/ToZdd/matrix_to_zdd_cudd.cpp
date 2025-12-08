@@ -503,74 +503,58 @@ void updateRecord(  std::vector<std::string>& headers,
 
 int main(int argc, char* argv[]) {
 
-    // if (argc < 4) {
-    //     std::cout << "Usage: " << argv[0] << " <input_matrix> <output_zdd> <read_mode> [output_dot]" << std::endl;
-    //     std::cout << "Example: " << argv[0] << " matrix.txt output.zdd 1 output.dot" << std::endl;
-    //     return 1;
-    // }
+    bool batchMode = argv[1] == std::string("-b");
 
-
-    if (argc < 3) {
+    if (batchMode) {
+        if (argc < 4) {
+            std::cerr << "Usage: " << argv[0] << " -b <folder_path> <read_mode>" << std::endl;
+            return 1;
+        }
         // 文件夹路径
-        std::vector<std::string> filePaths;
-        // std::string folderPath1 = "../exact_cover_benchmark 1";
-        // std::string folderPath2 = "../set_partitioning_benchmarks 2";
-        // std::string folderPath3 = "../graph_matrix 3";
-        std::string folderPath4 = "../graph_matrix/10_blocks 3";
-
-        // filePaths.push_back(folderPath1);
-        // filePaths.push_back(folderPath2);
-        // filePaths.push_back(folderPath3);
-        filePaths.push_back(folderPath4);
+        std::string folderPath = argv[2];
+        int read_mode = std::stoi(argv[3]);
 
         // 读取csv文件
         std::vector<std::string> headers;
         std::vector<std::vector<std::string>> rows;
 
         const std::string table = "../../exp_results.csv";
-        const std::string outputPath = "../../../D3X/data/10_blocks/";
+        const std::string outputPath = "../../../D3X/data/exp_set/";
         readCSV(table, headers, rows);
 
         // 遍历文件夹中的文件
-        std::string folderName;
-        int mode;
-        for (const auto& folderPath : filePaths) {
-            std::stringstream ss(folderPath);
-            ss >> folderName;
-            ss >> mode;
-            std::cout << "Start compile folder: " << folderName << ", mode: " << mode << std::endl;
-            for (const auto& entry : std::filesystem::directory_iterator(folderName)) {
-                if (entry.is_regular_file()) {
-                    std::string filePath = entry.path().string();
-                    std::string fileName = entry.path().stem().string();
-                    std::string outputFile = outputPath + fileName + ".zdd";
+        for (const auto& entry : std::filesystem::directory_iterator(folderPath)) {
+            if (entry.is_regular_file()) {
+                std::string filePath = entry.path().string();
+                std::string fileName = entry.path().stem().string();
+                std::string outputFile = outputPath + fileName + ".zdd";
 
-                    CUDDMatrixCompiler compiler;
+                CUDDMatrixCompiler compiler;
 
-                    // 加载矩阵
-                    if (!compiler.readFromFile(filePath, mode)) {
-                        std::cerr << "Failed to read file: " << filePath << std::endl;
-                        return 1;
-                    }
-                    
-                    std::cout << "Compiling " << fileName << std::endl;
-
-                    // 编译为ZDD
-                    auto start = std::chrono::high_resolution_clock::now();
-                    auto zdd = compiler.compile();
-                    auto end = std::chrono::high_resolution_clock::now();
-                    
-                    double elapsed = std::chrono::duration<double>(end - start).count();
-                    std::cout << "Compilation time: " << elapsed << " seconds" << std::endl;
-
-                    updateRecord(headers, rows, fileName, elapsed, compiler.rows, compiler.cols);
-                    
-                    // 输出ZDD文件
-                    compiler.outputZDD(zdd, outputFile);
-                    
+                // 加载矩阵
+                if (!compiler.readFromFile(filePath, read_mode)) {
+                    std::cerr << "Failed to read file: " << filePath << std::endl;
+                    return 1;
                 }
+                
+                std::cout << "Compiling " << fileName << std::endl;
+
+                // 编译为ZDD
+                auto start = std::chrono::high_resolution_clock::now();
+                auto zdd = compiler.compile();
+                auto end = std::chrono::high_resolution_clock::now();
+                
+                double elapsed = std::chrono::duration<double>(end - start).count();
+                std::cout << "Compilation time: " << elapsed << " seconds" << std::endl;
+
+                updateRecord(headers, rows, fileName, elapsed, compiler.rows, compiler.cols);
+                
+                // 输出ZDD文件
+                compiler.outputZDD(zdd, outputFile);
+                
             }
-        }    
+        }
+          
         writeCSV(table, headers, rows); // 写入csv文件
 
         std::cout << "All compilations completed. Results saved to " << table << std::endl;
