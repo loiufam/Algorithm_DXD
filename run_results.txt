@@ -1,2 +1,4 @@
-启用DLX算法求解: Eenet
-DLX开始搜索...
+启用DXZ算法求解: grafo337.15
+Time: 0.129364 s
+Solutions: 53010000
+DXZ算法求解结束: grafo337.15
