@@ -1,4 +1,6 @@
-启用DXZ算法求解: grafo337.15
-Time: 0.129364 s
+启用多线程DXD算法求解: grafo337.15
+开始多线程DXD搜索...
+Time: 0.034226 s
 Solutions: 53010000
-DXZ算法求解结束: grafo337.15
+Max Blocks: 13
+多线程DXD算法求解结束: grafo337.15

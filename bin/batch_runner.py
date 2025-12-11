@@ -30,9 +30,9 @@ ALGORITHMS = [
 
 # 多线程算法配置：(算法名, 命令参数, 是否使用ett, 线程数列表, 输出文件名)
 THREAD_ALGORITHMS = [
-    ("DXD_M", ["mdxd", "ig"], True, [4, 8, 16], "DXD_M_threads.csv"),
-    ("IDXD_M", ["mdxd", "ett"], True, [4, 8, 16], "IDXD_M_threads.csv"),
-    ("MDLX", ["mdlx", "ett"], True, [4, 8, 16], "MDLX_threads.csv"),
+    ("DXD_M", ["mdxd", "ig"], True, [2, 4, 8], "DXD_M_threads.csv"),
+    ("IDXD_M", ["mdxd", "ett"], True, [2, 4, 8], "IDXD_M_threads.csv"),
+    # ("MDLX", ["mdlx", "ett"], True, [2, 4, 8], "MDLX_threads.csv"),
 ]
 
 ALGORITHM_GROUPS = [
@@ -383,50 +383,50 @@ def main():
 
     if args.no_parallel:
         # 对每个算法运行测试
-        for algo_name, algo_params, col_id, include_solutions, output_file in ALGORITHMS:
-            print(f"\n{'=' * 60}")
-            print(f"运行算法: {algo_name}")
-            print(f"{'=' * 60}")
-            
-            results_data = {}
-            csv_path = os.path.join(results_folder, output_file)
-            col_id = col_id - 1
-
-            for i, input_file in enumerate(input_files, 1):
-                filename = os.path.basename(input_file)
-                print(f"\n[{i}/{len(input_files)}] 处理文件: {filename}")
-                
-                result = run_algorithm(algo_name, algo_params, input_file, read_mode)
-                results_data[filename] = result
-                
-                # 实时写入结果
-                write_csv_results(csv_path, results_data, col_id, include_solutions)
-
-        # 对每个算法运行测试
-        # for algo_name, algo_params, use_ett, thread_nums, output_file in THREAD_ALGORITHMS:
+        # for algo_name, algo_params, col_id, include_solutions, output_file in ALGORITHMS:
         #     print(f"\n{'=' * 60}")
-        #     print(f"运行算法: {algo_name} (线程数: {thread_nums})")
+        #     print(f"运行算法: {algo_name}")
         #     print(f"{'=' * 60}")
             
         #     results_data = {}
         #     csv_path = os.path.join(results_folder, output_file)
+        #     col_id = col_id - 1
 
         #     for i, input_file in enumerate(input_files, 1):
         #         filename = os.path.basename(input_file)
         #         print(f"\n[{i}/{len(input_files)}] 处理文件: {filename}")
                 
-        #         # 存储该文件在不同线程数下的结果
-        #         results_data[filename] = {}
-                
-        #         for num_threads in thread_nums:
-        #             print(f"  测试 {num_threads} 线程...")
-        #             result = run_algorithm(
-        #                 algo_name, algo_params, input_file, read_mode, num_threads
-        #             )
-        #             results_data[filename][num_threads] = result
+        #         result = run_algorithm(algo_name, algo_params, input_file, read_mode)
+        #         results_data[filename] = result
                 
         #         # 实时写入结果
-        #         write_thread_csv_results(csv_path, results_data, thread_nums)  
+        #         write_csv_results(csv_path, results_data, col_id, include_solutions)
+
+        # 对每个算法运行测试
+        for algo_name, algo_params, use_ett, thread_nums, output_file in THREAD_ALGORITHMS:
+            print(f"\n{'=' * 60}")
+            print(f"运行算法: {algo_name} (线程数: {thread_nums})")
+            print(f"{'=' * 60}")
+            
+            results_data = {}
+            csv_path = os.path.join(results_folder, output_file)
+
+            for i, input_file in enumerate(input_files, 1):
+                filename = os.path.basename(input_file)
+                print(f"\n[{i}/{len(input_files)}] 处理文件: {filename}")
+                
+                # 存储该文件在不同线程数下的结果
+                results_data[filename] = {}
+                
+                for num_threads in thread_nums:
+                    print(f"  测试 {num_threads} 线程...")
+                    result = run_algorithm(
+                        algo_name, algo_params, input_file, read_mode, num_threads
+                    )
+                    results_data[filename][num_threads] = result
+                
+                # 实时写入结果
+                write_thread_csv_results(csv_path, results_data, thread_nums)  
 
     elif args.group_parallel:
         # 按组并行执行
