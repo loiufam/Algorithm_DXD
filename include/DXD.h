@@ -43,7 +43,12 @@ class DanceDNNF : DancingMatrix {
 
         DanceDNNF(const string& file_path, int from, Logger& l, 
                        const bool useIG = false, const bool useETT = false, int pool_size = 8, bool debug = false)
-            : DancingMatrix(file_path, from, useIG, useETT), logger(l), max_threads(pool_size), debug(debug) {
+            : DancingMatrix(file_path, from, useIG, useETT), 
+            logger(l), 
+            max_threads(pool_size), 
+            debug(debug), 
+            num_of_DNNFNodes(0),
+            max_depth(1) {
 
             if(pool_size > 1) {
                 omp_set_num_threads(pool_size); // 设置并行线程数
@@ -68,6 +73,11 @@ class DanceDNNF : DancingMatrix {
         bool isParallelSearch = false; // 是否并行搜索
         double decomposeTime = 0.0;
         bool debug = false;
+
+        // 构建Decision-ZDNNF
+        shared_ptr<DNNFNode> buildDecisionNode(int r, shared_ptr<DNNFNode> lo, shared_ptr<DNNFNode> hi);
+
+        shared_ptr<DNNFNode> buildDecomposableNode(vector<shared_ptr<DNNFNode>>& subDNNFs);
 
         // 多线程DLX
         DNNFResult parallelSearchMDLX(vector<Block>& blocks);
@@ -134,12 +144,18 @@ class DanceDNNF : DancingMatrix {
             startDXD();
         }
 
+        inline size_t gen_key(int r, DNNFNode* x, DNNFNode* y) {
+            return std::hash<int>()(r) ^ (std::hash<int>()(x->label) << 1) ^ (std::hash<int>()(y->label) << 2);
+        }
+
     private:
         // ThreadPool& pool;
         Logger& logger;
         bool controlOUTPUT = false;
         
         // DNNF相关
+        int num_of_DNNFNodes;
+        int max_depth;
         vector<string> cache_input_order; // 记录缓存的输入顺序，便于输出
         std::shared_ptr<DNNFNode> rootDNNF;
         std::unordered_set<size_t> records; // 用于记录无法分解的矩阵状态
@@ -150,6 +166,10 @@ class DanceDNNF : DancingMatrix {
         mutable std::shared_mutex cacheMutex;
         mutable std::shared_mutex recordMutex; // 记录互斥锁
         unordered_map<size_t, shared_ptr<DNNFNode>> C;
+
+        // DNNF Nodes table
+        mutable std::shared_mutex tableMutex;
+        unordered_map<size_t, shared_ptr<DNNFNode>> node_table;
 
         // 轻量级缓存：只存计数
         unordered_map<size_t, DNNFResult> countCache;

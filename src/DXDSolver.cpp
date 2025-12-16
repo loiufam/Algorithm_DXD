@@ -1,5 +1,31 @@
 #include "../include/DXD.h"
 
+shared_ptr<DNNFNode> DanceDNNF::buildDecisionNode(int r, shared_ptr<DNNFNode> lo, shared_ptr<DNNFNode> hi) {
+    if (hi == F) {
+        return lo;
+    }
+
+    std::shared_lock<std::shared_mutex> readLock(tableMutex);
+    size_t key = gen_key(r, lo.get(), hi.get());
+    if (node_table.find(key) != node_table.end()) {
+        return node_table[key];
+    }
+
+    auto decision_node = make_shared<DNNFNode>(NodeType::Decision, lo, hi);
+    node_table[key] = decision_node;
+    if (dxz_mode) {
+        num_of_DNNFNodes += 2;
+    }
+    num_of_DNNFNodes++;
+    return decision_node;
+}
+
+shared_ptr<DNNFNode> DanceDNNF::buildDecomposableNode(vector<shared_ptr<DNNFNode>>& subDNNFs) {
+    auto decompose_node = make_shared<DNNFNode>(NodeType::Decomposed, -3);
+    decompose_node->children = subDNNFs;
+    return decompose_node;
+}
+
 // 串行处理每个子块，组合为 分解 节点
 DNNFResult DanceDNNF::serialSearch(vector<Block>& blocks, int parent_depth) {
 
@@ -73,6 +99,8 @@ DNNFResult DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks, int parent_dep
 // DXD单线程（要体现分解性）
 DNNFResult DanceDNNF::DXD(Block& block, int depth) {
     
+    max_depth = std::max(max_depth, depth);
+
     if(timer.timeBoundBroken()) {
         throw std::runtime_error("Time bound broken");
     }
@@ -134,6 +162,7 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
     // 将choose列下的行节点作为Decision节点加入children
 
     DNNFResult totalResult(0);
+    shared_ptr<DNNFNode> x = F;
 
     coverInBlock(choose->col, block);
     Node* curC = choose->down;
@@ -149,6 +178,8 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
         auto result = DXD(block, depth + 1);
 
         if(!result.isZero()) {
+            auto y = make_shared<DNNFNode>(NodeType::Decision, curR->row, result.count);
+            buildDecisionNode(curR->row, x, y);
             totalResult = totalResult + result;
         }
         
@@ -183,7 +214,7 @@ void DanceDNNF::startDXD() {
         timer.reset();
         timer.markStartTime();
         auto start = std::chrono::high_resolution_clock::now();
-        auto ResSols = DXD(InitBlock, 0);  
+        auto ResSols = DXD(InitBlock, 1);  
         auto end = std::chrono::high_resolution_clock::now();
         timer.markStopTime();
 
@@ -195,6 +226,12 @@ void DanceDNNF::startDXD() {
         logger.logLine("Solutions: " + solutionCount);
     
         if(!controlOUTPUT) logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
+
+        if(dxz_mode) {
+            logger.logLine("ZDD Size: " + std::to_string(num_of_DNNFNodes + max_depth));
+        } else {
+            logger.logLine("DNNF Size: " + std::to_string(num_of_DNNFNodes));
+        }
 
         return;
     } catch (std::runtime_error &e) {
@@ -217,7 +254,7 @@ void DanceDNNF::startMultiThreadDXD() {
         timer.reset();
         timer.markStartTime();
         auto start = std::chrono::high_resolution_clock::now();
-        auto ResSols = DXD(InitBlock, 0);  // 多线程DXD搜索
+        auto ResSols = DXD(InitBlock, 1);  // 多线程DXD搜索
         auto end = std::chrono::high_resolution_clock::now();
         timer.markStopTime();
    
@@ -229,6 +266,11 @@ void DanceDNNF::startMultiThreadDXD() {
         logger.logLine("Solutions: " + solutionCount);
     
         logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
+        if(dxz_mode) {
+            logger.logLine("ZDD Size: " + std::to_string(num_of_DNNFNodes + max_depth));
+        } else {
+            logger.logLine("DNNF Size: " + std::to_string(num_of_DNNFNodes));
+        }
         return;
     } catch (std::runtime_error &e) {
         timeout = true;
