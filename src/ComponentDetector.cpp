@@ -69,11 +69,14 @@ CoverHistory ComponentDetector::DoCover(int c) {
     
     // 使用增量式分解处理边删除
     auto affected_comps = IncDecomposeMatrix(edges_to_delete);
-    
+   
+    history.affected_components = affected_comps;
     // 标记行为非激活
     for (int row : history.removed_rows) {
         row_active[row] = false;
     }
+
+    is_updated = true;
     
     return history;
 }
@@ -85,31 +88,48 @@ void ComponentDetector::DoUncover(const CoverHistory& history) {
     }
 
     unique_lock lock(ett_graph_mutex);
-    // for (auto it = history.added_replacement_edges.rbegin(); 
-    //      it != history.added_replacement_edges.rend(); ++it) {
-    //     int u = it->first, v = it->second;
-    //     unsigned long long key = makeEdgeKey(u, v);
-        
-    //     // 将替代边从树边降级为非树边
-    //     ett->cut(u, v);
-    //     tree_edges.erase(key);
-    //     non_tree_edges.insert(key);
-    // }
-
-    for (auto& edge : history.cut_tree_edges) {
-        int u = edge.first, v = edge.second;
+    // **如果有替代边被添加,需要降级回非树边**
+    for (auto it = history.added_replacement_edges.rbegin(); 
+         it != history.added_replacement_edges.rend(); ++it) {
+        int u = it->first, v = it->second;
         unsigned long long key = makeEdgeKey(u, v);
         
-        // 恢复树边
+        // 将替代边从树边降级为非树边
+        ett->cut(u, v);
+        tree_edges.erase(key);
+        non_tree_edges.insert(key);
+        
+        if (edge_info_map.count(key)) {
+            edge_info_map[key].is_tree = false;
+        }
+    }
+
+    // **恢复树边(逆序恢复)**
+    for (auto it = history.cut_tree_edges.rbegin(); 
+         it != history.cut_tree_edges.rend(); ++it) {
+        int u = it->first, v = it->second;
+        unsigned long long key = makeEdgeKey(u, v);
+        
         ett->link(u, v);
         tree_edges.insert(key);
+        
+        // 恢复edge_info_map
+        if (edge_info_map.count(key)) {
+            edge_info_map[key].is_tree = true;
+        }
     }
     
+    // **恢复非树边**
     for (auto& edge : history.removed_nontree_edges) {
         int u = edge.first, v = edge.second;
         unsigned long long key = makeEdgeKey(u, v);
         
         non_tree_edges.insert(key);
+        
+        // 恢复edge_info_map
+        if (edge_info_map.count(key)) {
+            edge_info_map[key].is_tree = false;
+        }
     }
     lock.unlock();
     
@@ -117,6 +137,9 @@ void ComponentDetector::DoUncover(const CoverHistory& history) {
     for (int row : history.removed_rows) {
         row_active[row] = true;
     }
+
+    is_updated = true;
+    last_affected_components_.clear();
 }
 
 // 增量式分解实现

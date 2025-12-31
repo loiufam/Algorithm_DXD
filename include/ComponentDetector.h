@@ -79,7 +79,9 @@ struct CoverHistory {
     
     // 记录替代边的操作（用于回滚）
     std::vector<std::pair<int, int>> added_replacement_edges;  // 新增的替代边
-    
+   
+    std::vector<std::set<int>> affected_components;
+
     void clear() {
         col = -1;
         removed_rows.clear();
@@ -113,6 +115,8 @@ private:
     std::unordered_map<unsigned long long, EdgeInfo> edge_info_map;  // edge_key -> EdgeInfo
     std::unordered_map<int, ComponentInfo> component_map;            // root -> ComponentInfo
     
+    std::vector<std::set<int>> last_affected_components_; // 缓存最近一次分解的结果
+
     // 获取边所属的连通分量root
     int getEdgeComponentRoot(int u, int v) {
         std::shared_lock lock(ett_graph_mutex);
@@ -340,6 +344,36 @@ private:
     CoverHistory DoCover(int c);
     void DoUncover(const CoverHistory& history);
 
+    std::vector<Block> convertComponentsToBlocks(
+        const std::vector<std::set<int>>& components) {
+        
+        std::vector<Block> blocks;
+        blocks.reserve(components.size());
+        
+        for (const auto& comp_rows : components) {
+            std::set<int> component_cols;
+            std::vector<int> component_rows_vec(comp_rows.begin(), comp_rows.end());
+            
+            for (int r : comp_rows) {
+                auto it = row_to_cols.find(r);
+                if (it != row_to_cols.end()) {
+                    for (int col : it->second) {
+                        if (active_cols.count(col)) {
+                            component_cols.insert(col);
+                        }
+                    }
+                }
+            }
+            
+            if (!component_rows_vec.empty()) {
+                blocks.emplace_back(std::move(component_rows_vec), 
+                                   std::move(component_cols));
+            }
+        }
+        
+        return blocks;
+    }
+
 public:
 
     static thread_local bool is_updated;  // 标识图是否发生更新
@@ -374,9 +408,29 @@ public:
 
     // 在特定行集合内部寻找分块(统一对外接口)
     std::vector<Block> GetBlocks(const std::set<int>& block_rows) {
-        if (!is_updated) return {};
-
-        // 构造当前分量
+        // 如果没有更新,返回上次缓存的结果
+        if (!is_updated) {
+            if (!last_affected_components_.empty()) {
+                return convertComponentsToBlocks(last_affected_components_);
+            }
+            // 如果缓存为空,说明是首次调用,使用detect_blocks
+            return detect_blocks(block_rows);
+        }
+        
+        // 有更新,使用上次Cover操作记录的受影响分量
+        if (!cover_stack_.empty()) {
+            const auto& history = cover_stack_.back();
+            if (!history.affected_components.empty()) {
+                is_updated = false;  // 重置标志
+                last_affected_components_ = history.affected_components;
+                return convertComponentsToBlocks(history.affected_components);
+            }
+        }
+        
+        // 降级到完整检测
+        is_updated = false;
+        auto blocks = detect_blocks(block_rows);
+        return blocks;
 
     }
 
