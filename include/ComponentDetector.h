@@ -21,35 +21,6 @@
 
 using comps = vector<Block>;
 
-// 检测上下文 - 存储某个递归层的检测结果
-struct DetectionContext {
-    set<int> block_rows;                          // 当前块包含的所有行
-    vector<Block> components;                     // 检测到的连通分量
-    unordered_map<int, size_t> row_to_component;  // 行 -> 分量索引的映射
-    int depth;                                    // 递归深度
-    
-    DetectionContext(int d = 0) : depth(d) {}
-    
-    // 根据连通分量结果构建索引
-    void build_index() {
-        row_to_component.clear();
-        for (size_t i = 0; i < components.size(); ++i) {
-            for (int r : components[i].rows) {
-                row_to_component[r] = i;
-            }
-        }
-    }
-};
-
-// 线程上下文：每个线程独立的缓存空间
-struct ThreadContext {
-    uint64_t thread_id;                                       // 线程唯一ID
-    unordered_map<int, shared_ptr<DetectionContext>> cache;   // depth -> context
-    mutable shared_mutex mutex;                               // 保护该线程的缓存
-    
-    ThreadContext(uint64_t id) : thread_id(id) {}
-};
-
 // 并查集实现
 class UnionFind {
 private:
@@ -125,6 +96,36 @@ struct CoverHistory {
 class ComponentDetector {
 private:
 
+    // 边的层级信息(用于分层搜索替代边)
+    struct EdgeInfo {
+        int level;           // 边的层级
+        bool is_tree;        // 是否为树边
+        int component_root;  // 所属连通分量的root节点
+    };
+
+    // 连通分量信息
+    struct ComponentInfo {
+        std::unordered_set<int> vertices;      // 分量中的顶点
+        std::unordered_set<unsigned long long> tree_edges;     // 分量的树边
+        std::unordered_set<unsigned long long> non_tree_edges; // 分量的非树边
+    };
+
+    std::unordered_map<unsigned long long, EdgeInfo> edge_info_map;  // edge_key -> EdgeInfo
+    std::unordered_map<int, ComponentInfo> component_map;            // root -> ComponentInfo
+    
+    // 获取边所属的连通分量root
+    int getEdgeComponentRoot(int u, int v) {
+        std::shared_lock lock(ett_graph_mutex);
+        return ett->getComponentId(u);
+    }
+    
+    // 更新边的分量归属
+    void updateEdgeComponent(unsigned long long key, int new_root) {
+        if (edge_info_map.count(key)) {
+            edge_info_map[key].component_root = new_root;
+        }
+    }
+
     unique_ptr<SplayETT> ett;
 
     // ===============================================================
@@ -146,11 +147,9 @@ private:
     std::unordered_set<unsigned long long> tree_edges;      // ETT中的实际树边
     std::unordered_set<unsigned long long> non_tree_edges;  // 逻辑存在但不在ETT中的边
     
-    // Track which rows are currently active (not removed)
     vector<bool> row_active;               // O(1)查询和修改
     std::unordered_set<int> active_cols;
 
-    // Union-Find 结构（用于快速分组）
     mutable std::vector<int> global_parent;
     mutable bool global_uf_valid = false;
 
@@ -167,10 +166,6 @@ private:
     static thread_local std::vector<Block> block_cache_;
     static thread_local bool need_rebuild; // 用于标记是否需要重新计算
     
-    // 线程上下文管理
-    mutable shared_mutex thread_ctx_mutex;
-    unordered_map<uint64_t, shared_ptr<ThreadContext>> thread_contexts; // thread_id -> context
-    atomic<uint64_t> next_thread_id{1};  // 自增的线程ID分配器
 
     // 添加调试标志
     bool debug_mode = false;
@@ -213,18 +208,11 @@ private:
             }
         }
 
-        // if (debug_mode) {
-        //     debug_log << "initial adjacency list:" << std::endl;
-        // }
-
         vector<pair<int,int>> edges;
         for (int u = 0; u < num_rows; u++) {
             for (int v : adj_list[u]) {
                 if (v > u) {  // 只添加一次
                     edges.push_back({u, v});
-                    // if (debug_mode) {
-                    //     debug_log << " Add Edge (" << u << ", " << v << ")" << std::endl;
-                    // }
                 }
             }
         }
@@ -249,20 +237,41 @@ private:
         std::vector<std::pair<int, int>> tree_edge_list;
         
         for (const auto& [u, v] : edges) {
-            unsigned long long key = makeEdgeKey(u, v);
-            
-            if (unite(u, v)) {
-                // 树边
-                tree_edge_list.push_back({u, v});
-                tree_edges.insert(key);
-            } else {
-                // 非树边
-                non_tree_edges.insert(key);
+                unsigned long long key = makeEdgeKey(u, v);
+                
+                if (unite(u, v)) {
+                    // 树边
+                    tree_edge_list.push_back({u, v});
+                    tree_edges.insert(key);
+                    edge_info_map[key] = {0, true, -1};  // level=0, is_tree=true
+                } else {
+                    // 非树边
+                    non_tree_edges.insert(key);
+                    edge_info_map[key] = {0, false, -1}; // level=0, is_tree=false
+                }
             }
-        }
-
-        ett->batchLink(tree_edge_list);
-        // if (debug_mode) ett->debugPrintEdges(debug_log);
+            
+            ett->batchLink(tree_edge_list);
+            
+            // 初始化连通分量映射
+            for (int i = 0; i < num_rows; i++) {
+                if (row_active[i]) {
+                    int root = ett->getComponentId(i);
+                    component_map[root].vertices.insert(i);
+                }
+            }
+            
+            // 记录每条边所属的分量
+            for (auto& [key, info] : edge_info_map) {
+                int u = static_cast<int>(key >> 32);
+                info.component_root = ett->getComponentId(u);
+                
+                if (info.is_tree) {
+                    component_map[info.component_root].tree_edges.insert(key);
+                } else {
+                    component_map[info.component_root].non_tree_edges.insert(key);
+                }
+            }
     }
 
     void BuildInitialGraphParallel() {
@@ -331,57 +340,9 @@ private:
     CoverHistory DoCover(int c);
     void DoUncover(const CoverHistory& history);
 
-    /**
-     * 在两个连通分量之间寻找替代边
-     * 使用BFS遍历较小的分量，检查是否有边连到另一个分量
-     */
-    bool findReplacementEdge(int comp1_node, int comp2_node, 
-                            int& out_u, int& out_v) {
-        int comp1_id = ett->getComponentId(comp1_node);
-        int comp2_id = ett->getComponentId(comp2_node);
-        
-        if (comp1_id == comp2_id) return false; // 已经连通
-        
-        // BFS遍历comp1，寻找连到comp2的非树边
-        std::queue<int> q;
-        std::unordered_set<int> visited;
-        
-        q.push(comp1_node);
-        visited.insert(comp1_node);
-        
-        while (!q.empty()) {
-            int u = q.front();
-            q.pop();
-            
-            // 检查u的所有邻居
-            for (int v : adj_list[u]) {
-                unsigned long long key = makeEdgeKey(u, v);
-                
-                // 如果是非树边，且连到comp2
-                if (non_tree_edges.count(key) && 
-                    ett->getComponentId(v) == comp2_id) {
-                    out_u = u;
-                    out_v = v;
-                    return true;
-                }
-                
-                // 继续BFS（只通过树边）
-                if (!visited.count(v) && 
-                    tree_edges.count(key) && 
-                    ett->getComponentId(v) == comp1_id) {
-                    visited.insert(v);
-                    q.push(v);
-                }
-            }
-            
-            // 限制搜索规模，避免超时
-            // if (visited.size() > 1000) break;
-        }
-        
-        return false;
-    }
-
 public:
+
+    static thread_local bool is_updated;  // 标识图是否发生更新
 
     ComponentDetector(const int n, const int m);
 
@@ -413,8 +374,10 @@ public:
 
     // 在特定行集合内部寻找分块(统一对外接口)
     std::vector<Block> GetBlocks(const std::set<int>& block_rows) {
-        return incMatrixDecompose(block_rows);
-        // return detect_blocks(block_rows);
+        if (!is_updated) return {};
+
+        // 构造当前分量
+
     }
 
     // 此函数需要独占锁，因为内部有 Splay 操作
@@ -428,69 +391,18 @@ public:
         return ett->getComponentId(u);
     }
 
-    vector<Block> incMatrixDecompose(const set<int>& block_rows);
+    // 增量式分解矩阵 - 返回受影响的连通分量
+    std::vector<std::set<int>> IncDecomposeMatrix(
+        const std::vector<std::pair<int,int>>& deleted_edges);
+    
+    // 在指定分量中查找替代边
+    std::optional<std::pair<int,int>> FindReplacementInComponent(
+        int u, int v, int comp_root);
     
     vector<Block> detect_blocks(const set<int>& block_rows);
 
     // 验证ETT状态的一致性
     void validateETTState(const std::string& operation, int col = -1);
-
-    // 获取或创建线程上下文
-    shared_ptr<ThreadContext> get_thread_context(uint64_t thread_id) {
-        shared_lock lock(thread_ctx_mutex);
-        auto it = thread_contexts.find(thread_id);
-        if (it != thread_contexts.end()) {
-            return it->second;
-        }
-        
-        // 需要创建新的线程上下文
-        lock.unlock();
-        unique_lock write_lock(thread_ctx_mutex);
-        
-        auto ctx = make_shared<ThreadContext>(thread_id);
-        thread_contexts[thread_id] = ctx;
-        return ctx;
-    }
-
-    // 从父线程继承初始缓存（用于子线程启动时）
-    // block_index: 子线程要处理的分块索引
-    void inherit_context(uint64_t parent_thread_id, uint64_t child_thread_id, 
-                        int depth, size_t block_index) {
-        // 获取父线程的上下文
-        auto parent_ctx = get_thread_context(parent_thread_id);
-        shared_lock parent_lock(parent_ctx->mutex);
-        
-        auto it = parent_ctx->cache.find(depth);
-        if (it == parent_ctx->cache.end()) {
-            throw runtime_error("inherit_context: parent depth not found");
-        }
-
-        auto parent_context = it->second;
-
-        parent_lock.unlock();
-        
-        // 为子线程创建新的上下文，只包含它要处理的那个分块
-        auto child_det_ctx = make_shared<DetectionContext>(depth);
-        
-        // 子线程的block_rows是单个分块的行
-        const auto& target_block = parent_context->components[block_index];
-        child_det_ctx->block_rows = target_block.rows;
-        
-        // 子线程的components只有一个元素：它要处理的分块
-        child_det_ctx->components = {target_block};
-        
-        child_det_ctx->build_index();
-        // 存入子线程的缓存
-        auto child_ctx = get_thread_context(child_thread_id);
-        unique_lock child_lock(child_ctx->mutex);
-        child_ctx->cache[depth] = child_det_ctx;
-    }
-
-    // 清理整个线程的缓存（线程结束时调用）
-    void cleanup_thread(uint64_t thread_id) {
-        unique_lock lock(thread_ctx_mutex);
-        thread_contexts.erase(thread_id);
-    }
 
 };
 
