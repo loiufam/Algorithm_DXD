@@ -20,12 +20,12 @@ RESULTS_FOLDER = "../results/Main"
 # 算法配置：(算法名, 命令参数, 列ID, 是否使用ett, 输出文件名)
 ALGORITHMS = [
     ("IDXD_S", ["dxd", "ett"], 9, True, "IDXD_S_results.csv"),
-    # ("IDXD_M", ["mdxd", "ett"], 10, True, "IDXD_M_results.csv"),
+    ("IDXD_M", ["mdxd", "ett"], 10, True, "IDXD_M_results.csv"),
     # ("DXD_S", ["dxd", "ig"], 7, True, "DXD_S_results.csv"),
     # ("DXD_M", ["mdxd", "ig"], 8, True, "DXD_M_results.csv"),
     # ("MDLX", ["mdlx", "ett"], 11, True, "MDLX_results.csv"),
     # ("DLX", ["dlx"], 4, True, "DLX_results.csv"),
-    ("DXZ", ["dxz"], 5, True, "DXZ_results.csv"),
+    # ("DXZ", ["dxz"], 5, True, "DXZ_results.csv"),
 ]
 
 # 多线程算法配置：(算法名, 命令参数, 是否使用ett, 线程数列表, 输出文件名)
@@ -348,10 +348,10 @@ def main():
                         help=f'结果输出文件夹路径，默认为{RESULTS_FOLDER}')
     parser.add_argument('-f', '--list_file', type=str, default='',
                         help='包含要处理的特定文件列表的文本文件路径（可选）')
-    parser.add_argument('-w', '--workers', type=int, default=None,
+    parser.add_argument('-w', '--workers', type=int, default=8,
                         help='并行工作进程数，默认为算法数量和CPU核心数的较小值')
-    parser.add_argument('--no-parallel', action='store_true',
-                        help='禁用并行处理，顺序执行所有算法')
+    parser.add_argument('--parallel', action='store_true',
+                    help='启用并行处理（默认顺序执行）')
     parser.add_argument('--group-parallel', action='store_true',
                         help='按组并行执行（推荐，可以更好地控制资源）')
     
@@ -397,7 +397,7 @@ def main():
 
     start_time = datetime.now()
 
-    if args.no_parallel:
+    if not args.parallel:
         # 对每个算法运行测试
         for algo_name, algo_params, col_id, include_solutions, output_file in ALGORITHMS:
             print(f"\n{'=' * 60}")
