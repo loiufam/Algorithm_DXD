@@ -166,7 +166,6 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
 
     coverInBlock(choose->col, block);
     Node* curC = choose->down;
-
     while(curC != choose) {
         
         Node* curR = curC->right;

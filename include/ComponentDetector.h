@@ -18,8 +18,71 @@
 #include <optional>
 #include <cstdint>
 #include <stdexcept>
+#include <algorithm>
 
 using comps = vector<Block>;
+
+// 分层非树边存储结构
+struct LayeredNonTreeEdges {
+    std::vector<std::unordered_set<unsigned long long>> levels;  // levels[i] = 第i层的非树边集合
+    std::unordered_map<unsigned long long, int> edge_to_level;   // 边 -> 当前所在层级
+    int max_level;
+    
+    LayeredNonTreeEdges(int max_lvl) : max_level(max_lvl) {
+        levels.resize(max_lvl + 1);
+    }
+    
+    // 添加边到指定层级
+    void addEdge(unsigned long long key, int level) {
+        if (level < 0 || level > max_level) return;
+        levels[level].insert(key);
+        edge_to_level[key] = level;
+    }
+    
+    // 删除边
+    void removeEdge(unsigned long long key) {
+        auto it = edge_to_level.find(key);
+        if (it != edge_to_level.end()) {
+            int level = it->second;
+            levels[level].erase(key);
+            edge_to_level.erase(it);
+        }
+    }
+    
+    // 降级边到下一层
+    bool demoteEdge(unsigned long long key) {
+        auto it = edge_to_level.find(key);
+        if (it == edge_to_level.end()) return false;
+        
+        int curr_level = it->second;
+        if (curr_level <= 0) return false;  // 已经在最底层
+        
+        levels[curr_level].erase(key);
+        levels[curr_level - 1].insert(key);
+        edge_to_level[key] = curr_level - 1;
+        return true;
+    }
+    
+    // 获取边的当前层级
+    int getLevel(unsigned long long key) const {
+        auto it = edge_to_level.find(key);
+        return (it != edge_to_level.end()) ? it->second : -1;
+    }
+    
+    // 获取指定层级的所有边
+    const std::unordered_set<unsigned long long>& getEdgesAtLevel(int level) const {
+        static const std::unordered_set<unsigned long long> empty_set;
+        if (level < 0 || level > max_level) return empty_set;
+        return levels[level];
+    }
+    
+    void clear() {
+        for (auto& level : levels) {
+            level.clear();
+        }
+        edge_to_level.clear();
+    }
+};
 
 // 并查集实现
 class UnionFind {
@@ -68,26 +131,40 @@ public:
     }
 };
 
-// 用于保存 Cover 操作的历史记录，由调用线程持有
-struct CoverHistory {
-    int col;                                      
-    std::vector<int> removed_rows;                
+// 连通分量信息（线程私有）
+struct ComponentInfo {
+    std::unordered_set<int> vertices;
+    std::unordered_set<unsigned long long> tree_edges;
+    std::unique_ptr<LayeredNonTreeEdges> non_tree_edges;
+    int tree_root;
     
-    // 分别记录树边和非树边的操作
-    std::vector<std::pair<int, int>> cut_tree_edges;     // 被cut的树边
-    std::vector<std::pair<int, int>> removed_nontree_edges; // 被删除的非树边
-    
-    // 记录替代边的操作（用于回滚）
-    std::vector<std::pair<int, int>> added_replacement_edges;  // 新增的替代边
-   
-    std::vector<std::set<int>> affected_components;
+    ComponentInfo() : tree_root(-1) {}
+};
 
+// 用于保存 Cover 操作的历史记录（线程私有）
+struct CoverHistory {
+    int col;
+    std::set<int> prev_rows;  // Cover前的行集合
+    std::vector<int> removed_rows;  // 被删除的行
+    
+    // ETT操作记录（用于回滚）
+    std::vector<std::pair<int, int>> cut_tree_edges;
+    std::vector<std::pair<int, int>> removed_nontree_edges;
+    std::vector<std::pair<int, int>> added_replacement_edges;
+    
+    // 连通分量信息
+    std::vector<std::set<int>> prev_components;  // Cover前的连通分量
+    std::vector<std::set<int>> new_components;   // Cover后的连通分量
+    
     void clear() {
         col = -1;
+        prev_rows.clear();
         removed_rows.clear();
         cut_tree_edges.clear();
         removed_nontree_edges.clear();
         added_replacement_edges.clear();
+        prev_components.clear();
+        new_components.clear();
     }
     
     bool isEmpty() const {
@@ -97,7 +174,6 @@ struct CoverHistory {
 
 class ComponentDetector {
 private:
-
     // 边的层级信息(用于分层搜索替代边)
     struct EdgeInfo {
         int level;           // 边的层级
@@ -105,30 +181,24 @@ private:
         int component_root;  // 所属连通分量的root节点
     };
 
-    // 连通分量信息
-    struct ComponentInfo {
-        std::unordered_set<int> vertices;      // 分量中的顶点
-        std::unordered_set<unsigned long long> tree_edges;     // 分量的树边
-        std::unordered_set<unsigned long long> non_tree_edges; // 分量的非树边
-    };
-
     std::unordered_map<unsigned long long, EdgeInfo> edge_info_map;  // edge_key -> EdgeInfo
-    std::unordered_map<int, ComponentInfo> component_map;            // root -> ComponentInfo
+    ComponentInfo component_info;  // 单个分量信息（线程私有，无需锁）
+    // std::unordered_map<int, ComponentInfo> component_map;            // root -> ComponentInfo
     
-    std::vector<std::set<int>> last_affected_components_; // 缓存最近一次分解的结果
+    // std::vector<std::set<int>> last_affected_components_; // 缓存最近一次分解的结果
 
     // 获取边所属的连通分量root
-    int getEdgeComponentRoot(int u, int v) {
-        std::shared_lock lock(ett_graph_mutex);
-        return ett->getComponentId(u);
-    }
+    // int getEdgeComponentRoot(int u, int v) {
+    //     std::shared_lock lock(ett_graph_mutex);
+    //     return ett->getComponentId(u);
+    // }
     
     // 更新边的分量归属
-    void updateEdgeComponent(unsigned long long key, int new_root) {
-        if (edge_info_map.count(key)) {
-            edge_info_map[key].component_root = new_root;
-        }
-    }
+    // void updateEdgeComponent(unsigned long long key, int new_root) {
+    //     if (edge_info_map.count(key)) {
+    //         edge_info_map[key].component_root = new_root;
+    //     }
+    // }
 
     unique_ptr<SplayETT> ett;
 
@@ -140,11 +210,10 @@ private:
 
     // 列到行的映射（静态，初始化后不变）
     std::unordered_map<int, std::vector<int>> col_to_rows;
-
-    // 动态状态
     std::unordered_map<int, std::unordered_set<int>> row_to_cols;
+
     // 边与列的映射：Edge(u, v) -> {Columns supporting this edge}
-    std::map<std::pair<int, int>, std::unordered_set<int>> edge_columns;
+    // std::map<std::pair<int, int>, std::unordered_set<int>> edge_columns;
 
     // 图的邻接表
     vector<unordered_set<int>> adj_list;  // adj_list[row] = {邻居}
@@ -154,22 +223,19 @@ private:
     vector<bool> row_active;               // O(1)查询和修改
     std::unordered_set<int> active_cols;
 
-    mutable std::vector<int> global_parent;
-    mutable bool global_uf_valid = false;
-
     // 锁机制
     // ett_mutex 保护 ETT 实例以及 edge_columns 映射，因为它们是强耦合的
-    mutable std::shared_mutex ett_graph_mutex; 
+    // mutable std::shared_mutex ett_graph_mutex; 
     
     // 保护矩阵状态 (row_to_cols, active_rows 等)
-    mutable std::shared_mutex state_mutex;
+    // mutable std::shared_mutex state_mutex;
 
     // 线程私有的历史栈
     static thread_local std::vector<CoverHistory> cover_stack_;
 
-    static thread_local std::vector<Block> block_cache_;
-    static thread_local bool need_rebuild; // 用于标记是否需要重新计算
-    
+    // 线程私有的状态追踪（无需锁）
+    static thread_local std::set<int> current_rows_;      // 当前活跃行集合
+    static thread_local std::vector<std::set<int>> current_components_;  // 当前连通分量
 
     // 添加调试标志
     bool debug_mode = false;
@@ -199,203 +265,38 @@ private:
         adj_list[v].erase(u);
     }
 
-    void BuildInitialGraph() {
-        
-        // 构建邻接表和 ETT
-        for (const auto& [col, rows] : col_to_rows) {
-            if (rows.size() < 2) continue;
-            
-            // 选择第一个行作为中心
-            int center = rows[0];
-            for (size_t i = 1; i < rows.size(); i++) {
-                addEdgeToAdjList(center, rows[i]);
-            }
-        }
-
-        vector<pair<int,int>> edges;
-        for (int u = 0; u < num_rows; u++) {
-            for (int v : adj_list[u]) {
-                if (v > u) {  // 只添加一次
-                    edges.push_back({u, v});
-                }
-            }
-        }
-
-        std::cout << "Initial ETT graph built with " << edges.size() << " edges." << std::endl;
-
-        std::vector<int> parent(num_rows);
-        for (int i = 0; i < num_rows; i++) parent[i] = i;
-        
-        std::function<int(int)> find = [&](int x) {
-            return parent[x] == x ? x : (parent[x] = find(parent[x]));
-        };
-        
-        auto unite = [&](int x, int y) -> bool {
-            x = find(x); y = find(y);
-            if (x == y) return false;
-            parent[y] = x;
-            return true;
-        };
-        
-        // 分类边
-        std::vector<std::pair<int, int>> tree_edge_list;
-        
-        for (const auto& [u, v] : edges) {
-                unsigned long long key = makeEdgeKey(u, v);
-                
-                if (unite(u, v)) {
-                    // 树边
-                    tree_edge_list.push_back({u, v});
-                    tree_edges.insert(key);
-                    edge_info_map[key] = {0, true, -1};  // level=0, is_tree=true
-                } else {
-                    // 非树边
-                    non_tree_edges.insert(key);
-                    edge_info_map[key] = {0, false, -1}; // level=0, is_tree=false
-                }
-            }
-            
-            ett->batchLink(tree_edge_list);
-            
-            // 初始化连通分量映射
-            for (int i = 0; i < num_rows; i++) {
-                if (row_active[i]) {
-                    int root = ett->getComponentId(i);
-                    component_map[root].vertices.insert(i);
-                }
-            }
-            
-            // 记录每条边所属的分量
-            for (auto& [key, info] : edge_info_map) {
-                int u = static_cast<int>(key >> 32);
-                info.component_root = ett->getComponentId(u);
-                
-                if (info.is_tree) {
-                    component_map[info.component_root].tree_edges.insert(key);
-                } else {
-                    component_map[info.component_root].non_tree_edges.insert(key);
-                }
-            }
+    // 计算分层的最大层级
+    int calculateMaxLevel(int num_vertices) {
+        if (num_vertices <= 1) return 0;
+        return static_cast<int>(std::ceil(std::log2(num_vertices)));
     }
 
-    void BuildInitialGraphParallel() {
-        const int num_threads = std::thread::hardware_concurrency();
-        
-        // 将列分成多个批次
-        std::vector<std::vector<std::pair<int, std::vector<int>>>> batches(num_threads);
-        int idx = 0;
-        for (const auto& col_rows : col_to_rows) {
-            batches[idx % num_threads].push_back(col_rows);
-            idx++;
-        }
-        
-        // 每个线程的局部边集合
-        std::vector<std::vector<std::pair<int,int>>> thread_edges(num_threads);
-        std::vector<std::unordered_set<uint64_t>> thread_edge_sets(num_threads);
-        
-        // 并行处理
-        std::vector<std::thread> threads;
-        for (int t = 0; t < num_threads; t++) {
-            threads.emplace_back([&, t]() {
-                auto& local_edges = thread_edges[t];
-                auto& local_edge_set = thread_edge_sets[t];
-                
-                for (const auto& [col, rows] : batches[t]) {
-                    for (size_t i = 0; i < rows.size(); i++) {
-                        for (size_t j = i + 1; j < rows.size(); j++) {
-                            int u = rows[i], v = rows[j];
-                            if (u > v) std::swap(u, v);
-                            
-                            uint64_t edge_key = (static_cast<uint64_t>(u) << 32) | v;
-                            if (local_edge_set.insert(edge_key).second) {
-                                local_edges.push_back({u, v});
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-        // 等待所有线程完成
-        for (auto& thread : threads) {
-            thread.join();
-        }
-        
-        // 合并结果（需要再次去重）
-        std::unordered_set<uint64_t> final_edge_set;
-        std::vector<std::pair<int,int>> edges;
-        
-        for (int t = 0; t < num_threads; t++) {
-            for (const auto& [u, v] : thread_edges[t]) {
-                uint64_t edge_key = (static_cast<uint64_t>(u) << 32) | v;
-                if (final_edge_set.insert(edge_key).second) {
-                    edges.push_back({u, v});
-                    adj_list[u].insert(v);
-                    adj_list[v].insert(u);
-                }
-            }
-        }
-        
-        std::cout << "Initial ETT graph built with " << edges.size() << " edges (parallel)." << std::endl;
-        ett->batchLink(edges);
-    }
+    // BFS构建生成森林
+    void BuildSpanningForest();
 
-    // 内部cover/uncover操作
-    CoverHistory DoCover(int c);
-    void DoUncover(const CoverHistory& history);
+    // 减量式生成连通分量 - 返回受影响的连通分量
+    std::vector<std::set<int>> DecGenerateCC(
+        const std::set<int>& deleted_vertices,
+        const std::set<int>& prev_component);
+    
+    // 在指定分量中查找替代边
+    // std::optional<std::pair<int,int>> FindReplacementInComponent(
+    //     int u, int v, int comp_root);
 
-    std::vector<Block> convertComponentsToBlocks(
-        const std::vector<std::set<int>>& components) {
-        
-        std::vector<Block> blocks;
-        blocks.reserve(components.size());
-        
-        for (const auto& comp_rows : components) {
-            std::set<int> component_cols;
-            std::vector<int> component_rows_vec(comp_rows.begin(), comp_rows.end());
-            
-            for (int r : comp_rows) {
-                auto it = row_to_cols.find(r);
-                if (it != row_to_cols.end()) {
-                    for (int col : it->second) {
-                        if (active_cols.count(col)) {
-                            component_cols.insert(col);
-                        }
-                    }
-                }
-            }
-            
-            if (!component_rows_vec.empty()) {
-                blocks.emplace_back(std::move(component_rows_vec), 
-                                   std::move(component_cols));
-            }
-        }
-        
-        return blocks;
-    }
+    // 分层查找替代边 - 从高层向低层查找
+    std::optional<std::pair<int,int>> FindReplacementLayered(int comp_u, int comp_v);
+
+    std::vector<Block> convertComponentsToBlocks(const std::vector<std::set<int>>& components);
 
 public:
 
-    static thread_local bool is_updated;  // 标识图是否发生更新
+    // static thread_local bool is_updated;
 
     ComponentDetector(const int n, const int m);
-
-    void Initialize(const std::unordered_map<int, std::vector<int>>& col_rows_map){
-        col_to_rows = col_rows_map;
-       
-        // 构建 row_to_cols
-        // if (debug_mode) debug_log << "printing intitial matrix state:" << std::endl;
-        for (const auto& [col, rows] : col_to_rows) {
-            for (int row : rows) {
-                row_to_cols[row].insert(col);
-            }
-        }
-        // if (debug_mode) debug_log << "=== End of initial matrix state ===" << std::endl;
-        BuildInitialGraph();
-    };
-  
     ~ComponentDetector() = default;
 
+    void Initialize(const std::unordered_map<int, std::vector<int>>& col_rows_map);
+  
     void enableDebug(const std::string& log_file = "../logs/ett_debug.log") {
         debug_mode = true;
         debug_log.open(log_file);
@@ -403,60 +304,21 @@ public:
     }
 
     void Cover(int c);
-    
     void Uncover();
 
     // 在特定行集合内部寻找分块(统一对外接口)
-    std::vector<Block> GetBlocks(const std::set<int>& block_rows) {
-        // 如果没有更新,返回上次缓存的结果
-        if (!is_updated) {
-            if (!last_affected_components_.empty()) {
-                return convertComponentsToBlocks(last_affected_components_);
-            }
-            // 如果缓存为空,说明是首次调用,使用detect_blocks
-            return detect_blocks(block_rows);
-        }
-        
-        // 有更新,使用上次Cover操作记录的受影响分量
-        if (!cover_stack_.empty()) {
-            const auto& history = cover_stack_.back();
-            if (!history.affected_components.empty()) {
-                is_updated = false;  // 重置标志
-                last_affected_components_ = history.affected_components;
-                return convertComponentsToBlocks(history.affected_components);
-            }
-        }
-        
-        // 降级到完整检测
-        is_updated = false;
-        auto blocks = detect_blocks(block_rows);
-        return blocks;
-
-    }
-
-    // 此函数需要独占锁，因为内部有 Splay 操作
+    std::vector<Block> GetBlocks(const std::set<int>& block_rows);
+  
+    // 工具函数
     bool IsConnected(int u, int v) const {
-        std::unique_lock<std::shared_mutex> lock(ett_graph_mutex);
         return ett->connected(u, v);
     }
 
     int GetComponentId(int u) const {
-        std::shared_lock<std::shared_mutex> lock(ett_graph_mutex);
         return ett->getComponentId(u);
     }
 
-    // 增量式分解矩阵 - 返回受影响的连通分量
-    std::vector<std::set<int>> IncDecomposeMatrix(
-        const std::vector<std::pair<int,int>>& deleted_edges);
-    
-    // 在指定分量中查找替代边
-    std::optional<std::pair<int,int>> FindReplacementInComponent(
-        int u, int v, int comp_root);
-    
     vector<Block> detect_blocks(const set<int>& block_rows);
-
-    // 验证ETT状态的一致性
-    void validateETTState(const std::string& operation, int col = -1);
 
 };
 
