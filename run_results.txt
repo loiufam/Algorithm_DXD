@@ -1,7 +1,7 @@
-启用多线程DXD算法求解: bell-09
+启用多线程DXD算法求解: grafo337.15
 开始多线程DXD搜索...
-Time: 0.109405 s
-Solutions: 21147
-Max Blocks: 1
-DNNF Size: 511
-多线程DXD算法求解结束: bell-09
+Time: 0.068565 s
+Solutions: 53010000
+Max Blocks: 13
+DNNF Size: 272
+多线程DXD算法求解结束: grafo337.15

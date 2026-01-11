@@ -20,9 +20,9 @@ RESULTS_FOLDER = "../results/Main"
 # 算法配置：(算法名, 命令参数, 列ID, 是否使用ett, 输出文件名)
 ALGORITHMS = [
     # ("IDXD_S", ["dxd", "ett"], 9, True, "IDXD_S_results.csv"),
-    # ("IDXD_M", ["mdxd", "ett"], 10, True, "IDXD_M_results.csv"),
-    ("DXD_S", ["dxd", "ig"], 7, True, "DXD_S_results.csv"),
-    ("DXD_M", ["mdxd", "ig"], 8, True, "DXD_M_results.csv"),
+    ("IDXD_M", ["mdxd", "ett"], 10, True, "IDXD_M_results_1-10.csv"),
+    # ("DXD_S", ["dxd", "ig"], 7, True, "DXD_S_results.csv"),
+    # ("DXD_M", ["mdxd", "ig"], 8, True, "DXD_M_results.csv"),
     # ("MDLX", ["mdlx", "ett"], 11, True, "MDLX_results.csv"),
     # ("DLX", ["dlx"], 4, True, "DLX_results.csv"),
     # ("DXZ", ["dxz"], 5, True, "DXZ_results.csv"),
