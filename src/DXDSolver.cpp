@@ -14,7 +14,7 @@ shared_ptr<DNNFNode> DanceDNNF::buildDecisionNode(int r, shared_ptr<DNNFNode> lo
     auto decision_node = make_shared<DNNFNode>(NodeType::Decision, lo, hi);
     node_table[key] = decision_node;
     if (dxz_mode) {
-        num_of_DNNFNodes += 2;
+        num_of_DNNFNodes += 1;
     }
     num_of_DNNFNodes++;
     return decision_node;
