@@ -1,9 +1,9 @@
 #include "../include/ComponentDetector.h"
 
 // 定义 thread_local 静态成员
-thread_local std::vector<CoverHistory> ComponentDetector::cover_stack_;
-thread_local std::set<int> ComponentDetector::current_rows_;
-thread_local std::vector<std::set<int>> ComponentDetector::current_components_;
+// thread_local std::vector<CoverHistory> ComponentDetector::cover_stack_;
+// thread_local std::set<int> ComponentDetector::current_rows_;
+// thread_local std::vector<std::set<int>> ComponentDetector::current_components_;
 
 ComponentDetector::ComponentDetector(const int n, const int m) 
     : num_rows(n),  num_cols(m) {
@@ -29,52 +29,19 @@ void ComponentDetector::Initialize(const std::unordered_map<int, std::vector<int
             row_to_cols[row].insert(col);
         }
         
-        // 构建邻接表（星形连接）
-        if (rows.size() >= 2) {
-            int center = rows[0];
-            for (size_t i = 1; i < rows.size(); i++) {
-                addEdgeToAdjList(center, rows[i]);
+        for (size_t i = 0; i < rows.size(); ++i) {
+            for (size_t j = i + 1; j < rows.size(); ++j) {
+                addEdgeToAdjList(rows[i], rows[j]);
             }
         }
     }
     
     // BFS构建生成森林
     BuildSpanningForest();
-    
-    // 初始化线程私有状态
-    current_rows_.clear();
-    for (int i = 0; i < num_rows; i++) {
-        if (row_active[i]) {
-            current_rows_.insert(i);
-        }
-    }
-    
-    // 初始化当前连通分量
-    if (component_info.vertices.size() == static_cast<size_t>(num_rows)) {
-        // 单分量
-        current_components_.clear();
-        current_components_.push_back(current_rows_);
-    }
 }
 
 void ComponentDetector::BuildSpanningForest() {
     std::vector<bool> visited(num_rows, false);
-    
-    // 收集所有边
-    std::vector<std::pair<int, int>> all_edges;
-    for (int u = 0; u < num_rows; u++) {
-        if (!row_active[u]) continue;
-        for (int v : adj_list[u]) {
-            if (v > u && row_active[v]) {
-                all_edges.push_back({u, v});
-            }
-        }
-    }
-    
-    std::cout << "Total edges in graph: " << all_edges.size() << std::endl;
-    
-    // 用于记录找到的连通分量
-    std::vector<std::set<int>> initial_components;
     
     // 对每个连通分量进行BFS
     for (int start = 0; start < num_rows; start++) {
@@ -95,7 +62,6 @@ void ComponentDetector::BuildSpanningForest() {
             q.pop();
             
             for (int v : adj_list[u]) {
-                if (!row_active[v]) continue;
                 
                 unsigned long long key = makeEdgeKey(u, v);
                 all_edges_in_comp.insert(key);
@@ -104,384 +70,240 @@ void ComponentDetector::BuildSpanningForest() {
                     visited[v] = true;
                     component_vertices.push_back(v);
                     tree_edge_list.push_back({u, v});
+                    tree_edges.insert(key);
                     q.push(v);
                 }
             }
         }
         
-        // 记录这个连通分量
-        std::set<int> comp_set(component_vertices.begin(), component_vertices.end());
-        initial_components.push_back(comp_set);
-        
-        // 计算该分量的最大层级
-        int max_level = calculateMaxLevel(component_vertices.size());
-        
         // Link树边到ETT
         ett->batchLink(tree_edge_list);
+
+        // 获取连通分量ID
+        int comp_id = ett->getComponentId(start);
         
-        // 更新树边信息
-        for (const auto& [u, v] : tree_edge_list) {
-            unsigned long long key = makeEdgeKey(u, v);
-            tree_edges.insert(key);
-            edge_info_map[key] = {max_level, true};
-        }
+        // 创建连通分量信息
+        ComponentInfo comp_info;
+        comp_info.vertices = std::unordered_set<int>(
+            component_vertices.begin(), 
+            component_vertices.end()
+        );
         
+        int max_level = calculateMaxLevel(component_vertices.size());
+        comp_info.non_tree_edges = std::make_unique<LayeredNonTreeEdges>(max_level);
+                
         // 识别非树边并添加到最高层
         for (unsigned long long key : all_edges_in_comp) {
             if (tree_edges.find(key) == tree_edges.end()) {
-                non_tree_edges.insert(key);
-                edge_info_map[key] = {max_level, false};
+                comp_info.non_tree_edges->addEdge(key, max_level);
             }
         }
+
+        component_map[comp_id] = std::move(comp_info);
         
-        // std::cout << "Component starting from " << start << ": " 
-        //           << component_vertices.size() << " vertices, "
-        //           << tree_edge_list.size() << " tree edges, "
-        //           << (all_edges_in_comp.size() - tree_edge_list.size()) << " non-tree edges, "
-        //           << "max level = " << max_level << std::endl;
     }
-    
-    // 如果只有一个分量，初始化component_info
-    if (initial_components.size() == 1) {
-        component_info.tree_root = 0;
-        component_info.vertices = std::unordered_set<int>(
-            initial_components[0].begin(), 
-            initial_components[0].end()
-        );
-        
-        int max_level = calculateMaxLevel(component_info.vertices.size());
-        component_info.non_tree_edges = std::make_unique<LayeredNonTreeEdges>(max_level);
-        
-        // 将所有非树边加入分层结构
-        for (unsigned long long key : non_tree_edges) {
-            component_info.non_tree_edges->addEdge(key, max_level);
-        }
-        
-        for (unsigned long long key : tree_edges) {
-            component_info.tree_edges.insert(key);
-        }
-        
-        current_components_ = initial_components;
-    } else {
-        // 多分量情况，current_components_会在GetBlocks首次调用时设置
-        current_components_ = initial_components;
-    }
-    
-    // std::cout << "Initial forest has " << initial_components.size() 
-    //           << " connected component(s)" << std::endl;
+
 }
 
 void ComponentDetector::Cover(int c) {
-    CoverHistory history;
-    history.col = c;
-    
-    // 保存Cover前的状态
-    history.prev_rows = current_rows_;
-    history.prev_components = current_components_;
-    
-    // 收集要删除的行
     auto it = col_to_rows.find(c);
-    if (it != col_to_rows.end()) {
-        const auto& rows = it->second;
-        for (int row : rows) {
-            if (row_active[row]) {
-                history.removed_rows.push_back(row);
-            }
+    if (it == col_to_rows.end()) return;
+    
+    const auto& rows = it->second;
+    for (int row : rows) {
+        if (row_active[row]) {
+            row_active[row] = false;
         }
     }
-    
-    // 标记行为非激活（不执行增量算法，留到GetBlocks）
-    for (int row : history.removed_rows) {
-        row_active[row] = false;
-        current_rows_.erase(row);
-    }
-    
-    // 压入历史栈
-    cover_stack_.push_back(std::move(history));
 }
 
 void ComponentDetector::Uncover() {
-    if (cover_stack_.empty()) {
-        throw std::runtime_error("Cannot uncover: cover stack is empty");
+    // 仅恢复行的激活状态（从历史记录中）
+    if (operation_stack.empty()) {
+        throw std::runtime_error("Cannot uncover: operation stack is empty");
     }
     
-    CoverHistory history = std::move(cover_stack_.back());
-    cover_stack_.pop_back();
+    EdgeOperationHistory& history = operation_stack.back();
     
-    if (history.isEmpty()) return;
+    // 恢复所有被删除边涉及的行
+    for (const auto& [u, v] : history.deleted_edges) {
+        if (u >= 0 && u < num_rows) row_active[u] = true;
+        if (v >= 0 && v < num_rows && v != u) row_active[v] = true;
+    }
+}
+
+void ComponentDetector::DeleteEdges(const std::set<int>& deleted_rows) {
+    if (deleted_rows.empty()) return;
     
-    // 恢复替代边（降级回非树边）
-    for (auto it = history.added_replacement_edges.rbegin(); 
-         it != history.added_replacement_edges.rend(); ++it) {
-        int u = it->first, v = it->second;
+    
+    // 收集所有涉及删除顶点的边
+    std::vector<std::pair<int, int>> edges_to_delete;
+    std::unordered_set<unsigned long long> processed_edges;
+    
+    for (int u : deleted_rows) {
+        row_active[u] = false;
+        for (int v : adj_list[u]) {
+            if (!row_active[v] || deleted_rows.count(v)) continue;
+            
+            unsigned long long key = makeEdgeKey(u, v);
+            if (processed_edges.count(key)) continue;
+            processed_edges.insert(key);
+            
+            // history.deleted_edges.push_back({u, v});
+            edges_to_delete.push_back({u, v});
+        }
+    }
+    
+    // std::unique_lock<std::shared_mutex> lock(access_ett_mutex);
+
+    // 按顺序处理每条边
+    for (const auto& [u, v] : edges_to_delete) {
         unsigned long long key = makeEdgeKey(u, v);
         
-        ett->cut(u, v);
-        tree_edges.erase(key);
-        non_tree_edges.insert(key);
+        // 确定活跃顶点和分量ID, 须确保有一端是活跃的
+        int active_vertex = deleted_rows.count(u) ? v : u;
+        int component_id = ett->getComponentId(active_vertex);
         
-        if (edge_info_map.count(key)) {
-            EdgeInfo& info = edge_info_map[key];
-            info.is_tree = false;
+        if (ett->isTreeEdge(u, v)) {
+            // 删除树边
+            ett->cut(u, v);
             
-            if (component_info.non_tree_edges) {
-                component_info.non_tree_edges->addEdge(key, info.level);
+            // 查找替代边
+            int new_comp_v_vertex = deleted_rows.count(u) ? u : v;
+            
+            // 只有当另一端也是活跃顶点时才查找替代边
+            if (!deleted_rows.count(new_comp_v_vertex)) {
+                int new_comp_u = ett->getComponentId(active_vertex);
+                int new_comp_v = ett->getComponentId(new_comp_v_vertex);
+                
+                if (new_comp_u != new_comp_v && component_map.count(component_id)) {
+                    auto replacement = FindReplacementLayered(component_map[component_id]);
+                    
+                    if (replacement.has_value()) {
+
+                        int ru = replacement->first;
+                        int rv = replacement->second;
+                        unsigned long long repl_key = makeEdgeKey(ru, rv);
+                        
+                        // 升级为树边
+                        ett->link(ru, rv);
+                        // tree_edges.insert(repl_key);
+                        // non_tree_edges.erase(repl_key);
+ 
+                        
+                        if (component_map.count(component_id)) {
+                            // component_map[component_id].tree_edges.insert(repl_key);
+                            if (component_map[component_id].non_tree_edges) {
+                                component_map[component_id].non_tree_edges->removeEdge(repl_key);
+                            }
+                        }
+                    }
+                }
+            }
+            
+        } else {
+            // 删除非树边
+            // non_tree_edges.erase(key);
+            
+            if (component_map.count(component_id) && 
+                component_map[component_id].non_tree_edges) {
+                component_map[component_id].non_tree_edges->removeEdge(key);
             }
         }
         
-        component_info.tree_edges.erase(key);
+        // edge_info_map.erase(key);
+        // history.operations.push_back(op);
+    }
+    // lock.unlock();
+}
+
+void ComponentDetector::AddEdges(const std::set<int>& add_rows) {
+
+    if (add_rows.empty()) return;
+    for (int row : add_rows) {
+        if (!row_active[row]) {
+            row_active[row] = true;
+        }
     }
 
-    // 恢复树边
-    for (auto it = history.cut_tree_edges.rbegin(); 
-         it != history.cut_tree_edges.rend(); ++it) {
-        int u = it->first, v = it->second;
-        unsigned long long key = makeEdgeKey(u, v);
-        
-        ett->link(u, v);
-        tree_edges.insert(key);
-        component_info.tree_edges.insert(key);
-        
-        if (edge_info_map.count(key)) {
-            edge_info_map[key].is_tree = true;
+    // 收集所有需要添加的边
+    std::vector<std::pair<int, int>> edges_to_add;
+    std::unordered_set<unsigned long long> processed_edges;
+    
+    for (int u : add_rows) {
+        for (int v : adj_list[u]) {
+            // 只添加两端都活跃的边
+            if (!row_active[v]) continue;
+            
+            unsigned long long key = makeEdgeKey(u, v);
+            if (processed_edges.count(key)) continue;
+            processed_edges.insert(key);
+            
+            edges_to_add.push_back({u, v});
         }
     }
-    
-    // 恢复非树边
-    for (auto& edge : history.removed_nontree_edges) {
-        int u = edge.first, v = edge.second;
+
+    // std::unique_lock<std::shared_mutex> lock(access_ett_mutex);
+
+    // 尝试link所有边，成功的成为树边，失败的成为非树边
+    for (const auto& [u, v] : edges_to_add) {
         unsigned long long key = makeEdgeKey(u, v);
-        
-        non_tree_edges.insert(key);
-        
-        if (edge_info_map.count(key)) {
-            EdgeInfo& info = edge_info_map[key];
-            info.is_tree = false;
-            
-            if (component_info.non_tree_edges) {
-                component_info.non_tree_edges->addEdge(key, info.level);
+
+        bool linked = ett->link(u, v);
+
+        if (!linked) {
+            // Link失败（已连通），成为非树边
+
+            int comp_id = ett->getComponentId(u);
+            if (component_map.count(comp_id) && 
+                component_map[comp_id].non_tree_edges) {
+                int level = calculateMaxLevel(component_map[comp_id].vertices.size());
+                
+                component_map[comp_id].non_tree_edges->addEdge(key, level);
             }
         }
     }
-    
-    // 恢复行的激活状态
-    for (int row : history.removed_rows) {
-        row_active[row] = true;
-    }
-    
-    // 恢复线程私有状态
-    current_rows_ = history.prev_rows;
-    current_components_ = history.prev_components;
+
 }
 
 std::vector<Block> ComponentDetector::GetBlocks(const std::set<int>& block_rows) {
-    // 首次调用或初始化后
-    // if (cover_stack_.empty()) {
-        // 检查初始森林
-        if (current_components_.size() > 1) {
-            // 多分量，返回子矩阵
-            return convertComponentsToBlocks(current_components_);
-        } else {
-            // 单分量，返回空（主算法继续）
-            return {};
-        }
-    // }
+    std::vector<Block> blocks;
     
-    // 计算被删除的顶点
-    std::set<int> deleted_vertices;
-    std::set_difference(
-        current_rows_.begin(), current_rows_.end(),
-        block_rows.begin(), block_rows.end(),
-        std::inserter(deleted_vertices, deleted_vertices.begin())
-    );
-    
-    if (deleted_vertices.empty()) {
-        // 没有变化，返回当前分量
-        if (current_components_.size() > 1) {
-            return convertComponentsToBlocks(current_components_);
-        } else {
-            return {};
+    // 根据连通分量分组
+    std::unordered_map<int, std::set<int>> comp_rows_map;
+    for (int row : block_rows) {
+        if (row_active[row]) {
+            int comp_id = ett->getComponentId(row);
+            comp_rows_map[comp_id].insert(row);
         }
     }
     
-    // 更新当前行集合
-    current_rows_ = block_rows;
-    
-    // std::vector<std::set<int>> new_components;
-    
-    // if (current_components_.size() == 1) {
-    //     // 单分量情况
-    //     new_components = DecGenerateCC(deleted_vertices, current_components_[0]);
-    // } else {
-    //     // 多分量情况（理论上不应该出现，因为已经分割）
-    //     for (const auto& comp : current_components_) {
-    //         std::set<int> comp_deleted;
-    //         std::set_intersection(
-    //             deleted_vertices.begin(), deleted_vertices.end(),
-    //             comp.begin(), comp.end(),
-    //             std::inserter(comp_deleted, comp_deleted.begin())
-    //         );
-            
-    //         if (!comp_deleted.empty()) {
-    //             auto sub_comps = DecGenerateCC(comp_deleted, comp);
-    //             new_components.insert(new_components.end(), sub_comps.begin(), sub_comps.end());
-    //         } else {
-    //             new_components.push_back(comp);
-    //         }
-    //     }
-    // }
-
-    // 调用增量算法生成新的连通分量
-    auto new_components = DecGenerateCC(deleted_vertices, current_components_[0]); 
-    
-    // 更新历史记录
-    if (!cover_stack_.empty()) {
-        cover_stack_.back().new_components = new_components;
+    // 只有多个分量时才分解
+    if (comp_rows_map.size() <= 1) {
+        return blocks;
     }
     
-    // 更新当前连通分量
-    current_components_ = new_components;
-    
-    // 转换为Block并返回
-    if (new_components.size() > 1) {
-        return convertComponentsToBlocks(new_components);
-    } else {
-        return {};  // 仍是单分量
-    }
-}
-
-// 增量式分解实现
-std::vector<std::set<int>> ComponentDetector::DecGenerateCC(
-    const std::set<int>& deleted_vertices,
-    const std::set<int>& prev_component ) {
-    
-    std::vector<std::set<int>> affected_components;
-    
-    if (deleted_vertices.empty()) {
-        // 无删除，返回原分量
-        if (!prev_component.empty()) {
-            affected_components.push_back(prev_component);
-        }
-        return affected_components;
-    }
-      
-    // 收集所有涉及删除顶点的边
-    std::vector<std::pair<int, int>> edges_to_process;
-    CoverHistory* current_history = cover_stack_.empty() ? nullptr : &cover_stack_.back();
-    
-    for (int u : deleted_vertices) {
-        for (int v : adj_list[u]) {
-            if (!row_active[v] || deleted_vertices.count(v)) continue;
-            if (u > v) continue;  // 避免重复
-            
-            unsigned long long key = makeEdgeKey(u, v);
-            
-            if (tree_edges.count(key)) {
-                edges_to_process.push_back({u, v});
-                if (current_history) {
-                    current_history->cut_tree_edges.push_back({u, v});
-                }
-            } else if (non_tree_edges.count(key)) {
-                // 删除非树边
-                if (component_info.non_tree_edges) {
-                    component_info.non_tree_edges->removeEdge(key);
-                }
-                non_tree_edges.erase(key);
-                edge_info_map.erase(key);
-                
-                if (current_history) {
-                    current_history->removed_nontree_edges.push_back({u, v});
+    // 转换为Block
+    for (const auto& [comp_id, rows] : comp_rows_map) {
+        std::set<int> component_cols;
+        std::vector<int> component_rows_vec(rows.begin(), rows.end());
+        
+        for (int r : rows) {
+            auto it = row_to_cols.find(r);
+            if (it != row_to_cols.end()) {
+                for (int col : it->second) {
+                    component_cols.insert(col);
                 }
             }
         }
-    }
-    
-    // 处理树边删除
-    for (const auto& [u, v] : edges_to_process) {
-        unsigned long long key = makeEdgeKey(u, v);
         
-        if (!edge_info_map.count(key)) continue;
-        
-        EdgeInfo& info = edge_info_map[key];
-        
-        // 从分量中移除树边
-        component_info.tree_edges.erase(key);
-        
-        // Cut操作
-        ett->cut(u, v);
-        tree_edges.erase(key);
-        
-        // 确定两个新分量
-        int active_vertex = deleted_vertices.count(u) ? v : u;
-        int comp_u = ett->getComponentId(active_vertex);
-        
-        // 查找替代边（从高层向低层）
-        auto replacement = FindReplacementLayered(comp_u, comp_u);
-          
-        if (replacement.has_value()) {
-            // 找到替代边，恢复连通性
-            int ru = replacement->first;
-            int rv = replacement->second;
-            unsigned long long repl_key = makeEdgeKey(ru, rv);
-            
-            ett->link(ru, rv);
-            
-            if (edge_info_map.count(repl_key)) {
-                EdgeInfo& repl_info = edge_info_map[repl_key];
-                repl_info.is_tree = true;
-                
-                // 从非树边升级到树边
-                if (component_info.non_tree_edges) {
-                    component_info.non_tree_edges->removeEdge(repl_key);
-                }
-                component_info.tree_edges.insert(repl_key);
-                
-                non_tree_edges.erase(repl_key);
-                tree_edges.insert(repl_key);
-            }
-            
-            if (current_history) {
-                current_history->added_replacement_edges.push_back({ru, rv});
-            }
-        }
-        
-        edge_info_map.erase(key);
-    }
-
-    // 收集剩余的活跃顶点并重新分组
-    std::set<int> remaining_vertices;
-    for (int v : prev_component) {
-        if (row_active[v] && !deleted_vertices.count(v)) {
-            remaining_vertices.insert(v);
+        if (!component_rows_vec.empty()) {
+            blocks.emplace_back(std::move(component_rows_vec), 
+                               std::move(component_cols));
         }
     }
     
-    if (remaining_vertices.empty()) {
-        return affected_components;
-    }
-    
-    // 根据ETT重新分组
-    std::unordered_map<int, std::set<int>> new_components_map;
-    for (int vertex : remaining_vertices) {
-        int comp_id = ett->getComponentId(vertex);
-        new_components_map[comp_id].insert(vertex);
-    }
-    
-    // 转换为vector
-    for (const auto& [comp_id, vertices] : new_components_map) {
-        if (!vertices.empty()) {
-            affected_components.push_back(vertices);
-        }
-    }
-    
-    // 如果只有一个分量且大小等于剩余顶点，说明没有分裂
-    if (affected_components.size() == 1 && 
-        affected_components[0].size() == remaining_vertices.size()) {
-        return affected_components;
-    }
-    
-    // 有分裂，返回所有新分量
-    return affected_components;
+    return blocks;
 }
 
 // 在指定分量中查找替代边
@@ -526,13 +348,11 @@ std::vector<std::set<int>> ComponentDetector::DecGenerateCC(
 // }
 
 // 分层查找替代边
-std::optional<std::pair<int,int>> ComponentDetector::FindReplacementLayered(int comp_u, int comp_v) {
+std::optional<std::pair<int,int>> ComponentDetector::FindReplacementLayered(ComponentInfo& comp_info) {
     
-    if (comp_u == comp_v) return std::nullopt; // 仍然连通
+    if (!comp_info.non_tree_edges) return std::nullopt;
     
-    if (!component_info.non_tree_edges) return std::nullopt;
-    
-    LayeredNonTreeEdges* non_tree = component_info.non_tree_edges.get();
+    LayeredNonTreeEdges* non_tree = comp_info.non_tree_edges.get();
     
     // 从最高层向下查找
     for (int level = non_tree->max_level; level >= 0; level--) {
@@ -541,8 +361,8 @@ std::optional<std::pair<int,int>> ComponentDetector::FindReplacementLayered(int 
         std::vector<unsigned long long> edges_to_demote;
         
         for (unsigned long long key : edges_at_level) {
-            int e_u = static_cast<int>(key >> 32);
-            int e_v = static_cast<int>(key & 0xFFFFFFFF);
+            int e_u, e_v;
+            decodeEdgeKey(key, e_u, e_v);
             
             if (!row_active[e_u] || !row_active[e_v]) {
                 edges_to_demote.push_back(key);
@@ -552,9 +372,8 @@ std::optional<std::pair<int,int>> ComponentDetector::FindReplacementLayered(int 
             int root_eu = ett->getComponentId(e_u);
             int root_ev = ett->getComponentId(e_v);
             
-            // 检查是否连接两个分裂的分量
-            if ((root_eu == comp_u && root_ev == comp_v) ||
-                (root_eu == comp_v && root_ev == comp_u)) {
+            // 找到跨分量的边，作为替代边
+            if (root_eu != root_ev) {
                 return std::make_pair(e_u, e_v);
             }
             
@@ -566,10 +385,15 @@ std::optional<std::pair<int,int>> ComponentDetector::FindReplacementLayered(int 
         
         // 执行降级
         for (unsigned long long key : edges_to_demote) {
+            // int original_level = non_tree->getLevel(key);
             non_tree->demoteEdge(key);
+            
             if (edge_info_map.count(key)) {
                 edge_info_map[key].level = level - 1;
             }
+            
+            // 记录降级操作（用于反向恢复）
+            // demoted_edges.push_back({key, original_level});
         }
     }
     

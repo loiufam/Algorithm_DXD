@@ -107,7 +107,7 @@ class DancingMatrix
         void printBlocks( vector<Block>& blocks) const;
         void cover( int c );  
         void uncover( int c ); 
-        void coverInBlock(int c, Block& block);
+        void coverInBlock(int c, Block& block, set<int>& covered_rows);
         void uncoverInBlock(int c, Block& block);
 
         string encodeBlockState(const unordered_set<int>& cols);

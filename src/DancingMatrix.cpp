@@ -361,14 +361,13 @@ void DancingMatrix::uncover( int c )
     colsSet.insert(c);
 }
 
-void DancingMatrix::coverInBlock(int c, Block& block){
+void DancingMatrix::coverInBlock(int c, Block& block, set<int>& removed_rows){
 
     ColumnHeader* col = &ColIndex[c];  
     col->right->left = col->left;  
     col->left->right = col->right;  
     
     block.cols.erase(c); // 从块中移除列
-
 
     Node* curR, *curC;  
     curC = col->down;  
@@ -392,8 +391,7 @@ void DancingMatrix::coverInBlock(int c, Block& block){
         }  
 
         curC = curC->down;  
-    }  
-
+    } 
 }
 
 void DancingMatrix::uncoverInBlock(int c, Block& block){ 
@@ -421,7 +419,6 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
 
         curC = curC->up;  
     }  
-
 
     col->right->left = col;  
     col->left->right = col;  

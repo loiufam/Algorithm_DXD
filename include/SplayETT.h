@@ -1,6 +1,8 @@
 #ifndef SPLAY_ETT_H
 #define SPLAY_ETT_H
 
+#include <omp.h>
+#include <memory>
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
@@ -8,6 +10,9 @@
 #include <functional>
 #include <iostream>
 #include <climits>
+#include <shared_mutex>
+#include <mutex>
+#include <atomic>
 
 
 class SplayETT {
@@ -16,7 +21,8 @@ private:
         Node *left, *right, *parent;
         int vertex;      // 对应的顶点编号（-1表示边节点）
         unsigned long long edgeKey;  // 边的唯一标识 (u,v) -> key
-        bool reversed;
+        bool reversed;   // 标记翻转
+        size_t node_id; // 节点唯一id
         
         Node(int v = -1, unsigned long long key = 0) 
             : left(nullptr), right(nullptr), parent(nullptr),
@@ -32,9 +38,28 @@ private:
     std::unordered_map<unsigned long long, Edge> edges;
     std::vector<Node*> nodePool;
 
+    // --- 线程局部容器结构 ---
+    struct ThreadLocalData {
+        std::vector<Node*> nodePool; // 负责该线程分配的 Node 内存管理
+        std::unordered_map<unsigned long long, Edge> edges; // 该线程负责的边
+        
+        ~ThreadLocalData() {
+            for (Node* n : nodePool) delete n;
+        }
+    };
+
+    std::vector<std::unique_ptr<ThreadLocalData>> threadDataSlots;
+    int max_threads;
+
+    inline ThreadLocalData& getLocalData() {
+        int tid = omp_get_thread_num();
+        return *threadDataSlots[tid];
+    }
+
     // 添加一个映射:树根 -> 连通分量ID
     std::unordered_map<Node*, int> rootToComponentId;
     int nextComponentId = 0;
+    mutable std::shared_mutex mtx;
 
     // 辅助函数：将边(u,v)编码为唯一键
     inline unsigned long long makeEdgeKey(int u, int v) const {
@@ -98,11 +123,6 @@ private:
         pushDown(x);
     }
     
-    inline Node* getRoot(Node* x) {
-        while (x->parent) x = x->parent;
-        return x;
-    }
-    
     Node* split(Node* x) {
         splay(x);
         pushDown(x);
@@ -132,13 +152,20 @@ private:
     }
     
     inline Node* allocNode(int v = -1, unsigned long long key = 0) {
+        auto& local = getLocalData();
+        
         Node* node = new Node(v, key);
-        nodePool.push_back(node);
+
+        static std::atomic<size_t> global_counter{0};
+        node->node_id = global_counter.fetch_add(1, std::memory_order_relaxed);
+        
+        local.nodePool.push_back(node);
         return node;
     }
 
     // 获取或创建连通分量ID
     int getOrCreateComponentId(Node* root) {
+        // std::unique_lock<std::shared_mutex> lock(mutex_);
         auto it = rootToComponentId.find(root);
         if (it != rootToComponentId.end()) {
             return it->second;
@@ -152,6 +179,7 @@ private:
     
     // 更新rootToComponentId映射
     void updateComponentMapping(Node* oldRoot1, Node* oldRoot2, Node* newRoot) {
+        // std::unique_lock<std::shared_mutex> lock(mutex_);
         int compId1 = -1, compId2 = -1;
         
         auto it1 = rootToComponentId.find(oldRoot1);
@@ -177,12 +205,36 @@ private:
         
         rootToComponentId[newRoot] = finalId;
     }
+
+    void debugDfs(Node* x) {
+        if (!x) return;
+        pushDown(x);
+        debugDfs(x->left);
+        if (x->vertex != -1) 
+            std::cout << x->vertex << " ";
+        else {
+            auto it = edges.find(x->edgeKey);
+            if (it != edges.end()) {
+                std::cout << "(" << it->second.u << "," << it->second.v << ") ";
+            }
+        };
+        debugDfs(x->right);
+    }
+
+    inline Node* getRoot(Node* x) {
+        while (x->parent) x = x->parent;
+        return x;
+    }
     
 public:
-    explicit SplayETT(int n) {
+    explicit SplayETT(int n, int num_threads = 32) {
         vertexNodes.resize(n);
-        nodePool.reserve(n * 4);
-        edges.reserve(n * 2);
+        // nodePool.reserve(n * 4);
+        max_threads = num_threads;
+        threadDataSlots.resize(max_threads);
+        for (int i = 0; i < max_threads; ++i) {
+            threadDataSlots[i] = std::make_unique<ThreadLocalData>();
+        }
         
         for (int i = 0; i < n; i++) {
             vertexNodes[i] = allocNode(i);
@@ -190,9 +242,17 @@ public:
     }
     
     ~SplayETT() {
-        for (Node* node : nodePool) {
-            delete node;
+        // 释放所有节点内存
+        for (auto& slot : threadDataSlots) {
+            slot.reset();
         }
+    }
+
+    void debugPrintEuler(int u) {
+        Node* root = getRoot(vertexNodes[u]);
+        splay(root);
+        debugDfs(root);
+        std::cout << "\n";
     }
     
     /**
@@ -203,16 +263,19 @@ public:
      */
     bool link(int u, int v) {
         if (u == v) return false;
+
+        auto& local = getLocalData();
+        unsigned long long key = makeEdgeKey(u, v);
         
-        unsigned long long edgeKey = makeEdgeKey(u, v);
-        // 只检查边是否已存在，不检查连通性
-        if (edges.find(edgeKey) != edges.end()) {
-            return false;  // 边已存在，不重复添加
+        if (local.edges.count(key)) return false;
+
+        if (connected(u, v)) {
+            return false;
         }
         
-        Node* e1 = allocNode(-1, edgeKey);
-        Node* e2 = allocNode(-1, edgeKey);
-        
+        Node* e1 = allocNode(-1, key);
+        Node* e2 = allocNode(-1, key);
+
         Node* rootU = getRoot(vertexNodes[u]);
         Node* rootV = getRoot(vertexNodes[v]);
         
@@ -223,10 +286,7 @@ public:
         newRoot = merge(newRoot, e2);
         newRoot = merge(newRoot, rightU);
 
-        // 更新连通分量映射
-        updateComponentMapping(rootU, rootV, newRoot);
-        
-        edges[edgeKey] = {e1, e2, u, v};
+        local.edges[key] = {e1, e2, u, v};
         return true;
     }
     
@@ -238,20 +298,20 @@ public:
      */
     bool cut(int u, int v) {
         if (u == v) return false;
+
+        auto& local = getLocalData();
+        unsigned long long key = makeEdgeKey(u, v);
         
-        unsigned long long edgeKey = makeEdgeKey(u, v);
-        auto it = edges.find(edgeKey);
-        if (it == edges.end()) return false;
+        auto it = local.edges.find(key);
+        if (it == local.edges.end()) return false;
         
         Edge& edge = it->second;
         Node* e1 = edge.first;
         Node* e2 = edge.second;
 
-        // 记录旧根
-        Node* oldRoot = getRoot(e1);    
-        
         splay(e1);
         splay(e2);
+
         if (e2->parent) {
             std::swap(e1, e2);
             splay(e1);
@@ -263,38 +323,29 @@ public:
         Node* left = e1->left;
         if (left) left->parent = nullptr;
         
-        Node* newRoot1 = merge(left, middle);
+        merge(left, right);
+        // Node* newRoot2 = middle;
 
-        // 更新连通分量映射
-        auto rootIt = rootToComponentId.find(oldRoot);
-        if (rootIt != rootToComponentId.end()) {
-            int oldCompId = rootIt->second;
-            rootToComponentId.erase(rootIt);
-            
-            if (newRoot1) {
-                rootToComponentId[newRoot1] = oldCompId;
-            }
-        }
-        
-        edges.erase(it);
+        local.edges.erase(it);
         return true;
     }
 
     inline bool connected(int u, int v) {
-        if (u == v) return true;
         return getRoot(vertexNodes[u]) == getRoot(vertexNodes[v]);
     }
 
     /**
-     * 获取节点所在连通分量节点id
+     * 获取节点所在连通分量根节点节点id
      */
-    int getComponentId(int u) {
-        if (u < 0 || u >= static_cast<int>(vertexNodes.size())) {
-            return -1;
-        }
-        
+    int getComponentId(int u) {        
         Node* root = getRoot(vertexNodes[u]);
-        return getOrCreateComponentId(root);
+        return root->node_id;
+    }
+
+    bool isTreeEdge(int u, int v) {
+        auto& local = getLocalData();
+        unsigned long long key = makeEdgeKey(u, v);
+        return local.edges.find(key) != local.edges.end();
     }
 
     void batchLink(const std::vector<std::pair<int, int>>& edges_to_add) {

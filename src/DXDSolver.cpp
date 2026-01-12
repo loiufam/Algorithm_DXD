@@ -96,10 +96,10 @@ DNNFResult DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks, int parent_dep
 }
 
 
-// DXD单线程（要体现分解性）
+// DXD IDXD
 DNNFResult DanceDNNF::DXD(Block& block, int depth) {
     
-    max_depth = std::max(max_depth, depth);
+    // max_depth = std::max(max_depth, depth);
 
     if(timer.timeBoundBroken()) {
         throw std::runtime_error("Time bound broken");
@@ -164,15 +164,20 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
     DNNFResult totalResult(0);
     shared_ptr<DNNFNode> x = F;
 
-    coverInBlock(choose->col, block);
+    set<int> deleted_rows;
+    coverInBlock(choose->col, block, deleted_rows);
+    detector->DeleteEdges(deleted_rows);
+
     Node* curC = choose->down;
     while(curC != choose) {
         
         Node* curR = curC->right;
+        set<int> deleted_rows_;
         while (curR != curC) {
-            coverInBlock(curR->col, block);
+            coverInBlock(curR->col, block, deleted_rows_);
             curR = curR->right;
         }
+        detector->DeleteEdges(deleted_rows_);
  
         auto result = DXD(block, depth + 1);
 
@@ -187,9 +192,11 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
             uncoverInBlock(curR->col, block);
             curR = curR->left;
         }
+        detector->AddEdges(deleted_rows_);
         curC = curC->down;
     }
     uncoverInBlock(choose->col, block);
+    detector->AddEdges(deleted_rows);
 
     // 插入缓存
     setCacheCount(state, totalResult);
@@ -373,7 +380,8 @@ DNNFResult DanceDNNF::MDLX(vector<int>& sols, Block& block) {
 
     DNNFResult totalResult = DNNFResult(0);
 
-    coverInBlock( choose->col, block );
+    set<int> deleted_rows;
+    coverInBlock( choose->col, block, deleted_rows );
     Node* curC = choose->down;  
 
     while( curC != choose )  
@@ -382,7 +390,7 @@ DNNFResult DanceDNNF::MDLX(vector<int>& sols, Block& block) {
         Node* curR = curC->right;  
         while( curR != curC )  
         {  
-            coverInBlock( curR->col, block );  
+            coverInBlock( curR->col, block, deleted_rows );  
             curR = curR->right;  
         }  
 
