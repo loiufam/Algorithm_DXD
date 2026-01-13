@@ -1,5 +1,7 @@
-启用DXZ算法求解: Aarnet
-Time: 1.873902 s
-Solutions: 53067357700
-ZDD Size: 1715
-DXZ算法求解结束: Aarnet
+启用多线程DXD算法求解: grafo337.15
+开始多线程DXD搜索...
+Time: 0.076451 s
+Solutions: 53010000
+Max Blocks: 13
+DNNF Size: 273
+多线程DXD算法求解结束: grafo337.15
