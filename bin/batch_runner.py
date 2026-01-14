@@ -32,7 +32,7 @@ ALGORITHMS = [
 # 多线程算法配置：(算法名, 命令参数, 是否使用ett, 线程数列表, 输出文件名)
 THREAD_ALGORITHMS = [
     # ("DXD_M", ["mdxd", "ig"], True, [2, 4, 8], "DXD_M_threads.csv"),
-    ("IDXD_M", ["mdxd", "ett"], True, [2, 4, 8], "IDXD_M_threads.csv"),
+    ("IDXD_M", ["mdxd", "ett"], True, [1, 2], "IDXD_M_threads.csv"),
     # ("MDLX", ["mdlx", "ett"], True, [2, 4, 8], "MDLX_threads.csv"),
 ]
 
