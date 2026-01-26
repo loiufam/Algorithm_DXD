@@ -5,6 +5,7 @@
 
 #include "SplayETT.h"
 #include "TreapETT.h"
+#include "SplayTree.h"
 #include <map>
 #include <set>
 #include <stack>
@@ -354,5 +355,64 @@ public:
     vector<Block> detect_blocks(const set<int>& block_rows);
 
 };
+
+// 邻接表节点（支持O(1)删除和恢复）
+struct AdjNode {
+    int neighbor;
+    bool deleted;
+    AdjNode* next;
+    
+    AdjNode(int v) : neighbor(v), deleted(false), next(nullptr) {}
+};
+
+// 无向图（邻接表表示）
+class Graph {
+private:
+    int numVertices;
+    std::vector<AdjNode*> adjList;  // 每个顶点的邻接表头
+    std::unordered_map<int, std::unordered_map<int, AdjNode*>> edgeMap; // 快速查找边
+    
+public:
+    Graph(int n);
+    ~Graph();
+    
+    void addEdge(int u, int v);
+    void deleteEdge(int u, int v);
+    void restoreEdge(int u, int v);
+    // void deleteVertex(int v);
+    // void restoreVertex(int v);
+    
+    std::vector<int> getNeighbors(int v) const;
+    bool hasEdge(int u, int v) const;
+    int getDegree(int v) const;
+
+    void printGraph() const {
+        std::cout << "=== Graph Adjacency List Structure ===" << std::endl;
+        for (int i = 0; i < numVertices; ++i) {
+            std::cout << "Vertex " << std::setw(2) << i << ": ";
+            
+            AdjNode* curr = adjList[i];
+            if (!curr) {
+                std::cout << "(no neighbors)";
+            }
+            
+            while (curr) {
+                // 打印邻居节点
+                std::cout << "[" << curr->neighbor;
+                
+                // 如果被标记删除，加上标记
+                if (curr->deleted) {
+                    std::cout << "(DEL)"; 
+                }
+                std::cout << "] -> ";
+                
+                curr = curr->next;
+            }
+            std::cout << "NULL" << std::endl;
+        }
+        std::cout << "======================================" << std::endl;
+    }
+};
+
 
 #endif // COMPONENTDETECTOR_H

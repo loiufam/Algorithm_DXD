@@ -32,7 +32,7 @@ ALGORITHMS = [
 # 多线程算法配置：(算法名, 命令参数, 是否使用ett, 线程数列表, 输出文件名)
 THREAD_ALGORITHMS = [
     # ("DXD_M", ["mdxd", "ig"], True, [2, 4, 8], "DXD_M_threads.csv"),
-    ("IDXD_M", ["mdxd", "ett"], True, [4, 8], "IDXD_M_threads.csv"),
+    ("IDXD_M", ["mdxd", "ett"], True, [1, 2, 4, 8], "IDXD_M_threads.csv"),
     # ("MDLX", ["mdlx", "ett"], True, [2, 4, 8], "MDLX_threads.csv"),
 ]
 
@@ -433,10 +433,16 @@ def main():
                 results_data[filename] = {}
                 
                 for num_threads in thread_nums:
-                    print(f"  测试 {num_threads} 线程...")
-                    result = run_algorithm(
-                        algo_name, algo_params, input_file, read_mode, num_threads
-                    )
+                    runtime = 0.0
+                    for i in range(10):
+                        print(f"  [{i+1}]: 测试 {num_threads} 线程...")
+                        result = run_algorithm(
+                            algo_name, algo_params, input_file, read_mode, num_threads
+                        )
+                        if result['time'] is not None:
+                            runtime += result['time']
+
+                    result['time'] = runtime / 10.0  # 取平均时间
                     results_data[filename][num_threads] = result
                 
                 # 实时写入结果

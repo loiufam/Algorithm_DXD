@@ -20,6 +20,21 @@ ComponentDetector::ComponentDetector(const int n, const int m)
 
 }
 
+Graph::Graph(int n) : numVertices(n) {
+    adjList.resize(n, nullptr);
+}
+
+Graph::~Graph() {
+    for (int i = 0; i < numVertices; i++) {
+        AdjNode* curr = adjList[i];
+        while (curr) {
+            AdjNode* next = curr->next;
+            delete curr;
+            curr = next;
+        }
+    }
+}
+
 void ComponentDetector::Initialize(const std::unordered_map<int, std::vector<int>>& col_rows_map) {
     col_to_rows = col_rows_map;
    
@@ -522,3 +537,73 @@ std::vector<Block> ComponentDetector::convertComponentsToBlocks(
     
 //     return blocks;
 // };
+
+
+void Graph::addEdge(int u, int v) {
+    if (u >= numVertices || v >= numVertices) return;
+   
+    if (edgeMap[u].count(v)) {
+        // 如果存在且被标记删除了，恢复它
+        if (edgeMap[u][v]->deleted) {
+            restoreEdge(u, v);
+        }
+        // 如果存在且没删除，直接返回（避免重复插入）
+        return;
+    }
+    
+    // 添加 u -> v
+    AdjNode* node1 = new AdjNode(v);
+    node1->next = adjList[u];
+    adjList[u] = node1;
+    edgeMap[u][v] = node1;
+    
+    // 添加 v -> u
+    AdjNode* node2 = new AdjNode(u);
+    node2->next = adjList[v];
+    adjList[v] = node2;
+    edgeMap[v][u] = node2;
+}
+
+void Graph::deleteEdge(int u, int v) {
+    if (edgeMap[u].count(v)) {
+        edgeMap[u][v]->deleted = true;
+    }
+    if (edgeMap[v].count(u)) {
+        edgeMap[v][u]->deleted = true;
+    }
+}
+
+void Graph::restoreEdge(int u, int v) {
+    if (edgeMap[u].count(v)) {
+        edgeMap[u][v]->deleted = false;
+    }
+    if (edgeMap[v].count(u)) {
+        edgeMap[v][u]->deleted = false;
+    }
+}
+
+std::vector<int> Graph::getNeighbors(int v) const {
+    std::vector<int> neighbors;
+    if (v >= numVertices) return neighbors;
+    
+    AdjNode* curr = adjList[v];
+    while (curr) {
+        if (!curr->deleted) {
+            neighbors.push_back(curr->neighbor);
+        }
+        curr = curr->next;
+    }
+    return neighbors;
+}
+
+bool Graph::hasEdge(int u, int v) const {
+    auto it = edgeMap.find(u);
+    if (it == edgeMap.end()) return false;
+    auto it2 = it->second.find(v);
+    if (it2 == it->second.end()) return false;
+    return !it2->second->deleted;
+}
+
+int Graph::getDegree(int v) const {
+    return getNeighbors(v).size();
+}

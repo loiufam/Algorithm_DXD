@@ -171,6 +171,21 @@ class DancingMatrix
             return enableGraphSync;
         }
 
+        void initialize();
+        void buildGraphFromMatrix();
+        
+        // 动态更新接口
+        void DecUpdateCC(const std::vector<int>& deletedVertices);
+        void IncUpdateCC(const std::vector<int>& restoredVertices);
+        
+        // 获取连通分量
+        std::vector<std::unordered_set<int>> getConnectedComponents() const;
+        int getNumComponents() const { return components.size(); }
+        
+        void printComponents() const;
+
+        void testCutEdge(int u, int v);
+
     private:  
         ColumnHeader* root;  
         std::unique_ptr<ColumnHeader[]> ColIndex;
@@ -193,7 +208,18 @@ class DancingMatrix
 
         // Graph build_graph_from_columns(const unordered_map<int, vector<int>>& col2rows, int num_rows, bool deduplicate = true);
 
-        bool enableGraphSync = true; // 是否启用图同步        
+        bool enableGraphSync = true; // 是否启用图同步      
+        
+        // build undirected graph from matrix
+        std::unique_ptr<Graph> graph;
+        // 连通分量管理
+        std::vector<std::unique_ptr<splaytree::EulerTourTree>> components;
+        std::unordered_map<int, splaytree::EulerTourTree*> vertexToComponent;
+        int nextTreeId = 0;
+        
+        // 从图构建生成森林
+        void buildSpanningForest();
+        std::vector<splaytree::Edge> bfsSpanningTree(int start, std::unordered_set<int>& visited, std::unordered_set<int>& componentVertices);
 };
 
 #endif
