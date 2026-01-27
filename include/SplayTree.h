@@ -49,6 +49,14 @@ struct EdgeHash {
     }
 };
 
+struct EdgeOrder {
+    Node* first;   // 在欧拉序列中先出现的边节点
+    Node* second;  // 在欧拉序列中后出现的边节点
+    
+    EdgeOrder() : first(nullptr), second(nullptr) {}
+    EdgeOrder(Node* f, Node* s) : first(f), second(s) {}
+};
+
 // 欧拉回路树类（无锁版本，每个线程独立处理）
 class EulerTourTree {
 private:
@@ -60,22 +68,32 @@ private:
     std::unordered_set<Edge, EdgeHash> nonTreeEdges;           // 非树边集合
     
     // 每个顶点的occurrence节点列表（用于O(1)查找）
-    std::unordered_map<int, std::vector<Node*>> vertexOccurrences;
+    // std::unordered_map<int, std::vector<Node*>> vertexOccurrences;
     std::unordered_map<int, std::unordered_map<int, Node*>> edgeNodes;
+
+    std::unordered_map<Edge, EdgeOrder, EdgeHash> edgeOrder;
     
     // Splay树基本操作
     void updateSize(Node* x);
     void rotate(Node* n);
     void splay(Node* n);
+    void updateSizeToRoot(Node* n);
 
     Node* findMax(Node* x);
     Node* findMin(Node* x);
     Node* findRoot(Node* x);
 
+    Node* findRightmost(Node* x);
+    Node* concatenate(Node* leftTree, Node* rightTree);
+    void mergeTrees(EulerTourTree* otherTree);
+
     Node* split(Node* x);
     Node* join(Node* leftTree, Node* rightTree);
     
     // 辅助函数
+    inline int getSize(Node* x) const {
+        return x ? x->size : 0;
+    }
     Node* getRepresentative(int u);
     void collectNodes(Node* x, std::vector<Node*>& nodes) const;
     Node* findEdgeNode(Node* subtree, int u, int v);
@@ -101,7 +119,8 @@ public:
     void addVertex(int v);
     void reroot(int u);
     void link(int u, int v, EulerTourTree* otherTree);
-    std::pair<std::unique_ptr<EulerTourTree>, std::unique_ptr<EulerTourTree>> cut(int u, int v, int newTreeId1, int newTreeId2);
+    Node* joinTreesViaEdge(Node* root1, Node* root2, int u, int v);
+    std::pair<std::unique_ptr<EulerTourTree>, std::unique_ptr<EulerTourTree>> cut(int u, int v, int newTreeIdU, int newTreeIdV);
     
     // 查询操作
     bool isConnected(int u, int v) const;
@@ -111,17 +130,62 @@ public:
     std::unordered_set<Edge, EdgeHash> getNonTreeEdges() const { return nonTreeEdges; }
     bool isEmpty() const { return vertices.empty(); }
     bool hasVertex(int v) const { return vertices.count(v) > 0; }
-    
+   
+    // 获取顶点的代表节点（用于快速更新 vertexToComponent）
+    Node* getVertexRepresentative(int v) const {
+        auto it = edgeNodes.find(v);
+        if (it != edgeNodes.end() && it->second.count(v)) {
+            return it->second.at(v);
+        }
+        return nullptr;
+    }
+
+    inline bool containsVertex(int v) const {
+        return vertices.count(v) > 0;
+    }
+
+    // 切下 x 左侧，返回 {left, x}
+    inline std::pair<Node*, Node*> splitBefore(Node* x) {
+        splay(x);
+        Node* left = x->left;
+        if (left) {
+            left->parent = nullptr;
+            x->left = nullptr;
+            updateSize(x);
+        }
+        return {left, x};
+    }
+
+    // 切下 x 右侧，返回 {x, right}
+    inline std::pair<Node*, Node*> splitAfter(Node* x) {
+        splay(x);
+        Node* right = x->right;
+        if (right) {
+            right->parent = nullptr;
+            x->right = nullptr;
+            updateSize(x);
+        }
+        return {x, right};
+    }
+
+
     // 非树边操作
     void addNonTreeEdge(const Edge& e) { nonTreeEdges.insert(e); }
     void removeNonTreeEdge(const Edge& e) { nonTreeEdges.erase(e); }
     bool hasNonTreeEdge(const Edge& e) const { return nonTreeEdges.count(e) > 0; }
+    bool isTreeEdge(int u, int v) const {
+        if (u > v) std::swap(u, v);
+        return edgeNodes.count(u) && edgeNodes.at(u).count(v);
+    }
     
     // 动态更新相关
     void removeVertex(int v);
-    
+    std::unique_ptr<EulerTourTree> cutBoundary(int v, int u);
+    std::unique_ptr<EulerTourTree> cutWithReplacement(int u, int v);
+
     // 调试
     void printEulerTour() const;
+    void testSplay(int v);
     int getVertexDegree(int v) const;
 };
 

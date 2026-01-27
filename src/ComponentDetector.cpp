@@ -596,6 +596,18 @@ std::vector<int> Graph::getNeighbors(int v) const {
     return neighbors;
 }
 
+std::vector<int> Graph::getAllNeighbors(int v) const {
+    std::vector<int> neighbors;
+    if (v >= numVertices) return neighbors;
+    
+    AdjNode* curr = adjList[v];
+    while (curr) {
+        neighbors.push_back(curr->neighbor);
+        curr = curr->next;
+    }
+    return neighbors;
+}
+
 bool Graph::hasEdge(int u, int v) const {
     auto it = edgeMap.find(u);
     if (it == edgeMap.end()) return false;

@@ -383,6 +383,7 @@ public:
     // void restoreVertex(int v);
     
     std::vector<int> getNeighbors(int v) const;
+    std::vector<int> getAllNeighbors(int v) const;
     bool hasEdge(int u, int v) const;
     int getDegree(int v) const;
 

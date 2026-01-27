@@ -185,6 +185,8 @@ class DancingMatrix
         void printComponents() const;
 
         void testCutEdge(int u, int v);
+        void testReRoot(int v);
+        void testSplay(int v);
 
     private:  
         ColumnHeader* root;  
@@ -214,7 +216,8 @@ class DancingMatrix
         std::unique_ptr<Graph> graph;
         // 连通分量管理
         std::vector<std::unique_ptr<splaytree::EulerTourTree>> components;
-        std::unordered_map<int, splaytree::EulerTourTree*> vertexToComponent;
+        // std::unordered_map<int, splaytree::EulerTourTree*> vertexToComponent;
+        splaytree::EulerTourTree* findEulerTourTree(int v) const;
         int nextTreeId = 0;
         
         // 从图构建生成森林
