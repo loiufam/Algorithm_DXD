@@ -101,14 +101,6 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool useIg , bo
     }  
     ColIndex[0].down = &RowIndex[0]; 
 
-    // if(useETT) {
-    //     DynamicHypergraphCC::Config config;
-    //     config.enable_parallel = true;
-    //     config.enable_persistence = true;
-    //     config.num_threads = 4;
-    //     dynamic_hypergraph_cc = make_unique<DynamicHypergraphCC>(config);
-    // }
-
     dataNodes.reserve(rows * cols / 2);
     int currentRow = 0;
     while (getline(file, line)) {
@@ -139,12 +131,6 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool useIg , bo
             // rowCols.push_back(currentCol);
         }
 
-        // 初始化ETT节点
-        // if (useETT) detector->add_row(currentRow);
-        // active_rows.insert(currentRow);
-        // if (useETT) {
-        //     dynamic_hypergraph_cc->addRow(currentRow, rowCols);
-        // }
         currentRow++;
         
         if (currentRow >= rows) break; // 防止超过预期行数
@@ -352,10 +338,16 @@ void DancingMatrix::DecUpdateCC(const std::vector<int>& deletedVertices) {
         std::vector<int> neighbors = graph->getNeighbors(v);
         
         // 判断是否为边界顶点（只有一条树边）
-        bool isBoundary = (tree->getVertexDegree(v) == 1);
+        int treeEdgeCount = tree->getVertexDegree(v);
+        // if (treeEdgeCount < 1) {
+        //     // 孤立顶点（不应该出现）
+        //     std::cout << "Isolated vertex " << v << "\n";
+        //     return;
+        // }
         
-        if (isBoundary) {
+        if (treeEdgeCount == 1) {
             // 边界顶点：删除所有非树边，无需寻找替代边
+            std::cout << "Removing boundary vertex " << v << "\n";
             int treeEdgeU = -1;
             for (int u : neighbors) {
                 if (tree->isTreeEdge(v, u)) {
@@ -368,11 +360,16 @@ void DancingMatrix::DecUpdateCC(const std::vector<int>& deletedVertices) {
                 graph->deleteEdge(v, u);
             }
 
-            tree->cutBoundary(v, treeEdgeU);
+            // 返回空树，统一删除边界树
+            auto bound_tree = tree->cutBoundary(v, treeEdgeU);
+            if (bound_tree) {
+                newComponents.push_back(std::move(bound_tree));
+            }
             graph->deleteEdge(v, treeEdgeU);
         } else {
             // 非边界顶点：处理每条边
             // 先处理非树边
+            std::cout << "Removing non-boundary vertex " << v << "\n";
             for (int u : neighbors) {
                if (!tree->isTreeEdge(v, u)) {
                     splaytree::Edge e(v, u);
@@ -408,20 +405,16 @@ void DancingMatrix::DecUpdateCC(const std::vector<int>& deletedVertices) {
         components.end()
     );
 
-    for (auto& comp : newComponents) {
-        components.push_back(std::move(comp));
+    if (!newComponents.empty()) {
+        for (auto& comp : newComponents) {
+            components.push_back(std::move(comp));
+        }
     }
 }
 
 void DancingMatrix::IncUpdateCC(const std::vector<int>& restoredVertices) {
     if (restoredVertices.empty()) return;
     std::unordered_set<int> restoredSet(restoredVertices.begin(), restoredVertices.end());
-
-    for (int v : restoredVertices) {
-        auto newTree = std::make_unique<splaytree::EulerTourTree>(v); // 假设构造函数支持传入 ID 或初始顶点
-        newTree->addVertex(v); // 初始化：加入顶点，创建 (v,v) 节点
-        components.push_back(std::move(newTree));
-    }
 
     for (int v : restoredVertices) {
         auto newTree = std::make_unique<splaytree::EulerTourTree>(nextTreeId++);
@@ -442,12 +435,9 @@ void DancingMatrix::IncUpdateCC(const std::vector<int>& restoredVertices) {
             splaytree::EulerTourTree* treeV = findEulerTourTree(v); 
 
             if (treeU != treeV) {
-                treeV->link(v, u, treeU);
+                treeU->link(u, v, treeV);
             } else {
-                splaytree::Edge e(v, u);
-                if (!treeV->hasNonTreeEdge(e)) {
-                    treeV->addNonTreeEdge(e);
-                }
+                treeU->addNonTreeEdge(splaytree::Edge(v, u));
             }
         }
     }
@@ -491,6 +481,21 @@ void DancingMatrix::printComponents() const {
     //         }
     //     }
     // }
+}
+
+void DancingMatrix::testDynamicUpdateCC(const std::vector<int>& deletedVertices) {
+    std::cout << "Before Decremental Update:\n";
+    printComponents();
+
+    DecUpdateCC(deletedVertices);
+
+    std::cout << "After Decremental Update:\n";
+    printComponents();
+
+    IncUpdateCC(deletedVertices);
+
+    std::cout << "After Incremental Update:\n";
+    printComponents();
 }
 
 void DancingMatrix::testCutEdge(int u, int v) {

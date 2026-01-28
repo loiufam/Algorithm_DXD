@@ -187,6 +187,7 @@ class DancingMatrix
         void testCutEdge(int u, int v);
         void testReRoot(int v);
         void testSplay(int v);
+        void testDynamicUpdateCC(const std::vector<int>& deletedVertices);
 
     private:  
         ColumnHeader* root;  

@@ -49,13 +49,13 @@ struct EdgeHash {
     }
 };
 
-struct EdgeOrder {
-    Node* first;   // 在欧拉序列中先出现的边节点
-    Node* second;  // 在欧拉序列中后出现的边节点
+// struct EdgeOrder {
+//     Node* first;   // 在欧拉序列中先出现的边节点
+//     Node* second;  // 在欧拉序列中后出现的边节点
     
-    EdgeOrder() : first(nullptr), second(nullptr) {}
-    EdgeOrder(Node* f, Node* s) : first(f), second(s) {}
-};
+//     EdgeOrder() : first(nullptr), second(nullptr) {}
+//     EdgeOrder(Node* f, Node* s) : first(f), second(s) {}
+// };
 
 // 欧拉回路树类（无锁版本，每个线程独立处理）
 class EulerTourTree {
@@ -71,7 +71,7 @@ private:
     // std::unordered_map<int, std::vector<Node*>> vertexOccurrences;
     std::unordered_map<int, std::unordered_map<int, Node*>> edgeNodes;
 
-    std::unordered_map<Edge, EdgeOrder, EdgeHash> edgeOrder;
+    // std::unordered_map<Edge, EdgeOrder, EdgeHash> edgeOrder;
     
     // Splay树基本操作
     void updateSize(Node* x);
@@ -179,6 +179,7 @@ public:
     }
     
     // 动态更新相关
+    void deleteOccurrence(Node* node);
     void removeVertex(int v);
     std::unique_ptr<EulerTourTree> cutBoundary(int v, int u);
     std::unique_ptr<EulerTourTree> cutWithReplacement(int u, int v);

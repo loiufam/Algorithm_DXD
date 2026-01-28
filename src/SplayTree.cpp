@@ -241,28 +241,27 @@ void EulerTourTree::link(int u, int v, EulerTourTree* otherTree) {
     // std::cout << "Before linking edge (" << u << ", " << v << "):\n";
     // printEulerTour();
     
-    // reroot(u);
-    // otherTree->reroot(v);
+    reroot(u);
+    otherTree->reroot(v);
     
-    // Node* edgeUV = new Node(u, v);
-    // Node* edgeVU = new Node(v, u);
+    Node* edgeUV = new Node(u, v);
+    Node* edgeVU = new Node(v, u);
     
-    // edgeNodes[u][v] = edgeUV;
-    // edgeNodes[v][u] = edgeVU;
+    edgeNodes[u][v] = edgeUV;
+    edgeNodes[v][u] = edgeVU;
 
-    // // 保存当前的 root
-    // Node* tree1Root = root;
-    // Node* tree2Root = otherTree->root;
+    // 保存当前的 root
+    Node* tree1Root = root;
+    Node* tree2Root = otherTree->root;
     
-    // // 合并: root -> edgeUV -> otherTree->root -> edgeVU
-    // tree1Root = concatenate(tree1Root, edgeUV);
-    // tree1Root = concatenate(tree1Root, tree2Root);
-    // tree1Root = concatenate(tree1Root, edgeVU);
+    // 合并: root -> edgeUV -> otherTree->root -> edgeVU
+    tree1Root = concatenate(tree1Root, edgeUV);
+    tree1Root = concatenate(tree1Root, tree2Root);
+    tree1Root = concatenate(tree1Root, edgeVU);
 
-    // updateSizeToRoot(edgeVU);
-    // root = findRoot(edgeVU);
+    updateSizeToRoot(edgeVU);
+    root = findRoot(edgeVU);
 
-    root = joinTreesViaEdge(root, otherTree->root, u, v);
     
     // 合并数据
     mergeTrees(otherTree);
@@ -585,22 +584,21 @@ std::unique_ptr<EulerTourTree> EulerTourTree::cutBoundary(int v, int u) {
     delete edgeVU;
     delete edgeUV;
 
-    vertices.erase(v);
-    edgeNodes.erase(v);
+    // vertices.erase(v);
+    // edgeNodes.erase(v);
 
     root = T_u;
 
     auto treeV = std::make_unique<EulerTourTree>(-1);
-    treeV->vertices.insert(v);
-    if (L) {
-        treeV->edgeNodes[v][v] = L;
-        treeV->root = L;
-    } else {
-        // 理论上 L 不会为空，如果 v 存在的话
-        Node* vNode = new Node(v);
-        treeV->edgeNodes[v][v] = vNode;
-        treeV->root = vNode;
-    }
+    treeV->vertices.clear();
+    // if (L) {
+    //     treeV->edgeNodes[v][v] = L;
+    //     treeV->root = L;
+    // } else {
+    //     Node* vNode = new Node(v);
+    //     treeV->edgeNodes[v][v] = vNode;
+    //     treeV->root = vNode;
+    // }
     return treeV;
 }
 
@@ -627,16 +625,11 @@ bool EulerTourTree::isConnected(int u, int v) const {
     return vertices.count(u) && vertices.count(v);
 }
 
-
-// 移除顶点
-void EulerTourTree::removeVertex(int v) {
-    if (!vertices.count(v)) return;
-    
-    Node* repNode = getRepresentative(v);
-    if (repNode) {
-        splay(repNode);
-        Node* left = repNode->left;
-        Node* right = repNode->right;
+void EulerTourTree::deleteOccurrence(Node* node) {
+    if (node) {
+        splay(node);
+        Node* left = node->left;
+        Node* right = node->right;
         if (left) left->parent = nullptr;
         if (right) right->parent = nullptr;
         
@@ -649,8 +642,26 @@ void EulerTourTree::removeVertex(int v) {
         } else {
             root = nullptr;
         }
-        
-        delete repNode;
+
+        delete node;
+    }
+}
+
+// 移除顶点
+void EulerTourTree::removeVertex(int v) {
+    if (!vertices.count(v)) return;
+    
+    std::cout << "Removing vertex " << v << "\n";
+    for (const auto& [neighbor, node] : edgeNodes[v]) {
+        if (neighbor == v) {
+            deleteOccurrence(node); // 删除顶点节点
+        } else {
+            std::cout << "Removing edge (" << v << ", " << neighbor << ")\n";
+            deleteOccurrence(edgeNodes[v][neighbor]); // 删除边节点 (v, neighbor)
+            std::cout << "Removing edge (" << neighbor << ", " << v << ")\n";
+            deleteOccurrence(edgeNodes[neighbor][v]); // 删除边节点 (neighbor, v)
+            edgeNodes[neighbor].erase(v);
+        }
     }
     
     vertices.erase(v);
@@ -669,17 +680,22 @@ int EulerTourTree::getVertexDegree(int v) const {
     if (!vertices.count(v)) return 0;
 
     int degree = 0;
+    std::vector<int> neighbors;
     auto it = edgeNodes.find(v);
     if (it != edgeNodes.end()) {
-        // 每条边有两个方向的节点，所以度数 = (边节点数) / 2
-        // 但需要排除自环 edgeNodes[v][v]
         for (const auto& [neighbor, node] : it->second) {
             if (neighbor != v) {
                 degree++;
+                neighbors.push_back(neighbor);
             }
         }
-        degree /= 2;  // 每条边计算了两次
     }
+    std::cout << "Vertex " << v << " has " << degree << " tree edges: ";
+    for (int neighbor : neighbors) {
+        std::cout << "( " << v << ", " << neighbor << " ) ";
+    }
+    std::cout << std::endl;
+
     return degree;
 }
 
@@ -688,7 +704,7 @@ void EulerTourTree::printEulerTour() const {
     std::vector<Node*> nodes;
     collectNodes(root, nodes);
     
-    std::cout << "=== Euler Tour (Tree " << treeId << ") ===" << std::endl;
+    // std::cout << "=== Euler Tour (Tree " << treeId << ") ===" << std::endl;
     // std::cout << "Total nodes: " << nodes.size() << std::endl;
     std::cout << "root id: (" << root->u << "," << root->v << ")" << std::endl;
     std::cout << "Size: " << (root ? root->size : 0) << std::endl;
