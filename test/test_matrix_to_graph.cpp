@@ -8,10 +8,10 @@ int main() {
     // dm.testSplay(3);
     // dm.printComponents();
     // 不分裂
-    std::cout << "测试不分裂情况：" << std::endl;
-    dm.testDynamicUpdateCC({0, 1});
+    // std::cout << "测试不分裂情况：" << std::endl;
+    // dm.testDynamicUpdateCC({0, 1});
     // 分裂
-    // std::cout << "测试分裂情况：" << std::endl;
-    // dm.testDynamicUpdateCC({2, 3, 4});
+    std::cout << "测试分裂情况：" << std::endl;
+    dm.testDynamicUpdateCC({2, 3, 4});
     return 0;
 }

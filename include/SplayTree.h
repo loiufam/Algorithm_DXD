@@ -102,8 +102,7 @@ private:
     void deleteTree(Node* x);
     
     // 寻找替代边
-    Edge findReplacementEdge(const std::unordered_set<int>& component1,
-                            const std::unordered_set<int>& component2);
+    Edge findReplacementEdge(Node* rootU, Node* rootV);
     
 public:
     explicit EulerTourTree(int id);
@@ -180,8 +179,10 @@ public:
     
     // 动态更新相关
     void deleteOccurrence(Node* node);
+    std::pair<Node*, Node*> deleteEdge(int u, int v);
+    void insertEdge(int u, int v);
     void removeVertex(int v);
-    std::unique_ptr<EulerTourTree> cutBoundary(int v, int u);
+    void cutBoundary(int v, int u);
     std::unique_ptr<EulerTourTree> cutWithReplacement(int u, int v);
 
     // 调试

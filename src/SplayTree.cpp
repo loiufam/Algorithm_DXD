@@ -153,6 +153,7 @@ Node* EulerTourTree::concatenate(Node* leftTree, Node* rightTree) {
     Node* r = findRightmost(leftTree);
     r->right = rightTree;
     rightTree->parent = r;
+    // updateSizeToRoot(rightTree);
     return leftTree;
 }
 
@@ -439,35 +440,82 @@ std::pair<std::unique_ptr<EulerTourTree>, std::unique_ptr<EulerTourTree>> EulerT
     return {std::move(treeU), std::move(treeV)};
 }
 
-// 带替换的Cut操作
-std::unique_ptr<EulerTourTree> EulerTourTree::cutWithReplacement(int u, int v) {
-    reroot(u); 
+void EulerTourTree::insertEdge(int u, int v) {
+    if (!vertices.count(u) || !vertices.count(v)) return;
+    
+    reroot(u);
+    
+    Node* nodeV = getRepresentative(v);
+    if (!nodeV) return;
+    
+    splay(nodeV);
+    Node* left = nodeV->left;
+    Node* right = nodeV->right;
+    
+    if (left) left->parent = nullptr;
+    if (right) right->parent = nullptr;
+    nodeV->left = nodeV->right = nullptr;
+    updateSize(nodeV);
+    
+    // 创建边节点
+    Node* edgeUV = new Node(u, v);
+    Node* edgeVU = new Node(v, u);
+    edgeNodes[u][v] = edgeUV;
+    edgeNodes[v][u] = edgeVU;
+    
+    // 组装：left -> (u,v) -> [v] -> right -> (v,u)
+    root = left;
+    root = concatenate(root, edgeUV);
+    root = concatenate(root, nodeV);
+    root = concatenate(root, right);
+    root = concatenate(root, edgeVU);
+    
+    updateSizeToRoot(edgeVU);
+    root = findRoot(edgeVU);
+}
 
-    // 安全检查：确保边存在
-    if (!edgeNodes.count(u) || !edgeNodes[u].count(v)) return nullptr;
-
+std::pair<Node*, Node*> EulerTourTree::deleteEdge(int u, int v) {
+    if (!edgeNodes.count(u) || !edgeNodes[u].count(v)) {
+        return {nullptr, nullptr};
+    }
+    
     Node* edgeUV = edgeNodes[u][v];
     Node* edgeVU = edgeNodes[v][u];
-
+    
+    // 删除 (u,v) 节点，返回分离的两部分
     splay(edgeUV);
-    Node* L = edgeUV->left;
-    Node* R = edgeUV->right;
+    Node* L1 = edgeUV->left;
+    Node* R1 = edgeUV->right;
+    if (L1) L1->parent = nullptr;
+    if (R1) R1->parent = nullptr;
     edgeUV->left = edgeUV->right = nullptr;
-    if (L) L->parent = nullptr;
-    if (R) R->parent = nullptr;
+    
+    // 在剩余部分中删除 (v,u) 节点
+    if (!R1) return {L1, nullptr};
     
     splay(edgeVU);
-    Node* Tv = edgeVU->left;
+    Node* L2 = edgeVU->left;
     Node* R2 = edgeVU->right;
-    edgeVU->left = edgeVU->right = nullptr;
-    if (Tv) Tv->parent = nullptr;
+    if (L2) L2->parent = nullptr;
     if (R2) R2->parent = nullptr;
+    edgeVU->left = edgeVU->right = nullptr;
+    
+    // 合并产生两棵子树
+    Node* treeU = join(L1, R2);  // u 侧的树
+    Node* treeV = L2;             // v 侧的树
+    
+    // 删除边节点
+    delete edgeUV;
+    delete edgeVU;
+    edgeNodes[u].erase(v);
+    edgeNodes[v].erase(u);
+    
+    return {treeU, treeV};
+}
 
-    Node* rootU = join(L, R2);
-    Node* rootV = Tv;
-    root = rootU;  // 当前对象保留为 u 所在的大树
+// 寻找替代边
+Edge EulerTourTree::findReplacementEdge(Node* rootU, Node* rootV) {
 
-    Edge replacement(-1, -1);
     for (const Edge& e : nonTreeEdges) {
         Node* nodeU = getRepresentative(e.u);
         Node* nodeV = getRepresentative(e.v);
@@ -478,26 +526,37 @@ std::unique_ptr<EulerTourTree> EulerTourTree::cutWithReplacement(int u, int v) {
         Node* rV = findRoot(nodeV);
         
         if ((rU == rootU && rV == rootV) || (rU == rootV && rV == rootU)) {
-            replacement = e;
-            break;
+            return e;
         }
     }
+    
+    return Edge(-1, -1);
+}
+
+// 带替换的Cut操作
+std::unique_ptr<EulerTourTree> EulerTourTree::cutWithReplacement(int u, int v) {
+    reroot(u); 
+
+    auto [treeU, treeV] = deleteEdge(u, v);
+    if (!treeU || !treeV) {
+        // 边不存在或删除失败
+        return nullptr;
+    }
+
+    root = treeU;  // 当前对象保留为 u 所在的大树
+
+    Edge replacement = findReplacementEdge(treeU, treeV);
 
     if (replacement.u != -1) {
         nonTreeEdges.erase(replacement);
 
-        delete edgeUV;
-        delete edgeVU;
-        edgeNodes[u].erase(v);
-        edgeNodes[v].erase(u);
-
-        root = joinTreesViaEdge(rootU, rootV, replacement.u, replacement.v);
+        root = joinTreesViaEdge(treeU, treeV, replacement.u, replacement.v);
         return nullptr; // 没有产生新分量
     } else {
         auto newTree = std::make_unique<EulerTourTree>(-1);
 
-        Node* T_small = (getSize(rootU) < getSize(rootV)) ? rootU : rootV;
-        Node* T_large = (T_small == rootU) ? rootV : rootU;
+        Node* T_small = (getSize(treeU) < getSize(treeV)) ? treeU : treeV;
+        Node* T_large = (T_small == treeU) ? treeV : treeU;
 
         // 分配顶点
         std::vector<Node*> nodes;
@@ -507,7 +566,7 @@ std::unique_ptr<EulerTourTree> EulerTourTree::cutWithReplacement(int u, int v) {
         for (Node* node : nodes) {
             int currU = node->u;
             int currV = node->v;
-            
+        
             // 移动 Vertices
             if (vertices.count(currU)) {
                 vertices.erase(currU);
@@ -518,7 +577,7 @@ std::unique_ptr<EulerTourTree> EulerTourTree::cutWithReplacement(int u, int v) {
                  newTree->vertices.insert(currV);
             }
 
-            // 移动 EdgeNodes
+            // 移动EdgeNodes
             if (node->isEdge()) {
                 newTree->edgeNodes[currU][currV] = node;
                 edgeNodes[currU].erase(currV);
@@ -546,78 +605,49 @@ std::unique_ptr<EulerTourTree> EulerTourTree::cutWithReplacement(int u, int v) {
         newTree->root = T_small;
         root = T_large;
 
-        delete edgeUV;
-        delete edgeVU;
-        if (newTree->vertices.count(u)) newTree->edgeNodes[u].erase(v);
-        else edgeNodes[u].erase(v);
+        if (newTree->vertices.count(u)) 
+            newTree->edgeNodes[u].erase(v);
+        else 
+            edgeNodes[u].erase(v);
 
-        if (newTree->vertices.count(v)) newTree->edgeNodes[v].erase(u);
-        else edgeNodes[v].erase(u);
+        if (newTree->vertices.count(v)) 
+            newTree->edgeNodes[v].erase(u);
+        else 
+            edgeNodes[v].erase(u);
         
         return newTree;
     }
 }
 
 // 快速切除边界边
-std::unique_ptr<EulerTourTree> EulerTourTree::cutBoundary(int v, int u) {
+void EulerTourTree::cutBoundary(int v, int u) {
     reroot(v);
 
     // 确保边存在
-    if (!edgeNodes.count(v) || !edgeNodes[v].count(u)) return nullptr;
+    if (!edgeNodes.count(v) || !edgeNodes[v].count(u)) return;
 
-    Node* edgeVU = edgeNodes[v][u]; // 边 (v, u)
-    Node* edgeUV = edgeNodes[u][v]; // 边 (u, v)
-
-    splay(edgeVU);
-    Node* L = edgeVU->left;
-    Node* R = edgeVU->right;
-    
-    edgeVU->left = nullptr;
-    edgeVU->right = nullptr;
-    if (L) L->parent = nullptr;
-    if (R) R->parent = nullptr;
-
-    splay(edgeUV);
-    Node* T_u = edgeUV->left;
-    if (T_u) T_u->parent = nullptr;
-
-    delete edgeVU;
-    delete edgeUV;
-
-    // vertices.erase(v);
-    // edgeNodes.erase(v);
-
-    root = T_u;
-
-    auto treeV = std::make_unique<EulerTourTree>(-1);
-    treeV->vertices.clear();
-    // if (L) {
-    //     treeV->edgeNodes[v][v] = L;
-    //     treeV->root = L;
-    // } else {
-    //     Node* vNode = new Node(v);
-    //     treeV->edgeNodes[v][v] = vNode;
-    //     treeV->root = vNode;
-    // }
-    return treeV;
-}
-
-// 寻找替代边
-Edge EulerTourTree::findReplacementEdge(const std::unordered_set<int>& component1,
-                                        const std::unordered_set<int>& component2) {
-    // 遍历较小分量的非树边
-    const auto& smaller = component1.size() < component2.size() ? component1 : component2;
-    const auto& larger = component1.size() < component2.size() ? component2 : component1;
-    
-    for (const Edge& e : nonTreeEdges) {
-        // 检查边的一个端点在small，另一个在large
-        if ((smaller.count(e.u) && larger.count(e.v)) ||
-            (smaller.count(e.v) && larger.count(e.u))) {
-            return e;
-        }
+    // 1. 删除 [v]
+    Node* nodeV = getRepresentative(v);
+    if (nodeV) {
+        deleteOccurrence(nodeV);  // root 会自动更新
+        edgeNodes[v].erase(v);
     }
     
-    return Edge(-1, -1);
+    // 2. 删除 (v,u)
+    if (edgeNodes[v].count(u)) {
+        Node* edgeVU = edgeNodes[v][u];
+        deleteOccurrence(edgeVU);  // root 会自动更新
+        edgeNodes[v].erase(u);
+    }
+    
+    // 3. 删除 (u,v)
+    if (edgeNodes[u].count(v)) {
+        Node* edgeUV = edgeNodes[u][v];
+        deleteOccurrence(edgeUV);  // root 会自动更新
+        edgeNodes[u].erase(v);
+    }
+
+    return;
 }
 
 // 查询操作
@@ -649,28 +679,23 @@ void EulerTourTree::deleteOccurrence(Node* node) {
 
 // 移除顶点
 void EulerTourTree::removeVertex(int v) {
-    if (!vertices.count(v)) return;
+    // if (!vertices.count(v)) return;
     
     std::cout << "Removing vertex " << v << "\n";
-    for (const auto& [neighbor, node] : edgeNodes[v]) {
-        if (neighbor == v) {
-            deleteOccurrence(node); // 删除顶点节点
-        } else {
-            std::cout << "Removing edge (" << v << ", " << neighbor << ")\n";
-            deleteOccurrence(edgeNodes[v][neighbor]); // 删除边节点 (v, neighbor)
-            std::cout << "Removing edge (" << neighbor << ", " << v << ")\n";
-            deleteOccurrence(edgeNodes[neighbor][v]); // 删除边节点 (neighbor, v)
-            edgeNodes[neighbor].erase(v);
-        }
-    }
+
+    auto repNode = getRepresentative(v);
+    deleteOccurrence(repNode);
     
     vertices.erase(v);
     edgeNodes.erase(v);
     
-    // 删除相关的非树边
-    for (const Edge& e : nonTreeEdges) {
-        if (e.u == v || e.v == v) {
-            nonTreeEdges.erase(e);
+    // 删除相关的非树边 - 使用迭代器安全删除
+    auto edgeIt = nonTreeEdges.begin();
+    while (edgeIt != nonTreeEdges.end()) {
+        if (edgeIt->u == v || edgeIt->v == v) {
+            edgeIt = nonTreeEdges.erase(edgeIt);
+        } else {
+            ++edgeIt;
         }
     }
 }
@@ -701,6 +726,11 @@ int EulerTourTree::getVertexDegree(int v) const {
 
 // 调试：打印欧拉回路
 void EulerTourTree::printEulerTour() const {
+    if (!root) {
+        std::cout << "Tree " << treeId << " is empty.\n";
+        return;
+    }
+    
     std::vector<Node*> nodes;
     collectNodes(root, nodes);
     

@@ -339,11 +339,7 @@ void DancingMatrix::DecUpdateCC(const std::vector<int>& deletedVertices) {
         
         // 判断是否为边界顶点（只有一条树边）
         int treeEdgeCount = tree->getVertexDegree(v);
-        // if (treeEdgeCount < 1) {
-        //     // 孤立顶点（不应该出现）
-        //     std::cout << "Isolated vertex " << v << "\n";
-        //     return;
-        // }
+
         
         if (treeEdgeCount == 1) {
             // 边界顶点：删除所有非树边，无需寻找替代边
@@ -360,11 +356,7 @@ void DancingMatrix::DecUpdateCC(const std::vector<int>& deletedVertices) {
                 graph->deleteEdge(v, u);
             }
 
-            // 返回空树，统一删除边界树
-            auto bound_tree = tree->cutBoundary(v, treeEdgeU);
-            if (bound_tree) {
-                newComponents.push_back(std::move(bound_tree));
-            }
+            tree->cutBoundary(v, treeEdgeU);
             graph->deleteEdge(v, treeEdgeU);
         } else {
             // 非边界顶点：处理每条边
@@ -394,6 +386,7 @@ void DancingMatrix::DecUpdateCC(const std::vector<int>& deletedVertices) {
         
         // 从树中删除顶点
         tree->removeVertex(v);
+        tree->printEulerTour();
     }
     
     // 更新连通分量
@@ -431,7 +424,9 @@ void DancingMatrix::IncUpdateCC(const std::vector<int>& restoredVertices) {
 
             if (restoredSet.count(u) && v > u) continue;
 
-            graph->restoreEdge(v, u);
+            if (!graph->hasEdge(v, u)) { 
+                graph->restoreEdge(v, u);
+            }
             splaytree::EulerTourTree* treeV = findEulerTourTree(v); 
 
             if (treeU != treeV) {
