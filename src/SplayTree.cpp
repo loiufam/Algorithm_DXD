@@ -543,7 +543,7 @@ std::unique_ptr<EulerTourTree> EulerTourTree::cutWithReplacement(int u, int v) {
         return nullptr;
     }
 
-    root = treeU;  // 当前对象保留为 u 所在的大树
+    root = treeU;  // 当前对象保留为 u 所在的树
 
     Edge replacement = findReplacementEdge(treeU, treeV);
 
@@ -572,13 +572,13 @@ std::unique_ptr<EulerTourTree> EulerTourTree::cutWithReplacement(int u, int v) {
                 vertices.erase(currU);
                 newTree->vertices.insert(currU);
             }
-            if (node->isEdge() && vertices.count(currV)) { // 处理边的另一端
+            if (currV != -1 && vertices.count(currV)) { // 处理边的另一端
                  vertices.erase(currV);
                  newTree->vertices.insert(currV);
             }
 
             // 移动EdgeNodes
-            if (node->isEdge()) {
+            if (currV != -1) {
                 newTree->edgeNodes[currU][currV] = node;
                 edgeNodes[currU].erase(currV);
                 if (edgeNodes[currU].empty()) edgeNodes.erase(currU);
@@ -605,16 +605,14 @@ std::unique_ptr<EulerTourTree> EulerTourTree::cutWithReplacement(int u, int v) {
         newTree->root = T_small;
         root = T_large;
 
-        if (newTree->vertices.count(u)) 
+        if (newTree->vertices.count(u)) {
             newTree->edgeNodes[u].erase(v);
-        else 
-            edgeNodes[u].erase(v);
-
-        if (newTree->vertices.count(v)) 
-            newTree->edgeNodes[v].erase(u);
-        else 
             edgeNodes[v].erase(u);
-        
+        } else { 
+            newTree->edgeNodes[v].erase(u);
+            edgeNodes[u].erase(v);
+        }
+
         return newTree;
     }
 }
@@ -626,21 +624,14 @@ void EulerTourTree::cutBoundary(int v, int u) {
     // 确保边存在
     if (!edgeNodes.count(v) || !edgeNodes[v].count(u)) return;
 
-    // 1. 删除 [v]
-    Node* nodeV = getRepresentative(v);
-    if (nodeV) {
-        deleteOccurrence(nodeV);  // root 会自动更新
-        edgeNodes[v].erase(v);
-    }
-    
-    // 2. 删除 (v,u)
+    // 删除 (v,u)
     if (edgeNodes[v].count(u)) {
         Node* edgeVU = edgeNodes[v][u];
         deleteOccurrence(edgeVU);  // root 会自动更新
         edgeNodes[v].erase(u);
     }
     
-    // 3. 删除 (u,v)
+    // 删除 (u,v)
     if (edgeNodes[u].count(v)) {
         Node* edgeUV = edgeNodes[u][v];
         deleteOccurrence(edgeUV);  // root 会自动更新
@@ -679,12 +670,14 @@ void EulerTourTree::deleteOccurrence(Node* node) {
 
 // 移除顶点
 void EulerTourTree::removeVertex(int v) {
-    // if (!vertices.count(v)) return;
+    if (!vertices.count(v)) return;
     
     std::cout << "Removing vertex " << v << "\n";
 
-    auto repNode = getRepresentative(v);
-    deleteOccurrence(repNode);
+    Node* nodeV = getRepresentative(v);
+    if (nodeV) {
+        deleteOccurrence(nodeV);
+    }
     
     vertices.erase(v);
     edgeNodes.erase(v);
