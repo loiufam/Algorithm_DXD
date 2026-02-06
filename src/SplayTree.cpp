@@ -672,7 +672,7 @@ void EulerTourTree::deleteOccurrence(Node* node) {
 void EulerTourTree::removeVertex(int v) {
     if (!vertices.count(v)) return;
     
-    std::cout << "Removing vertex " << v << "\n";
+    // std::cout << "Removing vertex " << v << "\n";
 
     Node* nodeV = getRepresentative(v);
     if (nodeV) {
@@ -708,11 +708,11 @@ int EulerTourTree::getVertexDegree(int v) const {
             }
         }
     }
-    std::cout << "Vertex " << v << " has " << degree << " tree edges: ";
-    for (int neighbor : neighbors) {
-        std::cout << "( " << v << ", " << neighbor << " ) ";
-    }
-    std::cout << std::endl;
+    // std::cout << "Vertex " << v << " has " << degree << " tree edges: ";
+    // for (int neighbor : neighbors) {
+    //     std::cout << "( " << v << ", " << neighbor << " ) ";
+    // }
+    // std::cout << std::endl;
 
     return degree;
 }

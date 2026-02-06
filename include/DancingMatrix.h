@@ -99,6 +99,15 @@ class DancingMatrix
         DancingMatrix& operator=(DancingMatrix&&) = delete;
         //释放内存  
         ~DancingMatrix();  
+
+        // 行 -> 包含该行的列集合
+        unordered_map<int, set<int>> row_to_cols;
+
+        // 追踪每行当前被cover的列（用于判断是否完全被删除）
+        unordered_map<int, set<int>> row_covered_cols;
+
+        // 关键数据结构：列 -> 激活行集合的反向索引
+        unordered_map<int, vector<int>> col_to_rows;
         
         void build_mapping_from_cols(const unordered_set<int>& blockCols, unordered_map<int, set<int>>& rowToCols, unordered_map<int, set<int>>& colToRows);
         void insert( int r, int c );  
@@ -155,6 +164,7 @@ class DancingMatrix
 
         // IBD: Independent Block Detection
         vector<Block> getComponentsByIG(const set<int> rows);
+        vector<Block> getComponentsByETT();
 
         void turnOnGraphSync() {
             // std::unique_lock lock(mutex_);
@@ -175,14 +185,14 @@ class DancingMatrix
         void buildGraphFromMatrix();
         
         // 动态更新接口
-        void DecUpdateCC(const std::vector<int>& deletedVertices);
-        void IncUpdateCC(const std::vector<int>& restoredVertices);
+        void DecUpdateCC(const std::set<int>& deletedVertices);
+        void IncUpdateCC(const std::set<int>& restoredVertices);
         
         // 获取连通分量
         std::vector<std::unordered_set<int>> getConnectedComponents() const;
         int getNumComponents() const { return components.size(); }
         
-        void printComponents() const;
+        void printComponents();
 
         void testCutEdge(int u, int v);
         void testReRoot(int v);
@@ -200,27 +210,79 @@ class DancingMatrix
         std::shared_ptr<ETTree> etTree;  // 欧拉回路树
         mutable std::shared_mutex mutex_;  // 读写锁
 
-        // 行 -> 包含该行的列集合
-        unordered_map<int, set<int>> row_to_cols;
-
-        // 追踪每行当前被cover的列（用于判断是否完全被删除）
-        unordered_map<int, set<int>> row_covered_cols;
-
-        // 关键数据结构：列 -> 激活行集合的反向索引
-        unordered_map<int, vector<int>> col_to_rows;
-
         // Graph build_graph_from_columns(const unordered_map<int, vector<int>>& col2rows, int num_rows, bool deduplicate = true);
 
-        bool enableGraphSync = true; // 是否启用图同步      
+        bool enableGraphSync = true; // 是否启用图同步   
         
+        // 深拷贝单个树
+        std::unique_ptr<splaytree::EulerTourTree> deepCopyTree(
+            splaytree::EulerTourTree* original);
+        
+        // 深拷贝图（只拷贝 block 相关的边）
+        std::unique_ptr<Graph> deepCopyGraph(const std::set<int>& rows);
+        
+    public:
         // build undirected graph from matrix
         std::unique_ptr<Graph> graph;
         // 连通分量管理
         std::vector<std::unique_ptr<splaytree::EulerTourTree>> components;
-        // std::unordered_map<int, splaytree::EulerTourTree*> vertexToComponent;
-        splaytree::EulerTourTree* findEulerTourTree(int v) const;
+        splaytree::EulerTourTree* findEulerTourTree(int v);
         int nextTreeId = 0;
+
+        // === 线程局部数据结构 ===
+        struct ThreadLocalState {
+            std::vector<std::unique_ptr<splaytree::EulerTourTree>> components;
+            std::unique_ptr<Graph> graph;
+            int nextTreeId;
+            bool initialized;
+            
+            ThreadLocalState() : nextTreeId(0), initialized(false) {}
+            
+            ~ThreadLocalState() {
+                components.clear();
+                graph.reset();
+            }
+        };
         
+        // thread_local 存储
+        static thread_local std::unique_ptr<ThreadLocalState> tlsState;
+
+        // 初始化线程局部状态
+        void initThreadLocalState(const Block& block, 
+                                    splaytree::EulerTourTree* singleTree);
+
+        // 清理线程局部状态
+        static void cleanupThreadLocalState();
+
+        // 判断是否使用线程局部状态
+        bool isThreadLocal() const {
+            return tlsState && tlsState->initialized;
+        }
+
+        // 获取当前线程的 components
+        std::vector<std::unique_ptr<splaytree::EulerTourTree>>& getComponents() {
+            if (isThreadLocal()) {
+                return tlsState->components;
+            }
+            return components;
+        }
+
+        // 获取当前线程的 graph
+        Graph* getGraph() {
+            if (isThreadLocal()) {
+                return tlsState->graph.get();
+            }
+            return graph.get();
+        }
+
+        // 获取当前线程的 nextTreeId
+        int& getNextTreeId() {
+            if (isThreadLocal()) {
+                return tlsState->nextTreeId;
+            }
+            return nextTreeId;
+        }
+
         // 从图构建生成森林
         void buildSpanningForest();
         std::vector<splaytree::Edge> bfsSpanningTree(int start, std::unordered_set<int>& visited, std::unordered_set<int>& componentVertices);

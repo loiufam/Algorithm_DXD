@@ -59,7 +59,8 @@ struct EdgeHash {
 
 // 欧拉回路树类（无锁版本，每个线程独立处理）
 class EulerTourTree {
-private:
+
+public:
     Node* root = nullptr;
     int treeId;
     
@@ -95,7 +96,6 @@ private:
         return x ? x->size : 0;
     }
     Node* getRepresentative(int u);
-    void collectNodes(Node* x, std::vector<Node*>& nodes) const;
     Node* findEdgeNode(Node* subtree, int u, int v);
     Node* findEdgeNodeDFS(Node* subtree, int u, int v);
     Node* buildFromNodes(std::vector<Node*>& nodes, int start, int end);
@@ -115,6 +115,8 @@ public:
     // 基本操作
     int getTreeId() const { return treeId; }
     Node* getRoot() const { return root; }
+    void collectNodes(Node* x, std::vector<Node*>& nodes) const;
+
     void addVertex(int v);
     void reroot(int u);
     void link(int u, int v, EulerTourTree* otherTree);

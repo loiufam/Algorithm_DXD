@@ -1,7 +1,2 @@
-启用多线程DXD算法求解: grafo337.15
-开始多线程DXD搜索...
-Time: 0.074738 s
-Solutions: 53010000
-Max Blocks: 13
-DNNF Size: 272
-多线程DXD算法求解结束: grafo337.15
+启用DXD算法求解: Aarnet
+开始单线程DXD搜索...

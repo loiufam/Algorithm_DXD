@@ -3,7 +3,7 @@
 
 static Logger logger("../run_results.txt");  // 全局日志
 // const string muti_thread_dxd_log_file = "../muti_thread_dxd_log.csv";
-static const int DEFAULT_THREADS = 16;  // 线程数
+static const int DEFAULT_THREADS = 8;  // 线程数
 
 // 算法类型枚举
 enum class algorithm_type {
