@@ -182,7 +182,7 @@ void DancingMatrix::initThreadLocalState(
     tlsState->components.push_back(std::move(treeCopy));
     
     // 深拷贝图
-    tlsState->graph = deepCopyGraph(block.rows);
+    tlsState->graph = deepCopyGraph(singleTree);
     
     tlsState->initialized = true;
 }
@@ -238,29 +238,22 @@ std::unique_ptr<splaytree::EulerTourTree> DancingMatrix::deepCopyTree(
     return newTree;
 }
 
-std::unique_ptr<Graph> DancingMatrix::deepCopyGraph(const std::set<int>& rows) {
+std::unique_ptr<Graph> DancingMatrix::deepCopyGraph(splaytree::EulerTourTree* tree) {
+    
     auto newGraph = std::make_unique<Graph>(ROWS);
+    if (!tree) return newGraph;
     
-    // 只拷贝当前 block 涉及的边
-    std::unordered_set<splaytree::Edge, splaytree::EdgeHash> addedEdges;
+    const auto& nonTreeEdges = tree->getNonTreeEdges();
+    for (const auto& edge : nonTreeEdges) {
+        newGraph->addEdge(edge.u, edge.v);
+    }
+
+    std::vector<splaytree::Node*> nodes;
+    tree->collectNodes(tree->getRoot(), nodes);
     
-    for (int row : rows) {
-        if (!row_to_cols.count(row)) continue;
-        
-        for (int col : row_to_cols[row]) {
-            if (!col_to_rows.count(col)) continue;
-            
-            for (int otherRow : col_to_rows[col]) {
-                if (otherRow == row) continue;
-                if (!rows.count(otherRow)) continue;
-                
-                // 避免重复添加（无向边）
-                splaytree::Edge edge(row, otherRow);
-                
-                if (addedEdges.insert(edge).second) {
-                    newGraph->addEdge(edge.u, edge.v);
-                }
-            }
+    for (auto* node : nodes) {
+        if (node->isEdge()) { // isEdge() 意味着 node->v != -1
+            newGraph->addEdge(node->u, node->v);
         }
     }
     

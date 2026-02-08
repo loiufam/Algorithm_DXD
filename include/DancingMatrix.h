@@ -219,7 +219,7 @@ class DancingMatrix
             splaytree::EulerTourTree* original);
         
         // 深拷贝图（只拷贝 block 相关的边）
-        std::unique_ptr<Graph> deepCopyGraph(const std::set<int>& rows);
+        std::unique_ptr<Graph> deepCopyGraph(splaytree::EulerTourTree* tree);
         
     public:
         // build undirected graph from matrix

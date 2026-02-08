@@ -31,8 +31,13 @@ DNNFResult DanceDNNF::serialSearch(vector<Block>& blocks, int parent_depth) {
 
     DNNFResult totalResult(1);
     
-    for (auto& b : blocks) {
-        auto result = DXD(b, parent_depth + 1);
+    for (size_t i = 0; i < blocks.size(); ++i) {
+        splaytree::EulerTourTree* sourceTree = components[i].get();
+        // initThreadLocalState(blocks[i], sourceTree);
+
+        auto result = DXD(blocks[i], parent_depth + 1);
+        // cleanupThreadLocalState();
+        
         if (result.isZero()) {
             return DNNFResult(0);
         }
@@ -160,8 +165,9 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
 
         if (curBlock.size() > 1) {
+            // std::cout << "Detected " << curBlock.size() << " independent blocks at depth " << depth << ".\n";
             // 检测到多个独立分块，则并行处理
-            if(useETT && isParallelSearch) turnOffGraphSync();
+            if(useETT) turnOffGraphSync();
 
             DNNFResult result;
 
