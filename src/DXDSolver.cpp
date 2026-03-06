@@ -5,18 +5,29 @@ shared_ptr<DNNFNode> DanceDNNF::buildDecisionNode(int r, shared_ptr<DNNFNode> lo
         return lo;
     }
 
-    std::shared_lock<std::shared_mutex> readLock(tableMutex);
     size_t key = gen_key(r, lo.get(), hi.get());
+
+    {    
+        std::shared_lock<std::shared_mutex> readLock(tableMutex);
+        auto it = node_table.find(key);
+        if (it != node_table.end()) {
+            return it->second;
+        }
+    }
+
+    std::unique_lock<std::shared_mutex> writeLock(tableMutex);
     if (node_table.find(key) != node_table.end()) {
         return node_table[key];
     }
 
     auto decision_node = make_shared<DNNFNode>(NodeType::Decision, lo, hi);
     node_table[key] = decision_node;
+
     if (dxz_mode) {
+        num_of_zddNodes += 2;
+    }else{
         num_of_DNNFNodes += 1;
     }
-    num_of_DNNFNodes++;
     return decision_node;
 }
 
@@ -193,9 +204,10 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
 
         int block_size = curBlock.size();
         if (block_size  > 1) {
+            num_of_DNNFNodes += block_size - 1; // 生成一个分解节点和block_size个子节点
             // std::cout << "Detected " << curBlock.size() << " independent blocks at depth " << depth << ".\n";
             // 检测到多个独立分块，则并行处理
-            if(useETT) turnOffGraphSync();
+            if(useETT && !single_thread_mode) turnOffGraphSync();
             // addConcurrentThread(block_size);
 
             DNNFResult result;
@@ -299,7 +311,7 @@ void DanceDNNF::startDXD() {
         if(!controlOUTPUT) logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
 
         if(dxz_mode) {
-            logger.logLine("ZDD Size: " + std::to_string(num_of_DNNFNodes + max_depth));
+            logger.logLine("ZDD Size: " + std::to_string(num_of_zddNodes));
         } else {
             logger.logLine("DNNF Size: " + std::to_string(num_of_DNNFNodes));
         }
@@ -338,7 +350,7 @@ void DanceDNNF::startMultiThreadDXD() {
     
         logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
         if(dxz_mode) {
-            logger.logLine("ZDD Size: " + std::to_string(num_of_DNNFNodes + max_depth));
+            logger.logLine("ZDD Size: " + std::to_string(num_of_zddNodes));
         } else {
             logger.logLine("DNNF Size: " + std::to_string(num_of_DNNFNodes));
         }

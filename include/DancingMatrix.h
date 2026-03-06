@@ -194,9 +194,10 @@ class DancingMatrix
         }
 
         bool shouldDecompose() {
-            // if(current_concurrent_threads < MAX_CONCURRENT_THREADS && tried_numbers < MAX_TRIES) {
-            //     return true;
-            // }
+            if (single_thread_mode && ++tried_numbers > MAX_TRIES) {
+                turnOffGraphSync();
+                return false;
+            }
             
             return isGraphSyncEnabled();;
         }
