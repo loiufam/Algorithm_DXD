@@ -61,8 +61,9 @@ struct EdgeHash {
 class EulerTourTree {
 
 public:
-    Node* root = nullptr;
+    Node* root;
     int treeId;
+    int  compId   = -1;
     
     // 连通分量信息
     std::unordered_set<int> vertices;                          // 顶点集合
@@ -70,6 +71,7 @@ public:
     
     // 每个顶点的occurrence节点列表（用于O(1)查找）
     // std::unordered_map<int, std::vector<Node*>> vertexOccurrences;
+    // 存储所有树边节点，便于快速查找和更新
     std::unordered_map<int, std::unordered_map<int, Node*>> edgeNodes;
 
     // std::unordered_map<Edge, EdgeOrder, EdgeHash> edgeOrder;
@@ -109,13 +111,19 @@ public:
     ~EulerTourTree();
 
     // 禁止拷贝，只能移动
-    EulerTourTree(const EulerTourTree&) = delete;
-    EulerTourTree& operator=(const EulerTourTree&) = delete;
+    // EulerTourTree(const EulerTourTree&) = delete;
+    // EulerTourTree& operator=(const EulerTourTree&) = delete;
+    EulerTourTree(const EulerTourTree& o)
+    : treeId(o.treeId), compId(o.compId), root(o.root),
+        vertices(o.vertices), nonTreeEdges(o.nonTreeEdges), edgeNodes(o.edgeNodes) {}
     
     // 基本操作
     int getTreeId() const { return treeId; }
     Node* getRoot() const { return root; }
     void collectNodes(Node* x, std::vector<Node*>& nodes) const;
+    int getAnyVertex() const {
+        return vertices.empty() ? -1 : *vertices.begin();
+    }
 
     void addVertex(int v);
     void reroot(int u);
@@ -145,30 +153,18 @@ public:
         return vertices.count(v) > 0;
     }
 
-    // 切下 x 左侧，返回 {left, x}
-    inline std::pair<Node*, Node*> splitBefore(Node* x) {
-        splay(x);
-        Node* left = x->left;
-        if (left) {
-            left->parent = nullptr;
-            x->left = nullptr;
-            updateSize(x);
+    // 快速获取边界顶点的树边邻居（如果存在）
+    inline int getBoundaryVertexTreeNeighbor(int v) const {
+        auto it = edgeNodes.find(v);
+        if (it != edgeNodes.end()) {
+            for (const auto& [neighbor, node] : it->second) {
+                if (neighbor != v) {
+                    return neighbor; // 返回唯一的树边邻居
+                }
+            }
         }
-        return {left, x};
+        return -1;
     }
-
-    // 切下 x 右侧，返回 {x, right}
-    inline std::pair<Node*, Node*> splitAfter(Node* x) {
-        splay(x);
-        Node* right = x->right;
-        if (right) {
-            right->parent = nullptr;
-            x->right = nullptr;
-            updateSize(x);
-        }
-        return {x, right};
-    }
-
 
     // 非树边操作
     void addNonTreeEdge(const Edge& e) { nonTreeEdges.insert(e); }

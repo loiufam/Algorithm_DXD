@@ -20,20 +20,6 @@ ComponentDetector::ComponentDetector(const int n, const int m)
 
 }
 
-Graph::Graph(int n) : numVertices(n) {
-    adjList.resize(n, nullptr);
-}
-
-Graph::~Graph() {
-    for (int i = 0; i < numVertices; i++) {
-        AdjNode* curr = adjList[i];
-        while (curr) {
-            AdjNode* next = curr->next;
-            delete curr;
-            curr = next;
-        }
-    }
-}
 
 void ComponentDetector::Initialize(const std::unordered_map<int, std::vector<int>>& col_rows_map) {
     col_to_rows = col_rows_map;
@@ -539,83 +525,59 @@ std::vector<Block> ComponentDetector::convertComponentsToBlocks(
 // };
 
 
-void Graph::addEdge(int u, int v) {
-    if (u >= numVertices || v >= numVertices) return;
-   
-    if (edgeMap[u].count(v)) {
-        // 如果存在且被标记删除了，恢复它
-        if (edgeMap[u][v]->deleted) {
-            restoreEdge(u, v);
-        }
-        // 如果存在且没删除，直接返回（避免重复插入）
-        return;
-    }
-    
-    // 添加 u -> v
-    AdjNode* node1 = new AdjNode(v);
-    node1->next = adjList[u];
-    adjList[u] = node1;
-    edgeMap[u][v] = node1;
-    
-    // 添加 v -> u
-    AdjNode* node2 = new AdjNode(u);
-    node2->next = adjList[v];
-    adjList[v] = node2;
-    edgeMap[v][u] = node2;
-}
-
-void Graph::deleteEdge(int u, int v) {
-    if (edgeMap[u].count(v)) {
-        edgeMap[u][v]->deleted = true;
-    }
-    if (edgeMap[v].count(u)) {
-        edgeMap[v][u]->deleted = true;
-    }
-}
-
-void Graph::restoreEdge(int u, int v) {
-    if (edgeMap[u].count(v)) {
-        edgeMap[u][v]->deleted = false;
-    }
-    if (edgeMap[v].count(u)) {
-        edgeMap[v][u]->deleted = false;
-    }
-}
-
 std::vector<int> Graph::getNeighbors(int v) const {
-    std::vector<int> neighbors;
-    if (v >= numVertices) return neighbors;
-    
-    AdjNode* curr = adjList[v];
-    while (curr) {
-        if (!curr->deleted) {
-            neighbors.push_back(curr->neighbor);
-        }
-        curr = curr->next;
-    }
-    return neighbors;
+    // chk(v);
+    std::vector<int> res;
+    for (AdjNode* c = vertices_[v].sentinel.next; c; c = c->next)
+        if (!c->deleted && !vertices_[c->neighbor].deleted)
+            res.push_back(c->neighbor);
+    return res;
 }
 
 std::vector<int> Graph::getAllNeighbors(int v) const {
-    std::vector<int> neighbors;
-    if (v >= numVertices) return neighbors;
-    
-    AdjNode* curr = adjList[v];
-    while (curr) {
-        neighbors.push_back(curr->neighbor);
-        curr = curr->next;
-    }
-    return neighbors;
-}
-
-bool Graph::hasEdge(int u, int v) const {
-    auto it = edgeMap.find(u);
-    if (it == edgeMap.end()) return false;
-    auto it2 = it->second.find(v);
-    if (it2 == it->second.end()) return false;
-    return !it2->second->deleted;
+    // chk(v);
+    std::vector<int> res;
+    for (AdjNode* c = vertices_[v].sentinel.next; c; c = c->next)
+        res.push_back(c->neighbor);   // 不检查 deleted，全部返回
+    return res;
 }
 
 int Graph::getDegree(int v) const {
     return getNeighbors(v).size();
+}
+
+// ─────────────────────────────────────────────
+//  SubGraph 成员实现
+// ─────────────────────────────────────────────
+ void SubGraph::addEdge    (int u, int v) { parent_->addEdge(u, v);     }
+ void SubGraph::deleteEdge (int u, int v) { parent_->deleteEdge(u, v);  }
+ void SubGraph::restoreEdge(int u, int v) { parent_->restoreEdge(u, v); }
+ bool SubGraph::hasEdge    (int u, int v) const { return parent_->hasEdge(u,v); }
+ void SubGraph::deleteVertex(int v)   { parent_->deleteVertex(v);  }
+ void SubGraph::restoreVertex(int v)  { parent_->restoreVertex(v); }
+ bool SubGraph::hasVertex  (int v)    const { return parent_->hasVertex(v); }
+
+ std::vector<int> SubGraph::neighbors(int v) const {
+    return parent_->getNeighbors(v);
+}
+
+ std::vector<int> SubGraph::getAllNeighbors(int v) const {
+    return parent_->getAllNeighbors(v);
+}
+
+ void SubGraph::print() const {
+    std::cout << "  SubGraph[" << compId_ << "] (" << size() << "v): ";
+    for (int v : vertexIds_) {
+        std::cout << "v" << v << "(";
+        bool first = true;
+        for (AdjNode* c = parent_->vertex(v).sentinel.next; c; c = c->next) {
+            if (!c->deleted && parent_->vertex(c->neighbor).compId == compId_) {
+                if (!first) std::cout << ",";
+                std::cout << c->neighbor;
+                first = false;
+            }
+        }
+        std::cout << ") ";
+    }
+    std::cout << "\n";
 }

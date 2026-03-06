@@ -12,6 +12,8 @@ using row_id = int;
 const unsigned int MAX_ROW = 250000;
 const int TARGET_THRESHOLD = 5;
 const int HEAP_THRESHOLD = 50;  // 列数超过50时使用堆排序
+const int MAX_TRIES = 10;
+const int MAX_CONCURRENT_THREADS = 16;
 
 struct Node  
 {  
@@ -167,18 +169,36 @@ class DancingMatrix
         vector<Block> getComponentsByETT();
 
         void turnOnGraphSync() {
-            // std::unique_lock lock(mutex_);
+            std::unique_lock lock(graph_sync_mutex);
             enableGraphSync = true;
         }
 
         void turnOffGraphSync() {
-            // std::unique_lock lock(mutex_);
+            std::unique_lock lock(graph_sync_mutex);
             enableGraphSync = false;
         }
 
         bool isGraphSyncEnabled() const {
-            std::shared_lock lock(mutex_);
+            std::shared_lock lock(graph_sync_mutex);
             return enableGraphSync;
+        }
+
+        void addConcurrentThread(int count) {
+            std::lock_guard<std::mutex> lock(thread_count_mutex);
+            current_concurrent_threads += count;
+        }
+
+        void addTriedNumbers(int count) {
+            std::lock_guard<std::mutex> lock(tried_numbers_mutex);
+            tried_numbers += count;
+        }
+
+        bool shouldDecompose() {
+            // if(current_concurrent_threads < MAX_CONCURRENT_THREADS && tried_numbers < MAX_TRIES) {
+            //     return true;
+            // }
+            
+            return isGraphSyncEnabled();;
         }
 
         void initialize();
@@ -210,6 +230,14 @@ class DancingMatrix
         std::shared_ptr<ETTree> etTree;  // 欧拉回路树
         mutable std::shared_mutex mutex_;  // 读写锁
 
+        int current_concurrent_threads = 0;
+        std::mutex thread_count_mutex;
+
+        int tried_numbers = 0; // 已尝试的次数
+        std::mutex tried_numbers_mutex;
+
+        mutable std::shared_mutex graph_sync_mutex; // 图同步锁
+
         // Graph build_graph_from_columns(const unordered_map<int, vector<int>>& col2rows, int num_rows, bool deduplicate = true);
 
         bool enableGraphSync = true; // 是否启用图同步   
@@ -232,15 +260,17 @@ class DancingMatrix
         // === 线程局部数据结构 ===
         struct ThreadLocalState {
             std::vector<std::unique_ptr<splaytree::EulerTourTree>> components;
-            std::unique_ptr<Graph> graph;
-            int nextTreeId;
-            bool initialized;
+            // std::unique_ptr<Graph> graph;
+
+            SubGraph* subgraph  = nullptr;
+            int nextTreeId = 0;
+            bool initialized = false;
             
-            ThreadLocalState() : nextTreeId(0), initialized(false) {}
+            ThreadLocalState() = default;
             
             ~ThreadLocalState() {
                 components.clear();
-                graph.reset();
+                // graph.reset();
             }
         };
         
@@ -249,7 +279,7 @@ class DancingMatrix
 
         // 初始化线程局部状态
         void initThreadLocalState(const Block& block, 
-                                    splaytree::EulerTourTree* singleTree);
+                                    std::unique_ptr<splaytree::EulerTourTree> tree);
 
         // 清理线程局部状态
         static void cleanupThreadLocalState();
@@ -261,31 +291,45 @@ class DancingMatrix
 
         // 获取当前线程的 components
         std::vector<std::unique_ptr<splaytree::EulerTourTree>>& getComponents() {
-            if (isThreadLocal()) {
-                return tlsState->components;
-            }
-            return components;
+            return isThreadLocal() ? tlsState->components : components;
         }
 
         // 获取当前线程的 graph
-        Graph* getGraph() {
-            if (isThreadLocal()) {
-                return tlsState->graph.get();
+        // Graph* getGraph() {
+        //     if (isThreadLocal()) {
+        //         return tlsState->graph.get();
+        //     }
+        //     return graph.get();
+        // }
+
+        SubGraph* activeSubgraph_ = nullptr;
+
+        SubGraph* getGraph() {
+            if (isThreadLocal()) return tlsState->subgraph;
+
+            if (activeSubgraph_) return activeSubgraph_;
+            
+            // 从第一个非空分量取任意顶点做路由回查
+            for (auto& comp : components) {
+                if (!comp || comp->isEmpty()) continue;
+                int v = comp->getAnyVertex();
+                if (v >= 0) {
+                    SubGraph* sg = graph->subgraphOf(v);
+                    if (sg) return sg;
+                }
             }
-            return graph.get();
+            return nullptr;
         }
 
         // 获取当前线程的 nextTreeId
         int& getNextTreeId() {
-            if (isThreadLocal()) {
-                return tlsState->nextTreeId;
-            }
-            return nextTreeId;
+            return isThreadLocal() ? tlsState->nextTreeId : nextTreeId;
         }
 
         // 从图构建生成森林
         void buildSpanningForest();
         std::vector<splaytree::Edge> bfsSpanningTree(int start, std::unordered_set<int>& visited, std::unordered_set<int>& componentVertices);
+        void processBoundaryVertex(int v, splaytree::EulerTourTree* tree, SubGraph* g);
 };
 
 #endif

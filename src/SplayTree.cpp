@@ -698,13 +698,13 @@ int EulerTourTree::getVertexDegree(int v) const {
     if (!vertices.count(v)) return 0;
 
     int degree = 0;
-    std::vector<int> neighbors;
+    // std::vector<int> neighbors;
     auto it = edgeNodes.find(v);
     if (it != edgeNodes.end()) {
         for (const auto& [neighbor, node] : it->second) {
             if (neighbor != v) {
                 degree++;
-                neighbors.push_back(neighbor);
+                // neighbors.push_back(neighbor);
             }
         }
     }

@@ -163,26 +163,31 @@ void DancingMatrix::initialize() {
     buildSpanningForest();
 }
 
-void DancingMatrix::initThreadLocalState(
-    const Block& block, 
-    splaytree::EulerTourTree* singleTree) {
+void DancingMatrix::initThreadLocalState(const Block& block, std::unique_ptr<splaytree::EulerTourTree> tree) {
     
     // 创建或重置线程局部状态
     if (!tlsState) {
         tlsState = std::make_unique<ThreadLocalState>();
-    }
+    }  
     
     // 清空旧数据
     tlsState->components.clear();
-    tlsState->graph.reset();
+    tlsState->subgraph  = nullptr; 
     tlsState->nextTreeId = 0;
+
+    if (!tree) { 
+        std::cout << "Warning: Initializing thread local state with an empty tree." << std::endl;
+        tlsState->initialized = true; 
+        return; 
+    }
     
-    // 深拷贝树
-    auto treeCopy = deepCopyTree(singleTree);
-    tlsState->components.push_back(std::move(treeCopy));
+    int anyV = tree->getAnyVertex();
+
+    tlsState->components.push_back(std::move(tree));
     
-    // 深拷贝图
-    tlsState->graph = deepCopyGraph(singleTree);
+    if (anyV >= 0) {
+        tlsState->subgraph = graph->subgraphOf(anyV);
+    }
     
     tlsState->initialized = true;
 }
@@ -328,6 +333,9 @@ void DancingMatrix::buildSpanningForest() {
         // BFS构建生成树,得到树边集合及分量顶点集合
         unordered_set<int> comp_vertices;
         std::vector<splaytree::Edge> treeEdges = bfsSpanningTree(i, visited, comp_vertices);
+
+        int compId = nextTreeId;
+        graph->registerComponent(compId, comp_vertices);
         
         // 为每个顶点创建单独的树
         std::unordered_map<int, std::unique_ptr<splaytree::EulerTourTree>> vertexTrees;
@@ -416,16 +424,53 @@ splaytree::EulerTourTree* DancingMatrix::findEulerTourTree(int v) {
     auto& comps = getComponents();
     
     for (auto& tree : comps) {
-        if (tree->containsVertex(v)) {
+        if (tree && tree->containsVertex(v)) {
             return tree.get();
         }
     }
     return nullptr;
 }
 
+void DancingMatrix::processBoundaryVertex(int v, splaytree::EulerTourTree* tree, SubGraph* g){
+    // 处理所有相邻边(包含非树边)
+    std::vector<int> neighbors = g->neighbors(v);
+    
+    // 边界顶点：删除所有非树边，无需寻找替代边
+    // std::cout << "Removing boundary vertex " << v << "\n";
+    int treeEdgeNeighbor = tree->getBoundaryVertexTreeNeighbor(v);
+   
+    if (treeEdgeNeighbor < 0) {
+        // 只需删除所有非树边（如果还有的话），然后移除顶点
+        for (int u : neighbors) {
+            splaytree::Edge e(v, u);
+            if (tree->hasNonTreeEdge(e)) tree->removeNonTreeEdge(e);
+            g->deleteEdge(v, u);
+        }
+        tree->removeVertex(v);
+        return;
+    }
+
+    // 删除非树边
+    for (int u : neighbors) {
+        if (u != treeEdgeNeighbor) {
+            splaytree::Edge e(v, u);
+            tree->removeNonTreeEdge(e);
+            g->deleteEdge(v, u);
+        }
+    }
+    
+    // 删除唯一的树边
+    tree->cutBoundary(v, treeEdgeNeighbor);
+    g->deleteEdge(v, treeEdgeNeighbor);
+    
+    // 删除顶点
+    tree->removeVertex(v);
+}
+
 // 减量式更新单连通分量
 void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
 
+    if (!isGraphSyncEnabled()) return;
     if (deletedVertices.empty()) return;
 
     // std::cout << "DecUpdateCC: Deleting vertices: {";
@@ -437,10 +482,18 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
     auto& comps = getComponents();
     auto* g = getGraph();
 
+    if (!g) {
+        //主线程 / 串行模式下 getGraph() 返回 nullptr
+        std::cerr << "getGraph() returned nullptr in DecUpdateCC\n";
+        return;
+    }
+
     std::vector<int> boundaryVertices;
     std::vector<int> otherVertices;
+
     // 当前连通分量
     splaytree::EulerTourTree* current_tree = comps[0].get();
+    if (!current_tree) return;
 
     for (int v : deletedVertices) {
         int treeEdgeCount = current_tree->getVertexDegree(v);
@@ -454,66 +507,30 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
 
     // 先处理边界
     for (int v : boundaryVertices) {
-        
-        // 处理所有相邻边
-        std::vector<int> neighbors = g->getNeighbors(v);
-        
-        // 边界顶点：删除所有非树边，无需寻找替代边
-        // std::cout << "Removing boundary vertex " << v << "\n";
-        int treeEdgeNeighbor = -1;
-        
-        // 删除非树边
-        for (int u : neighbors) {
-            if (current_tree->isTreeEdge(v, u)) {
-                treeEdgeNeighbor = u;
-            } else {
-                splaytree::Edge e(v, u);
-                current_tree->removeNonTreeEdge(e);
-                g->deleteEdge(v, u);
-            }
-        }
-        
-        // 删除唯一的树边
-        if (treeEdgeNeighbor != -1) {
-            current_tree->cutBoundary(v, treeEdgeNeighbor);
-            g->deleteEdge(v, treeEdgeNeighbor);
-        }
-        
-        // 删除顶点
-        current_tree->removeVertex(v);
+        processBoundaryVertex(v, current_tree, g);
     }
 
-    // 处理完所有边界点，剩下的仍是current_tree
+    // 继续在处理剩余的非边界顶点
     for (int v : otherVertices) {
 
+        // 有可能出现分裂
         splaytree::EulerTourTree* tree = findEulerTourTree(v);
         if (!tree) continue; 
 
         // 处理所有相邻边
-        std::vector<int> neighbors = g->getNeighbors(v);
+        std::vector<int> neighbors = g->neighbors(v);
         int currentDegree = tree->getVertexDegree(v);
 
+        if (currentDegree == 0) {
+            // 已完全孤立，直接移除
+            tree->removeVertex(v);
+            continue;
+        }
         // 原本非边界顶点，可能变成边界顶点
         if (currentDegree == 1) {
             // std::cout << "Vertex " << v << " became boundary vertex\n";
             
-            int treeEdgeNeighbor = -1;
-            for (int u : neighbors) {
-                if (tree->isTreeEdge(v, u)) {
-                    treeEdgeNeighbor = u;
-                } else {
-                    splaytree::Edge e(v, u);
-                    tree->removeNonTreeEdge(e);
-                    g->deleteEdge(v, u);
-                }
-            }
-            
-            if (treeEdgeNeighbor != -1) {
-                tree->cutBoundary(v, treeEdgeNeighbor);
-                g->deleteEdge(v, treeEdgeNeighbor);
-            }
-            
-            tree->removeVertex(v);
+            processBoundaryVertex(v, tree, g);
             continue;
         }
         
@@ -544,6 +561,8 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
         // 删除所有树边
         for (int u : treeNeighbors) {
 
+            if (!g->hasEdge(v, u)) continue;
+
             splaytree::EulerTourTree* currentTree = findEulerTourTree(v);
             if (!currentTree) {
                 std::cout << "Warning: vertex " << v << " disappeared during edge removal\n";
@@ -564,10 +583,14 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
             // printComponents();
         }
 
-        for (auto& comp : comps) {
-            if (comp->containsVertex(v)) {
-                comp->removeVertex(v);
-            }
+        // for (auto& comp : comps) {
+        //     if (comp->containsVertex(v)) {
+        //         comp->removeVertex(v);
+        //     }
+        // }
+        splaytree::EulerTourTree* finalTree = findEulerTourTree(v);
+        if (finalTree) {
+            finalTree->removeVertex(v);
         }
     }
     
@@ -583,6 +606,7 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
 }
 
 void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
+    if (!isGraphSyncEnabled()) return;
     if (restoredVertices.empty()) return;
 
     // std::cout << "IncUpdateCC: Restoring vertices: {";
@@ -592,6 +616,10 @@ void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
     // std::cout << " }\n";
     auto& comps = getComponents();
     auto* g = getGraph();
+    if (!g) {
+        std::cerr << "getGraph() returned nullptr in IncUpdateCC\n";
+        return;
+    }
 
     std::unordered_set<int> restoredSet(restoredVertices.begin(), restoredVertices.end());
 
@@ -614,6 +642,7 @@ void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
                 g->restoreEdge(v, u);
             }
             splaytree::EulerTourTree* treeV = findEulerTourTree(v); 
+            if (!treeV) continue;
 
             if (treeU != treeV) {
             // std::cout << "Linking restored edge (" << v << ", " << u << ")\n";
@@ -976,7 +1005,7 @@ void DancingMatrix::coverInBlock(int c, Block& block, set<int>& removed_rows){
     while( curC != col )  
     {    
         int row_id = curC->row;
-        // removed_rows.insert(row_id);
+        removed_rows.insert(row_id);
 
         if (isGraphSyncEnabled() && useIG) {
             incrementalGraph->deactivateRow(row_id);

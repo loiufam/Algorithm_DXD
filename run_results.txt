@@ -1,6 +1,6 @@
 启用DXD算法求解: Aarnet
 开始单线程DXD搜索...
-Time: 17.698990 s
+Time: 22.569320 s
 Solutions: 58073996400
 Max Blocks: 8
 DNNF Size: 862

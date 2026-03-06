@@ -30,20 +30,45 @@ shared_ptr<DNNFNode> DanceDNNF::buildDecomposableNode(vector<shared_ptr<DNNFNode
 DNNFResult DanceDNNF::serialSearch(vector<Block>& blocks, int parent_depth) {
 
     DNNFResult totalResult(1);
-    
-    for (size_t i = 0; i < blocks.size(); ++i) {
-        splaytree::EulerTourTree* sourceTree = components[i].get();
-        // initThreadLocalState(blocks[i], sourceTree);
+    SubGraph* outerSubgraph = activeSubgraph_;
 
-        auto result = DXD(blocks[i], parent_depth + 1);
-        // cleanupThreadLocalState();
-        
-        if (result.isZero()) {
+    std::vector<std::unique_ptr<splaytree::EulerTourTree>> stash;
+    stash.swap(components);
+
+    auto restoreStash = [&]() {
+        components.clear();
+        for (auto& t : stash)
+            if (t) components.push_back(std::move(t));
+        activeSubgraph_ = outerSubgraph;
+    };
+
+    for (size_t i = 0; i < blocks.size(); ++i) {
+
+        if (i >= stash.size() || !stash[i]) {
+            std::cerr << "serialSearch: component " << i << " missing\n";
+            restoreStash();
             return DNNFResult(0);
         }
-        
+
+        int anyV = stash[i]->getAnyVertex();
+        activeSubgraph_ = (anyV >= 0) ? graph->subgraphOf(anyV) : nullptr;
+
+        components.push_back(std::move(stash[i]));
+
+        auto result = DXD(blocks[i], parent_depth + 1);
+
+        if (!components.empty()) {
+            stash[i] = std::move(components[0]);
+            components.clear();
+        }
+
+        if (result.isZero()) {
+            restoreStash();
+            return DNNFResult(0);
+        }
         totalResult = totalResult * result;
     }
+    restoreStash();
     
     return totalResult;
 }
@@ -52,32 +77,30 @@ DNNFResult DanceDNNF::serialSearch(vector<Block>& blocks, int parent_depth) {
 DNNFResult DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks, int parent_depth) {
 
     const int n = blocks.size();
-    std::vector<DNNFResult> results(n);
     std::atomic<bool> has_failure(false);
     std::atomic<bool> has_timeout(false);
 
     // 准备每个线程的初始树（在主线程中）
-    std::vector<splaytree::EulerTourTree*> treesToCopy(n);
-    for (int i = 0; i < n; i++) {
-        // components[i] 对应 blocks[i]
-        if (i < components.size()) {
-            treesToCopy[i] = components[i].get();
-        } else {
-            std::cerr << "Error: blocks and components size mismatch\n";
-            return DNNFResult(0);
-        }
-    }
+    std::vector<std::unique_ptr<splaytree::EulerTourTree>> extracted(n);
+    for (int i = 0; i < n; ++i)
+        extracted[i] = std::move(components[i]);
+    components.clear();
+
+    std::vector<DNNFResult> results(n);
+    // 子线程搜索完毕后，将（可能被 Dec/Inc 修改过、但已回溯还原的）树写回此处
+    std::vector<std::unique_ptr<splaytree::EulerTourTree>> returned(n);
     
     #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < n; i++) {
         if (has_failure.load(std::memory_order_acquire) || 
             has_timeout.load(std::memory_order_acquire)) {
+            returned[i] = std::move(extracted[i]);
             continue;
         }
 
         try {
             // === 初始化线程局部状态 ===
-            initThreadLocalState(blocks[i], treesToCopy[i]);
+            initThreadLocalState(blocks[i], std::move(extracted[i]));
 
             // === 执行搜索（自动使用线程局部数据） ===
             auto result = DXD(blocks[i], parent_depth + 1);
@@ -106,8 +129,12 @@ DNNFResult DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks, int parent_dep
                      << " unknown error\n";
         }
 
-        DancingMatrix::cleanupThreadLocalState();
+        cleanupThreadLocalState();
     }
+
+    components.resize(n);
+    for (int i = 0; i < n; ++i)
+        components[i] = std::move(returned[i]);
     
     if (has_timeout.load()) {
         throw std::runtime_error("Time bound broken");
@@ -152,7 +179,7 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
         }
     }
 
-    if (block.rows.size() > 2 && isGraphSyncEnabled()) {
+    if (block.rows.size() > 2 && shouldDecompose()) {
         
         vector<Block> curBlock;
         if (useETT ) {
@@ -160,29 +187,28 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
         } else if (useIG) {
             curBlock = getComponentsByIG(block.rows);
         }
-        // addRecordCount();
 
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
+        // addTriedNumbers(1);
 
-        if (curBlock.size() > 1) {
+        int block_size = curBlock.size();
+        if (block_size  > 1) {
             // std::cout << "Detected " << curBlock.size() << " independent blocks at depth " << depth << ".\n";
             // 检测到多个独立分块，则并行处理
             if(useETT) turnOffGraphSync();
+            // addConcurrentThread(block_size);
 
             DNNFResult result;
-
             if (isParallelSearch) {
                 result = parallelSearchUseOmp(curBlock, depth);
             } else {
                 result = serialSearch(curBlock, depth);
             }
+
             setCacheCount(state, result);
             return result;
         } 
-        
-        // if (getRecordCount() > MAX_DECOMPOSE_TIMES) {
-        //     turnOffGraphSync();
-        // }
+
     }
 
     ColumnHeader* choose = selectOptimalColumn(block.cols); 
