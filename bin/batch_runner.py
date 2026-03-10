@@ -14,6 +14,8 @@ from functools import partial
 
 # 配置
 MAIN_EXECUTABLE = "./main"
+D3X_EXECUTABLE = "./d3x"
+ZDD_EXP_SET = "../data/zdd_exp_set"
 INPUT_FOLDER = "../data/except_set"  
 RESULTS_FOLDER = "../results/Main"
 THREADS_FOLDER = "../results/Threads"
@@ -24,10 +26,11 @@ ALGORITHMS = [
     # ("IDXD_S", ["dxd", "ett"], 9, True, "IDXD_S_results.csv"),
     # ("IDXD_M", ["mdxd", "ett"], 10, True, "IDXD_M_results.csv"),
     # ("DXD_S", ["dxd", "ig"], 7, True, "DXD_S_results.csv"),
-    ("DXD_M", ["mdxd", "ig"], 8, True, "DXD_M_results.csv"),
+    # ("DXD_M", ["mdxd", "ig"], 8, True, "DXD_M_results.csv"),
     # ("MDLX", ["mdlx", "ett"], 11, True, "MDLX_results.csv"),
     # ("DLX", ["dlx"], 4, True, "DLX_results.csv"),
     # ("DXZ", ["dxz"], 5, True, "DXZ_results.csv"),
+    ("D3X", ["d3x", "-z"], 6, True, "D3X_results.csv")
 ]
 
 # 多线程算法配置：(算法名, 命令参数, 是否使用ett, 线程数列表, 输出文件名)
@@ -96,8 +99,11 @@ def run_algorithm(algo_name, algo_params, input_file, read_mode, num_threads = 8
     if len(algo_params) == 1:
         cmd = [MAIN_EXECUTABLE] + [algo_params[0], input_file, str(read_mode)]
     else:
-        # DXD and IDXD with threads
-        cmd = [MAIN_EXECUTABLE] + [algo_params[0], input_file, str(read_mode), algo_params[1], str(num_threads)]
+        if algo_params[0] == "d3x":
+            cmd = [D3X_EXECUTABLE] + [algo_params[1], input_file]
+        else:
+            # DXD and IDXD with threads
+            cmd = [MAIN_EXECUTABLE] + [algo_params[0], input_file, str(read_mode), algo_params[1], str(num_threads)]
     
     print(f"  运行命令: {' '.join(cmd)}")
     
@@ -379,11 +385,6 @@ def main():
     
     print(f"\n找到 {len(input_files)} 个输入文件\n")
     
-    # 检查可执行文件
-    if not os.path.exists(MAIN_EXECUTABLE):
-        print(f"错误：可执行文件不存在: {MAIN_EXECUTABLE}")
-        return
-
     # 从列表文件中过滤输入文件（如果提供）
     if list_file:
         input_files = filter_input_files(input_files, list_file)
