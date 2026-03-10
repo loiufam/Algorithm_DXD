@@ -751,7 +751,7 @@ void DancingMatrix::testCutEdge(int u, int v) {
 }
 
 vector<Block> DancingMatrix::getComponentsByIG(const set<int> rows) {
-    return incrementalGraph->computeComponentsInRows(rows);
+    return isGraphSyncEnabled() ? incrementalGraph->computeComponentsInRows(rows) : vector<Block>();
     // return findComponents(rows);
 };
 
@@ -1007,7 +1007,7 @@ void DancingMatrix::coverInBlock(int c, Block& block, set<int>& removed_rows){
         int row_id = curC->row;
         removed_rows.insert(row_id);
 
-        if (isGraphSyncEnabled() && useIG) {
+        if (useIG) {
             incrementalGraph->deactivateRow(row_id);
         }
         block.rows.erase(row_id); // 从块中移除行
@@ -1044,7 +1044,7 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
 
         block.rows.insert(row_id); // 将行添加到块中
 
-        if (isGraphSyncEnabled() && useIG) {
+        if (useIG) {
             incrementalGraph->reactivateRow(row_id); 
         }
 

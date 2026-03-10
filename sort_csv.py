@@ -3,25 +3,18 @@ import re
 
 df = pd.read_csv("exp_results.csv", header=None)
 
-def parse_grafo(name):
-    # 匹配 grafo1000.47
-    m = re.match(r"grafo(\d+)\.(\d+)", str(name))
+def parse_name(name):
+    s = str(name).strip()
+    # 匹配 grafo10116.100 格式
+    m = re.match(r"grafo(\d+)\.(\d+)", s)
     if m:
-        return int(m.group(1)), int(m.group(2))
-    return float("inf"), float("inf")
+        return (1, int(m.group(1)), int(m.group(2)), "")
+    # 非 grafo 格式，按原始字符串字母序排列在前
+    return (0, 0, 0, s)
 
-# 从第一列提取排序键
-first_col = df.columns[0]
-df[["_id", "_mid"]] = df[first_col].apply(
-    lambda x: pd.Series(parse_grafo(x))
-)
+sort_keys = df[0].apply(lambda x: parse_name(x))
+df["_sort"] = sort_keys
+df.sort_values(by="_sort", inplace=True)
+df.drop(columns=["_sort"], inplace=True)
 
-# 排序：先 grafo 编号，再 mid
-df.sort_values(by=["_id", "_mid"], inplace=True)
-
-# 删除临时列
-df.drop(columns=["_id", "_mid"], inplace=True)
-
-# 写回 CSV（保留表头）
-df.to_csv("exp_results.csv", index=False)
-
+df.to_csv("exp_results.csv", index=False, header=False)

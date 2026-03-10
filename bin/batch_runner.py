@@ -14,25 +14,26 @@ from functools import partial
 
 # 配置
 MAIN_EXECUTABLE = "./main"
-INPUT_FOLDER = "../data/run_set"  
+INPUT_FOLDER = "../data/except_set"  
 RESULTS_FOLDER = "../results/Main"
 THREADS_FOLDER = "../results/Threads"
+SPECIAL_FILE_LIST = "../instances.txt"
 
 # 算法配置：(算法名, 命令参数, 列ID, 是否使用ett, 输出文件名)
 ALGORITHMS = [
     # ("IDXD_S", ["dxd", "ett"], 9, True, "IDXD_S_results.csv"),
-    ("IDXD_M", ["mdxd", "ett"], 10, True, "IDXD_M_results.csv"),
+    # ("IDXD_M", ["mdxd", "ett"], 10, True, "IDXD_M_results.csv"),
     # ("DXD_S", ["dxd", "ig"], 7, True, "DXD_S_results.csv"),
-    # ("DXD_M", ["mdxd", "ig"], 8, True, "DXD_M_results.csv"),
+    ("DXD_M", ["mdxd", "ig"], 8, True, "DXD_M_results.csv"),
     # ("MDLX", ["mdlx", "ett"], 11, True, "MDLX_results.csv"),
     # ("DLX", ["dlx"], 4, True, "DLX_results.csv"),
-    ("DXZ", ["dxz"], 5, True, "DXZ_results.csv"),
+    # ("DXZ", ["dxz"], 5, True, "DXZ_results.csv"),
 ]
 
 # 多线程算法配置：(算法名, 命令参数, 是否使用ett, 线程数列表, 输出文件名)
 THREAD_ALGORITHMS = [
     # ("DXD_M", ["mdxd", "ig"], True, [2, 4, 8], "DXD_M_threads.csv"),
-    ("IDXD_M", ["mdxd", "ett"], True, [1, 2, 4, 8], "IDXD_M_threads.csv"),
+    ("IDXD_M", ["mdxd", "ett"], True, [1, 2, 4], "IDXD_M_threads.csv"),
     # ("MDLX", ["mdlx", "ett"], True, [2, 4, 8], "MDLX_threads.csv"),
 ]
 
@@ -90,7 +91,7 @@ def parse_log_output(output):
     
     return result
 
-def run_algorithm(algo_name, algo_params, input_file, read_mode, num_threads = 16):
+def run_algorithm(algo_name, algo_params, input_file, read_mode, num_threads = 8):
     """运行单个算法"""
     if len(algo_params) == 1:
         cmd = [MAIN_EXECUTABLE] + [algo_params[0], input_file, str(read_mode)]
@@ -150,7 +151,8 @@ def filter_input_files(input_files, list_file):
 
     # 读取指定的文件名（无扩展名）
     with open(list_file, 'r', encoding='utf-8') as f:
-        specified = set(line.strip() for line in f if line.strip())
+        # specified = set(line.strip() for line in f if line.strip())
+        specified = set(os.path.splitext(line.strip().split(',')[0])[0] for line in f if line.strip())
 
     matched = []
     for file in input_files:
@@ -433,16 +435,19 @@ def main():
                 results_data[filename] = {}
                 
                 for num_threads in thread_nums:
-                    runtime = 0.0
-                    for i in range(10):
-                        print(f"  [{i+1}]: 测试 {num_threads} 线程...")
-                        result = run_algorithm(
-                            algo_name, algo_params, input_file, read_mode, num_threads
-                        )
-                        if result['time'] is not None:
-                            runtime += result['time']
+                    # runtime = 0.0
+                    # for i in range(10):
+                    #     print(f"  [{i+1}]: 测试 {num_threads} 线程...")
+                    #     result = run_algorithm(
+                    #         algo_name, algo_params, input_file, read_mode, num_threads
+                    #     )
+                    #     if result['time'] is not None:
+                    #         runtime += result['time']
+                    result = run_algorithm(
+                        algo_name, algo_params, input_file, read_mode, num_threads
+                    )
 
-                    result['time'] = runtime / 10.0  # 取平均时间
+                    # result['time'] = runtime / 10.0  
                     results_data[filename][num_threads] = result
                 
                 # 实时写入结果

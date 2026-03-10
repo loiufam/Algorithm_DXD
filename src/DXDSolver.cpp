@@ -91,27 +91,28 @@ DNNFResult DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks, int parent_dep
     std::atomic<bool> has_failure(false);
     std::atomic<bool> has_timeout(false);
 
-    // 准备每个线程的初始树（在主线程中）
     std::vector<std::unique_ptr<splaytree::EulerTourTree>> extracted(n);
-    for (int i = 0; i < n; ++i)
-        extracted[i] = std::move(components[i]);
-    components.clear();
-
-    std::vector<DNNFResult> results(n);
-    // 子线程搜索完毕后，将（可能被 Dec/Inc 修改过、但已回溯还原的）树写回此处
     std::vector<std::unique_ptr<splaytree::EulerTourTree>> returned(n);
     
+    if(useETT) {
+        for (int i = 0; i < n; ++i)
+            extracted[i] = std::move(components[i]);
+        components.clear();
+    }
+
+    std::vector<DNNFResult> results(n);
+
     #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < n; i++) {
         if (has_failure.load(std::memory_order_acquire) || 
             has_timeout.load(std::memory_order_acquire)) {
-            returned[i] = std::move(extracted[i]);
+            if(useETT) returned[i] = std::move(extracted[i]);
             continue;
         }
 
         try {
             // === 初始化线程局部状态 ===
-            initThreadLocalState(blocks[i], std::move(extracted[i]));
+            if(useETT) initThreadLocalState(blocks[i], std::move(extracted[i]));
 
             // === 执行搜索（自动使用线程局部数据） ===
             auto result = DXD(blocks[i], parent_depth + 1);
@@ -140,13 +141,15 @@ DNNFResult DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks, int parent_dep
                      << " unknown error\n";
         }
 
-        cleanupThreadLocalState();
+        if(useETT) cleanupThreadLocalState();
     }
 
-    components.resize(n);
-    for (int i = 0; i < n; ++i)
-        components[i] = std::move(returned[i]);
-    
+    if (useETT) {
+        components.resize(n);
+        for (int i = 0; i < n; ++i)
+            components[i] = std::move(returned[i]);
+    }
+
     if (has_timeout.load()) {
         throw std::runtime_error("Time bound broken");
     }
@@ -207,7 +210,7 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
             num_of_DNNFNodes += block_size - 1; // 生成一个分解节点和block_size个子节点
             // std::cout << "Detected " << curBlock.size() << " independent blocks at depth " << depth << ".\n";
             // 检测到多个独立分块，则并行处理
-            if(useETT && !single_thread_mode) turnOffGraphSync();
+            if(!single_thread_mode) turnOffGraphSync();
             // addConcurrentThread(block_size);
 
             DNNFResult result;
@@ -238,7 +241,7 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
 
     set<int> deleted_rows;
     coverInBlock(choose->col, block, deleted_rows);
-    DecUpdateCC(deleted_rows);
+    if(useETT) DecUpdateCC(deleted_rows);
 
     Node* curC = choose->down;
     while(curC != choose) {
@@ -250,7 +253,7 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
             coverInBlock(curR->col, block, deleted_rows_);
             curR = curR->right;
         }
-        DecUpdateCC(deleted_rows_);
+        if(useETT) DecUpdateCC(deleted_rows_);
  
         auto result = DXD(block, depth + 1);
 
@@ -265,12 +268,12 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
             uncoverInBlock(curR->col, block);
             curR = curR->left;
         }
-        IncUpdateCC(deleted_rows_);
+        if(useETT) IncUpdateCC(deleted_rows_);
 
         curC = curC->down;
     }
     uncoverInBlock(choose->col, block);
-    IncUpdateCC(deleted_rows);
+    if(useETT) IncUpdateCC(deleted_rows);
 
     // std::cout << "\n============================\n";
     // std::cout << "[After] DXD called at depth " << depth << "\n";

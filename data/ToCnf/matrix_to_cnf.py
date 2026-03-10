@@ -350,7 +350,7 @@ if __name__ == "__main__":
         # ("../exact_cover_benchmark", 1),
         # ("../set_partitioning_benchmarks", 2),
         # ("../graph_matrix/partition", 3),
-        ("../Rome", 3)
+        ("../except_set", 3)
     ]
 
     table = "../../exp_results.csv"

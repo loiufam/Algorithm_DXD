@@ -1,5 +1,2 @@
-启用DXZ算法求解: grafo337.15
-Time: 0.553650 s
-Solutions: 53010000
-ZDD Size: 544
-DXZ算法求解结束: grafo337.15
+启用多线程DXD算法求解: grafo10209.99
+开始多线程DXD搜索...
