@@ -369,26 +369,33 @@ DNNFResult DanceDNNF::parallelSearchMDLX(vector<Block>& blocks) {
     const int n = blocks.size();
     
     // 并行处理每个子块
-    std::vector<DNNFResult> results(n, 0);
+    std::vector<DNNFResult> results(n);
     std::atomic<bool> has_timeout(false);
     std::atomic<bool> has_failure(false);
     
+    std::vector<std::unique_ptr<splaytree::EulerTourTree>> extracted(n);
+    std::vector<std::unique_ptr<splaytree::EulerTourTree>> returned(n);
+    
+    for (int i = 0; i < n; ++i)
+        extracted[i] = std::move(components[i]);
+    components.clear();
 
     #pragma omp parallel for
     for (int i = 0; i < n; i++) {
         // 提前检查超时标志
         if (has_timeout.load(std::memory_order_acquire) ||
              has_failure.load(std::memory_order_acquire)) {
+            returned[i] = std::move(extracted[i]);
             continue;
         }
         
         try {
-            // 每个线程使用block的副本和独立的sols
-            Block blockCopy = blocks[i];
+            initThreadLocalState(blocks[i], std::move(extracted[i]));
             vector<int> threadSols;
             
             // 递归调用MDLX（每个线程独立计数）
-            auto result = MDLX(threadSols, blockCopy);
+            auto result = MDLX(threadSols, blocks[i]);
+
             if (result.isZero()) {
                 has_failure.store(true, std::memory_order_release);
             } else {
@@ -405,8 +412,13 @@ DNNFResult DanceDNNF::parallelSearchMDLX(vector<Block>& blocks) {
         } catch (...) {
             has_failure.store(true, std::memory_order_release);
         }
+
+        cleanupThreadLocalState();
     }
 
+    components.resize(n);
+    for (int i = 0; i < n; ++i)
+        components[i] = std::move(returned[i]);
     
     // 检查超时（在主线程重新抛出）
     if (has_timeout.load()) {
@@ -437,15 +449,15 @@ DNNFResult DanceDNNF::MDLX(vector<int>& sols, Block& block) {
         return DNNFResult(1);
     }
     
-    if(isGraphSyncEnabled() && block.rows.size() >= MIN_BLOCK_ROWS) {
+    if(isGraphSyncEnabled() && block.rows.size() >= 2) {
 
-        vector<Block> curBlock = getComponentsByIG(block.rows);
+        vector<Block> curBlock = getComponentsByETT();
 
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
         if (curBlock.size() > 1) {
             
             turnOffGraphSync(); // 关闭图同步，提升性能
-            p_count.fetch_add(1);
+            // p_count.fetch_add(1);
 
             // 多线程搜索
             auto parallelCount = parallelSearchMDLX(curBlock);
@@ -453,7 +465,7 @@ DNNFResult DanceDNNF::MDLX(vector<int>& sols, Block& block) {
         } 
     }
 
-    ColumnHeader* choose = selectColumnHeuristic(block.cols);
+    ColumnHeader* choose = selectOptimalColumn(block.cols);
     if( !choose || choose->size <= 0 ) {
         return DNNFResult(0);  
     }
@@ -462,17 +474,20 @@ DNNFResult DanceDNNF::MDLX(vector<int>& sols, Block& block) {
 
     set<int> deleted_rows;
     coverInBlock( choose->col, block, deleted_rows );
+    DecUpdateCC(deleted_rows);
     Node* curC = choose->down;  
 
     while( curC != choose )  
     {  
          
-        Node* curR = curC->right;  
+        Node* curR = curC->right; 
+        set<int> deleted_rows_; 
         while( curR != curC )  
         {  
-            coverInBlock( curR->col, block, deleted_rows );  
+            coverInBlock( curR->col, block, deleted_rows_ );  
             curR = curR->right;  
         }  
+        DecUpdateCC(deleted_rows_);
 
         sols.push_back(curC->row + 1); 
         // 递归搜索
@@ -488,9 +503,11 @@ DNNFResult DanceDNNF::MDLX(vector<int>& sols, Block& block) {
             uncoverInBlock( curR->col, block );  
             curR = curR->left;  
         }  
+        IncUpdateCC(deleted_rows_);
         curC = curC->down;  
     }  
     uncoverInBlock( choose->col, block );  
+    IncUpdateCC(deleted_rows);
     return totalResult; 
 }
 

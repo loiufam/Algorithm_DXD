@@ -16,7 +16,7 @@ from functools import partial
 MAIN_EXECUTABLE = "./main"
 D3X_EXECUTABLE = "./d3x"
 ZDD_EXP_SET = "../data/zdd_exp_set"
-INPUT_FOLDER = "../data/except_set"  
+INPUT_FOLDER = "../data/all_dataset"  
 RESULTS_FOLDER = "../results/Main"
 THREADS_FOLDER = "../results/Threads"
 SPECIAL_FILE_LIST = "../instances.txt"
@@ -27,10 +27,10 @@ ALGORITHMS = [
     # ("IDXD_M", ["mdxd", "ett"], 10, True, "IDXD_M_results.csv"),
     # ("DXD_S", ["dxd", "ig"], 7, True, "DXD_S_results.csv"),
     # ("DXD_M", ["mdxd", "ig"], 8, True, "DXD_M_results.csv"),
-    # ("MDLX", ["mdlx", "ett"], 11, True, "MDLX_results.csv"),
-    # ("DLX", ["dlx"], 4, True, "DLX_results.csv"),
+    ("MDLX", ["mdlx", "ett"], 11, True, "MDLX_results.csv"),
+    ("DLX", ["dlx"], 4, True, "DLX_results.csv"),
     # ("DXZ", ["dxz"], 5, True, "DXZ_results.csv"),
-    ("D3X", ["d3x", "-z"], 6, True, "D3X_results.csv")
+    # ("D3X", ["d3x", "-z"], 6, True, "D3X_results.csv")
 ]
 
 # 多线程算法配置：(算法名, 命令参数, 是否使用ett, 线程数列表, 输出文件名)
