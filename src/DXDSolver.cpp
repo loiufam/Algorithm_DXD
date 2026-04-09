@@ -41,6 +41,18 @@ shared_ptr<DNNFNode> DanceDNNF::buildDecomposableNode(vector<shared_ptr<DNNFNode
 DNNFResult DanceDNNF::serialSearch(vector<Block>& blocks, int parent_depth) {
 
     DNNFResult totalResult(1);
+
+    if (!useETT) {
+        for (size_t i = 0; i < blocks.size(); ++i) {
+            auto result = DXD(blocks[i], parent_depth + 1);
+            if (result.isZero()) {
+                return DNNFResult(0);
+            }
+            totalResult = totalResult * result;
+        }
+        return totalResult;
+    }
+    
     SubGraph* outerSubgraph = activeSubgraph_;
 
     std::vector<std::unique_ptr<splaytree::EulerTourTree>> stash;

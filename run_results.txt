@@ -1,4 +1,7 @@
-启用DLX算法求解: grafo337.15
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DLX算法求解结束: grafo337.15
+启用多线程DXD算法求解: Aarnet
+开始多线程DXD搜索...
+Time: 4.439217 s
+Solutions: 53067357700
+Max Blocks: 8
+DNNF Size: 864
+多线程DXD算法求解结束: Aarnet

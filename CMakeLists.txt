@@ -40,8 +40,8 @@ add_executable(main src/main.cpp ${COMMON_SOURCES})
 # AddressSanitizer only in Debug mode
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Building with AddressSanitizer (Debug mode)")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+    target_compile_options(main PRIVATE -fsanitize=address -fno-omit-frame-pointer -g)
+    target_link_options(main PRIVATE -fsanitize=address -static-libasan)
 endif()
 
 # mkdir build && cd build
