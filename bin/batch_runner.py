@@ -36,8 +36,8 @@ ALGORITHMS = [
 # 多线程算法配置：(算法名, 命令参数, 是否使用ett, 线程数列表, 输出文件名)
 THREAD_ALGORITHMS = [
     # ("DXD_M", ["mdxd", "ig"], True, [2, 4, 8], "DXD_M_threads.csv"),
-    ("IDXD_M", ["mdxd", "ett"], True, [1, 2, 4], "IDXD_M_threads.csv"),
-    # ("MDLX", ["mdlx", "ett"], True, [2, 4, 8], "MDLX_threads.csv"),
+    # ("IDXD_M", ["mdxd", "ett"], True, [1, 2, 4], "IDXD_M_threads.csv"),
+    ("MDLX", ["mdlx", "ett"], True, [1, 2, 4], "MDLX_threads.csv"),
 ]
 
 ALGORITHM_GROUPS = [
@@ -102,7 +102,7 @@ def run_algorithm(algo_name, algo_params, input_file, read_mode, num_threads = 8
         if algo_params[0] == "d3x":
             cmd = [D3X_EXECUTABLE] + [algo_params[1], input_file]
         else:
-            # DXD and IDXD with threads
+            # MDLX and IDXD with threads
             cmd = [MAIN_EXECUTABLE] + [algo_params[0], input_file, str(read_mode), algo_params[1], str(num_threads)]
     
     print(f"  运行命令: {' '.join(cmd)}")

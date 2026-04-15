@@ -219,7 +219,6 @@ DNNFResult DanceDNNF::DXD(Block& block, int depth) {
 
         int block_size = curBlock.size();
         if (block_size  > 1) {
-            num_of_DNNFNodes += block_size - 1; // 生成一个分解节点和block_size个子节点
             // std::cout << "Detected " << curBlock.size() << " independent blocks at depth " << depth << ".\n";
             // 检测到多个独立分块，则并行处理
             if(!single_thread_mode) turnOffGraphSync();

@@ -519,7 +519,7 @@ int main(int argc, char* argv[]) {
         std::vector<std::vector<std::string>> rows;
 
         const std::string table = "../../exp_results.csv";
-        const std::string outputPath = "../../../D3X/data/exp_set/";
+        const std::string outputPath = "../../../D3X/data/zdd_exp_set/";
         readCSV(table, headers, rows);
 
         // 遍历文件夹中的文件
