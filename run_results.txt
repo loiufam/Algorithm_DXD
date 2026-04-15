@@ -1,7 +1,5 @@
-启用多线程DXD算法求解: Aarnet
-开始多线程DXD搜索...
-Time: 4.517113 s
-Solutions: 53067357700
-Max Blocks: 8
-DNNF Size: 857
-多线程DXD算法求解结束: Aarnet
+启用DXZ算法求解: Agis
+Time: 1.631900 s
+Solutions: 701220
+ZDD Size: 421
+DXZ算法求解结束: Agis

@@ -14,19 +14,40 @@ using namespace std;
 enum class NodeType { OR, Decision, Decomposed, Variable, Terminal };  // 节点类型 AND node 分为Decision和Decomposed两种
 
 struct DNNFNode {
+    size_t id;
+    inline static std::atomic<size_t> id_counter{0};
+
     NodeType type;
-    int label; // -1 for T, -2 for F
-    uint64_t count;
-    vector<std::shared_ptr<DNNFNode>> children; // 记录行id
+    int label{-3};   // -1 = T terminal, -2 = F terminal, -3 = Decomposed/OR
+    uint64_t count{0};
+    vector<std::shared_ptr<DNNFNode>> children;
     std::shared_ptr<DNNFNode> left;
     std::shared_ptr<DNNFNode> right;
 
-    DNNFNode() = default;
-    DNNFNode(NodeType t, int l) : type(t), label(l) {} // 构建变量节点和终端节点
-    DNNFNode(NodeType t, int l, uint64_t c) : type(t), label(l), count(c) {} // 构造函数用于OR节点和 Decomposed类型的AND节点   
-    DNNFNode(NodeType t, shared_ptr<DNNFNode> l, shared_ptr<DNNFNode> r) : type(t), left(l), right(r) {} // 构建Decision类型的AND节点
-    DNNFNode(int l, shared_ptr<DNNFNode> r, uint64_t c)  : type(NodeType::Decision), label(l), right(r), count(c) {} // 简化版决策节点
-
+    // Every constructor path assigns a fresh id.
+    DNNFNode()
+        : id(id_counter.fetch_add(1, std::memory_order_relaxed)) {}
+ 
+    DNNFNode(NodeType t, int l)
+        : id(id_counter.fetch_add(1, std::memory_order_relaxed)),
+          type(t), label(l) {}
+ 
+    DNNFNode(NodeType t, int l, uint64_t c)
+        : id(id_counter.fetch_add(1, std::memory_order_relaxed)),
+          type(t), label(l), count(c) {}
+ 
+    // Decision node: Decision(var, lo, hi)
+    DNNFNode(NodeType t, shared_ptr<DNNFNode> l, shared_ptr<DNNFNode> r)
+        : id(id_counter.fetch_add(1, std::memory_order_relaxed)),
+          type(t), left(l), right(r) {}
+ 
+    // Simplified decision node (label + hi + count)
+    DNNFNode(int l, shared_ptr<DNNFNode> r, uint64_t c)
+        : id(id_counter.fetch_add(1, std::memory_order_relaxed)),
+          type(NodeType::Decision), label(l), right(r), count(c) {}
+ 
+    // Convenience: is this a terminal node?
+    bool isTerminal() const { return type == NodeType::Terminal; }
 };
 
 class DanceDNNF : DancingMatrix { 
@@ -82,14 +103,24 @@ class DanceDNNF : DancingMatrix {
         DNNFResult parallelSearchMDLX(vector<Block>& blocks);
         DNNFResult MDLX(vector<int>& sols, Block& block);
 
-        DNNFResult DXD(Block& block, int depth);
-        DNNFResult serialSearch(vector<Block>& blocks, int depth);
-        DNNFResult parallelSearchUseOmp(vector<Block>& blocks, int depth);
+        std::pair<DNNFResult, std::shared_ptr<DNNFNode>> DXD(Block& block, int depth);
+        std::pair<DNNFResult, std::shared_ptr<DNNFNode>> serialSearch(vector<Block>& blocks, int depth);
+        std::pair<DNNFResult, std::shared_ptr<DNNFNode>> parallelSearchUseOmp(vector<Block>& blocks, int depth);
 
         // 启动搜索函数
         void startDXD();
         void startMultiThreadDXD();
         void start_MDLX_Search();
+
+        /**
+         * Counts unique nodes in the Decision-DNNF rooted at rootDNNF.
+         * Terminal nodes (T, F) are excluded from the count.
+         */
+        size_t countDNNFNodes() const;
+
+        size_t countZDDSize() const;
+
+        void printAllSolutions(std::ostream& out = std::cout, size_t max_sols = 0) const;
 
         bool queryRecord (size_t key) {
             std::shared_lock<std::shared_mutex> readLock(recordMutex);
@@ -143,8 +174,19 @@ class DanceDNNF : DancingMatrix {
             startDXD();
         }
 
-        inline size_t gen_key(int r, DNNFNode* x, DNNFNode* y) {
-            return std::hash<int>()(r) ^ (std::hash<int>()(x->label) << 1) ^ (std::hash<int>()(y->label) << 2);
+        // Hash (row-variable, lo-id, hi-id).  Using node ids instead of labels
+        // avoids false collisions: labels are reused row indices, while ids are
+        // globally unique per node.
+        inline size_t gen_key(int r, const DNNFNode* lo, const DNNFNode* hi) const {
+            auto mix = [](size_t x) -> size_t {
+                x ^= x >> 30; x *= 0xbf58476d1ce4e5b9ULL;
+                x ^= x >> 27; x *= 0x94d049bb133111ebULL;
+                return x ^ (x >> 31);
+            };
+            size_t h = mix(static_cast<size_t>(r));
+            h ^= mix(lo->id + 1ULL);
+            h ^= mix(hi->id + 0x9e3779b9ULL);
+            return h;
         }
 
     private:
@@ -158,11 +200,12 @@ class DanceDNNF : DancingMatrix {
         int max_depth;
         vector<string> cache_input_order; // 记录缓存的输入顺序，便于输出
         std::shared_ptr<DNNFNode> rootDNNF;
-        std::unordered_set<size_t> records; // 用于记录无法分解的矩阵状态
         std::shared_ptr<DNNFNode> T = std::make_shared<DNNFNode>(NodeType::Terminal, -1, 1);
         std::shared_ptr<DNNFNode> F = std::make_shared<DNNFNode>(NodeType::Terminal, -2, 0);
         
         // DNNF缓存
+        std::unordered_set<size_t> records; // 用于记录无法分解的矩阵状态
+
         mutable std::shared_mutex cacheMutex;
         mutable std::shared_mutex recordMutex; // 记录互斥锁
         unordered_map<size_t, shared_ptr<DNNFNode>> C;
@@ -171,7 +214,7 @@ class DanceDNNF : DancingMatrix {
         mutable std::shared_mutex tableMutex;
         unordered_map<size_t, shared_ptr<DNNFNode>> node_table;
 
-        // 轻量级缓存：只存计数
+         // count cache (state → count)
         unordered_map<size_t, DNNFResult> countCache;
 
         ThreadPool& getThreadPool(int poolSize) {

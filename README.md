@@ -1,69 +1,121 @@
-This repository implements algorithms for solving the exact cover problem efficiently. The key components include: Dynamic generating connected components based on SplayETT and Parallel search.
+# Exact Cover Solvers
+ 
+This repository implements algorithms for solving the **exact cover problem** efficiently.
+Key components include:
+ 
+- **Dancing Links (DLX)** matrix representation for compact constraint encoding
+- **Decision-DNNF / ZDD compilation** (DXD, DXZ) for knowledge compilation over exact cover instances
+- **Dynamic connected-component detection** via Splay-tree Euler Tour Trees (SplayETT)
+- **Parallel search** with OpenMP across independently decomposed sub-problems
 
-## Build Instructions
+---
+ 
+## Table of Contents
+ 
+1. [Requirements](#requirements)
+2. [Build](#build)
+3. [Usage](#usage)
+   - [Examples](#examples)
+4. [Benchmarks](#benchmarks)
 
-System requirements: `Ubuntu22.04`
+---
 
-Environment requirements: `GCC 11.4 or higher, G++ 11.4 or higher, CMake 3.22.1 or higher, OpenMP 4.0 or higher`
-
-To check whether OpenMP is available and verify its version, run:
+## Requirements
+ 
+| Component | Minimum version |
+|-----------|----------------|
+| OS | Ubuntu 22.04 |
+| GCC / G++ | 11.4 |
+| CMake | 3.22.1 |
+| OpenMP | 4.0 |
+ 
+**Verify OpenMP availability:**
+ 
 ```bash
 echo | g++ -fopenmp -dM -E - | grep _OPENMP
 ```
-
-The output is an integer macro indicating the supported OpenMP version.
-For example: _OPENMP 201511 → OpenMP 4.5
-
-To install all required dependencies, run:
+ 
+The output is a date-coded integer.  Example: `_OPENMP 201511` → OpenMP 4.5.
+ 
+**Install build dependencies:**
+ 
 ```bash
 sudo apt update
 sudo apt install -y build-essential cmake
 ```
+ 
+**Install the `dxd` library:**
+ 
+```
+https://github.com/loiufam/Algorithm_DXD
+```
 
-Install dxd from https://github.com/loiufam/alg-lab
+---
 
-
-### Compile and Run the code with the following command:
-
-To compile the solver:
+## Build
+ 
 ```bash
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Debug .. # or `cmake -DCMAKE_BUILD_TYPE=Release ..` 
+mkdir build && cd build
+ 
+# Debug build (assertions enabled, no optimisation)
+cmake -DCMAKE_BUILD_TYPE=Debug ..
+ 
+# Release build (recommended for benchmarking)
+cmake -DCMAKE_BUILD_TYPE=Release ..
+ 
 make -j
 ```
+ 
+The compiled binary is placed at `build/main`.
+ 
+---
 
-To run the solver, you can use the script "main" in this
-directory with the following arguments:
-```bash
-./main <alg_name> <test_case_path> [thread_num]
+
+## Usage
+ 
+```
+./main -a <alg> -i <input> [-t <threads>] [-d] [-h]
 ```
 
-## Arguments
 
-- **`alg_name`**  
-  Specifies the algorithm to be used. Supported options include:
-  - `dxd`: the DXD algorithm without dynamically updating connected components, instead of recomputing the whole graph by BFS (single-thread execution by default).
-  - `mdxd`: the multi-threaded DXD algorithm with dynamically updating connected components (parallel execution with 8 threads by default).
-
-- **`test_case_path`**  
-  The path to the input test case file.
-
-- **`thread_num`** *(optional)*  
-  Specifies the number of threads to be used during execution.  
-  This parameter is effective only for multi-threaded configurations (e.g., `mdxd`).
-
-
-For example:
+### Examples
+ 
 ```bash
-./main dxd ../data/run_set/Aarnet.txt # run DXD
-./main mdxd ../data/run_set/Aarnet.txt 1 # run a benchmark by single-thread DynDXD
-./main mdxd ../data/run_set/Aarnet.txt 8 # run a benchmark by 8 threads DynDXD
+# Count solutions with single-thread DLX
+./main -a dlx -i ../data/run_set/Aarnet.txt
+ 
+# Compile a ZDD over the solution set
+./main -a dxz -i ../data/exact_cover_benchmark/hard.txt
+ 
+# Single-thread DXD (Decision-DNNF compilation)
+./main -a dxd -i ../data/run_set/Aarnet.txt
+ 
+# Multi-thread DXD with 8 threads (default)
+./main -a mdxd -i ../data/run_set/Aarnet.txt
+ 
+# Multi-thread DXD with 4 threads
+./main -a mdxd -i ../data/run_set/Aarnet.txt -t 4
+ 
+# Single-thread baseline for mdxd (useful for speedup measurement)
+./main -a mdxd -i ../data/run_set/Aarnet.txt -t 1
+ 
 ```
 
+---
+ 
 ## Benchmarks
+ 
+Two dataset collections are stored under the `benchmark/` directory.
+ 
+| Directory | Format | Description |
+|-----------|--------|-------------|
+| `benchmark/exact_cover_benchmark/` | Standard exact-cover format | Classic exact cover instances |
+| `benchmark/run_set/` | Graph-derived format | Instances generated from network graphs (Topology Zoo and Rome) |
 
-We use two types of exact cover instance datasets.
-One is the exact cover benchmark dataset in the `exact_cover_benchmark` directory, and the other is the graph benchmark dataset in the `run_set` directory.
+The input format is detected automatically from the **parent directory name**:
+ 
+- parent = `exact_cover_benchmark` → read mode 1
+- parent = `run_set` → read mode 3
+If a file is placed elsewhere the solver defaults to read mode 3.
 
-All datasets are stored in the `benchmark` folder.
+---
