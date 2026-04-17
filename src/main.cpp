@@ -47,7 +47,7 @@ int main(int argc, char *argv[]){
             case AlgType::dxz:
                 {
                     logger.logLine("启用DXZ算法求解: " + filename);
-                    // DanceZDD danceZDD(input_file, read_mode, logger);
+                    // DanceZDD danceZDD(args.input, read_mode, logger);
                     // danceZDD.startDXZ();
                     DanceDNNF danceDNNF(args.input, read_mode, logger);
                     danceDNNF.runDXZ();

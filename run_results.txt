@@ -1,5 +1,7 @@
-启用DXZ算法求解: Agis
-Time: 1.631900 s
-Solutions: 701220
-ZDD Size: 421
-DXZ算法求解结束: Agis
+启用多线程DXD算法求解: bell-10
+开始多线程DXD搜索...
+Time: 57.736712 s
+Solutions: 115975
+Max Blocks: 1
+DNNF Size: 10353
+多线程DXD算法求解结束: bell-10

@@ -352,17 +352,16 @@ size_t DanceDNNF::countZDDSize() const {
         [&](const shared_ptr<DNNFNode>& node) -> size_t {
             if (!node)                       return 0;
             if (node->isTerminal())          return 0;   // T / F don't count
-            if (visited.count(node->id))     return 1;   // already counted (DAG sharing)
+            if (visited.count(node->id))     return 0;
             visited.insert(node->id);
  
             size_t total = 1;   // this node
             total += traverse(node->left);
             total += traverse(node->right);
-            for (const auto& child : node->children) total += traverse(child);
             return total;
         };
  
-    return traverse(rootDNNF);
+    return traverse(rootDNNF); // 加上T和F节点
 }
 
 
