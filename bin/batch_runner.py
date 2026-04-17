@@ -25,12 +25,12 @@ WRITE_INTERVAL = 10  # 每10个写一次CSV
 # (名称, 参数, 列ID, 是否写solutions, 是否支持线程, 输出文件)
 ALGORITHMS = [
     # ("IDXD_S", ["mdxd", "1"], 9, True, True, "DynDXD_1_results.csv"),
-    ("IDXD_M", ["mdxd", "8"], 10, True, True, "DynDXD_8_results.csv"),
+    # ("IDXD_M", ["mdxd", "8"], 10, True, True, "DynDXD_8_results.csv"),
     # ("DXD_S", ["dxd", "1"], 7, True, True, "DXD_1_results.csv"),
     # ("DXD_M", ["dxd", "8"], 8, True, True, "DXD_8_results.csv"),
     # ("MDLX", ["mdlx", "8"], 11, True, True, "MDLX_results.csv"),
     # ("DLX", ["dlx"], 4, True, False, "DLX_results.csv"),
-    ("DXZ", ["dxz"], 5, False, True, "DXZ_results.csv")
+    ("DXZ", ["dxz"], 5, True, False, "DXZ_results.csv")
 ]
 
 # 多线程算法配置：(算法名, 命令参数, 是否使用ett, 线程数列表, 输出文件名)
