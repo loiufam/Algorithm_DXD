@@ -330,7 +330,7 @@ size_t DanceDNNF::countDNNFNodes() const {
             if (visited.count(node->id))     return 0;   // already counted (DAG sharing)
             visited.insert(node->id);
  
-            size_t total = node->type == NodeType::Decision ? 1 : 0; // Count only Decision nodes
+            size_t total = 1;
             total += traverse(node->left);
             total += traverse(node->right);
             for (const auto& child : node->children) total += traverse(child);
