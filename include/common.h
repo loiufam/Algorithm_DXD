@@ -13,6 +13,7 @@
 #include <unordered_set>
 #include <deque>
 #include <stack>
+#include <gmpxx.h>
 #include <algorithm>
 #include <numeric>
 #include <cmath>
@@ -215,21 +216,34 @@ struct Result {
 
 // 轻量级结果结构
 struct DNNFResult {
-    uint64_t count;          // 精确计数（未溢出时使用）
-    bool overflowed;         // 是否溢出
-    ScientificCount sciCount; // 科学计数法（溢出后使用）
+    mpz_class count;
+    // uint64_t count;
+    // bool overflowed;         // 是否溢出
+    // ScientificCount sciCount; // 科学计数法（溢出后使用）
     
-    // 从精确值构造
-    DNNFResult(uint64_t c) : count(c), overflowed(false), sciCount(c) {}
+    // DNNFResult(uint64_t c) : count(c), overflowed(false), sciCount(c) {}
     
-    // 从科学计数法构造
-    DNNFResult(const ScientificCount& sc) : count(0), overflowed(true), sciCount(sc) {}
+    // DNNFResult(const ScientificCount& sc) : count(0), overflowed(true), sciCount(sc) {}
+    
+    // DNNFResult() : count(0), overflowed(false), sciCount(0) {}
+
+    // 从普通整型构造
+    DNNFResult(unsigned long c) : count(c) {}
+
+    // DNNFResult(unsigned long long c) : count(std::to_string(c)) {}
+    
+    // 从 GMP 大数构造
+    DNNFResult(const mpz_class& c) : count(c) {}
+    
+    // 从字符串构造（方便直接读取超大数）
+    DNNFResult(const std::string& s) : count(s) {}
     
     // 默认构造（零值）
-    DNNFResult() : count(0), overflowed(false), sciCount(0) {}
+    DNNFResult() : count(0) {}
     
     bool isZero() const {
-        return overflowed ? sciCount.isZero() : (count == 0);
+        // return overflowed ? sciCount.isZero() : (count == 0);
+        return count == 0;
     }
     
     bool isFailure() const { 
@@ -237,33 +251,37 @@ struct DNNFResult {
     }
     
     std::string toString() const {
-        if (overflowed) {
-            return sciCount.toString();
-        } else {
-            return std::to_string(count);
+        return count.get_str(10);
+    }
+
+    std::string toScientificString(int precision = 6) const {
+        std::string str = count.get_str(10);
+        if (str.length() <= 1) return str;
+
+        std::string result = "";
+        result += str[0];
+        result += ".";
+        
+        int availableFracLen = str.length() - 1;
+        int actualFracLen = std::min(availableFracLen, precision);
+        result += str.substr(1, actualFracLen);
+        
+        if (actualFracLen < precision) {
+            result.append(precision - actualFracLen, '0');
         }
+        
+        result += "e+" + std::to_string(availableFracLen);
+        return result;
     }
     
     // 乘法操作
     DNNFResult operator*(const DNNFResult& other) const {
+        // 剪枝优化：任何数乘 0 都是 0
         if (this->isZero() || other.isZero()) {
             return DNNFResult(0);
         }
-        
-        // 如果任意一方已经溢出，使用科学计数法
-        if (this->overflowed || other.overflowed) {
-            ScientificCount result = this->sciCount * other.sciCount;
-            return DNNFResult(result);
-        }
-        
-        // 检查是否会溢出
-        if (this->count <= ULLONG_MAX / other.count) {
-            return DNNFResult(this->count * other.count);
-        } else {
-            // 溢出，转换为科学计数法
-            ScientificCount result = this->sciCount * other.sciCount;
-            return DNNFResult(result);
-        }
+        // 直接相乘，GMP 内部会自动处理任意大小的内存扩容和高精度计算
+        return DNNFResult(this->count * other.count);
     }
     
     // 加法操作
@@ -271,20 +289,7 @@ struct DNNFResult {
         if (this->isZero()) return other;
         if (other.isZero()) return *this;
         
-        // 如果任意一方已经溢出，使用科学计数法
-        if (this->overflowed || other.overflowed) {
-            ScientificCount result = this->sciCount + other.sciCount;
-            return DNNFResult(result);
-        }
-        
-        // 检查是否会溢出
-        if (this->count <= ULLONG_MAX - other.count) {
-            return DNNFResult(this->count + other.count);
-        } else {
-            // 溢出，转换为科学计数法
-            ScientificCount result = this->sciCount + other.sciCount;
-            return DNNFResult(result);
-        }
+        return DNNFResult(this->count + other.count);
     }
 };
 

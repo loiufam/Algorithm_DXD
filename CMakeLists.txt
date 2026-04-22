@@ -28,15 +28,32 @@ set(COMMON_SOURCES
 # Add executable target
 # Main target
 add_executable(main src/main.cpp ${COMMON_SOURCES})
-# add_executable(main_dxd src/main_dxd.cpp ${COMMON_SOURCES})
-# add_executable(main_base src/main_base.cpp ${COMMON_SOURCES})
 
-# Optional test targets (enable manually if needed)
-# add_executable(test1 test/test1.cpp ${COMMON_SOURCES})
-# add_executable(test2 test/test2.cpp ${COMMON_SOURCES})
-# add_executable(test3 test/test3.cpp ${COMMON_SOURCES})
-# add_executable(test_ test/test_matrix_to_graph.cpp ${COMMON_SOURCES})
+# ==========================================
+# 1. 配置 GMP 高精度库链接 (处理超大模型计数)
+# ==========================================
+# 查找系统的 gmp 和 gmpxx 动态/静态库
+find_library(GMP_LIB NAMES gmp REQUIRED)
+find_library(GMPXX_LIB NAMES gmpxx REQUIRED)
 
+if(GMP_LIB AND GMPXX_LIB)
+    message(STATUS "Found GMP: ${GMP_LIB}")
+    message(STATUS "Found GMPXX: ${GMPXX_LIB}")
+    # 必须先链接 gmpxx (C++封装)，再链接 gmp (C底层库)
+    target_link_libraries(main PUBLIC ${GMPXX_LIB} ${GMP_LIB})
+endif()
+
+# ==========================================
+# 2. 配置 OpenMP (支持并行计算)
+# ==========================================
+find_package(OpenMP REQUIRED)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(main PUBLIC OpenMP::OpenMP_CXX)
+endif()
+
+# ==========================================
+# 3. 配置 AddressSanitizer (仅 Debug 模式)
+# ==========================================
 # AddressSanitizer only in Debug mode
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Building with AddressSanitizer (Debug mode)")
@@ -47,14 +64,3 @@ endif()
 # mkdir build && cd build
 # cmake .. -DCMAKE_BUILD_TYPE=Release
 # make -j
-
-# OpenMP
-find_package(OpenMP REQUIRED)
-if(OpenMP_CXX_FOUND)
-    target_link_libraries(main PUBLIC OpenMP::OpenMP_CXX)
-    # target_link_libraries(main_dxd PUBLIC OpenMP::OpenMP_CXX)
-    # target_link_libraries(test1 PUBLIC OpenMP::OpenMP_CXX)
-    # target_link_libraries(test2 PUBLIC OpenMP::OpenMP_CXX)
-    # target_link_libraries(test3 PUBLIC OpenMP::OpenMP_CXX)
-    # target_link_libraries(test_ PUBLIC OpenMP::OpenMP_CXX)
-endif()

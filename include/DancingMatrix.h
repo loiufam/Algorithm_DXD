@@ -183,25 +183,6 @@ class DancingMatrix
             return enableGraphSync;
         }
 
-        void addConcurrentThread(int count) {
-            std::lock_guard<std::mutex> lock(thread_count_mutex);
-            current_concurrent_threads += count;
-        }
-
-        void addTriedNumbers(int count) {
-            std::lock_guard<std::mutex> lock(tried_numbers_mutex);
-            tried_numbers += count;
-        }
-
-        bool shouldDecompose() {
-            if (single_thread_mode && ++tried_numbers > MAX_TRIES) {
-                turnOffGraphSync();
-                return false;
-            }
-            
-            return isGraphSyncEnabled();;
-        }
-
         void initialize();
         void buildGraphFromMatrix();
         
@@ -231,24 +212,12 @@ class DancingMatrix
         std::shared_ptr<ETTree> etTree;  // 欧拉回路树
         mutable std::shared_mutex mutex_;  // 读写锁
 
-        int current_concurrent_threads = 0;
-        std::mutex thread_count_mutex;
-
-        int tried_numbers = 0; // 已尝试的次数
-        std::mutex tried_numbers_mutex;
-
         mutable std::shared_mutex graph_sync_mutex; // 图同步锁
 
         // Graph build_graph_from_columns(const unordered_map<int, vector<int>>& col2rows, int num_rows, bool deduplicate = true);
 
         bool enableGraphSync = true; // 是否启用图同步   
         
-        // 深拷贝单个树
-        std::unique_ptr<splaytree::EulerTourTree> deepCopyTree(
-            splaytree::EulerTourTree* original);
-        
-        // 深拷贝图（只拷贝 block 相关的边）
-        std::unique_ptr<Graph> deepCopyGraph(splaytree::EulerTourTree* tree);
         
     public:
         // build undirected graph from matrix

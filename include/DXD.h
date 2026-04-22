@@ -6,7 +6,7 @@
 
 const int MIN_BLOCK_ROWS = 20;
 const int MAX_BLOCK_ROWS = 200;
-const int TIME_LIMIT_SECONDS = 1200; 
+const int TIME_LIMIT_SECONDS = 1500; 
 const int TIME_LIMIT_BUILDING_SECONDS = 1200;
 const int MAX_DECOMPOSE_TIMES = 5;
 using namespace std;
@@ -85,7 +85,6 @@ class DanceDNNF : DancingMatrix {
         atomic<int> p_count{0}; // 记录当前并行的子进程数
         int detect_record = 0; // 记录第几次检测
         size_t MAX_B_COUNT;
-        int max_threads; // 最大线程数
 
         double searchTime = 0.0;
         string solutionCount; // 记录解的数量
@@ -106,6 +105,41 @@ class DanceDNNF : DancingMatrix {
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> DXD(Block& block, int depth);
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> serialSearch(vector<Block>& blocks, int depth);
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> parallelSearchUseOmp(vector<Block>& blocks, int depth);
+
+        bool shouldDecompose() {
+            // 单线程模式下原有的 MAX_TRIES 限制
+            if (single_thread_mode) {
+                std::lock_guard<std::mutex> lock(tried_numbers_mutex);
+                if (++tried_numbers > MAX_TRIES) {
+                    turnOffGraphSync();
+                    return false;
+                }
+            }
+
+            int cur = 0;
+            {
+                std::lock_guard<std::mutex> lock(thread_count_mutex);
+                cur = current_concurrent_threads;
+            }
+
+            // 更新峰值
+            int prev_peak = peak_concurrent_threads.load();
+            while (cur > prev_peak && !peak_concurrent_threads.compare_exchange_weak(prev_peak, cur)) {}
+
+            const int cap = getMaxThreads();
+            const int threshold = static_cast<int>(cap * sync_off_ratio);
+        
+            if (cap > 0 && cur > threshold) {
+                // 只有当前还开着时才计数 + 关闭
+                if (isGraphSyncEnabled()) {
+                    turnOffGraphSync();
+                    sync_auto_off_count.fetch_add(1, std::memory_order_relaxed);
+                }
+                return false;
+            }
+                    
+            return isGraphSyncEnabled();;
+        }
 
         // 启动搜索函数
         void startDXD();
@@ -189,10 +223,50 @@ class DanceDNNF : DancingMatrix {
             return h;
         }
 
+        void addTriedNumbers(int count) {
+            std::lock_guard<std::mutex> lock(tried_numbers_mutex);
+            tried_numbers += count;
+        }
+
+        // 统计指标访问器
+        int    getPeakConcurrentThreads()  const { return peak_concurrent_threads.load();  }
+        size_t getMaxBlocksDetected()      const { return max_blocks_detected.load();      }
+        size_t getSyncAutoOffCount()       const { return sync_auto_off_count.load();      }
+        int  getMaxThreads() const {
+            return max_threads > 0 ? max_threads
+                                : static_cast<int>(std::thread::hardware_concurrency());
+        }
+
+        void addConcurrentThread(int count) {
+            std::lock_guard<std::mutex> lock(thread_count_mutex);
+            current_concurrent_threads += count;
+        }
+
+        void recordBlocksDetected(size_t n) {
+            size_t prev = max_blocks_detected.load();
+            while (n > prev &&
+                !max_blocks_detected.compare_exchange_weak(prev, n)) {}
+        }
+
     private:
         // ThreadPool& pool;
         Logger& logger;
         bool controlOUTPUT = false;
+
+        // 并行阈值控制
+        int max_threads = 0;               // 最大线程数（0 = 使用 hardware_concurrency）
+        double sync_off_ratio = 0.75;      // 超过此比例即关闭图同步
+
+        int current_concurrent_threads = 0;
+        std::mutex thread_count_mutex;
+
+        // 统计指标
+        std::atomic<int>    peak_concurrent_threads{0};
+        std::atomic<size_t> max_blocks_detected{0};
+        std::atomic<size_t> sync_auto_off_count{0};  // 由阈值触发关闭同步的次数
+
+        int tried_numbers = 0; // 已尝试的次数
+        std::mutex tried_numbers_mutex;
         
         int num_of_zddNodes = 0; // 记录生成的ZDD节点数量
         // DNNF相关
@@ -220,6 +294,22 @@ class DanceDNNF : DancingMatrix {
         ThreadPool& getThreadPool(int poolSize) {
             return ThreadPoolManager::get_instance(poolSize);
         }
+};
+
+class ConcurrentGuard {
+public:
+    ConcurrentGuard(
+        DanceDNNF& dm, int delta) : dm_(dm), delta_(delta) {
+        if (delta_ != 0) dm_.addConcurrentThread(delta_);
+    }
+    ~ConcurrentGuard() {
+        if (delta_ != 0) dm_.addConcurrentThread(-delta_);
+    }
+    ConcurrentGuard(const ConcurrentGuard&) = delete;
+    ConcurrentGuard& operator=(const ConcurrentGuard&) = delete;
+private:
+    DanceDNNF& dm_;
+    int delta_;
 };
 
 #endif

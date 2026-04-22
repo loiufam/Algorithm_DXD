@@ -184,14 +184,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(vect
         if (nodes[i]) subNodes.push_back(nodes[i]);
     }
     
-    shared_ptr<DNNFNode> decompNode;
-    if (subNodes.empty()) {
-        decompNode = T;
-    } else if (subNodes.size() == 1) {
-        decompNode = subNodes[0];
-    } else {
-        decompNode = buildDecomposableNode(subNodes);
-    }
+    shared_ptr<DNNFNode> decompNode = buildDecomposableNode(subNodes);
  
     return {totalResult, decompNode};
 }
@@ -240,11 +233,16 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
 
         if (int(curBlock.size())  > 1) {
             // std::cout << "Detected " << curBlock.size() << " independent blocks at depth " << depth << ".\n";
+            recordBlocksDetected(curBlock.size());
             // 检测到多个独立分块，则并行处理
-            if(!single_thread_mode) turnOffGraphSync();
-            // addConcurrentThread(block_size);
+            // if(!single_thread_mode) turnOffGraphSync();
+            const bool willParallel = isParallelSearch && curBlock.size() > 1;
+ 
+            // 每多一个分块就多一个并发分支
+            const int delta = willParallel ? static_cast<int>(curBlock.size()) : 0;
+            ConcurrentGuard guard(*this, delta);
 
-            auto [result, decompNode] = isParallelSearch
+            auto [result, decompNode] = willParallel
                 ? parallelSearchUseOmp(curBlock, depth)
                 : serialSearch(curBlock, depth);
 
