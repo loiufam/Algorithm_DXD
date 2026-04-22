@@ -1,2 +1,5 @@
-启用多线程DXD算法求解: Bbnplanet
-开始多线程DXD搜索...
+启用DXZ算法求解: Bbnplanet
+Time: 1.184433 s
+Solutions: 1650
+ZDD Size: 229
+DXZ算法求解结束: Bbnplanet

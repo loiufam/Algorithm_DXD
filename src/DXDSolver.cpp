@@ -139,6 +139,10 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(vect
                 results[i] = result;
                 nodes[i] = node;
             }
+
+            if (useETT && tlsState && !tlsState->components.empty()) {
+                returned[i] = std::move(tlsState->components.front());
+            }
         } catch (const std::runtime_error& e) {
             std::string msg = e.what();
             if (msg.find("Time bound") != std::string::npos) {
@@ -235,7 +239,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             // std::cout << "Detected " << curBlock.size() << " independent blocks at depth " << depth << ".\n";
             recordBlocksDetected(curBlock.size());
             // 检测到多个独立分块，则并行处理
-            // if(!single_thread_mode) turnOffGraphSync();
+            if(!single_thread_mode) turnOffGraphSync();
             const bool willParallel = isParallelSearch && curBlock.size() > 1;
  
             // 每多一个分块就多一个并发分支
