@@ -76,8 +76,8 @@ class DancingMatrix
         unordered_set<int> active_rows;
         Block InitBlock;
 
-        bool dxz_mode = false; // 选择列模式
-        bool single_thread_mode = false; // 单线程模式
+        bool dxz_mode = false;
+        bool single_thread_mode = false;
 
         // 列状态
         size_t getColumnState() const;
@@ -86,7 +86,7 @@ class DancingMatrix
         
         //接收矩阵其及维度  
         DancingMatrix( int rows, int cols, int** matrix, bool verbose = false);  
-        DancingMatrix( const string& file_path, int from, bool use_ig = false, bool use_ett = false);
+        DancingMatrix( const string& file_path, bool use_ig = false, bool use_ett = false);
 
         // 检测器，用于检测矩阵中的连通性
         std::unique_ptr<ComponentDetector> detector;
@@ -164,7 +164,6 @@ class DancingMatrix
             return root->right == root;
         }
 
-        // IBD: Independent Block Detection
         vector<Block> getComponentsByIG(const set<int> rows);
         vector<Block> getComponentsByETT();
 

@@ -147,10 +147,10 @@ private:
  
         // Algorithm name validation
         static const std::unordered_set<std::string> valid_algs =
-            {"dlx", "dxz", "dxd", "mdxd", "mdlx"};
+            {"dlx", "dxz", "dxd", "ddxd", "mdlx"};
         if (!valid_algs.count(alg)) {
             std::cerr << "[error] unknown algorithm '" << alg << "'.\n"
-                      << "        Valid choices: dlx  dxz  dxd  mdxd  mdlx\n";
+                      << "        Valid choices: dlx  dxz  dxd  ddxd  mdlx\n";
             return false;
         }
  

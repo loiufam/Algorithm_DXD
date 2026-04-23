@@ -197,8 +197,12 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(vect
 // DXD IDXD
 std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int depth) {
     
-    // std::cout << "\n============================\n";
-    // std::cout << "[Before] DXD called at depth " << depth << "\n";
+    std::ostringstream oss;
+    oss << "\n============================\n";
+    oss << "[Before] DXD called at depth " << depth
+        << ", omp_tid = " << omp_get_thread_num()
+        << "\n";
+    std::cout << oss.str();
     // printComponents();
 
     if(timer.timeBoundBroken()) {
@@ -239,10 +243,9 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             // std::cout << "Detected " << curBlock.size() << " independent blocks at depth " << depth << ".\n";
             recordBlocksDetected(curBlock.size());
             // 检测到多个独立分块，则并行处理
-            if(!single_thread_mode) turnOffGraphSync();
+            // if(!single_thread_mode) turnOffGraphSync();
             const bool willParallel = isParallelSearch && curBlock.size() > 1;
  
-            // 每多一个分块就多一个并发分支
             const int delta = willParallel ? static_cast<int>(curBlock.size()) : 0;
             ConcurrentGuard guard(*this, delta);
 
@@ -366,7 +369,7 @@ size_t DanceDNNF::countZDDSize() const {
     return traverse(rootDNNF); // 加上T和F节点
 }
 
-
+// DXD DXZ入口：单线程版本
 void DanceDNNF::startDXD() {
 
     if(!controlOUTPUT)  logger.logLine("开始单线程DXD搜索...");
@@ -395,27 +398,34 @@ void DanceDNNF::startDXD() {
 
         solutionCount = ResSols.toString();
         logger.logLine("Solutions: " + solutionCount);
+        logger.logLine("Solutions (scientific): " + ResSols.toScientificString(3)); 
     
         if(!controlOUTPUT) logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
 
-        size_t dnnf_size = countDNNFNodes();
-        size_t zdd_size = countZDDSize();
 
         if(dxz_mode) {
+            size_t zdd_size = countZDDSize();
             logger.logLine("ZDD Size: " + std::to_string(zdd_size));
         } else {
+            size_t dnnf_size = countDNNFNodes();
             logger.logLine("DNNF Size: " + std::to_string(dnnf_size));
         }
+
 
         return;
     } catch (std::runtime_error &e) {
         timeout = true;
-        if(!controlOUTPUT) logger.logLine("DXD搜索超时: " + std::string(e.what()));
+        if(dxz_mode) { 
+            logger.logLine("DXZ搜索超时: " + std::string(e.what()));
+        } else {
+            logger.logLine("DXD搜索超时: " + std::string(e.what()));
+        }
         return;
     }
 
 }
 
+// DynDXD
 void DanceDNNF::startMultiThreadDXD() {
 
     logger.logLine("开始多线程DXD搜索...");
@@ -441,21 +451,18 @@ void DanceDNNF::startMultiThreadDXD() {
 
         solutionCount = ResSols.toString();
         logger.logLine("Solutions: " + solutionCount);
+        logger.logLine("Solutions (scientific): " + ResSols.toScientificString(3));
     
         logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
             
         size_t dnnf_size = countDNNFNodes();
-        size_t zdd_size = countZDDSize();
 
-        if(dxz_mode) {
-            logger.logLine("ZDD Size: " + std::to_string(zdd_size));
-        } else {
-            logger.logLine("DNNF Size: " + std::to_string(dnnf_size));
-        }
+        logger.logLine("DNNF Size: " + std::to_string(dnnf_size));
+
         return;
     } catch (std::runtime_error &e) {
         timeout = true;
-        logger.logLine("DXD搜索超时: " + std::string(e.what()));
+        logger.logLine("DynDXD搜索超时: " + std::string(e.what()));
         return;
     }
 }
@@ -629,6 +636,7 @@ void DanceDNNF::start_MDLX_Search() {
 
         solutionCount = res.toString();
         logger.logLine("Solutions: " + solutionCount);
+        logger.logLine("Solutions (scientific): " + res.toScientificString(3));
 
         logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
         return;

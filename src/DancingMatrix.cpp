@@ -49,7 +49,7 @@ DancingMatrix::DancingMatrix( int rows, int cols, int** matrix, bool verbose )
 }
 
 // 从文件构造舞蹈链矩阵
-DancingMatrix::DancingMatrix( const string& file_path, int from, bool useIg , bool useETT  ) 
+DancingMatrix::DancingMatrix( const string& file_path, bool useIg , bool useETT  ) 
     : useIG(useIg), useETT(useETT)
 {
     ifstream file(file_path);
@@ -59,15 +59,23 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool useIg , bo
     }
 
     string line;
-    getline(file, line);  // 读取第一行 
+    if (!getline(file, line)) {
+        throw runtime_error("文件为空");
+    }
 
     int rows, cols;
-    if( from == 1 ) {
+    int skip_tokens = -1; // -1 表示尚未确定每行需要跳过的 token 数量
+
+    // 自动检测模式 1 (通常首行包含 '=' 或以 'c ' 开头)
+    if (line.find("=") != string::npos || line.find("c ") == 0) {
         PreProccess::extractNM( line, cols, rows );
-        getline(file, line); 
+        getline(file, line);  // 跳过第二行 
+        skip_tokens = 1;      // 模式 1 数据行只跳过一个 token (即 row_id)
     } else {
+        // 首行是 "cols rows" (模式 2 或 3)
         istringstream iss(line);
         iss >> cols >> rows;
+        // 此处先不设置 skip_tokens，留到读取第一行有效数据时动态推断
     }
 
     ROWS = rows;
@@ -106,13 +114,38 @@ DancingMatrix::DancingMatrix( const string& file_path, int from, bool useIg , bo
     int currentRow = 0;
     while (getline(file, line)) {
         if (line.empty()) continue; // 跳过空行
-        istringstream iss(line);
 
+        // 探测第一行数据以区分模式 2 和模式 3
+        if (skip_tokens == -1) {
+            istringstream peek_iss(line);
+            std::vector<int> temp_tokens;
+            int val;
+            while (peek_iss >> val) {
+                temp_tokens.push_back(val);
+            }
+            if (temp_tokens.empty()) continue; // 预防全空格的行
+
+            // 模式 3: [count] [id1] [id2] ...
+            // 元素总个数一定等于 temp_tokens[0] + 1
+            if (temp_tokens.size() == static_cast<size_t>(temp_tokens[0] + 1)) {
+                skip_tokens = 1; 
+            } 
+            // 模式 2: [id] [count] [id1] [id2] ...
+            // 元素总个数一定等于 temp_tokens[1] + 2
+            else if (temp_tokens.size() >= 2 && temp_tokens.size() == static_cast<size_t>(temp_tokens[1] + 2)) {
+                skip_tokens = 2;
+            } 
+            else {
+                cerr << "警告: 无法自动识别数据行格式，默认跳过1个标识符" << endl;
+                skip_tokens = 1;
+            }
+        }
+
+        istringstream iss(line);
         string token;
-        if (from == 1 || from == 3) {
-            iss >> token;
-        } else if (from == 2) {
-            iss >> token;
+
+        // 自动跳过不需要的 id 或 count 字段
+        for (int i = 0; i < skip_tokens; ++i) {
             iss >> token;
         }
 
@@ -749,33 +782,30 @@ void DancingMatrix::insert( int r, int c )
     auto newNode = std::make_unique<Node>(r, c);  
     Node* newNodePtr = newNode.get();
 
-    Node* cur = &ColIndex[c];  
-    while( cur->down != &ColIndex[c] && cur->down->row < r )  
-        cur = cur->down;  
+    // 1. 垂直方向插入 (直接插在列的末尾)
+    // ColIndex[c].up 永远指向当前列的最后一个节点
+    Node* colHead = &ColIndex[c];
+    Node* colTail = colHead->up; 
 
-    newNodePtr->down = cur->down;  
-    newNodePtr->up = cur;  
-    cur->down->up = newNodePtr;  
-    cur->down = newNodePtr;  
-    if( RowIndex[r].right == nullptr )  
-    {  
+    newNodePtr->down = colHead;
+    newNodePtr->up = colTail;
+    colTail->down = newNodePtr;
+    colHead->up = newNodePtr;
+
+    if( RowIndex[r].right == nullptr ) {  
         RowIndex[r].right = newNodePtr; 
         newNodePtr->row_first_node = true;
         newNode->left = newNodePtr;  
         newNode->right = newNodePtr;  
-    }  
-    else  
-    {  
+    } else {  
         Node* rowHead = RowIndex[r].right;  
-        cur = rowHead;  
+        // rowHead->left 永远指向当前行的最后一个节点
+        Node* rowTail = rowHead->left; 
 
-        while( cur->right != rowHead && cur->right->col < c )  
-            cur = cur->right;  
-
-        newNodePtr->right = cur->right;  
-        newNodePtr->left = cur;  
-        cur->right->left = newNodePtr;  
-        cur->right = newNodePtr;  
+        newNodePtr->right = rowHead;  
+        newNodePtr->left = rowTail;  
+        rowTail->right = newNodePtr;  
+        rowHead->left = newNodePtr; 
     }  
 
     dataNodes.push_back(std::move(newNode));

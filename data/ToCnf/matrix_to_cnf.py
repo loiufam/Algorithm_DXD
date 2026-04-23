@@ -1,193 +1,216 @@
 """
 精确覆盖问题到SAT的转换器
-支持Pairwise和Ladder编码, 输出DIMACS CNF格式
+支持四种编码: Pairwise, Ladder, Bitwise, Matrix
+输出DIMACS CNF格式，支持命令行参数批量处理
 """
 
-from typing import List, Tuple, Set
-import sys
 import os
-import pathlib
 import time
+import math
+import argparse
 import csv
+from pathlib import Path
+from typing import List, Tuple, Set
 
 TIME_COLUMN_INDEX = 16  
 INSTANCE_COLUMN = "Instance"
 TIME_COLUMN = "cnf_compile(s)"
 log_file = "log.txt"
 
-def read_exact_cover_matrix(filepath: str, read_mode: int = 1) -> Tuple[List[Set[int]], int, int]:
+def read_exact_cover_matrix(filepath: str) -> Tuple[List[Set[int]], int, int]:
     """
-    读取精确覆盖矩阵文件
+    自动识别并读取精确覆盖矩阵文件
     
-    支持三种读取模式：
-    read_mode = 1: 格式 "c n = cols , m = rows" 然后跳过一行
-    read_mode = 2: 格式 "cols rows" 然后每行 "行号 count col1 col2 ..."
-    read_mode = 3: 格式 "cols rows" 然后每行 "count col1 col2 ..."
+    自动识别的三种模式：
+    模式 1: 首行含 "=" 或以 "c " 开头，如 "c n = cols , m = rows"，跳过第二行，数据行跳过 1 个 id。
+    模式 2: 首行 "cols rows"，数据行 "id count col1 col2 ..."
+    模式 3: 首行 "cols rows"，数据行 "count col1 col2 ..."
     
-    返回：(集合列表, 列数/点数)
+    返回：(集合列表, 列数/点数, 行数)
     """
     with open(filepath, 'r') as f:
-        # 读取第一行获取cols和rows
+        # 读取第一行并去首尾空白
         first_line = f.readline().strip()
-        tokens = first_line.replace(",", "").split()
+        while not first_line:  # 防御性跳过文件开头的空行
+            first_line = f.readline().strip()
+            
+        read_mode = -1
+        start_idx = -1
         
-        if read_mode == 1:
-            # 格式: c n = cols , m = rows
+        # 1. 探测模式 1
+        if "=" in first_line or first_line.startswith("c "):
+            read_mode = 1
+            tokens = first_line.replace(",", "").split()
             cols = int(tokens[3])
             rows = int(tokens[6])
-            # 跳过第二行
-            f.readline()
+            f.readline()  # 模式 1 固定跳过第二行
+            start_idx = 1 # 模式 1 数据行固定跳过1个 token (row_id)
         else:
-            # 格式: cols rows
+            # 首行是 "cols rows" (模式 2 或 3)
+            tokens = first_line.split()
             cols = int(tokens[0])
             rows = int(tokens[1])
-        
+            
         sets = []
         
-        # 读取每一行
+        # 2. 逐行读取与模式探测
         for line in f:
             line = line.strip()
             if not line:
                 continue
-            
+                
             tokens = line.split()
+            if not tokens:
+                continue
+                
+            # 探测第一行有效数据以区分模式 2 和模式 3
+            if read_mode == -1:
+                # 模式 3: [count] [col1] [col2] ... (总 token 数等于 count + 1)
+                if len(tokens) == int(tokens[0]) + 1:
+                    read_mode = 3
+                    start_idx = 1
+                # 模式 2: [id] [count] [col1] [col2] ... (总 token 数等于 count + 2)
+                elif len(tokens) >= 2 and len(tokens) == int(tokens[1]) + 2:
+                    read_mode = 2
+                    start_idx = 2
+                else:
+                    print(f"警告: 无法自动识别数据行格式，默认跳过1个标识符。当前行: {line}")
+                    read_mode = 3
+                    start_idx = 1
             
-            if read_mode == 1:
-                # 跳过第一个token（行号）
-                start_idx = 1
-            elif read_mode == 2:
-                # 跳过前两个tokens（行号和count）
-                if len(tokens) < 2:
-                    continue
+            # 对模式 2 和 3 进行 count 校验
+            if read_mode == 2:
                 count = int(tokens[1])
-                if count <= 0:
-                    continue
-                start_idx = 2
-            else:  # read_mode == 3
-                # 跳过第一个token（count）
-                if len(tokens) < 1:
-                    continue
+                if count <= 0: continue
+            elif read_mode == 3:
                 count = int(tokens[0])
-                if count <= 0:
-                    continue
-                start_idx = 1
-            
+                if count <= 0: continue
+                
             # 读取列号
             col_set = set()
             for i in range(start_idx, len(tokens)):
                 col = int(tokens[i])
                 if 1 <= col <= cols:
                     col_set.add(col)
-            
+                    
             if col_set:
                 sets.append(col_set)
-        
+                
     return sets, cols, rows
 
-
-def exact_cover_to_cnf_pairwise(sets: List[Set[int]], num_points: int) -> Tuple[List[List[int]], int]:
+def encode_exactly_one(vars: List[int], current_aux: int, encoding: str) -> Tuple[List[List[int]], int]:
     """
-    Pairwise编码: 显式排除每对变量
-    
-    对于每个点v的exactly-one约束:
-    - At-least-one: (x_1 ∨ x_2 ∨ ... ∨ x_n)
-    - At-most-one: (¬x_i ∨ ¬x_j) for all i < j
+    对一组变量进行Exactly-One约束编码
     
     参数：
-        sets: 集合列表
-        num_points: 点的总数
-    
-    返回：(子句列表, 变量总数)
+        vars: 参与约束的布尔变量集合
+        current_aux: 当前可用的辅助变量起始编号
+        encoding: 编码方式 ('pairwise', 'ladder', 'bitwise', 'matrix')
+        
+    返回：
+        (子句列表, 更新后的下一个可用辅助变量编号)
     """
-    clauses = []
-    num_vars = len(sets)
-    
-    for v in range(1, num_points + 1):
-        # 找到包含点v的所有集合对应的变量
-        covering_vars = [i + 1 for i, s in enumerate(sets) if v in s]
-        
-        if not covering_vars:
-            # 无解情况
-            clauses.append([])
-            continue
-        
-        # At-least-one约束
-        clauses.append(covering_vars)
-        
-        # At-most-one约束：排除所有变量对
-        for i in range(len(covering_vars)):
-            for j in range(i + 1, len(covering_vars)):
-                clauses.append([-covering_vars[i], -covering_vars[j]])
-    
-    return clauses, num_vars
+    n = len(vars)
+    if n == 0:
+        return [[]], current_aux
+    if n == 1:
+        return [[vars[0]]], current_aux
 
-
-def exact_cover_to_cnf_ladder(sets: List[Set[int]], num_points: int) -> Tuple[List[List[int]], int]:
-    """
-    Ladder编码: 使用n-1个辅助变量
-    
-    辅助变量a_i表示：x_1 ∨ x_2 ∨ ... ∨ x_i为真
-    构造：
-    - a_2 ⇔ (x_1 ∨ x_2)
-    - a_i ⇔ (a_{i-1} ∨ x_i) for i ≥ 3
-    - a_n必须为真
-    - At-most-one: (¬x_1 ∨ ¬x_2), (¬a_{i-1} ∨ ¬x_i) for i ≥ 3
-    
-    参数：
-        sets: 集合列表
-        num_points: 点的总数
-    
-    返回：(子句列表, 总变量数包括辅助变量)
-    """
     clauses = []
+
+    if encoding == 'pairwise':
+        # At-least-one
+        clauses.append(list(vars))
+        # At-most-one
+        for i in range(n):
+            for j in range(i + 1, n):
+                clauses.append([-vars[i], -vars[j]])
+
+    elif encoding == 'ladder':
+        aux_vars = list(range(current_aux, current_aux + n - 1))
+        current_aux += n - 1
+        
+        clauses.append([-aux_vars[0], vars[0], vars[1]])
+        clauses.append([aux_vars[0], -vars[0]])
+        clauses.append([aux_vars[0], -vars[1]])
+        
+        for i in range(2, n):
+            if i < n - 1:
+                clauses.append([-aux_vars[i-1], aux_vars[i-2], vars[i]])
+                clauses.append([aux_vars[i-1], -aux_vars[i-2]])
+                clauses.append([aux_vars[i-1], -vars[i]])
+            else:
+                clauses.append([aux_vars[i-2], vars[i]])
+        
+        clauses.append([-vars[0], -vars[1]])
+        for i in range(2, n):
+            clauses.append([-aux_vars[i-2], -vars[i]])
+            
+        if n > 2:
+            clauses.append([aux_vars[-1]])
+
+    elif encoding == 'bitwise':
+        k = math.ceil(math.log2(n))
+        clauses.append(list(vars))  # At-least-one
+        if k > 0:
+            aux_vars = list(range(current_aux, current_aux + k))
+            current_aux += k
+            
+            for idx, var in enumerate(vars):
+                for j in range(k):
+                    bit = (idx >> j) & 1
+                    if bit == 1:
+                        clauses.append([-var, aux_vars[j]])
+                    else:
+                        clauses.append([-var, -aux_vars[j]])
+
+    elif encoding == 'matrix':
+        p = math.ceil(math.sqrt(n))
+        q = math.ceil(n / p)
+        
+        clauses.append(list(vars))  # At-least-one
+        
+        u_vars = list(range(current_aux, current_aux + p))
+        current_aux += p
+        v_vars = list(range(current_aux, current_aux + q))
+        current_aux += q
+        
+        # U Exactly-One (Pairwise)
+        clauses.append(list(u_vars))
+        for i in range(p):
+            for j in range(i + 1, p):
+                clauses.append([-u_vars[i], -u_vars[j]])
+                
+        # V Exactly-One (Pairwise)
+        clauses.append(list(v_vars))
+        for i in range(q):
+            for j in range(i + 1, q):
+                clauses.append([-v_vars[i], -v_vars[j]])
+                
+        # Linking clauses
+        for k_idx, var in enumerate(vars):
+            i = k_idx // q
+            j = k_idx % q
+            clauses.append([-var, u_vars[i]])
+            clauses.append([-var, v_vars[j]])
+
+    return clauses, current_aux
+
+def exact_cover_to_cnf(sets: List[Set[int]], num_points: int, encoding: str) -> Tuple[List[List[int]], int]:
+    """
+    将整个精确覆盖实例转换为CNF。
+    """
+    all_clauses = []
     num_vars = len(sets)
     current_aux = num_vars + 1
     
     for v in range(1, num_points + 1):
         covering_vars = [i + 1 for i, s in enumerate(sets) if v in s]
         
-        if not covering_vars:
-            clauses.append([])
-            continue
-        
-        n = len(covering_vars)
-        
-        if n == 1:
-            # 唯一选择，直接设为真
-            clauses.append([covering_vars[0]])
-            continue
-        
-        # 分配辅助变量
-        aux_vars = list(range(current_aux, current_aux + n - 1))
-        current_aux += n - 1
-        
-        # a_2 ⇔ (x_1 ∨ x_2)
-        clauses.append([-aux_vars[0], covering_vars[0], covering_vars[1]])
-        clauses.append([aux_vars[0], -covering_vars[0]])
-        clauses.append([aux_vars[0], -covering_vars[1]])
-        
-        # a_i ⇔ (a_{i-1} ∨ x_i) for i = 3 to n
-        for i in range(2, n):
-            if i < n - 1:
-                # 中间的辅助变量
-                clauses.append([-aux_vars[i-1], aux_vars[i-2], covering_vars[i]])
-                clauses.append([aux_vars[i-1], -aux_vars[i-2]])
-                clauses.append([aux_vars[i-1], -covering_vars[i]])
-            else:
-                # 最后一个：直接要求 (a_{n-1} ∨ x_n) 为真
-                clauses.append([aux_vars[i-2], covering_vars[i]])
-        
-        # At-most-one约束
-        clauses.append([-covering_vars[0], -covering_vars[1]])
-        for i in range(2, n):
-            clauses.append([-aux_vars[i-2], -covering_vars[i]])
-        
-        # 强制最后一个辅助变量为真
-        if n > 2:
-            clauses.append([aux_vars[-1]])
-    
-    return clauses, current_aux - 1
-
+        clauses, current_aux = encode_exactly_one(covering_vars, current_aux, encoding)
+        all_clauses.extend(clauses)
+            
+    return all_clauses, current_aux - 1
 
 def write_dimacs_cnf(clauses: List[List[int]], num_vars: int, output_file: str):
     """
@@ -210,178 +233,69 @@ def write_dimacs_cnf(clauses: List[List[int]], num_vars: int, output_file: str):
             else:
                 f.write('0\n')  # 空子句
 
+def main():
+    parser = argparse.ArgumentParser(description="精确覆盖问题到SAT(CNF)转换器 - 支持单文件与批量四种编码")
+    parser.add_argument('-i', '--input', type=str, required=True, help="输入路径 (单个文件或包含多个实例的文件夹)")
+    parser.add_argument('-o', '--output', type=str, required=True, help="输出基准文件夹的路径")
+    args = parser.parse_args()
 
-def matrix_to_cnf(input_file: str, output_file: str, read_mode: int = 1):
-    """
-    完整转换流程：精确覆盖矩阵 → DIMACS CNF
+    input_path = Path(args.input)
+    output_folder = Path(args.output)
     
-    参数：
-        input_file: 输入文件路径（精确覆盖矩阵）
-        output_file: 输出文件路径（DIMACS CNF格式）
-        encoding: 编码方式，'pairwise'或'ladder'
-        read_mode: 读取模式，1/2/3（见read_exact_cover_matrix函数说明）
-    """
-    # 读取输入
-    sets, num_points, num_rows = read_exact_cover_matrix(input_file, read_mode)
-    print(f"✓ 读取到 {len(sets)} 个集合（行），覆盖 {num_points} 个点（列）")
+    if not input_path.exists():
+        print(f"错误：输入路径 '{input_path}' 不存在。")
+        return
+        
+    encodings = ['pairwise', 'ladder', 'bitwise', 'matrix']
     
-    encoding = 'pairwise'  # 默认编码方式
-    # 根据行数选择编码方式
-    if num_rows > 200:
-        encoding = 'ladder'
-        print(f"⚠️ 行数较多，自动切换到Ladder编码")
-
-    # 转换为CNF
-    if encoding == 'pairwise':
-        clauses, num_vars = exact_cover_to_cnf_pairwise(sets, num_points)
-        print(f"✓ 使用Pairwise编码")
-    elif encoding == 'ladder':
-        clauses, num_vars = exact_cover_to_cnf_ladder(sets, num_points)
-        print(f"✓ 使用Ladder编码")
-    else:
-        raise ValueError(f"不支持的编码方式: {encoding}。请使用'pairwise'或'ladder'")
-    
-    print(f"✓ 生成 {len(clauses)} 个子句，{num_vars} 个变量")
-    
-    # 如果output_file是文件夹
-    if os.path.isdir(output_file):
-        input_file_name = os.path.basename(input_file)
-        output_file = os.path.join(output_file, f"{os.path.splitext(input_file_name)[0]}.cnf")
-
-    # 写入DIMACS格式
-    write_dimacs_cnf(clauses, num_vars, output_file)
-    print(f"✓ CNF文件已保存到: {output_file}")
-    
-    # 统计信息
-    clause_sizes = [len(c) for c in clauses if c]
-    if clause_sizes:
-        print(f"\n统计信息：")
-        print(f"  - 最小子句大小: {min(clause_sizes)}")
-        print(f"  - 最大子句大小: {max(clause_sizes)}")
-        print(f"  - 平均子句大小: {sum(clause_sizes)/len(clause_sizes):.2f}")
-
-def batch_convert(input_folder: str, output_folder: str, read_mode: int = 1):
-    """
-    批量转换文件夹中的所有精确覆盖矩阵文件为DIMACS CNF格式
-    
-    参数：
-        input_folder: 输入文件夹路径
-        output_folder: 输出文件夹路径
-        read_mode: 读取模式，1/2/3（见read_exact_cover_matrix函数说明）
-    """
-
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
-
-    with open(log_file, "a", encoding="utf-8") as log:
-        for filename in os.listdir(input_folder):
-            if filename.endswith(".txt") or filename.endswith(".ec"):
-                input_file = os.path.join(input_folder, filename)
-                output_file = os.path.join(output_folder, f"{os.path.splitext(filename)[0]}.cnf")
-                print(f"\n转换文件: {input_file} → {output_file}")
-
-                start = time.time()
-                matrix_to_cnf(input_file, output_file, read_mode)
-                duration = time.time() - start
-
-                base_name = os.path.splitext(filename)[0]
-
-                # 写入日志
-                log.write(f"{base_name} {duration:.4f}\n")
-                log.flush()
-
-                print(f"  - 转换完成，耗时: {duration:.4f} 秒")
-
-def read_csv(filename):
-    headers = []
-    rows = []
-    try:
-        with open(filename, 'r', newline='') as f:
-            reader = csv.reader(f)
-            headers = next(reader, [])
-            for row in reader:
-                # 填充缺失列
-                while len(row) < len(headers):
-                    row.append('')
-                rows.append(row)
-    except FileNotFoundError:
-        print(f"Warning: Cannot open CSV file: {filename} (will create new)")
-    return headers, rows
-
-def write_csv(filename, headers, rows):
-    with open(filename, 'w', newline='') as f:
+    # 创建各编码的子目录
+    for enc in encodings:
+        (output_folder / enc).mkdir(parents=True, exist_ok=True)
+        
+    csv_file = output_folder / "conversion_times.csv"
+    # 追加模式打开CSV，如果文件不存在或为空，则写入表头
+    write_header = not csv_file.exists() or csv_file.stat().st_size == 0
+    with open(csv_file, 'a', newline='') as f:
         writer = csv.writer(f)
-        writer.writerow(headers)
-        for row in rows:
-            # 确保行长度一致
-            while len(row) < len(headers):
-                row.append('')
-            writer.writerow(row)
+        if write_header:
+            writer.writerow(["Instance", "Pairwise_Time(s)", "Ladder_Time(s)", "Bitwise_Time(s)", "Matrix_Time(s)"])
 
-def update_record(headers, rows, instance_name, compile_time):
-    found = False
-    for row in rows:
-        while len(row) < len(headers):
-            row.append('')
-        if row and row[0] == instance_name:
-            row[TIME_COLUMN_INDEX] = str(compile_time)
-            found = True
-            break
-
-    if not found:
-        new_row = [''] * len(headers)
-        if headers:
-            new_row[0] = instance_name
-            if TIME_COLUMN_INDEX < len(headers):
-                new_row[TIME_COLUMN_INDEX] = str(compile_time)
-        rows.append(new_row)
+    # 判断是单文件还是文件夹，收集需要处理的文件列表
+    if input_path.is_file():
+        files_to_process = [input_path]
+        print(f"单文件模式：准备转换 {input_path.name}...\n")
+    elif input_path.is_dir():
+        files_to_process = [f for f in input_path.iterdir() if f.is_file() and f.suffix in ['.txt', '.ec', '']]
+        print(f"批量模式：找到 {len(files_to_process)} 个文件，开始批量转换...\n")
+    else:
+        print(f"错误：不支持的路径格式。")
+        return
+    
+    for file_path in files_to_process:
+        print(f"正在处理: {file_path.name}")
+        sets, num_points, num_rows = read_exact_cover_matrix(str(file_path))
+        
+        times = []
+        for enc in encodings:
+            start_time = time.time()
+            
+            clauses, total_vars = exact_cover_to_cnf(sets, num_points, enc)
+            
+            out_file = output_folder / enc / f"{file_path.stem}.cnf"
+            write_dimacs_cnf(clauses, total_vars, str(out_file))
+            
+            elapsed = round(time.time() - start_time, 4)
+            times.append(elapsed)
+            
+            print(f"  - {enc.capitalize():<10} 耗时: {elapsed:.4f}s | 变量数: {total_vars} | 子句数: {len(clauses)}")
+            
+        with open(csv_file, 'a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow([file_path.stem] + times)
+            
+        print("-" * 60)
+        
+    print(f"转换全部完成！各编码CNF已存储至 {output_folder}，耗时报表已保存至 {csv_file}")
 
 if __name__ == "__main__":
-    # if len(sys.argv) < 4:
-    #     print("Usage: python matrix_to_cnf.py <input_file> <output_file> <read_mode> [batch_mode]")
-    #     sys.exit(1)
-
-    # input_file = sys.argv[1]
-    # output_file = sys.argv[2]
-    # read_mode = int(sys.argv[3]) if len(sys.argv) > 3 else 1
-
-    # 文件夹路径
-    directories = [
-        # ("../exact_cover_benchmark", 1),
-        # ("../set_partitioning_benchmarks", 2),
-        # ("../graph_matrix/partition", 3),
-        ("../except_set", 3)
-    ]
-
-    table = "../../exp_results.csv"
-    output_path = "../../../Share_Data/exp_cnf"
-
-    headers, rows = read_csv(table)
-
-    for folder_path, mode in directories:
-        print(f"Start compile folder: {folder_path}, mode: {mode}")
-        folder = pathlib.Path(folder_path)
-        if not folder.exists():
-            print(f"Warning: folder not found - {folder_path}")
-            continue
-
-        for entry in folder.iterdir():
-            if entry.is_file():
-                file_path = str(entry)
-                file_name = entry.stem
-                print(f"Processing file: {file_name} (path: {file_path})")
-
-                start = time.time()
-                matrix_to_cnf(file_path, output_path, mode)
-                duration = round(time.time() - start, 4)
-
-                update_record(headers, rows, file_name, duration)
-    
-    write_csv(table, headers, rows)
-
-    # if len(sys.argv) > 4 and sys.argv[4] == "-b":
-    #     batch_convert(input_file, output_file, read_mode)
-    #     print(f"✓ 批量转换完成，输出文件夹: {output_file}")
-    # else:
-    #     matrix_to_cnf(input_file, output_file, read_mode)
-    #     print(f"✓ 转换完成!")
+    main()

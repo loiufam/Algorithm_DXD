@@ -62,9 +62,9 @@ class DanceDNNF : DancingMatrix {
             std::cout<< "初始化DanceDNNF完成." << endl;
         }
 
-        DanceDNNF(const string& file_path, int from, Logger& l, 
+        DanceDNNF(const string& file_path, Logger& l, 
                        const bool useIG = false, const bool useETT = false, int pool_size = 1, bool debug = false)
-            : DancingMatrix(file_path, from, useIG, useETT), 
+            : DancingMatrix(file_path, useIG, useETT), 
             logger(l), 
             max_threads(pool_size), 
             debug(debug), 

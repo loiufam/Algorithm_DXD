@@ -1,5 +1,2 @@
-启用DXZ算法求解: Bbnplanet
-Time: 1.184433 s
-Solutions: 1650
-ZDD Size: 229
-DXZ算法求解结束: Bbnplanet
+启用DynDXD算法求解: Aconet
+开始多线程DXD搜索...
