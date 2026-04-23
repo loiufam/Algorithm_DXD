@@ -116,27 +116,27 @@ class DanceDNNF : DancingMatrix {
                 }
             }
 
-            int cur = 0;
-            {
-                std::lock_guard<std::mutex> lock(thread_count_mutex);
-                cur = current_concurrent_threads;
-            }
+            // int cur = 0;
+            // {
+            //     std::lock_guard<std::mutex> lock(thread_count_mutex);
+            //     cur = current_concurrent_threads;
+            // }
 
-            // 更新峰值
-            int prev_peak = peak_concurrent_threads.load();
-            while (cur > prev_peak && !peak_concurrent_threads.compare_exchange_weak(prev_peak, cur)) {}
+            // // 更新峰值
+            // int prev_peak = peak_concurrent_threads.load();
+            // while (cur > prev_peak && !peak_concurrent_threads.compare_exchange_weak(prev_peak, cur)) {}
 
-            const int cap = getMaxThreads();
-            const int threshold = static_cast<int>(cap * sync_off_ratio);
+            // const int cap = getMaxThreads();
+            // const int threshold = static_cast<int>(cap * sync_off_ratio);
         
-            if (cap > 0 && cur > threshold) {
-                // 只有当前还开着时才计数 + 关闭
-                if (isGraphSyncEnabled()) {
-                    turnOffGraphSync();
-                    sync_auto_off_count.fetch_add(1, std::memory_order_relaxed);
-                }
-                return false;
-            }
+            // if (cap > 0 && cur > threshold) {
+            //     // 只有当前还开着时才计数 + 关闭
+            //     if (isGraphSyncEnabled()) {
+            //         turnOffGraphSync();
+            //         sync_auto_off_count.fetch_add(1, std::memory_order_relaxed);
+            //     }
+            //     return false;
+            // }
                     
             return isGraphSyncEnabled();;
         }

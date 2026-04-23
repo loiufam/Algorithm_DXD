@@ -57,12 +57,15 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(vector<Block
     SubGraph* outerSubgraph = activeSubgraph_;
 
     std::vector<std::unique_ptr<splaytree::EulerTourTree>> stash;
-    stash.swap(components);
+
+    auto& comps = getComponents(); // 获取当前组件
+
+    stash.swap(comps);
 
     auto restoreStash = [&]() {
-        components.clear();
+        comps.clear();
         for (auto& t : stash)
-            if (t) components.push_back(std::move(t));
+            if (t) comps.push_back(std::move(t));
         activeSubgraph_ = outerSubgraph;
     };
 
@@ -76,13 +79,13 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(vector<Block
 
         int anyV = stash[i]->getAnyVertex();
         activeSubgraph_ = (anyV >= 0) ? graph->subgraphOf(anyV) : nullptr;
-        components.push_back(std::move(stash[i]));
+        comps.push_back(std::move(stash[i]));
 
         auto [result, node] = DXD(blocks[i], parent_depth + 1);
 
-        if (!components.empty()) {
-            stash[i] = std::move(components[0]);
-            components.clear();
+        if (!comps.empty()) {
+            stash[i] = std::move(comps[0]);
+            comps.clear();
         }
 
         if (result.isZero()) {
@@ -109,10 +112,11 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(vect
     std::vector<std::unique_ptr<splaytree::EulerTourTree>> extracted(n);
     std::vector<std::unique_ptr<splaytree::EulerTourTree>> returned(n);
     
+    auto& comps = getComponents(); // 获取当前组件
     if(useETT) {
         for (int i = 0; i < n; ++i)
-            extracted[i] = std::move(components[i]);
-        components.clear();
+            extracted[i] = std::move(comps[i]);
+        comps.clear();
     }
 
     std::vector<DNNFResult> results(n);
@@ -166,9 +170,9 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(vect
     }
 
     if (useETT) {
-        components.resize(n);
+        comps.resize(n);
         for (int i = 0; i < n; ++i)
-            components[i] = std::move(returned[i]);
+            comps[i] = std::move(returned[i]);
     }
 
     if (has_timeout.load()) {
@@ -197,12 +201,12 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(vect
 // DXD IDXD
 std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int depth) {
     
-    std::ostringstream oss;
-    oss << "\n============================\n";
-    oss << "[Before] DXD called at depth " << depth
-        << ", omp_tid = " << omp_get_thread_num()
-        << "\n";
-    std::cout << oss.str();
+    // std::ostringstream oss;
+    // oss << "\n============================\n";
+    // oss << "[Before] DXD called at depth " << depth
+    //     << ", omp_tid = " << omp_get_thread_num()
+    //     << "\n";
+    // std::cout << oss.str();
     // printComponents();
 
     if(timer.timeBoundBroken()) {
@@ -243,13 +247,13 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             // std::cout << "Detected " << curBlock.size() << " independent blocks at depth " << depth << ".\n";
             recordBlocksDetected(curBlock.size());
             // 检测到多个独立分块，则并行处理
-            // if(!single_thread_mode) turnOffGraphSync();
-            const bool willParallel = isParallelSearch && curBlock.size() > 1;
+            if(!single_thread_mode) turnOffGraphSync();
+            // const bool willParallel = isParallelSearch && curBlock.size() > 1 && !omp_in_parallel();
  
-            const int delta = willParallel ? static_cast<int>(curBlock.size()) : 0;
-            ConcurrentGuard guard(*this, delta);
+            // const int delta = willParallel ? static_cast<int>(curBlock.size()) : 0;
+            // ConcurrentGuard guard(*this, delta);
 
-            auto [result, decompNode] = willParallel
+            auto [result, decompNode] = isParallelSearch
                 ? parallelSearchUseOmp(curBlock, depth)
                 : serialSearch(curBlock, depth);
 
@@ -369,10 +373,10 @@ size_t DanceDNNF::countZDDSize() const {
     return traverse(rootDNNF); // 加上T和F节点
 }
 
-// DXD DXZ入口：单线程版本
+// DXD DXZ入口
 void DanceDNNF::startDXD() {
 
-    if(!controlOUTPUT)  logger.logLine("开始单线程DXD搜索...");
+    if(!controlOUTPUT)  logger.logLine("开始DXD搜索...");
 
     isParallelSearch = false; // 单线程搜索
     MAX_B_COUNT = 1;
@@ -398,7 +402,7 @@ void DanceDNNF::startDXD() {
 
         solutionCount = ResSols.toString();
         logger.logLine("Solutions: " + solutionCount);
-        logger.logLine("Solutions (scientific): " + ResSols.toScientificString(3)); 
+        if (solutionCount.size() > 12) logger.logLine("Solutions (scientific): " + ResSols.toScientificString(3)); 
     
         if(!controlOUTPUT) logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
 
@@ -451,7 +455,7 @@ void DanceDNNF::startMultiThreadDXD() {
 
         solutionCount = ResSols.toString();
         logger.logLine("Solutions: " + solutionCount);
-        logger.logLine("Solutions (scientific): " + ResSols.toScientificString(3));
+        if (solutionCount.size() > 12) logger.logLine("Solutions (scientific): " + ResSols.toScientificString(3));
     
         logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
             
@@ -636,7 +640,7 @@ void DanceDNNF::start_MDLX_Search() {
 
         solutionCount = res.toString();
         logger.logLine("Solutions: " + solutionCount);
-        logger.logLine("Solutions (scientific): " + res.toScientificString(3));
+        if (solutionCount.size() > 12) logger.logLine("Solutions (scientific): " + res.toScientificString(3));
 
         logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
         return;

@@ -86,7 +86,8 @@ DancingMatrix::DancingMatrix( const string& file_path, bool useIg , bool useETT 
         throw runtime_error("time out");
     }
 
-    // cout << "处理矩阵维度: " << rows << " 行, " << cols << " 列." << endl;
+    cout << "rows: " << rows << endl;
+    cout << "cols: " << cols << endl;
     ColIndex = std::make_unique<ColumnHeader[]>(cols + 1);  
     RowIndex = std::make_unique<RowNode[]>(rows);  
     root = &ColIndex[0];  

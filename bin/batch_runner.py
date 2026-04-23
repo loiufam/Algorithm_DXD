@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import os
 import subprocess
@@ -14,30 +12,29 @@ from datetime import datetime
 # =========================
 # 配置
 # =========================
-MAIN_EXECUTABLE = "./main-1.0"
-INPUT_FOLDER = "../data/all_dataset"  
-RESULTS_FOLDER = "../results/Main"
+MAIN_EXECUTABLE = "./main"
+INPUT_FOLDERS = ["../data/dxz_set", "../data/graphs_set"]
+RESULTS_FOLDER = "../results/batch_results_" + datetime.now().strftime("%Y%m%d")
 THREADS_FOLDER = "../results/Threads"
-SPECIAL_FILE_LIST = "../instances.txt"
 
 WRITE_INTERVAL = 10  # 每10个写一次CSV
 
-# (名称, 参数, 列ID, 是否写solutions, 是否支持线程, 输出文件)
+# (名称, 参数, 是否支持线程, 输出文件)
 ALGORITHMS = [
-    # ("IDXD_S", ["mdxd", "1"], 9, True, True, "DynDXD_1_results.csv"),
-    # ("IDXD_M", ["mdxd", "8"], 10, True, True, "DynDXD_8_results.csv"),
-    # ("DXD_S", ["dxd", "1"], 7, True, True, "DXD_1_results.csv"),
-    # ("DXD_M", ["dxd", "8"], 8, True, True, "DXD_8_results.csv"),
-    # ("MDLX", ["mdlx", "8"], 11, True, True, "MDLX_results.csv"),
-    # ("DLX", ["dlx"], 4, True, False, "DLX_results.csv"),
-    ("DXZ", ["dxz"], 5, True, False, "DXZ_results.csv")
+    ("DynDXD_T8", ["ddxd", "8"], True, "DynDXD_t8_results.csv"),
+    ("DynDXD_T1", ["ddxd", "1"], True, "DynDXD_t1_results.csv"),
+    ("DXD_T1", ["dxd", "1"], True, "DXD_t1_results.csv"),
+    # ("DXD_M", ["dxd", "8"], True, "DXD_8_results.csv"),
+    # ("MDLX", ["mdlx", "8"], True, "MDLX_results.csv"),
+    ("DXZ", ["dxz"], False, "DXZ_results.csv"),
+    ("DLX", ["dlx"], False, "DLX_results.csv"),
 ]
 
-# 多线程算法配置：(算法名, 命令参数, 是否使用ett, 线程数列表, 输出文件名)
+# 多线程算法配置：(算法名, 命令参数, 支持多线程, 线程数列表, 输出文件名)
 THREAD_ALGORITHMS = [
-    # ("DXD_M", ["dxd"], True, [2, 4, 8], "DXD_M_threads.csv"),
-    # ("IDXD_M", ["mdxd"], True, [1, 2, 4], "IDXD_M_threads.csv"),
-    ("MDLX", ["mdlx", "ett"], True, [1, 2, 4], "MDLX_threads.csv"),
+    # ("DXD_M", ["dxd"], True, [2, 4, 8], "DXD_threads.csv"),
+    # ("DynDXD_M", ["ddxd"], True, [1, 2, 4], "DynDXD_threads.csv"),
+    ("MDLX", ["mdlx"], True, [1, 2, 4], "MDLX_threads.csv"),
 ]
 
 # =========================
@@ -51,8 +48,11 @@ logging.basicConfig(
 # =========================
 # 正则预编译
 # =========================
+COLS_PATTERN = re.compile(r'cols:\s*(\d+)')
+ROWS_PATTERN = re.compile(r'rows:\s*(\d+)')
 TIME_PATTERN = re.compile(r'Time:\s*([\d.]+)\s*s')
 SOL_PATTERN = re.compile(r'Solutions:\s*([\d.eE+\-]+)')
+SOL_SCI_PATTERN = re.compile(r'Solutions (scientific):\s*([\d.eE+\-]+)')
 BLOCK_PATTERN = re.compile(r'Max Blocks:\s*(\d+)')
 ZDD_PATTERN = re.compile(r'ZDD Size:\s*(\d+)')
 DNNF_PATTERN = re.compile(r'DNNF Size:\s*(\d+)')
@@ -63,6 +63,8 @@ DNNF_PATTERN = re.compile(r'DNNF Size:\s*(\d+)')
 def parse_log_output(output):
     """解析算法输出的日志信息"""
     result = {
+        'rows': None,
+        'cols': None,
         'time': None,
         'solutions': None,
         'max_blocks': None,
@@ -71,6 +73,11 @@ def parse_log_output(output):
         'status': 'success',
         'timeout': False 
     }
+
+    if m := COLS_PATTERN.search(output):
+        result['cols'] = int(m.group(1))
+    if m := ROWS_PATTERN.search(output):
+        result['rows'] = int(m.group(1))
 
     # 检测是否包含“超时”
     if '超时' in output:
@@ -82,6 +89,9 @@ def parse_log_output(output):
         result['time'] = float(m.group(1))
 
     if m := SOL_PATTERN.search(output):
+        result['solutions'] = m.group(1)
+
+    if m := SOL_SCI_PATTERN.search(output):
         result['solutions'] = m.group(1)
 
     if m := BLOCK_PATTERN.search(output):
@@ -173,13 +183,13 @@ def read_existing_csv(csv_path):
     
     return data
 
-def write_csv_results(csv_path, results_data, col_id, include_solutions=False):
+def write_csv_results(csv_path, results_data, alg_name):
     """将结果写入CSV文件"""
     # 读取现有数据
     existing_data = read_existing_csv(csv_path)
     
     # 确定列数
-    max_cols = 17 if include_solutions else 11
+    max_cols = 8
     
     # 合并新结果
     for filename, result in results_data.items():
@@ -191,40 +201,39 @@ def write_csv_results(csv_path, results_data, col_id, include_solutions=False):
         while len(existing_data[filename]) < max_cols:
             existing_data[filename].append('')
         
+        if result['cols'] is not None:
+            existing_data[filename][1] = str(result['cols'])
+        if result['rows'] is not None:
+            existing_data[filename][2] = str(result['rows'])
+
         # 写入时间结果
         if result['timeout']:
-            existing_data[filename][col_id] = 'timeout'
+            existing_data[filename][3] = 'TO'
         elif result['time'] is not None:
-            existing_data[filename][col_id] = f"{result['time']:.4f}"
+            existing_data[filename][3] = f"{result['time']:.4f}"
         
-            # 如果需要，写入 Solutions 和 Max Blocks
-            if include_solutions:
-                if result['solutions'] is not None:
-                    existing_data[filename][13] = result['solutions']
-                if result['max_blocks'] is not None:
-                    existing_data[filename][14] = str(result['max_blocks'])
+        # 写入 Solutions 和 Max Blocks
+        if result['solutions'] is not None:
+            existing_data[filename][4] = result['solutions']
+        if result['max_blocks'] is not None:
+            existing_data[filename][5] = str(result['max_blocks'])
         
-            # 添加警告标记
-            if result['status'] == 'warning':
-                existing_data[filename][col_id] = f"{existing_data[filename][col_id]} (WARNING: 0 solutions)"
+        # 添加警告标记
+        if result['status'] == 'warning':
+            existing_data[filename][3] = f"{existing_data[filename][3]} (WARNING: 0 solutions)"
 
-            if result['zdd_size'] is not None:
-                existing_data[filename][15] = result['zdd_size']
+        if result['zdd_size'] is not None:
+            existing_data[filename][6] = result['zdd_size']
 
-            if result['dnnf_size'] is not None:
-                existing_data[filename][16] = result['dnnf_size']
+        if result['dnnf_size'] is not None:
+            existing_data[filename][7] = result['dnnf_size']
     
     # 写入文件
     with open(csv_path, 'w', encoding='utf-8', newline='') as f:
         writer = csv.writer(f)
         
         # 写表头
-        if include_solutions:
-            header = ['Instance', '#cols', '#rows', 'DLX', 'DXZ', 'D3X', 'DXD_S', 'DXD_M', 
-                     'IDXD_S', 'IDXD_M', 'MDLX', 'sharpSAT-TD', 'ExactMC', 'Solutions', 'Max Blocks', '|ZDD|', '|DNNF|']
-        else:
-            header = ['Instance', '#cols', '#rows', 'DLX', 'DXZ', 'D3X', 'DXD_S', 'DXD_M', 
-                     'IDXD_S', 'IDXD_M', 'MDLX']
+        header = ['Instance', '#cols', '#rows', alg_name, 'Solutions', 'Max Blocks', '|ZDD|', '|DNNF|']
         writer.writerow(header)
         
         # 写数据行
@@ -303,10 +312,6 @@ def main():
         '''
     )
 
-    parser.add_argument('-i', '--input-folder', type=str, default=INPUT_FOLDER,
-                        help=f'输入文件夹路径，默认为{INPUT_FOLDER}')
-    parser.add_argument('-o', '--output-folder', type=str, default=RESULTS_FOLDER,
-                        help=f'结果输出文件夹路径，默认为{RESULTS_FOLDER}')
     parser.add_argument('-f', '--list_file', type=str, default='',
                         help='包含要处理的特定文件列表的文本文件路径（可选）')
     parser.add_argument('-p', '--parallel', action='store_true',
@@ -315,21 +320,20 @@ def main():
     
     args = parser.parse_args()
     
-    input_folder = args.input_folder
-    results_folder = args.output_folder
     list_file = args.list_file
     
     print("=" * 60)
     print("批量算法实验脚本")
     print("=" * 60)
-    print(f"输入文件夹: {input_folder}")
-    print(f"结果文件夹: {results_folder}")
     
     # 创建结果文件夹
-    os.makedirs(results_folder, exist_ok=True)
+    os.makedirs(RESULTS_FOLDER, exist_ok=True)
+    os.makedirs(THREADS_FOLDER, exist_ok=True)
     
     # 获取输入文件
-    input_files = get_input_files(input_folder)
+    input_files = []
+    for input_folder in INPUT_FOLDERS:
+        input_files.extend(get_input_files(input_folder))
     if not input_files:
         print("错误：没有找到输入文件")
         return
@@ -350,16 +354,14 @@ def main():
 
     if not args.parallel:
         # 不同求解器对比实验
-        for algo_name, algo_params, col_id, include_solutions, supports_thread, output_file in ALGORITHMS:
+        for algo_name, algo_params, supports_thread, output_file in ALGORITHMS:
             print(f"\n{'=' * 60}")
             print(f"运行算法: {algo_name}")
 
             print(f"{'=' * 60}")
-            csv_data = [["Instance", "Time", "Solutions", "MaxBlocks"]]
             
             results_data = {}
-            csv_path = os.path.join(results_folder, output_file)
-            col_id = col_id - 1
+            csv_path = os.path.join(RESULTS_FOLDER, output_file)
 
             for i, input_file in enumerate(input_files, 1):
                 filename = os.path.basename(input_file)
@@ -369,14 +371,15 @@ def main():
                 result = run_algorithm(algo_name, algo_params, input_file, supports_thread, threads)
                 results_data[filename] = result
 
-                # 实时写入结果
-                write_csv_results(csv_path, results_data, col_id, include_solutions)
+                if i % WRITE_INTERVAL == 0 or i == len(input_files):
+                    write_csv_results(csv_path, results_data, algo_name)
+                    results_data = {}  # 清空已写入的数据，继续收集新的结果
 
     else:
         # =====================
         # 多线程实验
         # =====================
-        for algo_name, algo_params, col_id, thread_nums, output_file in THREAD_ALGORITHMS:
+        for algo_name, algo_params, supports_thread, thread_nums, output_file in THREAD_ALGORITHMS:
             print(f"\n{'=' * 60}")
             print(f"运行算法: {algo_name} (线程数: {thread_nums})")
             print(f"{'=' * 60}")
@@ -401,14 +404,15 @@ def main():
                     #     if result['time'] is not None:
                     #         runtime += result['time']
                     result = run_algorithm(
-                        algo_name, algo_params, input_file, num_threads
+                        algo_name, algo_params, input_file, supports_thread, num_threads
                     )
 
                     # result['time'] = runtime / 10.0  
                     results_data[filename][num_threads] = result
                 
-                # 实时写入结果
-                write_thread_csv_results(csv_path, results_data, thread_nums)  
+                if i % WRITE_INTERVAL == 0 or i == len(input_files):
+                    write_thread_csv_results(csv_path, results_data, thread_nums) 
+                    results_data = {}  # 清空已写入的数据，继续收集新的结果 
 
     end_time = datetime.now()
     elapsed = (end_time - start_time).total_seconds()

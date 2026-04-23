@@ -11,7 +11,7 @@ LDFLAGS = -L$(CUDD_LIB)
 LIBS = -lcudd -lm
 
 # 目标文件
-TARGET = cudd_matrix_compiler
+TARGET = zdd_compiler
 SOURCE = matrix_to_zdd_cudd.cpp
 
 # 默认目标

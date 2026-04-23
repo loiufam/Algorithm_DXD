@@ -278,10 +278,14 @@ def main():
         times = []
         for enc in encodings:
             start_time = time.time()
+
+            out_file = output_folder / enc / f"{file_path.stem}.cnf"
+            if os.path.exists(out_file):
+                print(f"  - {enc.capitalize():<10} 输出文件已存在，跳过转换。")
+                continue
             
             clauses, total_vars = exact_cover_to_cnf(sets, num_points, enc)
-            
-            out_file = output_folder / enc / f"{file_path.stem}.cnf"
+
             write_dimacs_cnf(clauses, total_vars, str(out_file))
             
             elapsed = round(time.time() - start_time, 4)

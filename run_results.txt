@@ -1,2 +1,6 @@
-启用DynDXD算法求解: Aconet
-开始多线程DXD搜索...
+启用DXZ算法求解: AttMpls
+Time: 2.845520 s
+Solutions: 332079085047889148852050485582652086278656000
+Solutions (scientific): 3.320e+44
+ZDD Size: 5659
+DXZ算法求解结束: AttMpls

@@ -54,44 +54,95 @@ public:
         }
     }
 
+    void extractNM(const std::string& line, int& n, int& m) {
+        std::istringstream iss(line);
+        std::string token;
+
+        // 读取 "c"
+        iss >> token;  // 读取 "c"
+
+        iss >> token;  // 读取 "n"
+        if (token == "n") {
+            iss >> token;  // 读取 "="
+            iss >> n;      // 读取 n 的值
+        } else {
+            throw std::runtime_error("格式错误: 未找到 'n'");
+        }
+
+        // 读取 "m" 和其值
+        iss >> token;  // 读取 ","
+        iss >> token;  // 读取 "m"
+        if (token == "m") {
+            iss >> token;  // 读取 "="
+            iss >> m;      // 读取 m 的值
+        } else {
+            throw std::runtime_error("格式错误: 未找到 'm'");
+        }
+    }
+
     // 从文件读取稀疏矩阵
-    bool readFromFile(const std::string& filename, int read_mode = 1) {
+    bool readFromFile(const std::string& filename) {
         std::ifstream file(filename);
         if (!file.is_open()) {
             std::cerr << "Cannot open file " << filename << std::endl;
             return false;
         }
-        
+
         std::string line;
-        std::getline(file, line);
-        std::istringstream iss(line);
-        std::string token;
-        
-        if (read_mode == 1) {
-            // 格式: c n = cols , m = rows
-            iss >> token >> token >> token >> cols;
-            iss >> token >> token >> token >> rows;
-            std::getline(file, line);  // 跳过第二行
-        } else {
-            // 格式: cols rows
-            iss >> cols >> rows;
+        if (!getline(file, line)) {
+            throw std::runtime_error("文件为空");
         }
         
-        int count;
+        int skip_tokens = -1; // -1 表示尚未确定每行需要跳过的 token 数量
+
+        // 自动检测模式 1 (通常首行包含 '=' 或以 'c ' 开头)
+        if (line.find("=") != std::string::npos || line.find("c ") == 0) {
+            extractNM( line, cols, rows );
+            getline(file, line);  // 跳过第二行 
+            skip_tokens = 1;      // 模式 1 数据行只跳过一个 token (即 row_id)
+        } else {
+            // 首行是 "cols rows" (模式 2 或 3)
+            std::istringstream iss(line);
+            iss >> cols >> rows;
+            // 此处先不设置 skip_tokens，留到读取第一行有效数据时动态推断
+        }
+        
         // 读取每一行
         while (std::getline(file, line)) {
             if (line.empty()) continue;
-            std::istringstream iss(line);
-            
-            if (read_mode == 1) {
-                iss >> token;  
-            } else if (read_mode == 2) {
-                iss >> token >> count;
-            } else {
-                iss >> count;
+
+            // 探测第一行数据以区分模式 2 和模式 3
+            if (skip_tokens == -1) {
+                std::istringstream peek_iss(line);
+                std::vector<int> temp_tokens;
+                int val;
+                while (peek_iss >> val) {
+                    temp_tokens.push_back(val);
+                }
+                if (temp_tokens.empty()) continue; // 预防全空格的行
+
+                // 模式 3: [count] [id1] [id2] ...
+                // 元素总个数一定等于 temp_tokens[0] + 1
+                if (temp_tokens.size() == static_cast<size_t>(temp_tokens[0] + 1)) {
+                    skip_tokens = 1; 
+                } 
+                // 模式 2: [id] [count] [id1] [id2] ...
+                // 元素总个数一定等于 temp_tokens[1] + 2
+                else if (temp_tokens.size() >= 2 && temp_tokens.size() == static_cast<size_t>(temp_tokens[1] + 2)) {
+                    skip_tokens = 2;
+                } 
+                else {
+                    std::cerr << "警告: 无法自动识别数据行格式，默认跳过1个标识符" << std::endl;
+                    skip_tokens = 1;
+                }
             }
+
+            std::istringstream iss(line);
+            std::string token;
             
-            if (read_mode > 1 && count <= 0) continue; 
+            for (int i = 0; i < skip_tokens; ++i) {
+                iss >> token;
+            }
 
             std::set<int> colSet;
             int col;
@@ -507,20 +558,21 @@ int main(int argc, char* argv[]) {
 
     if (batchMode) {
         if (argc < 4) {
-            std::cerr << "Usage: " << argv[0] << " -b <folder_path> <read_mode>" << std::endl;
+            std::cerr << "Usage: " << argv[0] << " -b <folder_path> <output_path>" << std::endl;
             return 1;
         }
         // 文件夹路径
         std::string folderPath = argv[2];
-        int read_mode = std::stoi(argv[3]);
+        // 输出路径
+        std::string outputPath = argv[3];
 
         // 读取csv文件
         std::vector<std::string> headers;
         std::vector<std::vector<std::string>> rows;
 
-        const std::string table = "../../exp_results.csv";
-        const std::string outputPath = "../../../D3X/data/zdd_exp_set/";
-        readCSV(table, headers, rows);
+        // const std::string table = "../../exp_results.csv";
+        // const std::string outputPath = "../../../D3X/data/zdd_exp_set/";
+        // readCSV(table, headers, rows);
 
         // 遍历文件夹中的文件
         for (const auto& entry : std::filesystem::directory_iterator(folderPath)) {
@@ -529,10 +581,16 @@ int main(int argc, char* argv[]) {
                 std::string fileName = entry.path().stem().string();
                 std::string outputFile = outputPath + fileName + ".zdd";
 
+                // 检查是否已存在
+                if (std::filesystem::exists(outputFile)) {
+                    std::cout << "ZDD file already exists for " << fileName << ", skipping..." << std::endl;
+                    continue;
+                }   
+
                 CUDDMatrixCompiler compiler;
 
                 // 加载矩阵
-                if (!compiler.readFromFile(filePath, read_mode)) {
+                if (!compiler.readFromFile(filePath)) {
                     std::cerr << "Failed to read file: " << filePath << std::endl;
                     return 1;
                 }
@@ -547,7 +605,7 @@ int main(int argc, char* argv[]) {
                 double elapsed = std::chrono::duration<double>(end - start).count();
                 std::cout << "Compilation time: " << elapsed << " seconds" << std::endl;
 
-                updateRecord(headers, rows, fileName, elapsed, compiler.rows, compiler.cols);
+                // updateRecord(headers, rows, fileName, elapsed, compiler.rows, compiler.cols);
                 
                 // 输出ZDD文件
                 compiler.outputZDD(zdd, outputFile);
@@ -555,20 +613,20 @@ int main(int argc, char* argv[]) {
             }
         }
           
-        writeCSV(table, headers, rows); // 写入csv文件
+        // writeCSV(table, headers, rows);
 
-        std::cout << "All compilations completed. Results saved to " << table << std::endl;
+        // std::cout << "All compilations completed. Results saved to " << table << std::endl;
+        std::cout << "All compilations completed. ZDD files saved to " << outputPath << std::endl;
     } else {
         
         std::string inputFile = argv[1];
         std::string outputFile = argv[2];
-        int read_mode = std::stoi(argv[3]);
-        std::string dotFile = (argc > 4) ? argv[4] : "";
+        std::string dotFile = (argc > 3) ? argv[3] : "";
 
         CUDDMatrixCompiler compiler;
 
         // 加载矩阵
-        if (!compiler.readFromFile(inputFile, read_mode)) {
+        if (!compiler.readFromFile(inputFile)) {
             std::cerr << "Failed to read file: " << inputFile << std::endl;
             return 1;
         }
