@@ -98,6 +98,40 @@ def read_exact_cover_matrix(filepath: str) -> Tuple[List[Set[int]], int, int]:
                 
     return sets, cols, rows
 
+def matrix_encoding(n: int, vars: List[int], current_aux: int) -> Tuple[List[List[int]], int]:
+    clauses = []
+
+    p = math.ceil(math.sqrt(n))
+    q = math.ceil(n / p)
+    
+    clauses.append(list(vars))  # At-least-one
+    
+    u_vars = list(range(current_aux, current_aux + p))
+    current_aux += p
+    v_vars = list(range(current_aux, current_aux + q))
+    current_aux += q
+    
+    # U Exactly-One (Pairwise)
+    clauses.append(list(u_vars))
+    for i in range(p):
+        for j in range(i + 1, p):
+            clauses.append([-u_vars[i], -u_vars[j]])
+            
+    # V Exactly-One (Pairwise)
+    clauses.append(list(v_vars))
+    for i in range(q):
+        for j in range(i + 1, q):
+            clauses.append([-v_vars[i], -v_vars[j]])
+            
+    # Linking clauses
+    for k_idx, var in enumerate(vars):
+        i = k_idx // q
+        j = k_idx % q
+        clauses.append([-var, u_vars[i]])
+        clauses.append([-var, v_vars[j]]) 
+
+    return clauses, current_aux
+
 def encode_exactly_one(vars: List[int], current_aux: int, encoding: str) -> Tuple[List[List[int]], int]:
     """
     对一组变量进行Exactly-One约束编码
@@ -119,6 +153,9 @@ def encode_exactly_one(vars: List[int], current_aux: int, encoding: str) -> Tupl
     clauses = []
 
     if encoding == 'pairwise':
+        if n > 10:
+            return matrix_encoding(n, vars, current_aux)
+        
         # At-least-one
         clauses.append(list(vars))
         # At-most-one
@@ -165,34 +202,7 @@ def encode_exactly_one(vars: List[int], current_aux: int, encoding: str) -> Tupl
                         clauses.append([-var, -aux_vars[j]])
 
     elif encoding == 'matrix':
-        p = math.ceil(math.sqrt(n))
-        q = math.ceil(n / p)
-        
-        clauses.append(list(vars))  # At-least-one
-        
-        u_vars = list(range(current_aux, current_aux + p))
-        current_aux += p
-        v_vars = list(range(current_aux, current_aux + q))
-        current_aux += q
-        
-        # U Exactly-One (Pairwise)
-        clauses.append(list(u_vars))
-        for i in range(p):
-            for j in range(i + 1, p):
-                clauses.append([-u_vars[i], -u_vars[j]])
-                
-        # V Exactly-One (Pairwise)
-        clauses.append(list(v_vars))
-        for i in range(q):
-            for j in range(i + 1, q):
-                clauses.append([-v_vars[i], -v_vars[j]])
-                
-        # Linking clauses
-        for k_idx, var in enumerate(vars):
-            i = k_idx // q
-            j = k_idx % q
-            clauses.append([-var, u_vars[i]])
-            clauses.append([-var, v_vars[j]])
+        return matrix_encoding(n, vars, current_aux)
 
     return clauses, current_aux
 

@@ -1,6 +1,4 @@
-启用DXZ算法求解: AttMpls
-Time: 2.845520 s
-Solutions: 332079085047889148852050485582652086278656000
-Solutions (scientific): 3.320e+44
-ZDD Size: 5659
-DXZ算法求解结束: AttMpls
+启用DLX算法求解: grafo9788.80
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo9788.80
