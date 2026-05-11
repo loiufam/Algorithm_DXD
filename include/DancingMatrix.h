@@ -9,10 +9,10 @@
 using col_id = int;
 using row_id = int;
 
-const unsigned int MAX_ROW = 250000;
+const unsigned int MAX_ROW = 300000;
 const int TARGET_THRESHOLD = 5;
 const int HEAP_THRESHOLD = 50;  // 列数超过50时使用堆排序
-const int MAX_TRIES = 10;
+const int MAX_TRIES = 200;      // 820
 const int MAX_CONCURRENT_THREADS = 16;
 
 struct Node  
@@ -77,7 +77,7 @@ class DancingMatrix
         Block InitBlock;
 
         bool dxz_mode = false;
-        bool single_thread_mode = false;
+        bool dxd_mode = false;
 
         // 列状态
         size_t getColumnState() const;
@@ -121,7 +121,7 @@ class DancingMatrix
         void coverInBlock(int c, Block& block, set<int>& covered_rows);
         void uncoverInBlock(int c, Block& block);
 
-        string encodeBlockState(const unordered_set<int>& cols);
+        size_t encodeColState();
         size_t hashBlockState(const set<int>& cols);
      
         ColumnHeader* selectCol();
@@ -164,7 +164,7 @@ class DancingMatrix
             return root->right == root;
         }
 
-        vector<Block> getComponentsByIG(const set<int> rows);
+        vector<Block> getComponentsByBFS(const set<int>& target_cols);
         vector<Block> getComponentsByETT();
 
         void turnOnGraphSync() {

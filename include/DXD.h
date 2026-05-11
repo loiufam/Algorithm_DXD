@@ -74,7 +74,8 @@ class DanceDNNF : DancingMatrix {
             omp_set_num_threads(pool_size); // 设置并行线程数
             std::cout << "设置并行线程数为: " << pool_size << std::endl;
 
-            timer.setTimeBound(TIME_LIMIT_SECONDS + 30);
+            if (pool_size > 2) isParallelSearch = true;
+            timer.setTimeBound(TIME_LIMIT_SECONDS);
         }
 
         ~DanceDNNF() = default;
@@ -107,15 +108,23 @@ class DanceDNNF : DancingMatrix {
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> parallelSearchUseOmp(vector<Block>& blocks, int depth);
 
         bool shouldDecompose() {
-            // 单线程模式下原有的 MAX_TRIES 限制
-            if (single_thread_mode) {
-                std::lock_guard<std::mutex> lock(tried_numbers_mutex);
-                if (++tried_numbers > MAX_TRIES) {
+            if (!isGraphSyncEnabled()) {
+                return false;
+            }
+
+            if (isParallelSearch && !dxd_mode && MAX_B_COUNT > 2) {
+                turnOffGraphSync();
+                return false;
+            }
+
+            std::lock_guard<std::mutex> lock(tried_numbers_mutex);
+            if (!dxd_mode) {
+                int cur_tries = ++tried_numbers;
+                if ((cur_tries > 1 && MAX_B_COUNT == 1) || cur_tries > MAX_TRIES) {
                     turnOffGraphSync();
                     return false;
                 }
             }
-
             // int cur = 0;
             // {
             //     std::lock_guard<std::mutex> lock(thread_count_mutex);
@@ -138,7 +147,7 @@ class DanceDNNF : DancingMatrix {
             //     return false;
             // }
                     
-            return isGraphSyncEnabled();;
+            return true;
         }
 
         // 启动搜索函数

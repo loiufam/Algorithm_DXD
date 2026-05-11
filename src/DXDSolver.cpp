@@ -212,13 +212,15 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     if(timer.timeBoundBroken()) {
         throw std::runtime_error("Time bound broken");
     }
-    
-    if(block.cols.empty()) {
+
+    if (dxz_mode && isSolved()) {
         return {DNNFResult(1), T};
-    } 
+    } else if (block.cols.empty()) {
+        return {DNNFResult(1), T};
+    }
 
     // 先查缓存
-    size_t state = hashBlockState(block.cols); 
+    size_t state = dxz_mode ? encodeColState() : hashBlockState(block.cols);
     {
         std::shared_lock<std::shared_mutex> readLock(cacheMutex);
         auto countIt = countCache.find(state);
@@ -231,23 +233,18 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         }
     }
 
-    if (block.rows.size() > 2 && shouldDecompose()) {
+    // dxz模式跳过分块检测，直接进行列选择和分支
+    if (!dxz_mode && block.rows.size() > 2 && shouldDecompose()) {
         
-        vector<Block> curBlock;
-        if (useETT ) {
-            curBlock = getComponentsByETT();
-        } else if (useIG) {
-            curBlock = getComponentsByIG(block.rows);
-        }
+        vector<Block> curBlock = useETT ? getComponentsByETT() : getComponentsByBFS(block.cols);
+
 
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
         // addTriedNumbers(1);
 
         if (int(curBlock.size())  > 1) {
             // std::cout << "Detected " << curBlock.size() << " independent blocks at depth " << depth << ".\n";
-            recordBlocksDetected(curBlock.size());
-            // 检测到多个独立分块，则并行处理
-            if(!single_thread_mode) turnOffGraphSync();
+            // recordBlocksDetected(curBlock.size());
             // const bool willParallel = isParallelSearch && curBlock.size() > 1 && !omp_in_parallel();
  
             // const int delta = willParallel ? static_cast<int>(curBlock.size()) : 0;
@@ -264,7 +261,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
 
     }
 
-    ColumnHeader* choose = selectOptimalColumn(block.cols); 
+    ColumnHeader* choose = dxz_mode ? selectCol() : selectOptimalColumn(block.cols); 
     // std::cout << "Chosen column: " << choose->col << " (size: " << choose->size << ")\n";
 
     if(choose->size <= 0) {
@@ -279,7 +276,11 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     shared_ptr<DNNFNode> x = F;
 
     set<int> deleted_rows;
-    coverInBlock(choose->col, block, deleted_rows);
+    if (dxz_mode) {
+        cover(choose->col);
+    } else {
+        coverInBlock(choose->col, block, deleted_rows);
+    }
     if(useETT) DecUpdateCC(deleted_rows);
 
     Node* curC = choose->down;
@@ -289,7 +290,11 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         set<int> deleted_rows_;
 
         while (curR != curC) {
-            coverInBlock(curR->col, block, deleted_rows_);
+            if (dxz_mode) {
+                cover(curR->col);
+            } else {    
+                coverInBlock(curR->col, block, deleted_rows_);
+            }
             curR = curR->right;
         }
         if(useETT) DecUpdateCC(deleted_rows_);
@@ -303,14 +308,22 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         
         curR = curC->left;
         while (curR != curC) {
-            uncoverInBlock(curR->col, block);
+            if (dxz_mode) {
+                uncover(curR->col);
+            } else {
+                uncoverInBlock(curR->col, block);
+            }
             curR = curR->left;
         }
         if(useETT) IncUpdateCC(deleted_rows_);
 
         curC = curC->down;
     }
-    uncoverInBlock(choose->col, block);
+    if (dxz_mode) {
+        uncover(choose->col);
+    } else {
+        uncoverInBlock(choose->col, block);
+    }
     if(useETT) IncUpdateCC(deleted_rows);
 
     // std::cout << "\n============================\n";
@@ -378,10 +391,9 @@ void DanceDNNF::startDXD() {
 
     if(!controlOUTPUT)  logger.logLine("开始DXD搜索...");
 
-    isParallelSearch = false; // 单线程搜索
     MAX_B_COUNT = 1;
     if(!dxz_mode) {
-        single_thread_mode = true; // 启用单线程模式
+        dxd_mode = true; // 启用DXD模式
     }
     
     try{
@@ -404,15 +416,15 @@ void DanceDNNF::startDXD() {
         logger.logLine("Solutions: " + solutionCount);
         if (solutionCount.size() > 12) logger.logLine("Solutions (scientific): " + ResSols.toScientificString(3)); 
     
-        if(!controlOUTPUT) logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
+        // if(!controlOUTPUT) logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
 
 
         if(dxz_mode) {
             size_t zdd_size = countZDDSize();
             logger.logLine("ZDD Size: " + std::to_string(zdd_size));
         } else {
-            size_t dnnf_size = countDNNFNodes();
-            logger.logLine("DNNF Size: " + std::to_string(dnnf_size));
+            // size_t dnnf_size = countDNNFNodes();
+            // logger.logLine("DNNF Size: " + std::to_string(dnnf_size));
         }
 
 
@@ -434,7 +446,7 @@ void DanceDNNF::startMultiThreadDXD() {
 
     logger.logLine("开始多线程DXD搜索...");
     
-    isParallelSearch = true;  // 开启多线程搜索标志
+    // isParallelSearch = true;
     MAX_B_COUNT = 1;
 
     try {

@@ -182,10 +182,10 @@ DancingMatrix::DancingMatrix( const string& file_path, bool useIg , bool useETT 
         cout << "ETT initialization complete." << endl;
     }
 
-    if (useIg) {
-        incrementalGraph = make_unique<IncrementalConnectedGraph>(rows);
-        incrementalGraph->initialize(*this);
-    }
+    // if (useIg) {
+    //     incrementalGraph = make_unique<IncrementalConnectedGraph>(rows);
+    //     incrementalGraph->initialize(*this);
+    // }
 
     file.close();
 }
@@ -718,10 +718,68 @@ void DancingMatrix::testCutEdge(int u, int v) {
     tree1Ptr->printEulerTour();
 }
 
-vector<Block> DancingMatrix::getComponentsByIG(const set<int> rows) {
-    return isGraphSyncEnabled() ? incrementalGraph->computeComponentsInRows(rows) : vector<Block>();
-    // return findComponents(rows);
-};
+vector<Block> DancingMatrix::getComponentsByBFS(const set<int>& target_cols) {
+    vector<Block> components;
+    
+    if (target_cols.empty()) {
+        return components;
+    }
+
+
+    // 局部变量，各线程独立持有，保证线程安全
+    vector<bool> visited_cols(COLS + 1, false);
+    vector<bool> visited_rows(ROWS, false);
+    
+    // 只在限制的 target_cols 集合内启动 BFS
+    for (int start_col : target_cols) {
+        // 如果该列尚未被访问，启动 BFS
+        if (!visited_cols[start_col]) {
+            Block block;
+            queue<int> col_queue;
+            
+            // 初始化 BFS 队列
+            visited_cols[start_col] = true;
+            col_queue.push(start_col);
+            
+            while (!col_queue.empty()) {
+                int c = col_queue.front();
+                col_queue.pop();
+                
+                // 将当前列加入连通块
+                block.cols.insert(c);
+                
+                // 沿着当前列向下遍历
+                Node* node_in_col = ColIndex[c].down;
+                while (node_in_col != &ColIndex[c]) {
+                    int r = node_in_col->row; 
+                    
+                    if (!visited_rows[r]) {
+                        visited_rows[r] = true;
+                        block.rows.insert(r); 
+                        
+                        // 沿着当前行向右遍历，寻找相连的列
+                        Node* node_in_row = node_in_col->right;
+                        while (node_in_row != node_in_col) {
+                            int next_c = node_in_row->col;
+                            
+                            if (target_cols.count(next_c) && !visited_cols[next_c]) {
+                                visited_cols[next_c] = true;
+                                col_queue.push(next_c);
+                            }
+                            node_in_row = node_in_row->right;
+                        }
+                    }
+                    node_in_col = node_in_col->down;
+                }
+            }
+            
+            // 保存找到的独立子矩阵
+            components.push_back(block);
+        }
+    }
+    
+    return components;
+}
 
 vector<Block> DancingMatrix::getComponentsByETT() {
     // 使用当前线程的 components
@@ -812,10 +870,12 @@ void DancingMatrix::insert( int r, int c )
     dataNodes.push_back(std::move(newNode));
 }
 
-string DancingMatrix::encodeBlockState(const unordered_set<int>& cols){
-    string state(COLS, '0'); // 初始化为全0字符串
-    for(int col : cols) {
-        state[col - 1] = '1'; // 将对应列设置为1   
+size_t DancingMatrix::encodeColState(){
+    size_t state = 0;
+    ColumnHeader* cur = (ColumnHeader*)root->right;
+    while (cur != root) {
+        state ^= std::hash<int>()(cur->col) + 0x9e3779b9 + (state << 6) + (state >> 2);
+        cur = (ColumnHeader*)cur->right;
     }
     return state;
 }
@@ -908,7 +968,7 @@ void DancingMatrix::cover( int c )
     ColumnHeader* col = &ColIndex[c];  
     col->right->left = col->left;  
     col->left->right = col->right; 
-    colsSet.erase(c);
+    // colsSet.erase(c);
 
     Node* curR, *curC;  
     curC = col->down;  
@@ -925,7 +985,7 @@ void DancingMatrix::cover( int c )
 
             curR = curR->right;  
         }  
-        rowsSet.erase(curC->row);
+        // rowsSet.erase(curC->row);
         curC = curC->down;  
     }  
 }
@@ -948,12 +1008,12 @@ void DancingMatrix::uncover( int c )
 
             curR = curR->left;  
         }  
-        rowsSet.insert(curC->row);
+        // rowsSet.insert(curC->row);
         curC = curC->up;  
     }  
     col->right->left = col;  
     col->left->right = col;  
-    colsSet.insert(c);
+    // colsSet.insert(c);
 }
 
 void DancingMatrix::coverInBlock(int c, Block& block, set<int>& removed_rows){
@@ -972,9 +1032,9 @@ void DancingMatrix::coverInBlock(int c, Block& block, set<int>& removed_rows){
         int row_id = curC->row;
         removed_rows.insert(row_id);
 
-        if (useIG) {
-            incrementalGraph->deactivateRow(row_id);
-        }
+        // if (useIG) {
+        //     incrementalGraph->deactivateRow(row_id);
+        // }
         block.rows.erase(row_id); // 从块中移除行
 
         curR = curC->right;  
@@ -1009,9 +1069,9 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
 
         block.rows.insert(row_id); // 将行添加到块中
 
-        if (useIG) {
-            incrementalGraph->reactivateRow(row_id); 
-        }
+        // if (useIG) {
+        //     incrementalGraph->reactivateRow(row_id); 
+        // }
 
         curC = curC->up;  
     }  

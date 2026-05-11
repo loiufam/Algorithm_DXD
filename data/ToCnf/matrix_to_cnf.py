@@ -256,7 +256,8 @@ def main():
         print(f"错误：输入路径 '{input_path}' 不存在。")
         return
         
-    encodings = ['pairwise', 'ladder', 'bitwise', 'matrix']
+    # encodings = ['pairwise', 'ladder', 'bitwise', 'matrix']
+    encodings = ['matrix']
     
     # 创建各编码的子目录
     for enc in encodings:

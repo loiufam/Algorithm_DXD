@@ -71,10 +71,12 @@ def export_matrix_to_file(filename, cols, rows):
 def main():
     # 任务配置：名称，宽度，高度，使用的骨牌集合
     tasks = [
-        ("dominoes_8x8.txt", 8, 8, DOMINOES),
-        ("dominoes_10x10.txt", 10, 10, DOMINOES),
-        ("tetrominoes_6x6.txt", 6, 6, TETROMINOES),
-        ("tetrominoes_8x8.txt", 8, 8, TETROMINOES)
+        ("dominoes_set/dominoes_8x10.txt", 8, 10, DOMINOES),
+        ("dominoes_set/dominoes_10x12.txt", 10, 12, DOMINOES),
+        ("dominoes_set/dominoes_12x12.txt", 12, 12, DOMINOES),
+        ("dominoes_set/tetrominoes_4x5.txt", 4, 5, TETROMINOES), 
+        ("dominoes_set/tetrominoes_6x8.txt", 6, 8, TETROMINOES),
+        ("dominoes_set/tetrominoes_4x7.txt", 4, 7, TETROMINOES),
     ]
     
     for filename, w, h, pieces in tasks:

@@ -1,4 +1,5 @@
 
+from html import parser
 import os
 import subprocess
 import csv
@@ -13,22 +14,40 @@ from datetime import datetime
 # 配置
 # =========================
 MAIN_EXECUTABLE = "./main"
-INPUT_FOLDERS = ["../data/dxz_set", "../data/graphs_set"]
+INPUT_FOLDERS = ["../data/batch2/dominoes_set", 
+                 "../data/batch2/exact_cover_benchmarks", 
+                 "../data/batch2/set_partitionbenchmarks",
+                 "../data/batch2/graphs_set"
+                 ]
 RESULTS_FOLDER = "../results/batch_results_" + datetime.now().strftime("%Y%m%d")
 THREADS_FOLDER = "../results/Threads"
 
 WRITE_INTERVAL = 10  # 每10个写一次CSV
 
-# (名称, 参数, 是否支持线程, 输出文件)
-ALGORITHMS = [
+# =========================
+# 算法分组配置
+# =========================
+# 分组 1: ddxd-t8, ddxd-t1
+GROUP1_ALGORITHMS = [
     ("DynDXD_T8", ["ddxd", "8"], True, "DynDXD_t8_results.csv"),
     ("DynDXD_T1", ["ddxd", "1"], True, "DynDXD_t1_results.csv"),
+]
+
+# 分组 2: dxd-t8, dxd-t1
+GROUP2_ALGORITHMS = [
+    ("DXD_T8", ["dxd", "8"], True, "DXD_t8_results.csv"),
     ("DXD_T1", ["dxd", "1"], True, "DXD_t1_results.csv"),
-    # ("DXD_M", ["dxd", "8"], True, "DXD_8_results.csv"),
-    # ("MDLX", ["mdlx", "8"], True, "MDLX_results.csv"),
+]
+
+# 分组 3: dxz, dlx
+GROUP3_ALGORITHMS = [
     ("DXZ", ["dxz"], False, "DXZ_results.csv"),
     ("DLX", ["dlx"], False, "DLX_results.csv"),
 ]
+
+# 默认全部算法 (合并以上所有组)
+ALGORITHMS = GROUP1_ALGORITHMS + GROUP2_ALGORITHMS + GROUP3_ALGORITHMS
+
 
 # 多线程算法配置：(算法名, 命令参数, 支持多线程, 线程数列表, 输出文件名)
 THREAD_ALGORITHMS = [
@@ -314,6 +333,8 @@ def main():
 
     parser.add_argument('-f', '--list_file', type=str, default='',
                         help='包含要处理的特定文件列表的文本文件路径（可选）')
+    parser.add_argument('-G', '--group', type=int, choices=[1, 2, 3],
+                        help='指定运行的算法分组(1: ddxd-t8/t1, 2: dxd-t8/t1, 3: dxz/dlx)')
     parser.add_argument('-p', '--parallel', action='store_true',
                     help='开启多线程对比实验')
 
@@ -353,8 +374,23 @@ def main():
     start_time = datetime.now()
 
     if not args.parallel:
+
+        # 决定运行哪个算法组
+        if args.group == 1:
+            print("\n=== 运行分组 1 (DynDXD_T8, DynDXD_T1) ===")
+            algorithms_to_run = GROUP1_ALGORITHMS
+        elif args.group == 2:
+            print("\n=== 运行分组 2 (DXD_T8, DXD_T1) ===")
+            algorithms_to_run = GROUP2_ALGORITHMS
+        elif args.group == 3:
+            print("\n=== 运行分组 3 (DXZ, DLX) ===")
+            algorithms_to_run = GROUP3_ALGORITHMS
+        else:
+            print("\n=== 运行全部算法 ===")
+            algorithms_to_run = ALGORITHMS
+
         # 不同求解器对比实验
-        for algo_name, algo_params, supports_thread, output_file in ALGORITHMS:
+        for algo_name, algo_params, supports_thread, output_file in algorithms_to_run:
             print(f"\n{'=' * 60}")
             print(f"运行算法: {algo_name}")
 

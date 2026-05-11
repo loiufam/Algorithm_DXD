@@ -1,4 +1,6 @@
-启用DLX算法求解: grafo9788.80
-DLX开始搜索...
-DLX搜索超时: Time OUT
-DLX算法求解结束: grafo9788.80
+启用DXD算法求解: AsnetAm
+开始DXD搜索...
+Time: 4.427943 s
+Solutions: 20064184773096211440000
+Solutions (scientific): 2.006e+22
+DXD算法求解结束: AsnetAm
