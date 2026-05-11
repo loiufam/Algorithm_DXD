@@ -112,41 +112,21 @@ class DanceDNNF : DancingMatrix {
                 return false;
             }
 
-            if (isParallelSearch && !dxd_mode && MAX_B_COUNT > 2) {
+            if (dxd_mode) return true; // DXD模式下总是尝试分解
+
+            if (isParallelSearch && MAX_B_COUNT > 2) {
                 turnOffGraphSync();
                 return false;
             }
 
             std::lock_guard<std::mutex> lock(tried_numbers_mutex);
-            if (!dxd_mode) {
-                int cur_tries = ++tried_numbers;
-                if ((cur_tries > 1 && MAX_B_COUNT == 1) || cur_tries > MAX_TRIES) {
-                    turnOffGraphSync();
-                    return false;
-                }
+
+            int cur_tries = ++tried_numbers;
+            if ((cur_tries > 1 && MAX_B_COUNT == 1) || cur_tries > MAX_TRIES) {
+                turnOffGraphSync();
+                return false;
             }
-            // int cur = 0;
-            // {
-            //     std::lock_guard<std::mutex> lock(thread_count_mutex);
-            //     cur = current_concurrent_threads;
-            // }
-
-            // // 更新峰值
-            // int prev_peak = peak_concurrent_threads.load();
-            // while (cur > prev_peak && !peak_concurrent_threads.compare_exchange_weak(prev_peak, cur)) {}
-
-            // const int cap = getMaxThreads();
-            // const int threshold = static_cast<int>(cap * sync_off_ratio);
-        
-            // if (cap > 0 && cur > threshold) {
-            //     // 只有当前还开着时才计数 + 关闭
-            //     if (isGraphSyncEnabled()) {
-            //         turnOffGraphSync();
-            //         sync_auto_off_count.fetch_add(1, std::memory_order_relaxed);
-            //     }
-            //     return false;
-            // }
-                    
+ 
             return true;
         }
 
@@ -237,25 +217,6 @@ class DanceDNNF : DancingMatrix {
             tried_numbers += count;
         }
 
-        // 统计指标访问器
-        int    getPeakConcurrentThreads()  const { return peak_concurrent_threads.load();  }
-        size_t getMaxBlocksDetected()      const { return max_blocks_detected.load();      }
-        size_t getSyncAutoOffCount()       const { return sync_auto_off_count.load();      }
-        int  getMaxThreads() const {
-            return max_threads > 0 ? max_threads
-                                : static_cast<int>(std::thread::hardware_concurrency());
-        }
-
-        void addConcurrentThread(int count) {
-            std::lock_guard<std::mutex> lock(thread_count_mutex);
-            current_concurrent_threads += count;
-        }
-
-        void recordBlocksDetected(size_t n) {
-            size_t prev = max_blocks_detected.load();
-            while (n > prev &&
-                !max_blocks_detected.compare_exchange_weak(prev, n)) {}
-        }
 
     private:
         // ThreadPool& pool;
@@ -266,13 +227,6 @@ class DanceDNNF : DancingMatrix {
         int max_threads = 0;               // 最大线程数（0 = 使用 hardware_concurrency）
         double sync_off_ratio = 0.75;      // 超过此比例即关闭图同步
 
-        int current_concurrent_threads = 0;
-        std::mutex thread_count_mutex;
-
-        // 统计指标
-        std::atomic<int>    peak_concurrent_threads{0};
-        std::atomic<size_t> max_blocks_detected{0};
-        std::atomic<size_t> sync_auto_off_count{0};  // 由阈值触发关闭同步的次数
 
         int tried_numbers = 0; // 已尝试的次数
         std::mutex tried_numbers_mutex;
@@ -305,20 +259,5 @@ class DanceDNNF : DancingMatrix {
         }
 };
 
-class ConcurrentGuard {
-public:
-    ConcurrentGuard(
-        DanceDNNF& dm, int delta) : dm_(dm), delta_(delta) {
-        if (delta_ != 0) dm_.addConcurrentThread(delta_);
-    }
-    ~ConcurrentGuard() {
-        if (delta_ != 0) dm_.addConcurrentThread(-delta_);
-    }
-    ConcurrentGuard(const ConcurrentGuard&) = delete;
-    ConcurrentGuard& operator=(const ConcurrentGuard&) = delete;
-private:
-    DanceDNNF& dm_;
-    int delta_;
-};
 
 #endif

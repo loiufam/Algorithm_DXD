@@ -16,7 +16,7 @@ from datetime import datetime
 MAIN_EXECUTABLE = "./main"
 INPUT_FOLDERS = ["../data/batch2/dominoes_set", 
                  "../data/batch2/exact_cover_benchmarks", 
-                 "../data/batch2/set_partitionbenchmarks",
+                 "../data/batch2/set_partition_benchmarks",
                  "../data/batch2/graphs_set"
                  ]
 RESULTS_FOLDER = "../results/batch_results_" + datetime.now().strftime("%Y%m%d")

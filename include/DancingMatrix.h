@@ -88,11 +88,6 @@ class DancingMatrix
         DancingMatrix( int rows, int cols, int** matrix, bool verbose = false);  
         DancingMatrix( const string& file_path, bool use_ig = false, bool use_ett = false);
 
-        // 检测器，用于检测矩阵中的连通性
-        std::unique_ptr<ComponentDetector> detector;
-        // std::unique_ptr<DynamicHypergraphCC> dynamic_hypergraph_cc;
-        // std::unique_ptr<BlockDetector> block_detector;
-
         // 禁用拷贝和赋值
         DancingMatrix(const DancingMatrix&) = delete;
         DancingMatrix& operator=(const DancingMatrix&) = delete;
@@ -212,8 +207,6 @@ class DancingMatrix
         mutable std::shared_mutex mutex_;  // 读写锁
 
         mutable std::shared_mutex graph_sync_mutex; // 图同步锁
-
-        // Graph build_graph_from_columns(const unordered_map<int, vector<int>>& col2rows, int num_rows, bool deduplicate = true);
 
         bool enableGraphSync = true; // 是否启用图同步   
         

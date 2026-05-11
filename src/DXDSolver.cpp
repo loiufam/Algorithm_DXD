@@ -240,15 +240,9 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
 
 
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
-        // addTriedNumbers(1);
 
         if (int(curBlock.size())  > 1) {
             // std::cout << "Detected " << curBlock.size() << " independent blocks at depth " << depth << ".\n";
-            // recordBlocksDetected(curBlock.size());
-            // const bool willParallel = isParallelSearch && curBlock.size() > 1 && !omp_in_parallel();
- 
-            // const int delta = willParallel ? static_cast<int>(curBlock.size()) : 0;
-            // ConcurrentGuard guard(*this, delta);
 
             auto [result, decompNode] = isParallelSearch
                 ? parallelSearchUseOmp(curBlock, depth)
