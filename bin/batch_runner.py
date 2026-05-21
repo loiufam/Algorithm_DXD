@@ -2,6 +2,7 @@
 from html import parser
 import os
 import subprocess
+import resource
 import csv
 import re
 import sys
@@ -14,34 +15,35 @@ from datetime import datetime
 # 配置
 # =========================
 MAIN_EXECUTABLE = "./main"
-INPUT_FOLDERS = ["../data/batch2/dominoes_set", 
-                 "../data/batch2/exact_cover_benchmarks", 
-                 "../data/batch2/set_partition_benchmarks",
-                 "../data/batch2/graphs_set"
-                 ]
+INPUT_FOLDERS = [
+"../data/batch_2/dominoes_set",
+# "../data/batch_2/exact_cover_benchmarks",
+"../data/batch_2/set_partition_benchmarks",
+"../data/batch_2/graphs_set"
+]
 RESULTS_FOLDER = "../results/batch_results_" + datetime.now().strftime("%Y%m%d")
 THREADS_FOLDER = "../results/Threads"
 
-WRITE_INTERVAL = 10  # 每10个写一次CSV
+WRITE_INTERVAL = 3  # 每3个写一次CSV
 
 # =========================
 # 算法分组配置
 # =========================
 # 分组 1: ddxd-t8, ddxd-t1
 GROUP1_ALGORITHMS = [
-    ("DynDXD_T8", ["ddxd", "8"], True, "DynDXD_t8_results.csv"),
+    # ("DynDXD_T8", ["ddxd", "8"], True, "DynDXD_t8_results.csv"),
     ("DynDXD_T1", ["ddxd", "1"], True, "DynDXD_t1_results.csv"),
 ]
 
 # 分组 2: dxd-t8, dxd-t1
 GROUP2_ALGORITHMS = [
-    ("DXD_T8", ["dxd", "8"], True, "DXD_t8_results.csv"),
+    # ("DXD_T8", ["dxd", "8"], True, "DXD_t8_results.csv"),
     ("DXD_T1", ["dxd", "1"], True, "DXD_t1_results.csv"),
 ]
 
 # 分组 3: dxz, dlx
 GROUP3_ALGORITHMS = [
-    ("DXZ", ["dxz"], False, "DXZ_results.csv"),
+    # ("DXZ", ["dxz"], False, "DXZ_results.csv"),
     ("DLX", ["dlx"], False, "DLX_results.csv"),
 ]
 
@@ -79,7 +81,7 @@ DNNF_PATTERN = re.compile(r'DNNF Size:\s*(\d+)')
 # =========================
 # 解析输出
 # =========================
-def parse_log_output(output):
+def parse_log_output(output, memo_out = False):
     """解析算法输出的日志信息"""
     result = {
         'rows': None,
@@ -90,8 +92,13 @@ def parse_log_output(output):
         'zdd_size': None,
         'dnnf_size': None,
         'status': 'success',
-        'timeout': False 
+        'timeout': False
     }
+
+    if memo_out:
+        result['timeout'] = True
+        result['status'] = 'memory_out'
+        return result
 
     if m := COLS_PATTERN.search(output):
         result['cols'] = int(m.group(1))
@@ -103,7 +110,7 @@ def parse_log_output(output):
         result['timeout'] = True
         result['status'] = 'timeout'
         return result
-    
+
     if m := TIME_PATTERN.search(output):
         result['time'] = float(m.group(1))
 
@@ -121,43 +128,61 @@ def parse_log_output(output):
 
     if m := DNNF_PATTERN.search(output):
         result['dnnf_size'] = int(m.group(1))
-    
+
     # 检查是否有求解结果为0的情况
     try:
         if result['solutions'] and float(result['solutions']) == 0:
             result['status'] = 'warning'
     except:
         pass
-    
+
     return result
+
+def limit_memory():
+    """设置子进程虚拟内存上限为 20GB"""
+    # 20 GB 转换为 Bytes
+    max_memory_bytes = 20 * 1024 * 1024 * 1024
+    # 设置虚拟内存地址空间大小限制 (软限制, 硬限制)
+    resource.setrlimit(resource.RLIMIT_AS, (max_memory_bytes, max_memory_bytes))
 
 # =========================
 # 运行算法
 # =========================
-def run_algorithm(algo_name, algo_params, input_file, supports_thread, num_threads = 1):
+def run_algorithm(alg_name, algo_params, input_file, supports_thread, num_threads = 1, timeout = 1500):
     """运行单个算法"""
 
     cmd = [MAIN_EXECUTABLE] + ["-a", algo_params[0], "-i", input_file]
-    
+
     if supports_thread:
         cmd += ["-t", str(num_threads)]
 
     logging.info(f"运行: {' '.join(cmd)}")
-    
+
     try:
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
+            timeout=timeout,
             encoding='utf-8',
-            errors='replace'
+            errors='replace',
+            preexec_fn=limit_memory
         )
-        
+
         output = result.stdout + result.stderr
+
+        memo_out = False
+        if result.returncode != 0:
+            if "Memory" in output or "bad_alloc" in output or result.returncode < 0:
+                print(f"  [内存超出或崩溃] returncode={result.returncode}，可能超出了 20GB 限制。")
+                memo_out = True
         print(f"  输出: {output[:200]}...")  # 打印前200字符
-        
-        return parse_log_output(output)
-        
+
+        return parse_log_output(output, memo_out)
+
+    except subprocess.TimeoutExpired:
+        print(f"  [超时] 超过 {timeout} 秒限制。")
+        return {'cols': None, 'rows': None, 'timeout': True, 'status': 'timeout'}
     except Exception as e:
         logging.error(e)
         return {'status': 'error'}
@@ -189,7 +214,7 @@ def read_existing_csv(csv_path):
     """读取已有的CSV文件，返回字典格式"""
     if not os.path.exists(csv_path):
         return {}
-    
+
     data = {}
     with open(csv_path, 'r', encoding='utf-8') as f:
         reader = csv.reader(f)
@@ -199,62 +224,62 @@ def read_existing_csv(csv_path):
                 if len(row) > 0:
                     instanceName = row[0]
                     data[instanceName] = row
-    
+
     return data
 
 def write_csv_results(csv_path, results_data, alg_name):
     """将结果写入CSV文件"""
     # 读取现有数据
     existing_data = read_existing_csv(csv_path)
-    
+
     # 确定列数
     max_cols = 8
-    
+
     # 合并新结果
     for filename, result in results_data.items():
         if filename not in existing_data:
             existing_data[filename] = [''] * max_cols
             existing_data[filename][0] = filename
-        
+
         # 确保行有足够的列
         while len(existing_data[filename]) < max_cols:
             existing_data[filename].append('')
-        
-        if result['cols'] is not None:
-            existing_data[filename][1] = str(result['cols'])
-        if result['rows'] is not None:
-            existing_data[filename][2] = str(result['rows'])
+
+        if result.get('cols') is not None:
+            existing_data[filename][1] = str(result.get('cols'))
+        if result.get('rows') is not None:
+            existing_data[filename][2] = str(result.get('rows'))
 
         # 写入时间结果
-        if result['timeout']:
+        if result.get('timeout'):
             existing_data[filename][3] = 'TO'
-        elif result['time'] is not None:
-            existing_data[filename][3] = f"{result['time']:.4f}"
-        
+        elif result.get('time') is not None:
+            existing_data[filename][3] = f"{result.get('time'):.4f}"
+
         # 写入 Solutions 和 Max Blocks
-        if result['solutions'] is not None:
-            existing_data[filename][4] = result['solutions']
-        if result['max_blocks'] is not None:
-            existing_data[filename][5] = str(result['max_blocks'])
-        
+        if result.get('solutions') is not None:
+            existing_data[filename][4] = result.get('solutions')
+        if result.get('max_blocks') is not None:
+            existing_data[filename][5] = str(result.get('max_blocks'))
+
         # 添加警告标记
-        if result['status'] == 'warning':
+        if result.get('status') == 'warning':
             existing_data[filename][3] = f"{existing_data[filename][3]} (WARNING: 0 solutions)"
 
-        if result['zdd_size'] is not None:
-            existing_data[filename][6] = result['zdd_size']
+        if result.get('zdd_size') is not None:
+            existing_data[filename][6] = result.get('zdd_size')
 
-        if result['dnnf_size'] is not None:
-            existing_data[filename][7] = result['dnnf_size']
-    
+        if result.get('dnnf_size') is not None:
+            existing_data[filename][7] = result.get('dnnf_size')
+
     # 写入文件
     with open(csv_path, 'w', encoding='utf-8', newline='') as f:
         writer = csv.writer(f)
-        
+
         # 写表头
         header = ['Instance', '#cols', '#rows', alg_name, 'Solutions', 'Max Blocks', '|ZDD|', '|DNNF|']
         writer.writerow(header)
-        
+
         # 写数据行
         for filename in sorted(existing_data.keys()):
             writer.writerow(existing_data[filename])
@@ -263,47 +288,45 @@ def write_thread_csv_results(csv_path, results_data, thread_nums):
     """将多线程结果写入CSV文件"""
     # 读取现有数据
     existing_data = read_existing_csv(csv_path)
-    
+
     # 确定列数：Instance + 每个线程数1列(Time)
     num_cols = 1 + len(thread_nums) * 3  # 每个线程数占3列(Time, Solutions, Max Blocks)
-    
+
     # 合并新结果
     for filename, thread_results in results_data.items():
         if filename not in existing_data:
             existing_data[filename] = [''] * num_cols
             existing_data[filename][0] = filename
-        
+
         # 确保行有足够的列
         while len(existing_data[filename]) < num_cols:
             existing_data[filename].append('')
-        
+
         # 写入每个线程数的结果
         for idx, num_threads in enumerate(thread_nums):
             if num_threads in thread_results:
                 result = thread_results[num_threads]
                 col = 1 + idx * 3  # 每个线程数占1列
-                
+
                 # Time列
-                if result['timeout']:
+                if result.get('timeout'):
                     existing_data[filename][col] = 'timeout'
-                elif result['time'] is not None:
-                    time_str = f"{result['time']:.4f}"
-                    # if result['status'] == 'warning':
-                    #     time_str += " (WARNING: 0 solutions)"
+                elif result.get('time') is not None:
+                    time_str = f"{result.get('time'):.4f}"
                     existing_data[filename][col] = time_str
 
                 # Solutions列
-                if result['solutions'] is not None:
-                    existing_data[filename][col + 1] = result['solutions']
-                
+                if result.get('solutions') is not None:
+                    existing_data[filename][col + 1] = result.get('solutions')
+
                 # Max Blocks列
-                if result['max_blocks'] is not None:
-                    existing_data[filename][col + 2] = str(result['max_blocks'])
-    
+                if result.get('max_blocks') is not None:
+                    existing_data[filename][col + 2] = str(result.get('max_blocks'))
+
     # 写入文件
     with open(csv_path, 'w', encoding='utf-8', newline='') as f:
         writer = csv.writer(f)
-        
+
         # 写表头
         header = ['Instance']
         for num_threads in thread_nums:
@@ -313,13 +336,13 @@ def write_thread_csv_results(csv_path, results_data, thread_nums):
                 f'{num_threads}_threads_max_blocks'
             ])
         writer.writerow(header)
-        
+
         # 写数据行
         for filename in sorted(existing_data.keys()):
             writer.writerow(existing_data[filename])
 
 
-        
+
 def main():
     """主函数"""
     # 解析命令行参数
@@ -336,21 +359,35 @@ def main():
     parser.add_argument('-G', '--group', type=int, choices=[1, 2, 3],
                         help='指定运行的算法分组(1: ddxd-t8/t1, 2: dxd-t8/t1, 3: dxz/dlx)')
     parser.add_argument('-p', '--parallel', action='store_true',
-                    help='开启多线程对比实验')
+                        help='开启多线程对比实验')
+    parser.add_argument('-a', '--append', action='store_true',
+                        help='追加模式：寻找最新结果目录并跳过已存在的实例')
+    parser.add_argument('-t', '--timeout', type=int, default=1500,
+                        help="单次求解的超时时间（秒），默认 1500")
 
-    
+
     args = parser.parse_args()
-    
+
     list_file = args.list_file
-    
+
     print("=" * 60)
     print("批量算法实验脚本")
     print("=" * 60)
-    
+
+    global RESULTS_FOLDER
+    if args.append:
+        base_dir = Path("../results")
+        if base_dir.exists():
+            # 找到所有符合前缀的目录并按修改时间找最新的
+            dirs = [d for d in base_dir.glob("batch_results_*") if d.is_dir()]
+            if dirs:
+                RESULTS_FOLDER = str(max(dirs, key=lambda d: d.stat().st_mtime))
+                print(f"[*] 追加模式开启，使用最新结果目录: {RESULTS_FOLDER}")
+
     # 创建结果文件夹
     os.makedirs(RESULTS_FOLDER, exist_ok=True)
     os.makedirs(THREADS_FOLDER, exist_ok=True)
-    
+
     # 获取输入文件
     input_files = []
     for input_folder in INPUT_FOLDERS:
@@ -358,9 +395,9 @@ def main():
     if not input_files:
         print("错误：没有找到输入文件")
         return
-    
+
     print(f"\n找到 {len(input_files)} 个输入文件\n")
-    
+
     # 从列表文件中过滤输入文件（如果提供）
     if list_file:
         input_files = filter_input_files(input_files, list_file)
@@ -395,16 +432,23 @@ def main():
             print(f"运行算法: {algo_name}")
 
             print(f"{'=' * 60}")
-            
+
             results_data = {}
             csv_path = os.path.join(RESULTS_FOLDER, output_file)
 
+            existing_data = read_existing_csv(csv_path) if args.append else {}
+
             for i, input_file in enumerate(input_files, 1):
                 filename = os.path.basename(input_file)
+
+                if args.append and filename in existing_data:
+                    print(f"\n[{i}/{len(input_files)}] (追加模式) 跳过已有文件: {filename}")
+                    continue
+
                 print(f"\n[{i}/{len(input_files)}] 处理文件: {filename}")
-                
+
                 threads = int(algo_params[1]) if len(algo_params) > 1 else 1
-                result = run_algorithm(algo_name, algo_params, input_file, supports_thread, threads)
+                result = run_algorithm(algo_name, algo_params, input_file, supports_thread, threads, args.timeout)
                 results_data[filename] = result
 
                 if i % WRITE_INTERVAL == 0 or i == len(input_files):
@@ -419,17 +463,24 @@ def main():
             print(f"\n{'=' * 60}")
             print(f"运行算法: {algo_name} (线程数: {thread_nums})")
             print(f"{'=' * 60}")
-            
+
             results_data = {}
             csv_path = os.path.join(THREADS_FOLDER, output_file)
 
+            existing_data = read_existing_csv(csv_path) if args.append else {}
+
             for i, input_file in enumerate(input_files, 1):
                 filename = os.path.basename(input_file)
+
+                if args.append and filename in existing_data:
+                    print(f"\n[{i}/{len(input_files)}] (追加模式) 跳过已有文件: {filename}")
+                    continue
+
                 print(f"\n[{i}/{len(input_files)}] 处理文件: {filename}")
-                
+
                 # 存储该文件在不同线程数下的结果
                 results_data[filename] = {}
-                
+
                 for num_threads in thread_nums:
                     # runtime = 0.0
                     # for i in range(10):
@@ -443,16 +494,16 @@ def main():
                         algo_name, algo_params, input_file, supports_thread, num_threads
                     )
 
-                    # result['time'] = runtime / 10.0  
+                    # result['time'] = runtime / 10.0
                     results_data[filename][num_threads] = result
-                
+
                 if i % WRITE_INTERVAL == 0 or i == len(input_files):
-                    write_thread_csv_results(csv_path, results_data, thread_nums) 
-                    results_data = {}  # 清空已写入的数据，继续收集新的结果 
+                    write_thread_csv_results(csv_path, results_data, thread_nums)
+                    results_data = {}  # 清空已写入的数据，继续收集新的结果
 
     end_time = datetime.now()
     elapsed = (end_time - start_time).total_seconds()
-    
+
     print("\n" + "=" * 60)
     print("所有算法运行完成！")
     print(f"总耗时: {elapsed:.2f} 秒")

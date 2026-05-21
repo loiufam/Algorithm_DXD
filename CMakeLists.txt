@@ -52,6 +52,15 @@ if(OpenMP_CXX_FOUND)
 endif()
 
 # ==========================================
+# 2.5 配置 TBB (支持任务并行)
+# ==========================================
+find_package(TBB REQUIRED)
+if(TBB_FOUND)
+    message(STATUS "Found TBB: ${TBB_VERSION}")
+    target_link_libraries(main PUBLIC TBB::tbb)
+endif()
+
+# ==========================================
 # 3. 配置 AddressSanitizer (仅 Debug 模式)
 # ==========================================
 # AddressSanitizer only in Debug mode

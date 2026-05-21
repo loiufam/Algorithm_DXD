@@ -1,6 +1,2 @@
-启用DXZ算法求解: AsnetAm
-Time: 3.794117 s
-Solutions: 20064184773096211440000
-Solutions (scientific): 2.006e+22
-ZDD Size: 281910
-DXZ算法求解结束: AsnetAm
+启用DLX算法求解: grafo11181.95
+DLX开始搜索...
