@@ -1,11 +1,11 @@
 #include "../include/main.h"
 
-static Logger logger("../run_results.txt");  // 全局日志
+static Logger logger("");  // 全局日志
 // const string muti_thread_dxd_log_file = "../muti_thread_dxd_log.csv";
 static const int DEFAULT_THREADS = 8;  // 线程数
 
 enum class AlgType { dlx, dxz, dxd, ddxd, mdlx };
- 
+
 static AlgType toAlgType(const std::string& s) {
     if (s == "dlx")  return AlgType::dlx;
     if (s == "dxz")  return AlgType::dxz;
@@ -17,10 +17,10 @@ static AlgType toAlgType(const std::string& s) {
 
 // ./main -a ddxd -i ../data/exact_cover_benchmark/instance1.txt -t 4 --debug
 int main(int argc, char *argv[]){
-    
+
     ArgParser args;
     if (!args.parse(argc, argv)) return 1;
-    
+
     const std::string filename  = fs::path(args.input).stem().string();
     const AlgType alg = toAlgType(args.alg);
 
@@ -43,7 +43,7 @@ int main(int argc, char *argv[]){
                     logger.logLine("DXZ算法求解结束: " + filename);
                     break;
                 }
-            case AlgType::dxd: 
+            case AlgType::dxd:
                 {
                     int threads = args.threads > 0 ? args.threads : 1;
                     logger.logLine("启用DXD算法求解: " + filename);
@@ -83,6 +83,6 @@ int main(int argc, char *argv[]){
     catch (const std::exception& e) {
         std::cerr << "错误：" << e.what() << '\n';
     }
-    
+
     return 0;
 }

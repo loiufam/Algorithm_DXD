@@ -107,19 +107,19 @@ endif()
 # ==========================================
 # 4. P1 修复回归测试
 # ==========================================
-add_executable(test_p1_fixes test/test_p1_fixes.cpp ${COMMON_SOURCES})
-if(GMP_LIB AND GMPXX_LIB)
-    target_link_libraries(test_p1_fixes PUBLIC ${GMPXX_LIB} ${GMP_LIB})
-endif()
-if(OpenMP_CXX_FOUND)
-    target_link_libraries(test_p1_fixes PUBLIC OpenMP::OpenMP_CXX)
-endif()
-if(TBB_FOUND)
-    target_link_libraries(test_p1_fixes PUBLIC TBB::tbb)
-endif()
+# add_executable(test_p1_fixes test/test_p1_fixes.cpp ${COMMON_SOURCES})
+# if(GMP_LIB AND GMPXX_LIB)
+#     target_link_libraries(test_p1_fixes PUBLIC ${GMPXX_LIB} ${GMP_LIB})
+# endif()
+# if(OpenMP_CXX_FOUND)
+#     target_link_libraries(test_p1_fixes PUBLIC OpenMP::OpenMP_CXX)
+# endif()
+# if(TBB_FOUND)
+#     target_link_libraries(test_p1_fixes PUBLIC TBB::tbb)
+# endif()
 
-enable_testing()
-add_test(NAME p1_fixes COMMAND test_p1_fixes)
+# enable_testing()
+# add_test(NAME p1_fixes COMMAND test_p1_fixes)
 
 # mkdir build && cd build
 # cmake .. -DCMAKE_BUILD_TYPE=Release

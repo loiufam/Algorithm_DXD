@@ -293,46 +293,42 @@ struct DNNFResult {
     }
 };
 
-class Logger 
+class Logger
 {
     private:
         std::ofstream logFile;
         bool enableConsole;
-    
+
     public:
-        Logger(const std::string& filename, bool console = true) 
+        Logger(const std::string& filename, bool console = true)
             : enableConsole(console) {
             logFile.open(filename, std::ios::out | std::ios::trunc);
         }
-        
+
         ~Logger() {
             if (logFile.is_open()) {
                 logFile.close();
             }
         }
-        
+
         template<typename T>
         void log(const T& message) {
-            if (logFile.is_open()) {
-                logFile << message;
-                logFile.flush();
-            }
+            // if (logFile.is_open()) {
+            //     logFile << message;
+            //     logFile.flush();
+            // }
             if (enableConsole) {
                 std::cout << message;
             }
         }
-        
+
         template<typename T>
         void logLine(const T& message) {
-            log(message);
-            if (logFile.is_open()) {
-                logFile << std::endl;
-            }
             if (enableConsole) {
-                std::cout << std::endl;
+                std::cout << message << std::endl;
             }
         }
-        
+
         void enableConsoleOutput(bool enable) {
             enableConsole = enable;
         }
