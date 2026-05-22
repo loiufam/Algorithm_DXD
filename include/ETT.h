@@ -3,7 +3,15 @@
 
 #pragma once
 
-#include <bits/stdc++.h>
+// portable replacement for GCC-only <bits/stdc++.h>
+#include <algorithm>
+#include <deque>
+#include <iostream>
+#include <numeric>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 using namespace std;
 
 struct ETTUnionFind {

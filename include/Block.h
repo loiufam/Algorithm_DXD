@@ -2,7 +2,13 @@
 #define BLOCK_H
 #pragma once
 
-#include <bits/stdc++.h>
+// portable replacement for GCC-only <bits/stdc++.h>
+#include <algorithm>
+#include <iostream>
+#include <set>
+#include <vector>
+#include <string>
+#include <utility>
 using namespace std;
 
 struct Block {

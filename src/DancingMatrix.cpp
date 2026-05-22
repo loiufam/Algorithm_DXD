@@ -601,22 +601,29 @@ void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
         std::vector<int> neighbors = g->getAllNeighbors(v); 
 
         for (int u : neighbors) {
+            // P1-2 守卫：邻居 u 是否应该被恢复，对应"u 在当前矩阵中是否仍是激活行"。
+            //  - 矩阵-图一致性：行 r 在矩阵中激活 ⇔ 顶点 r 在某棵活跃 ETT 中
+            //  - DecUpdateCC 移除 v 时会调用 tree->removeVertex(v)，把 v 从所有 ETT 的 vertices 中 erase
+            //  - 因此 findEulerTourTree(u)!=nullptr 等价于 "u 当前在矩阵中激活"
+            //  - restoredSet.count(u) 是冗余兜底（同批恢复的 u 已经在前一个循环 push 进 comps）
+            // 没有这条守卫时，u 是已被永久 cover 的"幽灵行"也会被 restoreEdge → 状态污染。
             splaytree::EulerTourTree* treeU = findEulerTourTree(u);
-            if (!treeU) continue;
+            const bool uActive = (treeU != nullptr) || restoredSet.count(u);
+            if (!uActive) continue;
 
             if (restoredSet.count(u) && v > u) continue;
 
             if (!g->hasEdge(v, u)) {
                 g->restoreEdge(v, u);
             }
+            treeU = findEulerTourTree(u);
+            if (!treeU) continue;
             splaytree::EulerTourTree* treeV = findEulerTourTree(v); 
             if (!treeV) continue;
 
             if (treeU != treeV) {
-            // std::cout << "Linking restored edge (" << v << ", " << u << ")\n";
                 treeU->link(u, v, treeV);
             } else {
-                // std::cout << "Adding non-tree edge (" << v << ", " << u << ")\n";
                 treeU->addNonTreeEdge(splaytree::Edge(v, u));
             }
         }

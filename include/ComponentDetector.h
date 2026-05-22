@@ -23,6 +23,7 @@
 #include <cassert>
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 #include <functional>
 
 using comps = vector<Block>;
