@@ -70,24 +70,32 @@ def format_solutions(raw: str) -> Tuple[Optional[object], str]:
     """Return (excel_value, display_text).
 
     For solution counts whose decimal representation has more than 11 digits we
-    fall back to scientific notation as a string, since Excel cannot store
+    fall back to a power of 10 notation as a string, since Excel cannot store
     integers wider than 15 significant digits without loss.
     """
     raw = (raw or "").strip()
     if not raw:
         return None, ""
+
     digits = re.sub(r"\D", "", raw)
     if not digits or not raw.lstrip("-").isdigit():
         # Non-numeric (warnings, blanks, errors): keep as text.
         return raw, raw
+
     if len(digits) > 11:
-        # Render in scientific notation: 2.0064e+22 style.
+        # Render in power of 10 notation: 2.0064 × 10^22 style.
         n = int(raw)
         sign = "-" if n < 0 else ""
         s = digits  # already only digits
+
+        # 保留4位小数的尾数
         mantissa = f"{int(s[0])}.{s[1:5]}" if len(s) > 1 else s
         exp = len(s) - 1
-        return f"{sign}{mantissa}e+{exp:02d}", f"{sign}{mantissa}e+{exp:02d}"
+
+        # 改写为 10 的次方格式
+        power_str = f"{sign}{mantissa} × 10^{exp}"
+        return power_str, power_str
+
     # Fits comfortably as an integer.
     return int(raw), raw
 
@@ -256,7 +264,7 @@ def main() -> None:
     parser.add_argument(
         "input_dir",
         nargs="?",
-        default="results/batch_results_20260511",
+        default="batch_results_20260511",
         help="directory containing per-solver *_results.csv files",
     )
     parser.add_argument(
