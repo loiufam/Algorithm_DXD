@@ -14,7 +14,7 @@
 *.out
 *.app
 
-build/
-test/
-utils/
-visualize/
+build
+test
+utils
+visualize
