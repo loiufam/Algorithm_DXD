@@ -422,14 +422,18 @@ std::pair<std::unique_ptr<EulerTourTree>, std::unique_ptr<EulerTourTree>> EulerT
     T_large->edgeNodes = std::move(oldEdgeNodes);
 
     for (const Edge& e : nonTreeEdges) {
+        // P1-3 fix: 跨分量非树边在 cut 后两端不再连通，应丢弃
         bool inSmallU = T_small->vertices.count(e.u);
         bool inSmallV = T_small->vertices.count(e.v);
+        bool inLargeU = T_large->vertices.count(e.u);
+        bool inLargeV = T_large->vertices.count(e.v);
 
         if (inSmallU && inSmallV) {
             T_small->nonTreeEdges.insert(e);
-        } else {
+        } else if (inLargeU && inLargeV) {
             T_large->nonTreeEdges.insert(e);
         }
+        // 其余 cross-component 情况：两端被分裂到不同树，丢弃该非树边
     }
     
     root = nullptr;

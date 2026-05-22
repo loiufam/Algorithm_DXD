@@ -10,7 +10,13 @@
 //   ✅ 可直接在 DancingMatrix 中使用
 // ===============================================
 
-#include <bits/stdc++.h>
+#include <algorithm>
+#include <cstdint>
+#include <iostream>
+#include <random>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 #include "Block.h"
 using namespace std;
 

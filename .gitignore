@@ -15,6 +15,7 @@
 *.app
 
 build
+docs
 test
 utils
 visualize

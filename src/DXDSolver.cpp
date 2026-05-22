@@ -83,6 +83,14 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(vector<Block
 
         auto [result, node] = DXD(blocks[i], parent_depth + 1);
 
+        // 不变量：DXD 内部 cover/uncover 严格对称，递归返回时 comps 应只剩 1 棵树。
+        // 若出现多棵树，说明某条 IncUpdateCC 没把分裂的树重新 link 回去——
+        // 这是真正的 bug，应当显式暴露而不是默默合并。
+        if (comps.size() > 1) {
+            std::cerr << "serialSearch: invariant violated, comps.size()=" << comps.size()
+                      << " after DXD(block " << i << ") returned\n";
+            // 仍然保留首棵作为最佳猜测，避免崩溃；其余直接丢弃以便快速复现 bug。
+        }
         if (!comps.empty()) {
             stash[i] = std::move(comps[0]);
             comps.clear();
@@ -156,14 +164,25 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(vect
                 std::cerr << "Thread " << omp_get_thread_num() 
                          << " error: " << msg << "\n";
             }
+            // P1-4 fix: 异常路径同样要把线程局部 ETT 抢救回来，
+            // 否则 cleanupThreadLocalState() 会析构掉，主线程合并 comps 时槽位为空。
+            if (useETT && tlsState && !tlsState->components.empty()) {
+                returned[i] = std::move(tlsState->components.front());
+            }
         } catch (const std::exception& e) {
             has_failure.store(true, std::memory_order_release);
             std::cerr << "Thread " << omp_get_thread_num() 
                      << " exception: " << e.what() << "\n";
+            if (useETT && tlsState && !tlsState->components.empty()) {
+                returned[i] = std::move(tlsState->components.front());
+            }
         } catch (...) {
             has_failure.store(true, std::memory_order_release);
             std::cerr << "Thread " << omp_get_thread_num() 
                      << " unknown error\n";
+            if (useETT && tlsState && !tlsState->components.empty()) {
+                returned[i] = std::move(tlsState->components.front());
+            }
         }
 
         if(useETT) cleanupThreadLocalState();

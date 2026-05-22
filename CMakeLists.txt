@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 
 project(AlgorithmDXD VERSION 1.0)
 
@@ -7,8 +7,37 @@ project(AlgorithmDXD VERSION 1.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# 设置使用 libc++
-# set(CMAKE_CXX_STANDARD_LIBRARIES "-stdlib=libc++")
+# ─────────────────────────────────────────────
+# macOS / Homebrew 友好：自动补全 GMP / libomp / TBB 搜索路径
+# ─────────────────────────────────────────────
+if(APPLE)
+    # 检测 Homebrew 安装根目录（Apple Silicon: /opt/homebrew，Intel: /usr/local）
+    if(EXISTS "/opt/homebrew")
+        set(HOMEBREW_PREFIX "/opt/homebrew" CACHE PATH "Homebrew prefix")
+    elseif(EXISTS "/usr/local")
+        set(HOMEBREW_PREFIX "/usr/local" CACHE PATH "Homebrew prefix")
+    endif()
+
+    if(DEFINED HOMEBREW_PREFIX)
+        list(APPEND CMAKE_PREFIX_PATH
+            "${HOMEBREW_PREFIX}"
+            "${HOMEBREW_PREFIX}/opt/libomp"
+            "${HOMEBREW_PREFIX}/opt/tbb"
+            "${HOMEBREW_PREFIX}/opt/gmp"
+        )
+        include_directories(SYSTEM "${HOMEBREW_PREFIX}/include")
+        link_directories("${HOMEBREW_PREFIX}/lib")
+
+        # AppleClang 不会默认启用 OpenMP；这里通过 libomp 手工接入
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+            set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${HOMEBREW_PREFIX}/opt/libomp/include"
+                CACHE STRING "" FORCE)
+            set(OpenMP_CXX_LIB_NAMES "omp" CACHE STRING "" FORCE)
+            set(OpenMP_omp_LIBRARY "${HOMEBREW_PREFIX}/opt/libomp/lib/libomp.dylib"
+                CACHE FILEPATH "" FORCE)
+        endif()
+    endif()
+endif()
 
 # Add include directories
 include_directories(${PROJECT_SOURCE_DIR}/include)
@@ -18,7 +47,7 @@ set(COMMON_SOURCES
     src/DancingMatrix.cpp
     src/DXZSolver.cpp
     src/DXDSolver.cpp
-    src/DynamicGraph.cpp
+    # DynamicGraph.cpp 通过 #include 在 DancingMatrix.cpp 中引入，故不再单独参与编译
     # src/TreapETT.cpp
     src/DXDTime.cpp
     src/ComponentDetector.cpp
@@ -67,8 +96,30 @@ endif()
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Building with AddressSanitizer (Debug mode)")
     target_compile_options(main PRIVATE -fsanitize=address -fno-omit-frame-pointer -g)
-    target_link_options(main PRIVATE -fsanitize=address -static-libasan)
+    # macOS clang 不支持 static-libasan
+    if(APPLE)
+        target_link_options(main PRIVATE -fsanitize=address)
+    else()
+        target_link_options(main PRIVATE -fsanitize=address -static-libasan)
+    endif()
 endif()
+
+# ==========================================
+# 4. P1 修复回归测试
+# ==========================================
+add_executable(test_p1_fixes test/test_p1_fixes.cpp ${COMMON_SOURCES})
+if(GMP_LIB AND GMPXX_LIB)
+    target_link_libraries(test_p1_fixes PUBLIC ${GMPXX_LIB} ${GMP_LIB})
+endif()
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(test_p1_fixes PUBLIC OpenMP::OpenMP_CXX)
+endif()
+if(TBB_FOUND)
+    target_link_libraries(test_p1_fixes PUBLIC TBB::tbb)
+endif()
+
+enable_testing()
+add_test(NAME p1_fixes COMMAND test_p1_fixes)
 
 # mkdir build && cd build
 # cmake .. -DCMAKE_BUILD_TYPE=Release

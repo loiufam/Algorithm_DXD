@@ -1,2 +1,7 @@
-启用DLX算法求解: grafo11546.97
-DLX开始搜索...
+启用DynDXD算法求解: dominoes_10x10
+开始多线程DXD搜索...
+Time: 0.013127 s
+Solutions: 258500842280
+Max Blocks: 1
+DNNF Size: 13547
+DynDXD算法求解结束: dominoes_10x10
