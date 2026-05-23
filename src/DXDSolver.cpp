@@ -7,19 +7,27 @@ shared_ptr<DNNFNode> DanceDNNF::buildDecisionNode(int r, shared_ptr<DNNFNode> lo
 
     size_t key = gen_key(r, lo.get(), hi.get());
 
-    {    
+    {
         std::shared_lock<std::shared_mutex> readLock(tableMutex);
         auto it = node_table.find(key);
         if (it != node_table.end()) {
-            return it->second;
+            if (auto cached = it->second.lock()) {
+                return cached;
+            }
         }
     }
 
     std::unique_lock<std::shared_mutex> writeLock(tableMutex);
-    if (node_table.count(key)) return node_table[key];
+    auto it = node_table.find(key);
+    if (it != node_table.end()) {
+        if (auto cached = it->second.lock()) {
+            return cached;
+        }
+        node_table.erase(it);
+    }
 
     auto decision_node = make_shared<DNNFNode>(NodeType::Decision, lo, hi);
-    decision_node->label = r;  
+    decision_node->label = r;
     node_table[key] = decision_node;
 
     return decision_node;
@@ -405,6 +413,16 @@ void DanceDNNF::startDXD() {
     if(!controlOUTPUT)  logger.logLine("开始DXD搜索...");
 
     MAX_B_COUNT = 1;
+
+    {
+        std::unique_lock<std::shared_mutex> cacheLock(cacheMutex);
+        C.clear();
+        countCache.clear();
+    }
+    {
+        std::unique_lock<std::shared_mutex> tableLock(tableMutex);
+        node_table.clear();
+    }
     if(!dxz_mode) {
         dxd_mode = true; // 启用DXD模式
     }
@@ -461,6 +479,16 @@ void DanceDNNF::startMultiThreadDXD() {
     
     // isParallelSearch = true;
     MAX_B_COUNT = 1;
+
+    {
+        std::unique_lock<std::shared_mutex> cacheLock(cacheMutex);
+        C.clear();
+        countCache.clear();
+    }
+    {
+        std::unique_lock<std::shared_mutex> tableLock(tableMutex);
+        node_table.clear();
+    }
 
     try {
 
@@ -843,4 +871,3 @@ void DanceDNNF::printAllSolutions(ostream& out, size_t max_sols) const {
         out << "  Total: " << count << " solution(s).\n";
     out << "══════════════════════════════════════════\n";
 }
-
