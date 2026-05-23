@@ -249,7 +249,7 @@ class DanceDNNF : DancingMatrix {
 
         // DNNF Nodes table
         mutable std::shared_mutex tableMutex;
-        unordered_map<size_t, shared_ptr<DNNFNode>> node_table;
+        unordered_map<size_t, std::weak_ptr<DNNFNode>> node_table;
 
          // count cache (state → count)
         unordered_map<size_t, DNNFResult> countCache;
