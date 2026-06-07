@@ -91,10 +91,10 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(vector<Block
 
         auto [result, node] = DXD(blocks[i], parent_depth + 1);
 
-
         // if (comps.size() > 1) {
         //     std::cerr << "serialSearch: invariant violated, comps.size()=" << comps.size()
         //               << " after DXD(block " << i << ") returned\n";
+        //     // 仍然保留首棵作为最佳猜测，避免崩溃；其余直接丢弃以便快速复现 bug。
         // }
         if (!comps.empty()) {
             stash[i] = std::move(comps[0]);
