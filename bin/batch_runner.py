@@ -17,14 +17,14 @@ from datetime import datetime
 MAIN_EXECUTABLE = "./main"
 INPUT_FOLDERS = [
 "../data/batch_2/dominoes_set",
-# "../data/batch_2/exact_cover_benchmarks",
+"../data/batch_2/exact_cover_benchmarks",
 "../data/batch_2/set_partition_benchmarks",
 "../data/batch_2/graphs_set"
 ]
 RESULTS_FOLDER = "../results/batch_results_" + datetime.now().strftime("%Y%m%d")
 THREADS_FOLDER = "../results/Threads"
 
-WRITE_INTERVAL = 3  # 每3个写一次CSV
+WRITE_INTERVAL = 2  # 每2个写一次CSV
 
 # =========================
 # 算法分组配置
@@ -53,9 +53,9 @@ ALGORITHMS = GROUP1_ALGORITHMS + GROUP2_ALGORITHMS + GROUP3_ALGORITHMS
 
 # 多线程算法配置：(算法名, 命令参数, 支持多线程, 线程数列表, 输出文件名)
 THREAD_ALGORITHMS = [
-    # ("DXD_M", ["dxd"], True, [2, 4, 8], "DXD_threads.csv"),
-    # ("DynDXD_M", ["ddxd"], True, [1, 2, 4], "DynDXD_threads.csv"),
-    ("MDLX", ["mdlx"], True, [1, 2, 4], "MDLX_threads.csv"),
+    # ("DXD_M", ["dxd"], True, [1, 2, 4, 8], "DXD_threads.csv"),
+    # ("DynDXD_M", ["ddxd"], True, [1, 2, 4, 8], "DynDXD_threads.csv"),
+    ("MDLX", ["mdlx"], True, [1, 2, 4, 8], "MDLX_threads.csv"),
 ]
 
 # =========================
@@ -180,9 +180,29 @@ def run_algorithm(alg_name, algo_params, input_file, supports_thread, num_thread
 
         return parse_log_output(output, memo_out)
 
-    except subprocess.TimeoutExpired:
+    except subprocess.TimeoutExpired as e:
         print(f"  [超时] 超过 {timeout} 秒限制。")
-        return {'cols': None, 'rows': None, 'timeout': True, 'status': 'timeout'}
+        
+        # 安全解码函数：处理可能返回的 bytes 或 None
+        def safe_decode(out_data):
+            if out_data is None:
+                return ""
+            if isinstance(out_data, bytes):
+                return out_data.decode('utf-8', errors='replace')
+            return str(out_data)
+
+        stdout_part = safe_decode(e.stdout)
+        stderr_part = safe_decode(e.stderr)
+        output = stdout_part + stderr_part
+        
+        print(f"  超时前输出: {output[:200]}...")  # 打印超时前捕获的内容供调试
+        
+        result = parse_log_output(output)
+        
+        result['timeout'] = True
+        result['status'] = 'timeout'
+        
+        return result
     except Exception as e:
         logging.error(e)
         return {'status': 'error'}
@@ -209,6 +229,15 @@ def filter_input_files(input_files, list_file):
             matched.append(file)
 
     return sorted(matched)
+
+def get_skip_set(skip_file):
+    """读取黑名单txt，返回需要跳过的文件名集合"""
+    if not skip_file or not os.path.exists(skip_file):
+        return set()
+
+    with open(skip_file, 'r', encoding='utf-8') as f:
+        # 提取文件名，确保带有后缀，去除两端空格
+        return set(line.strip() for line in f if line.strip())
 
 def read_existing_csv(csv_path):
     """读取已有的CSV文件，返回字典格式"""
@@ -356,6 +385,10 @@ def main():
 
     parser.add_argument('-f', '--list_file', type=str, default='',
                         help='包含要处理的特定文件列表的文本文件路径（可选）')
+    parser.add_argument('-s', '--skip_file', type=str, default='',
+                        help='包含要跳过的文件列表（带后缀，一行一个）的文本文件路径（黑名单模式）') # 新增
+    parser.add_argument('-r', '--rounds', type=int, default=1,
+                        help='多线程实验中每个实例运行的轮数，取平均时间写入CSV（默认1）') # 新增
     parser.add_argument('-G', '--group', type=int, choices=[1, 2, 3],
                         help='指定运行的算法分组(1: ddxd-t8/t1, 2: dxd-t8/t1, 3: dxz/dlx)')
     parser.add_argument('-p', '--parallel', action='store_true',
@@ -376,16 +409,22 @@ def main():
 
     global RESULTS_FOLDER
     if args.append:
-        base_dir = Path("../results")
-        if base_dir.exists():
-            # 找到所有符合前缀的目录并按修改时间找最新的
-            dirs = [d for d in base_dir.glob("batch_results_*") if d.is_dir()]
-            if dirs:
-                RESULTS_FOLDER = str(max(dirs, key=lambda d: d.stat().st_mtime))
-                print(f"[*] 追加模式开启，使用最新结果目录: {RESULTS_FOLDER}")
+        if not args.parallel:
+            # 单线程追加：去寻找最新的 batch_results 目录
+            base_dir = Path("../results")
+            if base_dir.exists():
+                dirs = [d for d in base_dir.glob("batch_results_*") if d.is_dir()]
+                if dirs:
+                    RESULTS_FOLDER = str(max(dirs, key=lambda d: d.stat().st_mtime))
+                    print(f"[*] 追加模式开启，单线程结果将追加至最新目录: {RESULTS_FOLDER}")
+        else:
+            # 多线程追加：直接提示使用 Threads 目录
+            print(f"[*] 追加模式开启，多线程结果将追加至: {THREADS_FOLDER}")
 
-    # 创建结果文件夹
-    os.makedirs(RESULTS_FOLDER, exist_ok=True)
+    else:
+        # 创建结果文件夹
+        os.makedirs(RESULTS_FOLDER, exist_ok=True)
+    
     os.makedirs(THREADS_FOLDER, exist_ok=True)
 
     # 获取输入文件
@@ -402,6 +441,11 @@ def main():
     if list_file:
         input_files = filter_input_files(input_files, list_file)
         print(f"\n过滤后找到 {len(input_files)} 个输入文件\n")
+
+    # 加载需要跳过但需要记为超时的黑名单文件
+    skip_set = get_skip_set(args.skip_file)
+    if skip_set:
+        print(f"\n加载了 {len(skip_set)} 个黑名单文件（将直接记为超时）\n")
 
     # 检查可执行文件
     if not os.path.exists(MAIN_EXECUTABLE):
@@ -445,11 +489,15 @@ def main():
                     print(f"\n[{i}/{len(input_files)}] (追加模式) 跳过已有文件: {filename}")
                     continue
 
-                print(f"\n[{i}/{len(input_files)}] 处理文件: {filename}")
-
-                threads = int(algo_params[1]) if len(algo_params) > 1 else 1
-                result = run_algorithm(algo_name, algo_params, input_file, supports_thread, threads, args.timeout)
-                results_data[filename] = result
+                if filename in skip_set:
+                    print(f"\n[{i}/{len(input_files)}] (黑名单) 跳过运行，直接记为超时: {filename}")
+                    # 伪造一个超时的结果写入
+                    results_data[filename] = {'timeout': True, 'status': 'timeout'}
+                else:
+                    print(f"\n[{i}/{len(input_files)}] 处理文件: {filename}")
+                    threads = int(algo_params[1]) if len(algo_params) > 1 else 1
+                    result = run_algorithm(algo_name, algo_params, input_file, supports_thread, threads, args.timeout)
+                    results_data[filename] = result
 
                 if i % WRITE_INTERVAL == 0 or i == len(input_files):
                     write_csv_results(csv_path, results_data, algo_name)
@@ -476,26 +524,69 @@ def main():
                     print(f"\n[{i}/{len(input_files)}] (追加模式) 跳过已有文件: {filename}")
                     continue
 
-                print(f"\n[{i}/{len(input_files)}] 处理文件: {filename}")
+                if filename in skip_set:
+                    print(f"\n[{i}/{len(input_files)}] (黑名单) 跳过运行，所有线程数均记为超时: {filename}")
+                    results_data[filename] = {}
+                    for num_threads in thread_nums:
+                        results_data[filename][num_threads] = {'timeout': True, 'status': 'timeout'}
+                else:
+                    print(f"\n[{i}/{len(input_files)}] 处理文件: {filename}")
+                    results_data[filename] = {}
 
-                # 存储该文件在不同线程数下的结果
-                results_data[filename] = {}
+                    # 标识高线程是否已经超时
+                    higher_thread_timeout = False
 
-                for num_threads in thread_nums:
-                    # runtime = 0.0
-                    # for i in range(10):
-                    #     print(f"  [{i+1}]: 测试 {num_threads} 线程...")
-                    #     result = run_algorithm(
-                    #         algo_name, algo_params, input_file, read_mode, num_threads
-                    #     )
-                    #     if result['time'] is not None:
-                    #         runtime += result['time']
-                    result = run_algorithm(
-                        algo_name, algo_params, input_file, supports_thread, num_threads
-                    )
+                    for num_threads in sorted(thread_nums, reverse=True):
 
-                    # result['time'] = runtime / 10.0
-                    results_data[filename][num_threads] = result
+                        # 如果高线程已经超时，直接将剩余的低线程计为超时并跳过执行
+                        if higher_thread_timeout:
+                            print(f"  -> 高并发已超时，直接跳过 {num_threads} 线程计为超时")
+                            results_data[filename][num_threads] = {'timeout': True, 'status': 'timeout'}
+                            continue
+
+                        if args.rounds > 1:
+                            times = []
+                            last_result = None
+                            print(f"  测试 {num_threads} 线程 (共 {args.rounds} 轮): ", end="", flush=True)
+                            
+                            for r in range(args.rounds):
+                                result = run_algorithm(
+                                    algo_name, algo_params, input_file, supports_thread, num_threads, args.timeout
+                                )
+                                
+                                # 如果遇到超时或内存溢出，直接终止后续轮次，节省时间
+                                if result.get('timeout') or result.get('status') != 'success':
+                                    last_result = result
+                                    print("[失败/超时中断]", end=" ")
+                                    if result.get('timeout'):
+                                        higher_thread_timeout = True
+                                    break
+                                    
+                                if result.get('time') is not None:
+                                    times.append(result['time'])
+                                last_result = result
+                                print(f"{r+1}✓ ", end="", flush=True)
+                            
+                            print() # 换行
+                            
+                            # 汇总结果：如果完整跑完了，计算平均时间覆盖回去
+                            if times and len(times) == args.rounds:
+                                avg_time = sum(times) / len(times)
+                                last_result['time'] = avg_time
+                                results_data[filename][num_threads] = last_result
+                            else:
+                                # 跑失败了或者被中断，直接存最后一次的异常状态
+                                results_data[filename][num_threads] = last_result
+
+                        else:
+                            # 跑单轮的逻辑
+                            result = run_algorithm(
+                                algo_name, algo_params, input_file, supports_thread, num_threads, args.timeout
+                            )
+                            results_data[filename][num_threads] = result
+
+                            if result.get('timeout'):
+                                higher_thread_timeout = True
 
                 if i % WRITE_INTERVAL == 0 or i == len(input_files):
                     write_thread_csv_results(csv_path, results_data, thread_nums)

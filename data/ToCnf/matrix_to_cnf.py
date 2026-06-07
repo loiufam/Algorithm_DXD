@@ -153,7 +153,7 @@ def encode_exactly_one(vars: List[int], current_aux: int, encoding: str) -> Tupl
     clauses = []
 
     if encoding == 'pairwise':
-        if n > 10:
+        if n > 30:
             return matrix_encoding(n, vars, current_aux)
         
         # At-least-one
@@ -247,6 +247,7 @@ def main():
     parser = argparse.ArgumentParser(description="精确覆盖问题到SAT(CNF)转换器 - 支持单文件与批量四种编码")
     parser.add_argument('-i', '--input', type=str, required=True, help="输入路径 (单个文件或包含多个实例的文件夹)")
     parser.add_argument('-o', '--output', type=str, required=True, help="输出基准文件夹的路径")
+    parser.add_argument('-e', '--exclude', type=str, default=None, help="排除列表txt文件路径 (文件内包含的无后缀实例名将被跳过)")
     args = parser.parse_args()
 
     input_path = Path(args.input)
@@ -255,9 +256,24 @@ def main():
     if not input_path.exists():
         print(f"错误：输入路径 '{input_path}' 不存在。")
         return
+
+    # 读取排除列表
+    exclude_set = set()
+    if args.exclude:
+        exclude_path = Path(args.exclude)
+        if exclude_path.is_file():
+            try:
+                with open(exclude_path, 'r', encoding='utf-8') as f:
+                    # 逐行读取，去除首尾空白，忽略空行
+                    exclude_set = {line.strip() for line in f if line.strip()}
+                print(f"已加载排除列表 '{exclude_path.name}'，共包含 {len(exclude_set)} 个需要跳过的实例。\n")
+            except Exception as e:
+                print(f"警告：读取排除列表文件时发生错误: {e}\n")
+        else:
+            print(f"警告：指定的排除列表文件 '{args.exclude}' 不存在，将被忽略。\n")
         
     # encodings = ['pairwise', 'ladder', 'bitwise', 'matrix']
-    encodings = ['matrix']
+    encodings = ['pairwise', 'ladder', 'bitwise']
     
     # 创建各编码的子目录
     for enc in encodings:
@@ -283,6 +299,11 @@ def main():
         return
     
     for file_path in files_to_process:
+        # 新增：跳过排除列表中的实例
+        if file_path.stem in exclude_set:
+            print(f"跳过处理: {file_path.name} (存在于排除列表中)")
+            continue
+        
         print(f"正在处理: {file_path.name}")
         sets, num_points, num_rows = read_exact_cover_matrix(str(file_path))
         
