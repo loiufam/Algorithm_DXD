@@ -19,6 +19,7 @@ public:
     // Parsed values (populated by parse())
     std::string alg;
     std::string input;
+    std::string dep_mode = "d"; // default to dynamic decomposition
     int         threads = 8;
     bool        debug   = false;
  
@@ -44,7 +45,8 @@ public:
             // ── value flags: consume the *next* token as the value ────────────
             if (tok == "-a" || tok == "--alg"     ||
                 tok == "-i" || tok == "--input"   ||
-                tok == "-t" || tok == "--threads") {
+                tok == "-t" || tok == "--threads" ||
+                tok == "-m" || tok == "--mode") {
  
                 if (i + 1 >= argc) {
                     std::cerr << "[error] flag '" << tok
@@ -56,6 +58,13 @@ public:
  
                 if (tok == "-a" || tok == "--alg")         alg     = val;
                 else if (tok == "-i" || tok == "--input")  input   = val;
+                else if (tok == "-m" || tok == "--mode") {
+                    if (val != "d" && val != "s") {
+                        std::cerr << "[error] --mode value must be 'd' or 's'.\n";
+                        return false;
+                    }
+                    dep_mode = val;
+                }
                 else if (tok == "-t" || tok == "--threads") {
                     try {
                         threads = std::stoi(val);
@@ -76,6 +85,14 @@ public:
                     std::string val = tok.substr(eq + 1);
                     if (key == "--alg")     { alg     = val; continue; }
                     if (key == "--input")   { input   = val; continue; }
+                    if (key == "--mode") {
+                        if (val != "d" && val != "s") {
+                            std::cerr << "[error] --mode value must be 'd' or 's'.\n";
+                            return false;
+                        }
+                        dep_mode = val;
+                        continue;
+                    }
                     if (key == "--threads") {
                         try { threads = std::stoi(val); } catch (...) {
                             std::cerr << "[error] --threads value must be an integer.\n";

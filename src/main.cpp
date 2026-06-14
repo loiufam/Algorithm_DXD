@@ -15,6 +15,13 @@ static AlgType toAlgType(const std::string& s) {
     throw std::invalid_argument("unknown algorithm: " + s);
 }
 
+static DecomMode toMDLXMode(const std::string& s) {
+    if (s == "d") return DecomMode::Dynamic;
+    if (s == "s") return DecomMode::Static;
+    throw std::invalid_argument("unknown mdlx-mode: '" + s +
+        "'. Valid: d | s");
+}
+
 // ./main -a ddxd -i ../data/exact_cover_benchmark/instance1.txt -t 4 --debug
 int main(int argc, char *argv[]){
 
@@ -63,16 +70,17 @@ int main(int argc, char *argv[]){
                 }
             case AlgType::mdlx:
                 {
-                    logger.logLine("启用多线程DLX算法求解: " + filename);
-                    DanceDNNF danceDNNF(args.input, logger, false, true, args.threads, args.debug);
-                    danceDNNF.start_MDLX_Search();
+                    DecomMode mode = toMDLXMode(args.dep_mode);
+
+                    bool needETT = (mode == DecomMode::Dynamic);
+                    logger.logLine("启用MDLX算法求解 [mode=" + args.dep_mode + "]: " + filename);
+                    DanceDNNF danceDNNF(args.input, logger,
+                                    /*useIG=*/!needETT,
+                                    /*useETT=*/needETT,
+                                    args.threads, args.debug);
+                    danceDNNF.start_MDLX(mode);
                     logger.logLine("多线程DLX算法求解结束: " + filename);
-                    // else {
-                    //     logger.logLine("启用多线程DLX算法求解: " + filename);
-                    //     DanceDNNF danceDNNF(input_file, logger, true, false, DEFAULT_THREADS, debug);
-                    //     danceDNNF.start_MDLX_Search();
-                    //     logger.logLine("多线程DLX算法求解结束: " + filename);
-                    // }
+
                     break;
                 }
             default:

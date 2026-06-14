@@ -12,6 +12,8 @@ const int MAX_DECOMPOSE_TIMES = 5;
 using namespace std;
 
 enum class NodeType { OR, Decision, Decomposed, Variable, Terminal };  // 节点类型 AND node 分为Decision和Decomposed两种
+// 模式：ETT动态连通 vs BFS静态扫描
+enum class DecomMode { Dynamic, Static };
 
 struct DNNFNode {
     size_t id;
@@ -133,7 +135,15 @@ class DanceDNNF : DancingMatrix {
         // 启动搜索函数
         void startDXD();
         void startMultiThreadDXD();
-        void start_MDLX_Search();
+
+        // ── MDLX（统一接口，mode决定分块策略）
+        DNNFResult parallelSearchMDLX(vector<Block>& blocks, DecomMode mode);
+ 
+        // MDLX_impl: 统一递归搜索，根据mode选择分块方式和图更新策略
+        DNNFResult MDLX(vector<int>& sols, Block& block, DecomMode mode);
+ 
+        // start_MDLX: 统一入口，通过mode参数切换ETT/BFS
+        void start_MDLX(DecomMode mode);
 
         /**
          * Counts unique nodes in the Decision-DNNF rooted at rootDNNF.

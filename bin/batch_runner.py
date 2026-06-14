@@ -47,8 +47,16 @@ GROUP3_ALGORITHMS = [
     ("DLX", ["dlx"], False, "DLX_results.csv"),
 ]
 
+GROUP4_ALGORITHMS = [
+    # ("MDLX", ["mdlx", "d", "1"], True, "MDLX_D_results_T1.csv"),
+    ("MDLX", ["mdlx", "s", "1"], True, "MDLX_S_results_T1.csv"),
+    # ("MDLX", ["mdlx", "d", "8"], True, "MDLX_D_results_T8.csv"),
+    ("MDLX", ["mdlx", "s", "8"], True, "MDLX_S_results_T8.csv"),
+]
+
 # 默认全部算法 (合并以上所有组)
-ALGORITHMS = GROUP1_ALGORITHMS + GROUP2_ALGORITHMS + GROUP3_ALGORITHMS
+# ALGORITHMS = GROUP1_ALGORITHMS + GROUP2_ALGORITHMS + GROUP3_ALGORITHMS + GROUP4_ALGORITHMS
+ALGORITHMS = GROUP4_ALGORITHMS
 
 
 # 多线程算法配置：(算法名, 命令参数, 支持多线程, 线程数列表, 输出文件名)
@@ -153,6 +161,9 @@ def run_algorithm(alg_name, algo_params, input_file, supports_thread, num_thread
 
     cmd = [MAIN_EXECUTABLE] + ["-a", algo_params[0], "-i", input_file]
 
+    if (alg_name == "MDLX"):
+        cmd += ["-m", algo_params[1]]
+    
     if supports_thread:
         cmd += ["-t", str(num_threads)]
 
@@ -389,8 +400,8 @@ def main():
                         help='包含要跳过的文件列表（带后缀，一行一个）的文本文件路径（黑名单模式）') # 新增
     parser.add_argument('-r', '--rounds', type=int, default=1,
                         help='多线程实验中每个实例运行的轮数，取平均时间写入CSV（默认1）') # 新增
-    parser.add_argument('-G', '--group', type=int, choices=[1, 2, 3],
-                        help='指定运行的算法分组(1: ddxd-t8/t1, 2: dxd-t8/t1, 3: dxz/dlx)')
+    parser.add_argument('-G', '--group', type=int, choices=[1, 2, 3, 4],
+                        help='指定运行的算法分组(1: ddxd-t8/t1, 2: dxd-t8/t1, 3: dxz/dlx), 4: MDLX variants)')
     parser.add_argument('-p', '--parallel', action='store_true',
                         help='开启多线程对比实验')
     parser.add_argument('-a', '--append', action='store_true',
@@ -466,6 +477,9 @@ def main():
         elif args.group == 3:
             print("\n=== 运行分组 3 (DXZ, DLX) ===")
             algorithms_to_run = GROUP3_ALGORITHMS
+        elif args.group == 4:
+            print("\n=== 运行分组 4 (MDLX variants) ===")
+            algorithms_to_run = GROUP4_ALGORITHMS
         else:
             print("\n=== 运行全部算法 ===")
             algorithms_to_run = ALGORITHMS
@@ -495,7 +509,10 @@ def main():
                     results_data[filename] = {'timeout': True, 'status': 'timeout'}
                 else:
                     print(f"\n[{i}/{len(input_files)}] 处理文件: {filename}")
-                    threads = int(algo_params[1]) if len(algo_params) > 1 else 1
+                    if algo_name != "MDLX":
+                        threads = int(algo_params[1]) if len(algo_params) > 1 else 1
+                    else:
+                        threads = int(algo_params[2]) if len(algo_params) > 2 else 1
                     result = run_algorithm(algo_name, algo_params, input_file, supports_thread, threads, args.timeout)
                     results_data[filename] = result
 

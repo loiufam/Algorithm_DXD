@@ -521,7 +521,7 @@ void DanceDNNF::startMultiThreadDXD() {
     }
 }
 
-DNNFResult DanceDNNF::parallelSearchMDLX(vector<Block>& blocks) {
+DNNFResult DanceDNNF::parallelSearchMDLX(vector<Block>& blocks, DecomMode mode) {
     const int n = blocks.size();
     
     // 并行处理每个子块
@@ -532,31 +532,39 @@ DNNFResult DanceDNNF::parallelSearchMDLX(vector<Block>& blocks) {
     std::vector<std::unique_ptr<splaytree::EulerTourTree>> extracted(n);
     std::vector<std::unique_ptr<splaytree::EulerTourTree>> returned(n);
     
-    for (int i = 0; i < n; ++i)
-        extracted[i] = std::move(components[i]);
-    components.clear();
+    if (mode == DecomMode::Dynamic) {
+        auto& comps = getComponents();
+        for (int i = 0; i < n; ++i)
+            extracted[i] = std::move(comps[i]);
+        comps.clear();
+    }
 
     #pragma omp parallel for
     for (int i = 0; i < n; i++) {
         // 提前检查超时标志
         if (has_timeout.load(std::memory_order_acquire) ||
              has_failure.load(std::memory_order_acquire)) {
-            returned[i] = std::move(extracted[i]);
+            if (mode == DecomMode::Dynamic)
+                returned[i] = std::move(extracted[i]);
             continue;
         }
         
         try {
-            initThreadLocalState(blocks[i], std::move(extracted[i]));
+            if (mode == DecomMode::Dynamic)
+                initThreadLocalState(blocks[i], std::move(extracted[i]));
             vector<int> threadSols;
             
             // 递归调用MDLX（每个线程独立计数）
-            auto result = MDLX(threadSols, blocks[i]);
+            auto result = MDLX(threadSols, blocks[i], mode);
 
             if (result.isZero()) {
                 has_failure.store(true, std::memory_order_release);
             } else {
                 results[i] = result;
             }
+
+            if (mode == DecomMode::Dynamic && tlsState && !tlsState->components.empty())
+                returned[i] = std::move(tlsState->components.front());
             
         } catch (const std::runtime_error& e) {
             // 捕获超时异常
@@ -567,24 +575,23 @@ DNNFResult DanceDNNF::parallelSearchMDLX(vector<Block>& blocks) {
             }
         } catch (...) {
             has_failure.store(true, std::memory_order_release);
+            if (mode == DecomMode::Dynamic && tlsState && !tlsState->components.empty())
+                returned[i] = std::move(tlsState->components.front());
         }
 
-        cleanupThreadLocalState();
+        if (mode == DecomMode::Dynamic)
+            cleanupThreadLocalState();
     }
 
-    components.resize(n);
-    for (int i = 0; i < n; ++i)
-        components[i] = std::move(returned[i]);
+    if (mode == DecomMode::Dynamic) {
+        auto& comps = getComponents();
+        comps.resize(n);
+        for (int i = 0; i < n; ++i)
+            comps[i] = std::move(returned[i]);
+    }
     
-    // 检查超时（在主线程重新抛出）
-    if (has_timeout.load()) {
-        throw std::runtime_error("Time out");
-    }
-
-    // 检查失败（在主线程重新抛出）
-    if (has_failure.load()) {
-        return DNNFResult(0);
-    }
+    if (has_timeout.load()) throw runtime_error("Time out");
+    if (has_failure.load()) return DNNFResult(0);
     
     // 合并结果：计算所有子块解的笛卡尔积
     DNNFResult totalCount(1);
@@ -595,7 +602,7 @@ DNNFResult DanceDNNF::parallelSearchMDLX(vector<Block>& blocks) {
     return totalCount;
 }
 
-DNNFResult DanceDNNF::MDLX(vector<int>& sols, Block& block) {
+DNNFResult DanceDNNF::MDLX(vector<int>& sols, Block& block, DecomMode mode) {
 
     if (timer.timeBoundBroken()) {
         throw std::runtime_error("Time out");
@@ -604,20 +611,25 @@ DNNFResult DanceDNNF::MDLX(vector<int>& sols, Block& block) {
     if( block.cols.empty() ) {
         return DNNFResult(1);
     }
-    
-    if(isGraphSyncEnabled() && block.rows.size() >= 2) {
 
-        vector<Block> curBlock = getComponentsByETT();
+    bool try_decompose = (mode == DecomMode::Dynamic)
+                        ? (isGraphSyncEnabled() && block.rows.size() >= 2)
+                        : (block.rows.size() >= 2);
+    
+    if (try_decompose) {
+
+        vector<Block> curBlock = mode == DecomMode::Dynamic ? getComponentsByETT() : getComponentsByBFS(block.cols);
 
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
+
         if (curBlock.size() > 1) {
             
-            turnOffGraphSync(); // 关闭图同步，提升性能
-            // p_count.fetch_add(1);
+            if (mode == DecomMode::Dynamic) {
+                turnOffGraphSync(); // 关闭图同步，提升性能
+            }
 
             // 多线程搜索
-            auto parallelCount = parallelSearchMDLX(curBlock);
-            return parallelCount;
+            return parallelSearchMDLX(curBlock, mode);
         } 
     }
 
@@ -630,7 +642,9 @@ DNNFResult DanceDNNF::MDLX(vector<int>& sols, Block& block) {
 
     set<int> deleted_rows;
     coverInBlock( choose->col, block, deleted_rows );
-    DecUpdateCC(deleted_rows);
+    if (mode == DecomMode::Dynamic) {
+        DecUpdateCC(deleted_rows);
+    }
     Node* curC = choose->down;  
 
     while( curC != choose )  
@@ -643,11 +657,13 @@ DNNFResult DanceDNNF::MDLX(vector<int>& sols, Block& block) {
             coverInBlock( curR->col, block, deleted_rows_ );  
             curR = curR->right;  
         }  
-        DecUpdateCC(deleted_rows_);
+        if (mode == DecomMode::Dynamic) {
+            DecUpdateCC(deleted_rows_);
+        }
 
         sols.push_back(curC->row + 1); 
         // 递归搜索
-        auto result = MDLX(sols, block);
+        auto result = MDLX(sols, block, mode);
         if (!result.isZero()) {
             totalResult = totalResult + result;
         }
@@ -659,20 +675,31 @@ DNNFResult DanceDNNF::MDLX(vector<int>& sols, Block& block) {
             uncoverInBlock( curR->col, block );  
             curR = curR->left;  
         }  
-        IncUpdateCC(deleted_rows_);
+        if (mode == DecomMode::Dynamic) {
+            IncUpdateCC(deleted_rows_);
+        }
         curC = curC->down;  
     }  
     uncoverInBlock( choose->col, block );  
-    IncUpdateCC(deleted_rows);
+    if (mode == DecomMode::Dynamic) {
+        IncUpdateCC(deleted_rows);
+    }
     return totalResult; 
 }
 
-void DanceDNNF::start_MDLX_Search() {
+void DanceDNNF::start_MDLX(DecomMode mode) {
 
-    logger.logLine("开始多线程DLX搜索...");
+    // logger.logLine("开始多线程DLX搜索...");
 
+    const string modeStr = (mode == DecomMode::Dynamic) ? "ETT多线程DLX" : "BFS多线程DLX";
+    logger.logLine("开始" + modeStr + "搜索...");
+ 
     p_count = 0;
     MAX_B_COUNT = 1;
+ 
+    // BFS 不使用 graph-sync 机制，提前关闭避免无效检查
+    if (mode == DecomMode::Static)
+        turnOffGraphSync();
     
     try {
         vector<int> sols;
@@ -680,7 +707,7 @@ void DanceDNNF::start_MDLX_Search() {
         timer.reset();
         timer.markStartTime();
         auto start = std::chrono::high_resolution_clock::now();
-        auto res = MDLX(sols, InitBlock);
+        auto res = MDLX(sols, InitBlock, mode);
         auto end = std::chrono::high_resolution_clock::now();
         timer.markStopTime();
 
