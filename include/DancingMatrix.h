@@ -2,7 +2,7 @@
 #define DANCINGMATRIX_H
 
 #include "ThreadPool.h"
-#include "ComponentDetector.h"
+#include "DynamicConnectivity.h"
 // #include "BlockDetector.h"
 #include "common.h"
 
@@ -160,7 +160,7 @@ class DancingMatrix
         }
 
         vector<Block> getComponentsByBFS(const set<int>& target_cols);
-        vector<Block> getComponentsByETT();
+        vector<Block> getComponentsByETT(const set<int>& target_cols);
 
         void turnOnGraphSync() {
             std::unique_lock lock(graph_sync_mutex);
@@ -226,6 +226,10 @@ class DancingMatrix
 
             SubGraph* subgraph  = nullptr;
             int nextTreeId = 0;
+            int no_split_count = 0;
+            int decompose_depth = 0;
+            bool dynamic_ett_disabled = false;
+            bool decomposition_disabled = false;
             bool initialized = false;
             
             ThreadLocalState() = default;

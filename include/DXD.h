@@ -109,27 +109,117 @@ class DanceDNNF : DancingMatrix {
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> serialSearch(vector<Block>& blocks, int depth);
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> parallelSearchUseOmp(vector<Block>& blocks, int depth);
 
-        bool shouldDecompose() {
-            if (!isGraphSyncEnabled()) {
+        static constexpr int SMALL_INSTANCE_ROWS = 100;
+        static constexpr int SMALL_INSTANCE_COLS = 30;
+        static constexpr int MAIN_NO_SPLIT_LIMIT = 5;
+        static constexpr int TLS_NO_SPLIT_LIMIT = 3;
+        static constexpr int SMALL_BLOCK_ROWS = 64;
+        static constexpr int SMALL_BLOCK_COLS = 12;
+        static constexpr int NESTED_DYNAMIC_DEPTH_LIMIT = 2;
+
+        bool dynamic_ett_disabled = false;
+        bool decomposition_disabled = false;
+        int main_no_split_count = 0;
+
+        bool isSmallInstanceForDynamicEtt() const {
+            return ROWS <= SMALL_INSTANCE_ROWS || COLS <= SMALL_INSTANCE_COLS;
+        }
+
+        bool isLargeEnoughToStopAfterNoSplit(const Block& block) const {
+            return block.rows.size() > SMALL_BLOCK_ROWS && block.cols.size() > SMALL_BLOCK_COLS;
+        }
+
+        bool isCurrentDynamicEttDisabled() const {
+            return dynamic_ett_disabled ||
+                   (isThreadLocal() && tlsState->dynamic_ett_disabled);
+        }
+
+        bool isCurrentDecompositionDisabled() const {
+            return decomposition_disabled ||
+                   (isThreadLocal() && tlsState->decomposition_disabled);
+        }
+
+        void disableDynamicEttForCurrentState() {
+            if (isThreadLocal()) {
+                tlsState->dynamic_ett_disabled = true;
+            } else {
+                dynamic_ett_disabled = true;
+            }
+        }
+
+        bool shouldTryDecompose(const Block& block, int depth) {
+            (void)depth;
+            if (block.rows.size() <= 2 || block.cols.empty()) return false;
+
+            if (dxd_mode) return true; // DXD 模式保持静态 BFS 分解尝试。
+
+            if (isCurrentDecompositionDisabled()) return false;
+
+            if (!isGraphSyncEnabled() && useETT && !isCurrentDynamicEttDisabled()) {
                 return false;
             }
 
-            if (dxd_mode) return true; // DXD模式下总是尝试分解
-
-            if (isParallelSearch && MAX_B_COUNT > 2) {
-                turnOffGraphSync();
-                return false;
-            }
-
-            std::lock_guard<std::mutex> lock(tried_numbers_mutex);
-
-            int cur_tries = ++tried_numbers;
-            if ((cur_tries > 1 && MAX_B_COUNT == 1) || cur_tries > MAX_TRIES) {
-                turnOffGraphSync();
-                return false;
-            }
- 
             return true;
+        }
+
+        bool shouldUseDynamicEtt(Block& block, int depth) {
+            if (!useETT || dxd_mode) return false;
+            if (isCurrentDynamicEttDisabled()) return false;
+
+            if (isSmallInstanceForDynamicEtt()) {
+                dynamic_ett_disabled = true;
+                return false;
+            }
+
+            if (isThreadLocal()) {
+                const bool smallBlock = block.rows.size() <= SMALL_BLOCK_ROWS ||
+                                        block.cols.size() <= SMALL_BLOCK_COLS;
+                const bool deepNested = tlsState->decompose_depth >= NESTED_DYNAMIC_DEPTH_LIMIT ||
+                                        depth >= NESTED_DYNAMIC_DEPTH_LIMIT + 2;
+                if (smallBlock || deepNested || tlsState->no_split_count >= TLS_NO_SPLIT_LIMIT) {
+                    tlsState->dynamic_ett_disabled = true;
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        bool shouldMaintainDynamicEtt() const {
+            return useETT && !dxd_mode && !isCurrentDynamicEttDisabled();
+        }
+
+        void resetAdaptiveDecompositionState() {
+            dynamic_ett_disabled = false;
+            decomposition_disabled = false;
+            main_no_split_count = 0;
+        }
+
+        void updateAdaptiveDecompositionState(const Block& block, size_t numBlocks, bool usedDynamicEtt) {
+            if (dxd_mode) return;
+
+            if (numBlocks > 1) {
+                if (isThreadLocal()) {
+                    tlsState->no_split_count = 0;
+                } else {
+                    main_no_split_count = 0;
+                }
+                return;
+            }
+
+            if (isThreadLocal()) {
+                if (usedDynamicEtt && ++tlsState->no_split_count >= TLS_NO_SPLIT_LIMIT) {
+                    tlsState->dynamic_ett_disabled = true;
+                }
+                return;
+            }
+
+            if (usedDynamicEtt && isLargeEnoughToStopAfterNoSplit(block) &&
+                ++main_no_split_count >= MAIN_NO_SPLIT_LIMIT) {
+                dynamic_ett_disabled = true;
+                decomposition_disabled = true;
+                turnOffGraphSync();
+            }
         }
 
         // 启动搜索函数
