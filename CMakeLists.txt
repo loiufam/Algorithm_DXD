@@ -50,7 +50,6 @@ set(COMMON_SOURCES
     # DynamicGraph.cpp 通过 #include 在 DancingMatrix.cpp 中引入，故不再单独参与编译
     # src/TreapETT.cpp
     src/DXDTime.cpp
-    src/ComponentDetector.cpp
     src/SplayTree.cpp
 )
 
@@ -83,10 +82,12 @@ endif()
 # ==========================================
 # 2.5 配置 TBB (支持任务并行)
 # ==========================================
-find_package(TBB REQUIRED)
+find_package(TBB QUIET)
 if(TBB_FOUND)
     message(STATUS "Found TBB: ${TBB_VERSION}")
     target_link_libraries(main PUBLIC TBB::tbb)
+else()
+    message(STATUS "TBB not found; continuing because current targets do not require TBB")
 endif()
 
 # ==========================================

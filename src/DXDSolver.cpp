@@ -143,9 +143,20 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(vect
             continue;
         }
 
+        std::unique_ptr<ThreadLocalState> outerTls;
+        if (useETT) {
+            // 嵌套并行分解时，同一个 OpenMP worker 可能已经持有父级子块的 TLS。
+            // 暂存父 TLS，再为当前子分量安装独立 TLS，避免 cleanup 把父级状态释放。
+            outerTls = std::move(tlsState);
+        }
+
         try {
             // === 初始化线程局部状态 ===
-            if(useETT) initThreadLocalState(blocks[i], std::move(extracted[i]));
+            if(useETT) {
+                const int outerDepth = outerTls ? outerTls->decompose_depth : 0;
+                initThreadLocalState(blocks[i], std::move(extracted[i]));
+                if (tlsState) tlsState->decompose_depth = outerDepth + 1;
+            }
 
             // === 执行搜索（自动使用线程局部数据） ===
             auto [result, node] = DXD(blocks[i], parent_depth + 1);
@@ -190,7 +201,10 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(vect
             }
         }
 
-        if(useETT) cleanupThreadLocalState();
+        if (useETT) {
+            cleanupThreadLocalState();
+            tlsState = std::move(outerTls);
+        }
     }
 
     if (useETT) {
@@ -258,19 +272,41 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     }
 
     // dxz模式跳过分块检测，直接进行列选择和分支
-    if (!dxz_mode && block.rows.size() > 2 && shouldDecompose()) {
+    if (!dxz_mode && shouldTryDecompose(block, depth)) {
         
-        vector<Block> curBlock = useETT ? getComponentsByETT() : getComponentsByBFS(block.cols);
-
+        const bool useDynamicEttForSplit = shouldUseDynamicEtt(block, depth);
+        vector<Block> curBlock = useDynamicEttForSplit
+            ? getComponentsByETT(block.cols)
+            : getComponentsByBFS(block.cols);
 
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
+        updateAdaptiveDecompositionState(block, curBlock.size(), useDynamicEttForSplit);
 
         if (int(curBlock.size())  > 1) {
             // std::cout << "Detected " << curBlock.size() << " independent blocks at depth " << depth << ".\n";
 
-            auto [result, decompNode] = isParallelSearch
-                ? parallelSearchUseOmp(curBlock, depth)
-                : serialSearch(curBlock, depth);
+            std::pair<DNNFResult, shared_ptr<DNNFNode>> decompResult;
+            if (!useDynamicEttForSplit && useETT) {
+                // 自适应关闭动态 ETT 后，本次分解来自 BFS；临时走非 ETT 搜索路径，
+                // 避免 serialSearch/parallelSearchUseOmp 继续按 ETT components 分发子块。
+                const bool oldUseETT = useETT;
+                useETT = false;
+                try {
+                    decompResult = isParallelSearch
+                        ? parallelSearchUseOmp(curBlock, depth)
+                        : serialSearch(curBlock, depth);
+                } catch (...) {
+                    useETT = oldUseETT;
+                    throw;
+                }
+                useETT = oldUseETT;
+            } else {
+                decompResult = isParallelSearch
+                    ? parallelSearchUseOmp(curBlock, depth)
+                    : serialSearch(curBlock, depth);
+            }
+
+            auto [result, decompNode] = decompResult;
 
             setCacheCount(state, result);
             setCache(state, decompNode);
@@ -299,7 +335,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     } else {
         coverInBlock(choose->col, block, deleted_rows);
     }
-    if(useETT) DecUpdateCC(deleted_rows);
+    if(shouldMaintainDynamicEtt()) DecUpdateCC(deleted_rows);
 
     Node* curC = choose->down;
     while(curC != choose) {
@@ -315,7 +351,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             }
             curR = curR->right;
         }
-        if(useETT) DecUpdateCC(deleted_rows_);
+        if(shouldMaintainDynamicEtt()) DecUpdateCC(deleted_rows_);
  
         auto [result, sub_node] = DXD(block, depth + 1);
 
@@ -333,7 +369,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             }
             curR = curR->left;
         }
-        if(useETT) IncUpdateCC(deleted_rows_);
+        if(shouldMaintainDynamicEtt()) IncUpdateCC(deleted_rows_);
 
         curC = curC->down;
     }
@@ -342,7 +378,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     } else {
         uncoverInBlock(choose->col, block);
     }
-    if(useETT) IncUpdateCC(deleted_rows);
+    if(shouldMaintainDynamicEtt()) IncUpdateCC(deleted_rows);
 
     // std::cout << "\n============================\n";
     // std::cout << "[After] DXD called at depth " << depth << "\n";
@@ -410,6 +446,7 @@ void DanceDNNF::startDXD() {
     if(!controlOUTPUT)  logger.logLine("开始DXD搜索...");
 
     MAX_B_COUNT = 1;
+    resetAdaptiveDecompositionState();
 
     {
         std::unique_lock<std::shared_mutex> cacheLock(cacheMutex);
@@ -476,6 +513,11 @@ void DanceDNNF::startMultiThreadDXD() {
     
     // isParallelSearch = true;
     MAX_B_COUNT = 1;
+    resetAdaptiveDecompositionState();
+    if (isSmallInstanceForDynamicEtt()) {
+        dynamic_ett_disabled = true;
+        logger.logLine("Adaptive: small instance, disable dynamic ETT and fall back to BFS decomposition.");
+    }
 
     {
         std::unique_lock<std::shared_mutex> cacheLock(cacheMutex);
@@ -549,6 +591,11 @@ DNNFResult DanceDNNF::parallelSearchMDLX(vector<Block>& blocks, DecomMode mode) 
             continue;
         }
         
+        std::unique_ptr<ThreadLocalState> outerTls;
+        if (mode == DecomMode::Dynamic) {
+            outerTls = std::move(tlsState);
+        }
+
         try {
             if (mode == DecomMode::Dynamic)
                 initThreadLocalState(blocks[i], std::move(extracted[i]));
@@ -579,8 +626,10 @@ DNNFResult DanceDNNF::parallelSearchMDLX(vector<Block>& blocks, DecomMode mode) 
                 returned[i] = std::move(tlsState->components.front());
         }
 
-        if (mode == DecomMode::Dynamic)
+        if (mode == DecomMode::Dynamic) {
             cleanupThreadLocalState();
+            tlsState = std::move(outerTls);
+        }
     }
 
     if (mode == DecomMode::Dynamic) {
@@ -618,7 +667,7 @@ DNNFResult DanceDNNF::MDLX(vector<int>& sols, Block& block, DecomMode mode) {
     
     if (try_decompose) {
 
-        vector<Block> curBlock = mode == DecomMode::Dynamic ? getComponentsByETT() : getComponentsByBFS(block.cols);
+        vector<Block> curBlock = mode == DecomMode::Dynamic ? getComponentsByETT(block.cols) : getComponentsByBFS(block.cols);
 
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
 

@@ -174,8 +174,6 @@ DancingMatrix::DancingMatrix( const string& file_path, bool useIg , bool useETT 
     InitBlock = Block(rowsSet, colsSet);
 
     if(useETT){
-        // detector = make_unique<ComponentDetector>(ROWS, COLS); 
-        // detector->Initialize(col_to_rows);
         graph = make_unique<Graph>(ROWS);
         initialize();
         
@@ -441,31 +439,29 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
     if (!isGraphSyncEnabled()) return;
     if (deletedVertices.empty()) return;
 
-    // std::cout << "DecUpdateCC: Deleting vertices: {";
-    // for (int v : deletedVertices) {
-    //     std::cout << " " << v;
-    // }
-    // std::cout << " }\n";
-
     auto& comps = getComponents();
     auto* g = getGraph();
 
     if (!g) {
-        //主线程 / 串行模式下 getGraph() 返回 nullptr
-        // std::cerr << "getGraph() returned nullptr in DecUpdateCC\n";
         return;
     }
 
+    if (comps.empty()) return;
+
+    // 每个线程在进入一个子块时只接收一棵 ETT；但是在同一线程递归 cover
+    // 的过程中，cutWithReplacement 可能把这棵树拆成多棵树。这里按顶点
+    // 当前所属树动态路由，既保留“子块/线程无锁独立”的设计，也避免分裂
+    // 后继续假设 comps[0] 而误删其他分量的顶点。
     std::vector<int> boundaryVertices;
     std::vector<int> otherVertices;
-
-    // 当前连通分量
-    splaytree::EulerTourTree* current_tree = comps[0].get();
-    if (!current_tree) return;
+    boundaryVertices.reserve(deletedVertices.size());
+    otherVertices.reserve(deletedVertices.size());
 
     for (int v : deletedVertices) {
-        int treeEdgeCount = current_tree->getVertexDegree(v);
+        splaytree::EulerTourTree* tree = findEulerTourTree(v);
+        if (!tree) continue;
 
+        int treeEdgeCount = tree->getVertexDegree(v);
         if (treeEdgeCount == 1) {
             boundaryVertices.push_back(v);
         } else {
@@ -473,12 +469,14 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
         }
     }
 
-    // 先处理边界
+    // 先删边界点。每个顶点都重新查询所属树，因为前一个删除可能已导致分裂。
     for (int v : boundaryVertices) {
-        processBoundaryVertex(v, current_tree, g);
+        splaytree::EulerTourTree* tree = findEulerTourTree(v);
+        if (!tree) continue;
+        processBoundaryVertex(v, tree, g);
     }
 
-    // 继续在处理剩余的非边界顶点
+    // 再处理非边界点；同样不假设当前线程只有 comps[0]。
     for (int v : otherVertices) {
 
         // 有可能出现分裂
@@ -496,15 +494,11 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
         }
         // 原本非边界顶点，可能变成边界顶点
         if (currentDegree == 1) {
-            // std::cout << "Vertex " << v << " became boundary vertex\n";
-            
             processBoundaryVertex(v, tree, g);
             continue;
         }
         
         // 仍是非边界顶点
-        // std::cout << "Removing non-boundary vertex " << v << "\n";
-        
         // 收集树边邻居和非树边邻居
         std::vector<int> treeNeighbors;
         std::vector<int> nonTreeNeighbors;
@@ -533,29 +527,17 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
 
             splaytree::EulerTourTree* currentTree = findEulerTourTree(v);
             if (!currentTree) {
-                std::cout << "Warning: vertex " << v << " disappeared during edge removal\n";
                 break;
             }
             
-            // std::cout << "  Cutting edge (" << v << ", " << u << ")\n";
-            
             auto newTree = currentTree->cutWithReplacement(v, u);
             if (newTree) {
-                // std::cout << "    -> Split occurred, new component created\n";
                 comps.push_back(std::move(newTree));
-            } else {
-                // std::cout << "    -> Reconnected with replacement edge\n";
             }
             
             g->deleteEdge(v, u);
-            // printComponents();
         }
 
-        // for (auto& comp : comps) {
-        //     if (comp->containsVertex(v)) {
-        //         comp->removeVertex(v);
-        //     }
-        // }
         splaytree::EulerTourTree* finalTree = findEulerTourTree(v);
         if (finalTree) {
             finalTree->removeVertex(v);
@@ -566,7 +548,7 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
     comps.erase(
         std::remove_if(comps.begin(), comps.end(),
             [](const std::unique_ptr<splaytree::EulerTourTree>& t) { 
-                return t->isEmpty(); 
+                return !t || t->isEmpty(); 
             }),
         comps.end()
     );
@@ -788,23 +770,34 @@ vector<Block> DancingMatrix::getComponentsByBFS(const set<int>& target_cols) {
     return components;
 }
 
-vector<Block> DancingMatrix::getComponentsByETT() {
-    // 使用当前线程的 components
+vector<Block> DancingMatrix::getComponentsByETT(const set<int>& target_cols) {
+    // 使用当前线程的 components；每个线程只持有当前递归块的 ETT 森林。
     auto& comps = getComponents();
 
     vector<Block> blocks;
+    blocks.reserve(comps.size());
     for (const auto& tree : comps) {
+        if (!tree || tree->isEmpty()) continue;
+
         unordered_set<int> comp_rows = tree->getVertices();
         set<int> block_rows(comp_rows.begin(), comp_rows.end());
         set<int> block_cols;
 
         for (int r : block_rows) {
-            for (int c : row_to_cols[r]) {
-                block_cols.insert(c);
+            auto rowIt = row_to_cols.find(r);
+            if (rowIt == row_to_cols.end()) continue;
+
+            for (int c : rowIt->second) {
+                // ETT 分块必须与 BFS 分块使用同一当前列口径，避免把已 cover 的列放回子块。
+                if (target_cols.count(c)) {
+                    block_cols.insert(c);
+                }
             }
         }
 
-        blocks.emplace_back(block_rows, block_cols);
+        if (!block_rows.empty() && !block_cols.empty()) {
+            blocks.emplace_back(std::move(block_rows), std::move(block_cols));
+        }
     }
     return blocks;
 };
