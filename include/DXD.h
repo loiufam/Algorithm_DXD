@@ -101,10 +101,6 @@ class DanceDNNF : DancingMatrix {
 
         shared_ptr<DNNFNode> buildDecomposableNode(vector<shared_ptr<DNNFNode>>& subDNNFs);
 
-        // 多线程DLX
-        DNNFResult parallelSearchMDLX(vector<Block>& blocks);
-        DNNFResult MDLX(vector<int>& sols, Block& block);
-
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> DXD(Block& block, int depth);
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> serialSearch(vector<Block>& blocks, int depth);
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> parallelSearchUseOmp(vector<Block>& blocks, int depth);

@@ -516,7 +516,7 @@ void DanceDNNF::startMultiThreadDXD() {
     resetAdaptiveDecompositionState();
     if (isSmallInstanceForDynamicEtt()) {
         dynamic_ett_disabled = true;
-        logger.logLine("Adaptive: small instance, disable dynamic ETT and fall back to BFS decomposition.");
+        // logger.logLine("Adaptive: small instance, disable dynamic ETT and fall back to BFS decomposition.");
     }
 
     {
