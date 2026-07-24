@@ -310,6 +310,12 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
                     useDynamicEttForSplit &&
                     curBlock.size() >= DYNAMIC_STOP_COMPONENT_COUNT;
                 if (stopDynamicUpdates) {
+                    // 初始分块达到阈值后立即停止维护；搜索过程中仅记录第一组
+                    // 实际 cover 删除的行，等总时间停止计时后再用它测量 Dec/Inc。
+                    if (depth == 1) {
+                        deferDynamicUpdateMeasurement.store(true, std::memory_order_release);
+                    }
+
                     // 当前分解已经提供了足够的并行度。关闭父状态及所有后续子块的
                     // 动态维护，避免继续支付 DecUpdateCC/IncUpdateCC 的开销。
                     disableDynamicEttForCurrentState();
@@ -355,6 +361,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         coverInBlock(choose->col, block, deleted_rows);
     }
     if(shouldMaintainDynamicEtt(depth)) timedDecUpdateCC(deleted_rows);
+    rememberDeferredDeletedRows(deleted_rows);
 
     Node* curC = choose->down;
     while(curC != choose) {
@@ -371,6 +378,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             curR = curR->right;
         }
         if(shouldMaintainDynamicEtt(depth)) timedDecUpdateCC(deleted_rows_);
+        rememberDeferredDeletedRows(deleted_rows_);
  
         auto [result, sub_node] = DXD(block, depth + 1);
 
@@ -565,6 +573,7 @@ void DanceDNNF::startMultiThreadDXD() {
         timer.markStopTime();
    
         searchTime = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
+        measureDeferredDynamicUpdate();
         logger.logLine("Time: " + std::to_string(searchTime) + " s");
         logger.logLine("Dyn CC CPU: " + std::to_string(ccCpuTime) + " s");
         timeout = false;
