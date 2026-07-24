@@ -116,7 +116,8 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(vector<Block
 
 //   Launch one OpenMP thread per independent block.
 //   Returns the product of counts AND the Decomposed-AND node.
-std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(vector<Block>& blocks, int parent_depth) {
+std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(
+    vector<Block>& blocks, int parent_depth, bool disableDynamicUpdates) {
 
     const int n = blocks.size();
     std::atomic<bool> has_failure(false);
@@ -155,7 +156,16 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(vect
             if(useETT) {
                 const int outerDepth = outerTls ? outerTls->decompose_depth : 0;
                 initThreadLocalState(blocks[i], std::move(extracted[i]));
-                if (tlsState) tlsState->decompose_depth = outerDepth + 1;
+                if (tlsState) {
+                    tlsState->decompose_depth = outerDepth + 1;
+                    // 父块已经分出足够多的独立子块时，子块只负责搜索；不再维护
+                    // ETT，也不再尝试更深层分解。该标志必须显式传入新建的 TLS，
+                    // 否则父 TLS 中的关闭状态会在这里丢失。
+                    if (disableDynamicUpdates) {
+                        tlsState->dynamic_ett_disabled = true;
+                        tlsState->decomposition_disabled = true;
+                    }
+                }
             }
 
             // === 执行搜索（自动使用线程局部数据） ===
@@ -275,49 +285,52 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     if (!dxz_mode && shouldTryDecompose(block, depth)) {
         
         const bool useDynamicEttForSplit = shouldUseDynamicEtt(block, depth);
-        vector<Block> curBlock;
-        if (useDynamicEttForSplit) {
-            curBlock = getComponentsByETT(block.cols);
-        } else {
-            // DXD 从头执行 BFS，并把 BFS 与 Block 集合构建整体计入 CC CPU。
-            const std::clock_t ccStart = std::clock();
-            curBlock = getComponentsByBFS(block.cols);
-            ccCpuTime += static_cast<double>(std::clock() - ccStart) / CLOCKS_PER_SEC;
-        }
-
-        MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
-        updateAdaptiveDecompositionState(block, curBlock.size(), useDynamicEttForSplit);
-
-        if (int(curBlock.size())  > 1) {
-            // std::cout << "Detected " << curBlock.size() << " independent blocks at depth " << depth << ".\n";
-
-            std::pair<DNNFResult, shared_ptr<DNNFNode>> decompResult;
-            if (!useDynamicEttForSplit && useETT) {
-                // 自适应关闭动态 ETT 后，本次分解来自 BFS；临时走非 ETT 搜索路径，
-                // 避免 serialSearch/parallelSearchUseOmp 继续按 ETT components 分发子块。
-                const bool oldUseETT = useETT;
-                useETT = false;
-                try {
-                    decompResult = isParallelSearch
-                        ? parallelSearchUseOmp(curBlock, depth)
-                        : serialSearch(curBlock, depth);
-                } catch (...) {
-                    useETT = oldUseETT;
-                    throw;
-                }
-                useETT = oldUseETT;
+        // shouldUseDynamicEtt() 本身可能在本次调用中因小规模/深层块而关闭
+        // 动态更新。因此必须在它返回后再次判断：DynDXD 不能把 false 当成
+        // “改用 BFS”；只有静态 DXD 才允许进入 BFS 分支。
+        const bool canComputeComponents = useDynamicEttForSplit || dxd_mode || !useETT;
+        if (canComputeComponents) {
+            vector<Block> curBlock;
+            if (useDynamicEttForSplit) {
+                curBlock = getComponentsByETT(block.cols);
             } else {
-                decompResult = isParallelSearch
-                    ? parallelSearchUseOmp(curBlock, depth)
-                    : serialSearch(curBlock, depth);
+                // DXD 从头执行 BFS，并把 BFS 与 Block 集合构建整体计入 CC CPU。
+                const std::clock_t ccStart = std::clock();
+                curBlock = getComponentsByBFS(block.cols);
+                ccCpuTime += static_cast<double>(std::clock() - ccStart) / CLOCKS_PER_SEC;
             }
 
-            auto [result, decompNode] = decompResult;
+            MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
+            updateAdaptiveDecompositionState(block, curBlock.size(), useDynamicEttForSplit);
 
-            setCacheCount(state, result);
-            setCache(state, decompNode);
-            return {result, decompNode};
-        } 
+            if (int(curBlock.size()) > 1) {
+            // std::cout << "Detected " << curBlock.size() << " independent blocks at depth " << depth << ".\n";
+
+                const bool stopDynamicUpdates =
+                    useDynamicEttForSplit &&
+                    curBlock.size() >= DYNAMIC_STOP_COMPONENT_COUNT;
+                if (stopDynamicUpdates) {
+                    // 当前分解已经提供了足够的并行度。关闭父状态及所有后续子块的
+                    // 动态维护，避免继续支付 DecUpdateCC/IncUpdateCC 的开销。
+                    disableDynamicEttForCurrentState();
+                    if (isThreadLocal()) {
+                        tlsState->decomposition_disabled = true;
+                    } else {
+                        decomposition_disabled = true;
+                    }
+                }
+
+                auto decompResult = isParallelSearch
+                    ? parallelSearchUseOmp(curBlock, depth, stopDynamicUpdates)
+                    : serialSearch(curBlock, depth);
+
+                auto [result, decompNode] = decompResult;
+
+                setCacheCount(state, result);
+                setCache(state, decompNode);
+                return {result, decompNode};
+            }
+        }
 
     }
 

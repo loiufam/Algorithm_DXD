@@ -107,7 +107,8 @@ class DanceDNNF : DancingMatrix {
 
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> DXD(Block& block, int depth);
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> serialSearch(vector<Block>& blocks, int depth);
-        std::pair<DNNFResult, std::shared_ptr<DNNFNode>> parallelSearchUseOmp(vector<Block>& blocks, int depth);
+        std::pair<DNNFResult, std::shared_ptr<DNNFNode>> parallelSearchUseOmp(
+            vector<Block>& blocks, int depth, bool disableDynamicUpdates = false);
 
         static constexpr int SMALL_INSTANCE_ROWS = 100;
         static constexpr int SMALL_INSTANCE_COLS = 30;
@@ -116,6 +117,7 @@ class DanceDNNF : DancingMatrix {
         static constexpr int SMALL_BLOCK_ROWS = 64;
         static constexpr int SMALL_BLOCK_COLS = 12;
         static constexpr int NESTED_DYNAMIC_DEPTH_LIMIT = 2;
+        static constexpr size_t DYNAMIC_STOP_COMPONENT_COUNT = 4;
 
         bool dynamic_ett_disabled = false;
         bool decomposition_disabled = false;
