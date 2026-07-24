@@ -115,12 +115,12 @@ class DanceDNNF : DancingMatrix {
 
         static constexpr int SMALL_INSTANCE_ROWS = 100;
         static constexpr int SMALL_INSTANCE_COLS = 30;
-        static constexpr int MAIN_NO_SPLIT_LIMIT = 5;
+        static constexpr int MAIN_NO_SPLIT_LIMIT = 1;
         static constexpr int TLS_NO_SPLIT_LIMIT = 3;
         static constexpr int SMALL_BLOCK_ROWS = 64;
         static constexpr int SMALL_BLOCK_COLS = 12;
         static constexpr int NESTED_DYNAMIC_DEPTH_LIMIT = 2;
-        static constexpr size_t DYNAMIC_STOP_COMPONENT_COUNT = 4;
+        static constexpr size_t DYNAMIC_STOP_COMPONENT_COUNT = 2;
 
         bool dynamic_ett_disabled = false;
         bool decomposition_disabled = false;
@@ -185,8 +185,7 @@ class DanceDNNF : DancingMatrix {
                                         block.cols.size() <= SMALL_BLOCK_COLS;
                 const bool deepNested = tlsState->decompose_depth >= NESTED_DYNAMIC_DEPTH_LIMIT ||
                                         depth >= NESTED_DYNAMIC_DEPTH_LIMIT + 2;
-                if (dynamicUpdateCycleCompleted.load(std::memory_order_acquire) &&
-                    (smallBlock || deepNested || tlsState->no_split_count >= TLS_NO_SPLIT_LIMIT)) {
+                if ((smallBlock || deepNested || tlsState->no_split_count >= TLS_NO_SPLIT_LIMIT)) {
                     tlsState->dynamic_ett_disabled = true;
                     return false;
                 }
@@ -210,7 +209,6 @@ class DanceDNNF : DancingMatrix {
             const std::clock_t start = std::clock();
             IncUpdateCC(restoredRows);
             ccCpuTime += static_cast<double>(std::clock() - start) / CLOCKS_PER_SEC;
-            dynamicUpdateCycleCompleted.store(true, std::memory_order_release);
         }
 
         void rememberDeferredDeletedRows(const std::set<int>& deletedRows) {
@@ -232,8 +230,6 @@ class DanceDNNF : DancingMatrix {
             }
             if (deletedRows.empty()) return;
 
-            // 并行子块结束后主线程没有 TLS，需要把图操作路由到候选删除集
-            // 所属的初始子图。Dec/Inc 成对执行，测量后图状态保持不变。
             SubGraph* outerSubgraph = activeSubgraph_;
             activeSubgraph_ = graph->subgraphOf(*deletedRows.begin());
             timedDecUpdateCC(deletedRows);
@@ -250,7 +246,7 @@ class DanceDNNF : DancingMatrix {
             deferredDeletedRows.clear();
         }
 
-        void updateAdaptiveDecompositionState(const Block& block, size_t numBlocks, bool usedDynamicEtt) {
+        void updateAdaptiveDecompositionState(const Block& block, size_t numBlocks) {
             if (dxd_mode) return;
 
             if (numBlocks > 1) {
@@ -263,14 +259,13 @@ class DanceDNNF : DancingMatrix {
             }
 
             if (isThreadLocal()) {
-                if (usedDynamicEtt && ++tlsState->no_split_count >= TLS_NO_SPLIT_LIMIT) {
+                if (++tlsState->no_split_count >= TLS_NO_SPLIT_LIMIT) {
                     tlsState->dynamic_ett_disabled = true;
                 }
                 return;
             }
 
-            if (usedDynamicEtt && isLargeEnoughToStopAfterNoSplit(block) &&
-                ++main_no_split_count >= MAIN_NO_SPLIT_LIMIT) {
+            if (++main_no_split_count >= MAIN_NO_SPLIT_LIMIT) {
                 dynamic_ett_disabled = true;
                 decomposition_disabled = true;
                 turnOffGraphSync();

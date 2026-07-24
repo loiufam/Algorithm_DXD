@@ -284,14 +284,11 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     // dxz模式跳过分块检测，直接进行列选择和分支
     if (!dxz_mode && shouldTryDecompose(block, depth)) {
         
-        const bool useDynamicEttForSplit = shouldUseDynamicEtt(block, depth);
-        // shouldUseDynamicEtt() 本身可能在本次调用中因小规模/深层块而关闭
-        // 动态更新。因此必须在它返回后再次判断：DynDXD 不能把 false 当成
-        // “改用 BFS”；只有静态 DXD 才允许进入 BFS 分支。
-        const bool canComputeComponents = useDynamicEttForSplit || dxd_mode || !useETT;
-        if (canComputeComponents) {
+        // const bool useDynamicEttForSplit = shouldUseDynamicEtt(block, depth);
+        // const bool canComputeComponents = useDynamicEttForSplit || dxd_mode || !useETT;
+        // if (canComputeComponents) {
             vector<Block> curBlock;
-            if (useDynamicEttForSplit) {
+            if (useETT) {
                 curBlock = getComponentsByETT(block.cols);
             } else {
                 // DXD 从头执行 BFS，并把 BFS 与 Block 集合构建整体计入 CC CPU。
@@ -301,24 +298,17 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             }
 
             MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
-            updateAdaptiveDecompositionState(block, curBlock.size(), useDynamicEttForSplit);
+            updateAdaptiveDecompositionState(block, curBlock.size());
 
             if (int(curBlock.size()) > 1) {
             // std::cout << "Detected " << curBlock.size() << " independent blocks at depth " << depth << ".\n";
 
-                const bool stopDynamicUpdates =
-                    useDynamicEttForSplit &&
-                    curBlock.size() >= DYNAMIC_STOP_COMPONENT_COUNT &&
-                    dynamicUpdateCycleCompleted.load(std::memory_order_acquire);
+                const bool stopDynamicUpdates = curBlock.size() >= DYNAMIC_STOP_COMPONENT_COUNT;
                 if (stopDynamicUpdates) {
-                    // 初始分块达到阈值后立即停止维护；搜索过程中仅记录第一组
-                    // 实际 cover 删除的行，等总时间停止计时后再用它测量 Dec/Inc。
                     if (depth == 1) {
                         deferDynamicUpdateMeasurement.store(true, std::memory_order_release);
                     }
 
-                    // 当前分解已经提供了足够的并行度。关闭父状态及所有后续子块的
-                    // 动态维护，避免继续支付 DecUpdateCC/IncUpdateCC 的开销。
                     disableDynamicEttForCurrentState();
                     if (isThreadLocal()) {
                         tlsState->decomposition_disabled = true;
@@ -337,7 +327,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
                 setCache(state, decompNode);
                 return {result, decompNode};
             }
-        }
+        // }
 
     }
 
