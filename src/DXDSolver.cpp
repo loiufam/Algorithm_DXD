@@ -308,10 +308,12 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
 
                 const bool stopDynamicUpdates =
                     useDynamicEttForSplit &&
-                    curBlock.size() >= DYNAMIC_STOP_COMPONENT_COUNT;
+                    curBlock.size() >= DYNAMIC_STOP_COMPONENT_COUNT &&
+                    dynamicUpdateCycleCompleted.load(std::memory_order_acquire);
                 if (stopDynamicUpdates) {
-                    // 当前分解已经提供了足够的并行度。关闭父状态及所有后续子块的
-                    // 动态维护，避免继续支付 DecUpdateCC/IncUpdateCC 的开销。
+                    // 当前分解已经提供了足够的并行度，并且至少完成过一轮
+                    // DecUpdateCC/IncUpdateCC。关闭父状态及所有后续子块的动态
+                    // 维护，避免继续支付更新开销。
                     disableDynamicEttForCurrentState();
                     if (isThreadLocal()) {
                         tlsState->decomposition_disabled = true;
