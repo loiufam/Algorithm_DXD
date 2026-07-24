@@ -185,7 +185,8 @@ class DanceDNNF : DancingMatrix {
                                         block.cols.size() <= SMALL_BLOCK_COLS;
                 const bool deepNested = tlsState->decompose_depth >= NESTED_DYNAMIC_DEPTH_LIMIT ||
                                         depth >= NESTED_DYNAMIC_DEPTH_LIMIT + 2;
-                if (smallBlock || deepNested || tlsState->no_split_count >= TLS_NO_SPLIT_LIMIT) {
+                if (dynamicUpdateCycleCompleted.load(std::memory_order_acquire) &&
+                    (smallBlock || deepNested || tlsState->no_split_count >= TLS_NO_SPLIT_LIMIT)) {
                     tlsState->dynamic_ett_disabled = true;
                     return false;
                 }
@@ -209,6 +210,7 @@ class DanceDNNF : DancingMatrix {
             const std::clock_t start = std::clock();
             IncUpdateCC(restoredRows);
             ccCpuTime += static_cast<double>(std::clock() - start) / CLOCKS_PER_SEC;
+            dynamicUpdateCycleCompleted.store(true, std::memory_order_release);
         }
 
         void rememberDeferredDeletedRows(const std::set<int>& deletedRows) {

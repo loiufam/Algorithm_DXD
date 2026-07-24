@@ -308,7 +308,8 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
 
                 const bool stopDynamicUpdates =
                     useDynamicEttForSplit &&
-                    curBlock.size() >= DYNAMIC_STOP_COMPONENT_COUNT;
+                    curBlock.size() >= DYNAMIC_STOP_COMPONENT_COUNT &&
+                    dynamicUpdateCycleCompleted.load(std::memory_order_acquire);
                 if (stopDynamicUpdates) {
                     // 初始分块达到阈值后立即停止维护；搜索过程中仅记录第一组
                     // 实际 cover 删除的行，等总时间停止计时后再用它测量 Dec/Inc。
