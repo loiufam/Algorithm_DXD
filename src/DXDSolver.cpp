@@ -275,9 +275,15 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     if (!dxz_mode && shouldTryDecompose(block, depth)) {
         
         const bool useDynamicEttForSplit = shouldUseDynamicEtt(block, depth);
-        vector<Block> curBlock = useDynamicEttForSplit
-            ? getComponentsByETT(block.cols)
-            : getComponentsByBFS(block.cols);
+        vector<Block> curBlock;
+        if (useDynamicEttForSplit) {
+            curBlock = getComponentsByETT(block.cols);
+        } else {
+            // DXD 从头执行 BFS，并把 BFS 与 Block 集合构建整体计入 CC CPU。
+            const std::clock_t ccStart = std::clock();
+            curBlock = getComponentsByBFS(block.cols);
+            ccCpuTime += static_cast<double>(std::clock() - ccStart) / CLOCKS_PER_SEC;
+        }
 
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
         updateAdaptiveDecompositionState(block, curBlock.size(), useDynamicEttForSplit);
@@ -335,7 +341,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     } else {
         coverInBlock(choose->col, block, deleted_rows);
     }
-    if(shouldMaintainDynamicEtt()) DecUpdateCC(deleted_rows);
+    if(shouldMaintainDynamicEtt()) timedDecUpdateCC(deleted_rows);
 
     Node* curC = choose->down;
     while(curC != choose) {
@@ -351,7 +357,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             }
             curR = curR->right;
         }
-        if(shouldMaintainDynamicEtt()) DecUpdateCC(deleted_rows_);
+        if(shouldMaintainDynamicEtt()) timedDecUpdateCC(deleted_rows_);
  
         auto [result, sub_node] = DXD(block, depth + 1);
 
@@ -369,7 +375,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             }
             curR = curR->left;
         }
-        if(shouldMaintainDynamicEtt()) IncUpdateCC(deleted_rows_);
+        if(shouldMaintainDynamicEtt()) timedIncUpdateCC(deleted_rows_);
 
         curC = curC->down;
     }
@@ -378,7 +384,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     } else {
         uncoverInBlock(choose->col, block);
     }
-    if(shouldMaintainDynamicEtt()) IncUpdateCC(deleted_rows);
+    if(shouldMaintainDynamicEtt()) timedIncUpdateCC(deleted_rows);
 
     // std::cout << "\n============================\n";
     // std::cout << "[After] DXD called at depth " << depth << "\n";
@@ -446,6 +452,7 @@ void DanceDNNF::startDXD() {
     if(!controlOUTPUT)  logger.logLine("开始DXD搜索...");
 
     MAX_B_COUNT = 1;
+    ccCpuTime = 0.0;
     resetAdaptiveDecompositionState();
 
     {
@@ -475,6 +482,7 @@ void DanceDNNF::startDXD() {
 
         searchTime = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
         logger.logLine("Time: " + std::to_string(searchTime) + " s");
+        if (!dxz_mode) logger.logLine("DXD CC CPU: " + std::to_string(ccCpuTime) + " s");
         timeout = false;
 
         solutionCount = ResSols.toString();
@@ -499,6 +507,7 @@ void DanceDNNF::startDXD() {
         if(dxz_mode) { 
             logger.logLine("DXZ搜索超时: " + std::string(e.what()));
         } else {
+            logger.logLine("DXD CC CPU: " + std::to_string(ccCpuTime) + " s");
             logger.logLine("DXD搜索超时: " + std::string(e.what()));
         }
         return;
@@ -513,6 +522,7 @@ void DanceDNNF::startMultiThreadDXD() {
     
     // isParallelSearch = true;
     MAX_B_COUNT = 1;
+    ccCpuTime = 0.0;
     resetAdaptiveDecompositionState();
     if (isSmallInstanceForDynamicEtt()) {
         dynamic_ett_disabled = true;
@@ -543,6 +553,7 @@ void DanceDNNF::startMultiThreadDXD() {
    
         searchTime = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
         logger.logLine("Time: " + std::to_string(searchTime) + " s");
+        logger.logLine("Dyn CC CPU: " + std::to_string(ccCpuTime) + " s");
         timeout = false;
 
         solutionCount = ResSols.toString();
@@ -558,6 +569,7 @@ void DanceDNNF::startMultiThreadDXD() {
         return;
     } catch (std::runtime_error &e) {
         timeout = true;
+        logger.logLine("Dyn CC CPU: " + std::to_string(ccCpuTime) + " s");
         logger.logLine("DynDXD搜索超时: " + std::string(e.what()));
         return;
     }
