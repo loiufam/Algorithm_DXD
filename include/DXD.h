@@ -3,6 +3,7 @@
 
 #include "../include/DancingMatrix.h"
 #include "../include/DXDTime.h"
+#include <ctime>
 
 const int MIN_BLOCK_ROWS = 20;
 const int MAX_BLOCK_ROWS = 200;
@@ -94,6 +95,9 @@ class DanceDNNF : DancingMatrix {
         bool timeout = false; // 是否超时
         bool isParallelSearch = false; // 是否并行搜索
         double decomposeTime = 0.0;
+        // 累计连通分量处理的 CPU 时间。实验使用单线程运行，因此
+        // std::clock() 的进程 CPU 时间就是当前算法线程消耗的 CPU 时间。
+        double ccCpuTime = 0.0;
         bool debug = false;
 
         // 构建Decision-ZDNNF
@@ -103,7 +107,8 @@ class DanceDNNF : DancingMatrix {
 
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> DXD(Block& block, int depth);
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> serialSearch(vector<Block>& blocks, int depth);
-        std::pair<DNNFResult, std::shared_ptr<DNNFNode>> parallelSearchUseOmp(vector<Block>& blocks, int depth);
+        std::pair<DNNFResult, std::shared_ptr<DNNFNode>> parallelSearchUseOmp(
+            vector<Block>& blocks, int depth, bool disableDynamicUpdates = false);
 
         static constexpr int SMALL_INSTANCE_ROWS = 100;
         static constexpr int SMALL_INSTANCE_COLS = 30;
@@ -112,6 +117,7 @@ class DanceDNNF : DancingMatrix {
         static constexpr int SMALL_BLOCK_ROWS = 64;
         static constexpr int SMALL_BLOCK_COLS = 12;
         static constexpr int NESTED_DYNAMIC_DEPTH_LIMIT = 2;
+        static constexpr size_t DYNAMIC_STOP_COMPONENT_COUNT = 4;
 
         bool dynamic_ett_disabled = false;
         bool decomposition_disabled = false;
@@ -151,6 +157,10 @@ class DanceDNNF : DancingMatrix {
 
             if (isCurrentDecompositionDisabled()) return false;
 
+            // DynDXD 的动态分解一旦关闭，就直接继续搜索，不能回退到 BFS。
+            // 这样 Dyn CC CPU 只对应动态连通分量维护，不混入静态重计算。
+            if (useETT && isCurrentDynamicEttDisabled()) return false;
+
             if (!isGraphSyncEnabled() && useETT && !isCurrentDynamicEttDisabled()) {
                 return false;
             }
@@ -183,6 +193,18 @@ class DanceDNNF : DancingMatrix {
 
         bool shouldMaintainDynamicEtt() const {
             return useETT && !dxd_mode && !isCurrentDynamicEttDisabled();
+        }
+
+        void timedDecUpdateCC(const std::set<int>& deletedRows) {
+            const std::clock_t start = std::clock();
+            DecUpdateCC(deletedRows);
+            ccCpuTime += static_cast<double>(std::clock() - start) / CLOCKS_PER_SEC;
+        }
+
+        void timedIncUpdateCC(const std::set<int>& restoredRows) {
+            const std::clock_t start = std::clock();
+            IncUpdateCC(restoredRows);
+            ccCpuTime += static_cast<double>(std::clock() - start) / CLOCKS_PER_SEC;
         }
 
         void resetAdaptiveDecompositionState() {

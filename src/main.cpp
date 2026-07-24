@@ -53,6 +53,7 @@ int main(int argc, char *argv[]){
             case AlgType::dxd:
                 {
                     int threads = args.threads > 0 ? args.threads : 1;
+                    logger.logLine("Instance: " + filename);
                     logger.logLine("启用DXD算法求解: " + filename);
                     DanceDNNF danceDNNF(args.input, logger, true, false, threads, args.debug);
                     danceDNNF.startDXD();
@@ -61,6 +62,7 @@ int main(int argc, char *argv[]){
                 }
             case AlgType::ddxd:
                 {
+                    logger.logLine("Instance: " + filename);
                     logger.logLine("启用DynDXD算法求解: " + filename);
                     // DanceDNNF danceDNNF(input_file, logger, true, false, num_threads, debug);
                     DanceDNNF danceDNNF(args.input, logger, false, true, args.threads, args.debug); // 默认ett
