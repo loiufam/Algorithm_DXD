@@ -57,10 +57,17 @@ set(COMMON_SOURCES
 # Main target
 add_executable(main src/main.cpp ${COMMON_SOURCES})
 
-# Keep runnable artifacts next to the experiment scripts.  This also makes a
-# fresh out-of-tree build work with bin/batch_runner.py without a manual copy.
-set_target_properties(main PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin"
+# Keep the conventional build/main output and mirror it next to the experiment
+# scripts.  This prevents an old build/main from being mistaken for a fresh
+# binary while still letting bin/*.py use bin/main.
+target_compile_definitions(main PRIVATE
+    ALGORITHM_DXD_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
+)
+add_custom_command(TARGET main POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_SOURCE_DIR}/bin"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "$<TARGET_FILE:main>" "${PROJECT_SOURCE_DIR}/bin/main"
+    COMMENT "Mirroring main to ${PROJECT_SOURCE_DIR}/bin/main"
 )
 
 # ==========================================

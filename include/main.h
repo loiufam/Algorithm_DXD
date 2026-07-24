@@ -1,5 +1,6 @@
 #include "DXD.h"
 #include "DXZ.h"
+#include <filesystem>
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ArgParser
@@ -165,6 +166,22 @@ private:
             ok = false;
         }
         if (!ok) { printHelp(prog); return false; }
+
+        // Commands are often launched from build/ while using a path relative
+        // to the repository root (for example data/batch_2/...). Resolve that
+        // form without forcing callers to spell ../data/... .
+        std::filesystem::path inputPath(input);
+        if (!inputPath.is_absolute() && !std::filesystem::exists(inputPath)) {
+            const auto sourceRelative =
+                std::filesystem::path(ALGORITHM_DXD_SOURCE_DIR) / inputPath;
+            if (std::filesystem::exists(sourceRelative)) {
+                input = sourceRelative.string();
+            }
+        }
+        if (!std::filesystem::exists(input)) {
+            std::cerr << "[error] input file does not exist: " << input << "\n";
+            return false;
+        }
  
         // Thread cap
         if (threads > 8) {
