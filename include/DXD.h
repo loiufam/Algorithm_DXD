@@ -98,9 +98,9 @@ class DanceDNNF : DancingMatrix {
         // 累计连通分量处理的 CPU 时间。实验使用单线程运行，因此
         // std::clock() 的进程 CPU 时间就是当前算法线程消耗的 CPU 时间。
         double ccCpuTime = 0.0;
-        // 达到分块阈值时，至少完成一轮 Dec/Inc 后才停止动态维护，避免初始
-        // 分块数已经达到阈值时 Dyn CC CPU 始终为零。
-        std::atomic<bool> dynamicUpdateCycleCompleted{false};
+        std::atomic<bool> deferDynamicUpdateMeasurement{false};
+        std::mutex deferredRowsMutex;
+        std::set<int> deferredDeletedRows;
         bool debug = false;
 
         // 构建Decision-ZDNNF
@@ -213,11 +213,41 @@ class DanceDNNF : DancingMatrix {
             dynamicUpdateCycleCompleted.store(true, std::memory_order_release);
         }
 
+        void rememberDeferredDeletedRows(const std::set<int>& deletedRows) {
+            if (!deferDynamicUpdateMeasurement.load(std::memory_order_acquire) ||
+                deletedRows.empty()) return;
+
+            std::lock_guard<std::mutex> lock(deferredRowsMutex);
+            if (deferredDeletedRows.empty()) {
+                deferredDeletedRows = deletedRows;
+                deferDynamicUpdateMeasurement.store(false, std::memory_order_release);
+            }
+        }
+
+        void measureDeferredDynamicUpdate() {
+            std::set<int> deletedRows;
+            {
+                std::lock_guard<std::mutex> lock(deferredRowsMutex);
+                deletedRows = deferredDeletedRows;
+            }
+            if (deletedRows.empty()) return;
+
+            // 并行子块结束后主线程没有 TLS，需要把图操作路由到候选删除集
+            // 所属的初始子图。Dec/Inc 成对执行，测量后图状态保持不变。
+            SubGraph* outerSubgraph = activeSubgraph_;
+            activeSubgraph_ = graph->subgraphOf(*deletedRows.begin());
+            timedDecUpdateCC(deletedRows);
+            timedIncUpdateCC(deletedRows);
+            activeSubgraph_ = outerSubgraph;
+        }
+
         void resetAdaptiveDecompositionState() {
             dynamic_ett_disabled = false;
             decomposition_disabled = false;
             main_no_split_count = 0;
-            dynamicUpdateCycleCompleted.store(false, std::memory_order_relaxed);
+            deferDynamicUpdateMeasurement.store(false, std::memory_order_relaxed);
+            std::lock_guard<std::mutex> lock(deferredRowsMutex);
+            deferredDeletedRows.clear();
         }
 
         void updateAdaptiveDecompositionState(const Block& block, size_t numBlocks, bool usedDynamicEtt) {
