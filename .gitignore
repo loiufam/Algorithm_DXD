@@ -13,6 +13,7 @@
 *.exe
 *.out
 *.app
+/bin/main
 
 build
 docs
