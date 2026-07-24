@@ -104,7 +104,23 @@ The compiled binary is placed at `build/main`.
 ---
  
 ## Benchmarks
- 
+
+### Single-thread CC timing experiment
+
+Release builds place the executable in `bin/main`. The dedicated experiment
+runner reads `data/batch_2/Final_Experiment_Report.xlsx`, selects instances for
+which both `DXD-T1` and `DynDXD-T1` completed, and records wall-clock search
+time plus CC CPU time in CSV format:
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j4
+python3 bin/run_cc_experiment.py
+```
+
+The default output is `results/cc_cpu_experiment.csv`. Use `--dry-run` to list
+the selected inputs, or `--limit N` for a short smoke test.
+
 Two dataset collections are stored under the `benchmark/` directory.
  
 | Directory | Format | Description |

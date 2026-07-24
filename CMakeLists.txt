@@ -57,6 +57,12 @@ set(COMMON_SOURCES
 # Main target
 add_executable(main src/main.cpp ${COMMON_SOURCES})
 
+# Keep runnable artifacts next to the experiment scripts.  This also makes a
+# fresh out-of-tree build work with bin/batch_runner.py without a manual copy.
+set_target_properties(main PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin"
+)
+
 # ==========================================
 # 1. 配置 GMP 高精度库链接 (处理超大模型计数)
 # ==========================================
