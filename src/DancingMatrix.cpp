@@ -436,8 +436,8 @@ void DancingMatrix::processBoundaryVertex(int v, splaytree::EulerTourTree* tree,
 // 减量式更新单连通分量
 void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
 
-    if (!isGraphSyncEnabled()) return;
-    if (deletedVertices.empty()) return;
+    // if (!isGraphSyncEnabled()) return;
+    // if (deletedVertices.empty()) return;
 
     auto& comps = getComponents();
     auto* g = getGraph();
@@ -556,8 +556,8 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
 }
 
 void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
-    if (!isGraphSyncEnabled()) return;
-    if (restoredVertices.empty()) return;
+    // if (!isGraphSyncEnabled()) return;
+    // if (restoredVertices.empty()) return;
 
     // std::cout << "IncUpdateCC: Restoring vertices: {";
     // for (int v : restoredVertices) {

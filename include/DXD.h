@@ -191,7 +191,8 @@ class DanceDNNF : DancingMatrix {
             return true;
         }
 
-        bool shouldMaintainDynamicEtt() const {
+        bool shouldMaintainDynamicEtt(int depth) const {
+            if (depth == 1) return true;
             return useETT && !dxd_mode && !isCurrentDynamicEttDisabled();
         }
 

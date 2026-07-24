@@ -354,7 +354,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     } else {
         coverInBlock(choose->col, block, deleted_rows);
     }
-    if(shouldMaintainDynamicEtt()) timedDecUpdateCC(deleted_rows);
+    if(shouldMaintainDynamicEtt(depth)) timedDecUpdateCC(deleted_rows);
 
     Node* curC = choose->down;
     while(curC != choose) {
@@ -370,7 +370,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             }
             curR = curR->right;
         }
-        if(shouldMaintainDynamicEtt()) timedDecUpdateCC(deleted_rows_);
+        if(shouldMaintainDynamicEtt(depth)) timedDecUpdateCC(deleted_rows_);
  
         auto [result, sub_node] = DXD(block, depth + 1);
 
@@ -388,7 +388,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             }
             curR = curR->left;
         }
-        if(shouldMaintainDynamicEtt()) timedIncUpdateCC(deleted_rows_);
+        if(shouldMaintainDynamicEtt(depth)) timedIncUpdateCC(deleted_rows_);
 
         curC = curC->down;
     }
@@ -397,7 +397,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     } else {
         uncoverInBlock(choose->col, block);
     }
-    if(shouldMaintainDynamicEtt()) timedIncUpdateCC(deleted_rows);
+    if(shouldMaintainDynamicEtt(depth)) timedIncUpdateCC(deleted_rows);
 
     // std::cout << "\n============================\n";
     // std::cout << "[After] DXD called at depth " << depth << "\n";
