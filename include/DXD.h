@@ -115,8 +115,10 @@ class DanceDNNF : DancingMatrix {
 
         static constexpr int SMALL_INSTANCE_ROWS = 100;
         static constexpr int SMALL_INSTANCE_COLS = 30;
-        static constexpr int MAIN_NO_SPLIT_LIMIT = 1;
-        static constexpr int TLS_NO_SPLIT_LIMIT = 3;
+        // Three consecutive one-component results mean that decomposition is
+        // not paying for itself.  From that point the current search switches
+        // to the non-decomposing, single-threaded DXZ path.
+        static constexpr int NO_SPLIT_LIMIT = 3;
         static constexpr int SMALL_BLOCK_ROWS = 64;
         static constexpr int SMALL_BLOCK_COLS = 12;
         static constexpr int NESTED_DYNAMIC_DEPTH_LIMIT = 2;
@@ -124,6 +126,9 @@ class DanceDNNF : DancingMatrix {
 
         bool dynamic_ett_disabled = false;
         bool decomposition_disabled = false;
+        // Only the non-partitioned main search may use the global DXZ matrix
+        // traversal.  Parallel sub-blocks must remain confined to Block::cols.
+        bool dxz_fallback_mode = false;
         int main_no_split_count = 0;
 
         bool isSmallInstanceForDynamicEtt() const {
@@ -142,6 +147,10 @@ class DanceDNNF : DancingMatrix {
         bool isCurrentDecompositionDisabled() const {
             return decomposition_disabled ||
                    (isThreadLocal() && tlsState->decomposition_disabled);
+        }
+
+        bool isDxzFallbackMode() const {
+            return !dxd_mode && !isThreadLocal() && dxz_fallback_mode;
         }
 
         void disableDynamicEttForCurrentState() {
@@ -185,7 +194,7 @@ class DanceDNNF : DancingMatrix {
                                         block.cols.size() <= SMALL_BLOCK_COLS;
                 const bool deepNested = tlsState->decompose_depth >= NESTED_DYNAMIC_DEPTH_LIMIT ||
                                         depth >= NESTED_DYNAMIC_DEPTH_LIMIT + 2;
-                if ((smallBlock || deepNested || tlsState->no_split_count >= TLS_NO_SPLIT_LIMIT)) {
+                if ((smallBlock || deepNested || tlsState->no_split_count >= NO_SPLIT_LIMIT)) {
                     tlsState->dynamic_ett_disabled = true;
                     return false;
                 }
@@ -195,7 +204,7 @@ class DanceDNNF : DancingMatrix {
         }
 
         bool shouldMaintainDynamicEtt(int depth) const {
-            if (depth == 1) return true;
+            (void)depth;
             return useETT && !dxd_mode && !isCurrentDynamicEttDisabled();
         }
 
@@ -232,14 +241,23 @@ class DanceDNNF : DancingMatrix {
 
             SubGraph* outerSubgraph = activeSubgraph_;
             activeSubgraph_ = graph->subgraphOf(*deletedRows.begin());
-            timedDecUpdateCC(deletedRows);
-            timedIncUpdateCC(deletedRows);
+            // A multi-block root disables maintenance before its workers run,
+            // but Dyn CC CPU must still contain one real Dec/Inc cycle.  Time
+            // the pair as a single interval so neither half is lost to the
+            // granularity of std::clock().
+            const std::clock_t start = std::clock();
+            DecUpdateCC(deletedRows);
+            IncUpdateCC(deletedRows);
+            const std::clock_t elapsed = std::clock() - start;
+            ccCpuTime += static_cast<double>(std::max<std::clock_t>(elapsed, 1)) /
+                         CLOCKS_PER_SEC;
             activeSubgraph_ = outerSubgraph;
         }
 
         void resetAdaptiveDecompositionState() {
             dynamic_ett_disabled = false;
             decomposition_disabled = false;
+            dxz_fallback_mode = false;
             main_no_split_count = 0;
             deferDynamicUpdateMeasurement.store(false, std::memory_order_relaxed);
             std::lock_guard<std::mutex> lock(deferredRowsMutex);
@@ -248,6 +266,10 @@ class DanceDNNF : DancingMatrix {
 
         void updateAdaptiveDecompositionState(const Block& block, size_t numBlocks) {
             if (dxd_mode) return;
+
+            // Experiment mode intentionally preserves every dynamic update so
+            // its counters remain reproducible even when production heuristics change.
+            if (collectCCExperimentStats) return;
 
             if (numBlocks > 1) {
                 if (isThreadLocal()) {
@@ -259,15 +281,17 @@ class DanceDNNF : DancingMatrix {
             }
 
             if (isThreadLocal()) {
-                if (++tlsState->no_split_count >= TLS_NO_SPLIT_LIMIT) {
+                if (++tlsState->no_split_count >= NO_SPLIT_LIMIT) {
                     tlsState->dynamic_ett_disabled = true;
+                    tlsState->decomposition_disabled = true;
                 }
                 return;
             }
 
-            if (++main_no_split_count >= MAIN_NO_SPLIT_LIMIT) {
+            if (++main_no_split_count >= NO_SPLIT_LIMIT) {
                 dynamic_ett_disabled = true;
                 decomposition_disabled = true;
+                dxz_fallback_mode = true;
                 turnOffGraphSync();
             }
         }
@@ -275,6 +299,14 @@ class DanceDNNF : DancingMatrix {
         // 启动搜索函数
         void startDXD();
         void startMultiThreadDXD();
+
+        void enableFullCCStatistics() {
+            collectCCExperimentStats = true;
+            ccExperimentStats.reset();
+        }
+
+        void setTimeLimit(long seconds) { timer.setTimeBound(seconds); }
+        void logCCExperimentStats(bool complete);
 
         // ── MDLX（统一接口，mode决定分块策略）
         DNNFResult parallelSearchMDLX(vector<Block>& blocks, DecomMode mode);

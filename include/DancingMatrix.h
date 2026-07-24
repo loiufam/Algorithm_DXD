@@ -79,6 +79,27 @@ class DancingMatrix
         bool dxz_mode = false;
         bool dxd_mode = false;
 
+        struct CCExperimentStats {
+            uint64_t decCalls = 0, incCalls = 0;
+            uint64_t merges = 0, splits = 0;
+            long double verticesSum = 0, edgesSum = 0;
+            long double updateVerticesSum = 0, updateEdgesSum = 0;
+            uint64_t enSamples = 0, enSum = 0;
+            uint64_t enPositiveUpdates = 0;
+            long double enUpdateAverageSum = 0;
+            uint64_t replacementSearchCalls = 0, replacementScanSteps = 0;
+            uint64_t replacementEarlyBreaks = 0, replacementFullScans = 0;
+
+            void reset() { *this = {}; }
+            uint64_t calls() const { return decCalls + incCalls; }
+        };
+
+        bool collectCCExperimentStats = false;
+        CCExperimentStats ccExperimentStats;
+        std::mutex ccExperimentStatsMutex;
+
+        void recordCCUpdateStart(const std::set<int>& vertices, bool restoring);
+
         // 列状态
         size_t getColumnState() const;
         Signature getColumnSignature() const;

@@ -518,9 +518,16 @@ std::pair<Node*, Node*> EulerTourTree::deleteEdge(int u, int v) {
 }
 
 // 寻找替代边
-Edge EulerTourTree::findReplacementEdge(Node* rootU, Node* rootV) {
+Edge EulerTourTree::findReplacementEdge(Node* rootU, Node* rootV,
+                                        ReplacementSearchMetrics* metrics) {
+
+    if (metrics) {
+        metrics->searched = true;
+        metrics->nonTreeEdges = nonTreeEdges.size();
+    }
 
     for (const Edge& e : nonTreeEdges) {
+        if (metrics) ++metrics->scanSteps;
         Node* nodeU = getRepresentative(e.u);
         Node* nodeV = getRepresentative(e.v);
 
@@ -530,6 +537,7 @@ Edge EulerTourTree::findReplacementEdge(Node* rootU, Node* rootV) {
         Node* rV = findRoot(nodeV);
         
         if ((rU == rootU && rV == rootV) || (rU == rootV && rV == rootU)) {
+            if (metrics) metrics->found = true;
             return e;
         }
     }
@@ -538,7 +546,8 @@ Edge EulerTourTree::findReplacementEdge(Node* rootU, Node* rootV) {
 }
 
 // 带替换的Cut操作
-std::unique_ptr<EulerTourTree> EulerTourTree::cutWithReplacement(int u, int v) {
+std::unique_ptr<EulerTourTree> EulerTourTree::cutWithReplacement(
+    int u, int v, ReplacementSearchMetrics* metrics) {
     reroot(u); 
 
     auto [treeU, treeV] = deleteEdge(u, v);
@@ -549,7 +558,7 @@ std::unique_ptr<EulerTourTree> EulerTourTree::cutWithReplacement(int u, int v) {
 
     root = treeU;  // 当前对象保留为 u 所在的树
 
-    Edge replacement = findReplacementEdge(treeU, treeV);
+    Edge replacement = findReplacementEdge(treeU, treeV, metrics);
 
     if (replacement.u != -1) {
         nonTreeEdges.erase(replacement);
