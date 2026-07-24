@@ -66,6 +66,8 @@ int main(int argc, char *argv[]){
                     logger.logLine("启用DynDXD算法求解: " + filename);
                     // DanceDNNF danceDNNF(input_file, logger, true, false, num_threads, debug);
                     DanceDNNF danceDNNF(args.input, logger, false, true, args.threads, args.debug); // 默认ett
+                    if (args.full_cc_stats) danceDNNF.enableFullCCStatistics();
+                    danceDNNF.setTimeLimit(args.time_limit);
                     danceDNNF.startMultiThreadDXD();
                     logger.logLine("DynDXD算法求解结束: " + filename);
                     break;

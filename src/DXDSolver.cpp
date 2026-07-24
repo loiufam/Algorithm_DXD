@@ -261,14 +261,22 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         throw std::runtime_error("Time bound broken");
     }
 
-    if (dxz_mode && isSolved()) {
+    // Capture the mode for this stack frame.  A deeper call may cross the
+    // adaptive threshold; its parent must still undo operations using the
+    // same representation with which it covered them.
+    const bool useDxzSearch = dxz_mode || isDxzFallbackMode();
+
+    if (useDxzSearch && isSolved()) {
         return {DNNFResult(1), T};
     } else if (block.cols.empty()) {
         return {DNNFResult(1), T};
     }
 
-    // 先查缓存
-    size_t state = dxz_mode ? encodeColState() : hashBlockState(block.cols);
+    // Keep fallback cache entries in a separate key space: unlike DXD, DXZ
+    // does not mutate Block::cols while descending.
+    size_t state = useDxzSearch
+        ? (encodeColState() ^ size_t{0xd6e8feb86659fd93ULL})
+        : hashBlockState(block.cols);
     {
         std::shared_lock<std::shared_mutex> readLock(cacheMutex);
         auto countIt = countCache.find(state);
@@ -303,7 +311,9 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             if (int(curBlock.size()) > 1) {
             // std::cout << "Detected " << curBlock.size() << " independent blocks at depth " << depth << ".\n";
 
-                const bool stopDynamicUpdates = curBlock.size() >= DYNAMIC_STOP_COMPONENT_COUNT;
+                const bool stopDynamicUpdates =
+                    !collectCCExperimentStats &&
+                    curBlock.size() >= DYNAMIC_STOP_COMPONENT_COUNT;
                 if (stopDynamicUpdates) {
                     if (depth == 1) {
                         deferDynamicUpdateMeasurement.store(true, std::memory_order_release);
@@ -331,7 +341,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
 
     }
 
-    ColumnHeader* choose = dxz_mode ? selectCol() : selectOptimalColumn(block.cols); 
+    ColumnHeader* choose = useDxzSearch ? selectCol() : selectOptimalColumn(block.cols);
     // std::cout << "Chosen column: " << choose->col << " (size: " << choose->size << ")\n";
 
     if(choose->size <= 0) {
@@ -346,7 +356,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     shared_ptr<DNNFNode> x = F;
 
     set<int> deleted_rows;
-    if (dxz_mode) {
+    if (useDxzSearch) {
         cover(choose->col);
     } else {
         coverInBlock(choose->col, block, deleted_rows);
@@ -361,7 +371,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         set<int> deleted_rows_;
 
         while (curR != curC) {
-            if (dxz_mode) {
+            if (useDxzSearch) {
                 cover(curR->col);
             } else {    
                 coverInBlock(curR->col, block, deleted_rows_);
@@ -380,7 +390,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         
         curR = curC->left;
         while (curR != curC) {
-            if (dxz_mode) {
+            if (useDxzSearch) {
                 uncover(curR->col);
             } else {
                 uncoverInBlock(curR->col, block);
@@ -391,7 +401,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
 
         curC = curC->down;
     }
-    if (dxz_mode) {
+    if (useDxzSearch) {
         uncover(choose->col);
     } else {
         uncoverInBlock(choose->col, block);
@@ -458,6 +468,29 @@ size_t DanceDNNF::countZDDSize() const {
     return traverse(rootDNNF); // 加上T和F节点
 }
 
+void DanceDNNF::logCCExperimentStats(bool complete) {
+    if (!collectCCExperimentStats) return;
+    const auto& stats = ccExperimentStats;
+    logger.logLine("CC Stats Complete: " + std::to_string(complete ? 1 : 0));
+    logger.logLine("CC Stats Calls: " + std::to_string(stats.calls()));
+    logger.logLine("CC Stats Dec Calls: " + std::to_string(stats.decCalls));
+    logger.logLine("CC Stats Inc Calls: " + std::to_string(stats.incCalls));
+    logger.logLine("CC Stats Merges: " + std::to_string(stats.merges));
+    logger.logLine("CC Stats Splits: " + std::to_string(stats.splits));
+    logger.logLine("CC Stats Vertex Sum: " + std::to_string(stats.verticesSum));
+    logger.logLine("CC Stats Edge Sum: " + std::to_string(stats.edgesSum));
+    logger.logLine("CC Stats Update Vertex Sum: " + std::to_string(stats.updateVerticesSum));
+    logger.logLine("CC Stats Update Edge Sum: " + std::to_string(stats.updateEdgesSum));
+    logger.logLine("CC Stats En Samples: " + std::to_string(stats.enSamples));
+    logger.logLine("CC Stats En Sum: " + std::to_string(stats.enSum));
+    logger.logLine("CC Stats En Positive Updates: " + std::to_string(stats.enPositiveUpdates));
+    logger.logLine("CC Stats En Update Average Sum: " + std::to_string(stats.enUpdateAverageSum));
+    logger.logLine("CC Stats Replacement Searches: " + std::to_string(stats.replacementSearchCalls));
+    logger.logLine("CC Stats Replacement Scan Steps: " + std::to_string(stats.replacementScanSteps));
+    logger.logLine("CC Stats Early Breaks: " + std::to_string(stats.replacementEarlyBreaks));
+    logger.logLine("CC Stats Full Scans: " + std::to_string(stats.replacementFullScans));
+}
+
 // DXD DXZ入口
 void DanceDNNF::startDXD() {
 
@@ -465,6 +498,7 @@ void DanceDNNF::startDXD() {
 
     MAX_B_COUNT = 1;
     ccCpuTime = 0.0;
+    if (collectCCExperimentStats) ccExperimentStats.reset();
     resetAdaptiveDecompositionState();
 
     {
@@ -535,10 +569,13 @@ void DanceDNNF::startMultiThreadDXD() {
     // isParallelSearch = true;
     MAX_B_COUNT = 1;
     ccCpuTime = 0.0;
+    if (collectCCExperimentStats) ccExperimentStats.reset();
     resetAdaptiveDecompositionState();
-    if (isSmallInstanceForDynamicEtt()) {
+    if (!collectCCExperimentStats && isSmallInstanceForDynamicEtt()) {
         dynamic_ett_disabled = true;
-        // logger.logLine("Adaptive: small instance, disable dynamic ETT and fall back to BFS decomposition.");
+        decomposition_disabled = true;
+        dxz_fallback_mode = true;
+        turnOffGraphSync();
     }
 
     {
@@ -567,6 +604,7 @@ void DanceDNNF::startMultiThreadDXD() {
         measureDeferredDynamicUpdate();
         logger.logLine("Time: " + std::to_string(searchTime) + " s");
         logger.logLine("Dyn CC CPU: " + std::to_string(ccCpuTime) + " s");
+        logCCExperimentStats(true);
         timeout = false;
 
         solutionCount = ResSols.toString();
@@ -582,7 +620,10 @@ void DanceDNNF::startMultiThreadDXD() {
         return;
     } catch (std::runtime_error &e) {
         timeout = true;
+        timer.markStopTime();
+        logger.logLine("Time: " + std::to_string(timer.getElapsedTime()) + " s");
         logger.logLine("Dyn CC CPU: " + std::to_string(ccCpuTime) + " s");
+        logCCExperimentStats(false);
         logger.logLine("DynDXD搜索超时: " + std::string(e.what()));
         return;
     }

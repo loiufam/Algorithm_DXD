@@ -49,6 +49,13 @@ struct EdgeHash {
     }
 };
 
+struct ReplacementSearchMetrics {
+    size_t nonTreeEdges = 0;
+    size_t scanSteps = 0;
+    bool searched = false;
+    bool found = false;
+};
+
 // struct EdgeOrder {
 //     Node* first;   // 在欧拉序列中先出现的边节点
 //     Node* second;  // 在欧拉序列中后出现的边节点
@@ -104,7 +111,8 @@ public:
     void deleteTree(Node* x);
     
     // 寻找替代边
-    Edge findReplacementEdge(Node* rootU, Node* rootV);
+    Edge findReplacementEdge(Node* rootU, Node* rootV,
+                             ReplacementSearchMetrics* metrics = nullptr);
     
 public:
     explicit EulerTourTree(int id);
@@ -181,7 +189,8 @@ public:
     void insertEdge(int u, int v);
     void removeVertex(int v);
     void cutBoundary(int v, int u);
-    std::unique_ptr<EulerTourTree> cutWithReplacement(int u, int v);
+    std::unique_ptr<EulerTourTree> cutWithReplacement(
+        int u, int v, ReplacementSearchMetrics* metrics = nullptr);
 
     // 调试
     void printEulerTour() const;

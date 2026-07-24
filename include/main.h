@@ -1,5 +1,6 @@
 #include "DXD.h"
 #include "DXZ.h"
+#include <filesystem>
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ArgParser
@@ -22,6 +23,8 @@ public:
     std::string dep_mode = "d"; // default to dynamic decomposition
     int         threads = 8;
     bool        debug   = false;
+    bool        full_cc_stats = false;
+    int         time_limit = 1500;
  
     // ── parse ────────────────────────────────────────────────────────────────
     // Returns true on success, false if --help was requested or an error
@@ -41,11 +44,16 @@ public:
                 debug = true;
                 continue;
             }
+            if (tok == "--full-cc-stats") {
+                full_cc_stats = true;
+                continue;
+            }
  
             // ── value flags: consume the *next* token as the value ────────────
             if (tok == "-a" || tok == "--alg"     ||
                 tok == "-i" || tok == "--input"   ||
                 tok == "-t" || tok == "--threads" ||
+                tok == "--time-limit" ||
                 tok == "-m" || tok == "--mode") {
  
                 if (i + 1 >= argc) {
@@ -71,6 +79,12 @@ public:
                     } catch (...) {
                         std::cerr << "[error] --threads requires an integer, got '"
                                   << val << "'.\n";
+                        return false;
+                    }
+                }
+                else if (tok == "--time-limit") {
+                    try { time_limit = std::stoi(val); } catch (...) {
+                        std::cerr << "[error] --time-limit requires an integer.\n";
                         return false;
                     }
                 }
@@ -126,6 +140,8 @@ public:
             << "                           mdlx  – Multi-thread DLX\n"
             << "  -i, --input   <path>   Path to the input test-case file (required)\n"
             << "  -t, --threads <n>      Number of threads (default: 8).\n"
+            << "      --full-cc-stats    Keep all dynamic CC updates and emit experiment counters.\n"
+            << "      --time-limit <s>    Solver time limit in seconds (default: 1500).\n"
             << "                         Effective only for mdxd / mdlx.\n"
             << "                         Values > 8 are clamped to 8.\n"
             << "  -d, --debug            Enable debug output\n"
@@ -150,6 +166,22 @@ private:
             ok = false;
         }
         if (!ok) { printHelp(prog); return false; }
+
+        // Commands are often launched from build/ while using a path relative
+        // to the repository root (for example data/batch_2/...). Resolve that
+        // form without forcing callers to spell ../data/... .
+        std::filesystem::path inputPath(input);
+        if (!inputPath.is_absolute() && !std::filesystem::exists(inputPath)) {
+            const auto sourceRelative =
+                std::filesystem::path(ALGORITHM_DXD_SOURCE_DIR) / inputPath;
+            if (std::filesystem::exists(sourceRelative)) {
+                input = sourceRelative.string();
+            }
+        }
+        if (!std::filesystem::exists(input)) {
+            std::cerr << "[error] input file does not exist: " << input << "\n";
+            return false;
+        }
  
         // Thread cap
         if (threads > 8) {
@@ -168,6 +200,14 @@ private:
         if (!valid_algs.count(alg)) {
             std::cerr << "[error] unknown algorithm '" << alg << "'.\n"
                       << "        Valid choices: dlx  dxz  dxd  ddxd  mdlx\n";
+            return false;
+        }
+        if (full_cc_stats && (alg != "ddxd" || threads != 1)) {
+            std::cerr << "[error] --full-cc-stats requires --alg ddxd --threads 1.\n";
+            return false;
+        }
+        if (time_limit < 1) {
+            std::cerr << "[error] --time-limit must be >= 1.\n";
             return false;
         }
  

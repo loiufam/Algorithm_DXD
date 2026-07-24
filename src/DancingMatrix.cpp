@@ -433,8 +433,48 @@ void DancingMatrix::processBoundaryVertex(int v, splaytree::EulerTourTree* tree,
     tree->removeVertex(v);
 }
 
+void DancingMatrix::recordCCUpdateStart(const std::set<int>& changedVertices,
+                                        bool restoring) {
+    if (!collectCCExperimentStats) return;
+
+    auto& comps = getComponents();
+    std::unordered_set<int> active;
+    for (const auto& tree : comps) {
+        if (tree) active.insert(tree->vertices.begin(), tree->vertices.end());
+    }
+
+    uint64_t graphEdges = 0;
+    for (int v : active) {
+        for (int u : graph->neighbors(v)) {
+            if (active.count(u) && v < u) ++graphEdges;
+        }
+    }
+
+    std::unordered_set<splaytree::Edge, splaytree::EdgeHash> affectedEdges;
+    for (int v : changedVertices) {
+        const auto neighbors = restoring ? graph->getAllNeighbors(v) : graph->neighbors(v);
+        for (int u : neighbors) {
+            if (!restoring || active.count(u) || changedVertices.count(u)) {
+                affectedEdges.emplace(v, u);
+            }
+        }
+    }
+
+    std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+    if (restoring) ++ccExperimentStats.incCalls;
+    else ++ccExperimentStats.decCalls;
+    ccExperimentStats.verticesSum += active.size();
+    ccExperimentStats.edgesSum += graphEdges;
+    ccExperimentStats.updateVerticesSum += changedVertices.size();
+    ccExperimentStats.updateEdgesSum += affectedEdges.size();
+}
+
 // 减量式更新单连通分量
 void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
+
+    recordCCUpdateStart(deletedVertices, false);
+    uint64_t enSumThisUpdate = 0;
+    uint64_t enSamplesThisUpdate = 0;
 
     // if (!isGraphSyncEnabled()) return;
     // if (deletedVertices.empty()) return;
@@ -530,8 +570,25 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
                 break;
             }
             
-            auto newTree = currentTree->cutWithReplacement(v, u);
+            splaytree::ReplacementSearchMetrics searchMetrics;
+            auto newTree = currentTree->cutWithReplacement(
+                v, u, collectCCExperimentStats ? &searchMetrics : nullptr);
+            if (collectCCExperimentStats && searchMetrics.searched) {
+                enSumThisUpdate += searchMetrics.nonTreeEdges;
+                ++enSamplesThisUpdate;
+                std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+                ++ccExperimentStats.replacementSearchCalls;
+                ++ccExperimentStats.enSamples;
+                ccExperimentStats.enSum += searchMetrics.nonTreeEdges;
+                ccExperimentStats.replacementScanSteps += searchMetrics.scanSteps;
+                if (searchMetrics.found) ++ccExperimentStats.replacementEarlyBreaks;
+                else ++ccExperimentStats.replacementFullScans;
+            }
             if (newTree) {
+                if (collectCCExperimentStats) {
+                    std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+                    ++ccExperimentStats.splits;
+                }
                 comps.push_back(std::move(newTree));
             }
             
@@ -553,9 +610,17 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
         comps.end()
     );
 
+    if (collectCCExperimentStats && enSamplesThisUpdate > 0) {
+        std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+        ++ccExperimentStats.enPositiveUpdates;
+        ccExperimentStats.enUpdateAverageSum +=
+            static_cast<long double>(enSumThisUpdate) / enSamplesThisUpdate;
+    }
+
 }
 
 void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
+    recordCCUpdateStart(restoredVertices, true);
     // if (!isGraphSyncEnabled()) return;
     // if (restoredVertices.empty()) return;
 
@@ -605,6 +670,10 @@ void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
 
             if (treeU != treeV) {
                 treeU->link(u, v, treeV);
+                if (collectCCExperimentStats) {
+                    std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+                    ++ccExperimentStats.merges;
+                }
             } else {
                 treeU->addNonTreeEdge(splaytree::Edge(v, u));
             }

@@ -57,6 +57,19 @@ set(COMMON_SOURCES
 # Main target
 add_executable(main src/main.cpp ${COMMON_SOURCES})
 
+# Keep the conventional build/main output and mirror it next to the experiment
+# scripts.  This prevents an old build/main from being mistaken for a fresh
+# binary while still letting bin/*.py use bin/main.
+target_compile_definitions(main PRIVATE
+    ALGORITHM_DXD_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
+)
+add_custom_command(TARGET main POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_SOURCE_DIR}/bin"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "$<TARGET_FILE:main>" "${PROJECT_SOURCE_DIR}/bin/main"
+    COMMENT "Mirroring main to ${PROJECT_SOURCE_DIR}/bin/main"
+)
+
 # ==========================================
 # 1. 配置 GMP 高精度库链接 (处理超大模型计数)
 # ==========================================
