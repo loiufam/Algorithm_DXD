@@ -98,6 +98,9 @@ class DanceDNNF : DancingMatrix {
         // 累计连通分量处理的 CPU 时间。实验使用单线程运行，因此
         // std::clock() 的进程 CPU 时间就是当前算法线程消耗的 CPU 时间。
         double ccCpuTime = 0.0;
+        // 达到分块阈值时，至少完成一轮 Dec/Inc 后才停止动态维护，避免初始
+        // 分块数已经达到阈值时 Dyn CC CPU 始终为零。
+        std::atomic<bool> dynamicUpdateCycleCompleted{false};
         bool debug = false;
 
         // 构建Decision-ZDNNF
@@ -182,7 +185,8 @@ class DanceDNNF : DancingMatrix {
                                         block.cols.size() <= SMALL_BLOCK_COLS;
                 const bool deepNested = tlsState->decompose_depth >= NESTED_DYNAMIC_DEPTH_LIMIT ||
                                         depth >= NESTED_DYNAMIC_DEPTH_LIMIT + 2;
-                if (smallBlock || deepNested || tlsState->no_split_count >= TLS_NO_SPLIT_LIMIT) {
+                if (dynamicUpdateCycleCompleted.load(std::memory_order_acquire) &&
+                    (smallBlock || deepNested || tlsState->no_split_count >= TLS_NO_SPLIT_LIMIT)) {
                     tlsState->dynamic_ett_disabled = true;
                     return false;
                 }
@@ -206,12 +210,14 @@ class DanceDNNF : DancingMatrix {
             const std::clock_t start = std::clock();
             IncUpdateCC(restoredRows);
             ccCpuTime += static_cast<double>(std::clock() - start) / CLOCKS_PER_SEC;
+            dynamicUpdateCycleCompleted.store(true, std::memory_order_release);
         }
 
         void resetAdaptiveDecompositionState() {
             dynamic_ett_disabled = false;
             decomposition_disabled = false;
             main_no_split_count = 0;
+            dynamicUpdateCycleCompleted.store(false, std::memory_order_relaxed);
         }
 
         void updateAdaptiveDecompositionState(const Block& block, size_t numBlocks, bool usedDynamicEtt) {
