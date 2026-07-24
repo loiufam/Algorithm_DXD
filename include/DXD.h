@@ -267,6 +267,10 @@ class DanceDNNF : DancingMatrix {
         void updateAdaptiveDecompositionState(const Block& block, size_t numBlocks) {
             if (dxd_mode) return;
 
+            // Experiment mode intentionally preserves every dynamic update so
+            // its counters remain reproducible even when production heuristics change.
+            if (collectCCExperimentStats) return;
+
             if (numBlocks > 1) {
                 if (isThreadLocal()) {
                     tlsState->no_split_count = 0;
@@ -295,6 +299,14 @@ class DanceDNNF : DancingMatrix {
         // 启动搜索函数
         void startDXD();
         void startMultiThreadDXD();
+
+        void enableFullCCStatistics() {
+            collectCCExperimentStats = true;
+            ccExperimentStats.reset();
+        }
+
+        void setTimeLimit(long seconds) { timer.setTimeBound(seconds); }
+        void logCCExperimentStats(bool complete);
 
         // ── MDLX（统一接口，mode决定分块策略）
         DNNFResult parallelSearchMDLX(vector<Block>& blocks, DecomMode mode);

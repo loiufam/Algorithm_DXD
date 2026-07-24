@@ -311,7 +311,9 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             if (int(curBlock.size()) > 1) {
             // std::cout << "Detected " << curBlock.size() << " independent blocks at depth " << depth << ".\n";
 
-                const bool stopDynamicUpdates = curBlock.size() >= DYNAMIC_STOP_COMPONENT_COUNT;
+                const bool stopDynamicUpdates =
+                    !collectCCExperimentStats &&
+                    curBlock.size() >= DYNAMIC_STOP_COMPONENT_COUNT;
                 if (stopDynamicUpdates) {
                     if (depth == 1) {
                         deferDynamicUpdateMeasurement.store(true, std::memory_order_release);
@@ -466,6 +468,29 @@ size_t DanceDNNF::countZDDSize() const {
     return traverse(rootDNNF); // 加上T和F节点
 }
 
+void DanceDNNF::logCCExperimentStats(bool complete) {
+    if (!collectCCExperimentStats) return;
+    const auto& stats = ccExperimentStats;
+    logger.logLine("CC Stats Complete: " + std::to_string(complete ? 1 : 0));
+    logger.logLine("CC Stats Calls: " + std::to_string(stats.calls()));
+    logger.logLine("CC Stats Dec Calls: " + std::to_string(stats.decCalls));
+    logger.logLine("CC Stats Inc Calls: " + std::to_string(stats.incCalls));
+    logger.logLine("CC Stats Merges: " + std::to_string(stats.merges));
+    logger.logLine("CC Stats Splits: " + std::to_string(stats.splits));
+    logger.logLine("CC Stats Vertex Sum: " + std::to_string(stats.verticesSum));
+    logger.logLine("CC Stats Edge Sum: " + std::to_string(stats.edgesSum));
+    logger.logLine("CC Stats Update Vertex Sum: " + std::to_string(stats.updateVerticesSum));
+    logger.logLine("CC Stats Update Edge Sum: " + std::to_string(stats.updateEdgesSum));
+    logger.logLine("CC Stats En Samples: " + std::to_string(stats.enSamples));
+    logger.logLine("CC Stats En Sum: " + std::to_string(stats.enSum));
+    logger.logLine("CC Stats En Positive Updates: " + std::to_string(stats.enPositiveUpdates));
+    logger.logLine("CC Stats En Update Average Sum: " + std::to_string(stats.enUpdateAverageSum));
+    logger.logLine("CC Stats Replacement Searches: " + std::to_string(stats.replacementSearchCalls));
+    logger.logLine("CC Stats Replacement Scan Steps: " + std::to_string(stats.replacementScanSteps));
+    logger.logLine("CC Stats Early Breaks: " + std::to_string(stats.replacementEarlyBreaks));
+    logger.logLine("CC Stats Full Scans: " + std::to_string(stats.replacementFullScans));
+}
+
 // DXD DXZ入口
 void DanceDNNF::startDXD() {
 
@@ -473,6 +498,7 @@ void DanceDNNF::startDXD() {
 
     MAX_B_COUNT = 1;
     ccCpuTime = 0.0;
+    if (collectCCExperimentStats) ccExperimentStats.reset();
     resetAdaptiveDecompositionState();
 
     {
@@ -543,8 +569,9 @@ void DanceDNNF::startMultiThreadDXD() {
     // isParallelSearch = true;
     MAX_B_COUNT = 1;
     ccCpuTime = 0.0;
+    if (collectCCExperimentStats) ccExperimentStats.reset();
     resetAdaptiveDecompositionState();
-    if (isSmallInstanceForDynamicEtt()) {
+    if (!collectCCExperimentStats && isSmallInstanceForDynamicEtt()) {
         dynamic_ett_disabled = true;
         decomposition_disabled = true;
         dxz_fallback_mode = true;
@@ -577,6 +604,7 @@ void DanceDNNF::startMultiThreadDXD() {
         measureDeferredDynamicUpdate();
         logger.logLine("Time: " + std::to_string(searchTime) + " s");
         logger.logLine("Dyn CC CPU: " + std::to_string(ccCpuTime) + " s");
+        logCCExperimentStats(true);
         timeout = false;
 
         solutionCount = ResSols.toString();
@@ -592,7 +620,10 @@ void DanceDNNF::startMultiThreadDXD() {
         return;
     } catch (std::runtime_error &e) {
         timeout = true;
+        timer.markStopTime();
+        logger.logLine("Time: " + std::to_string(timer.getElapsedTime()) + " s");
         logger.logLine("Dyn CC CPU: " + std::to_string(ccCpuTime) + " s");
+        logCCExperimentStats(false);
         logger.logLine("DynDXD搜索超时: " + std::string(e.what()));
         return;
     }
