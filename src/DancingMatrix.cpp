@@ -566,12 +566,6 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
 
         // 删除所有树边
         for (int u : treeNeighbors) {
-            // 删除的树边累积求和
-            if (collectCCExperimentStats) {
-                std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
-                ++ccExperimentStats.treeEdge_cuts; 
-            }
-
             if (!g->hasEdge(v, u)) continue;
 
             splaytree::EulerTourTree* currentTree = findEulerTourTree(v);
@@ -588,12 +582,20 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
                 std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
                 ++ccExperimentStats.replacementSearchCalls;
                 ++ccExperimentStats.enSamples;
+                // searched 只会在树边成功 cut 后置位，因此不会把失败的
+                // deleteEdge 或已被删除的图边误计为 tree-edge cut。
+                ++ccExperimentStats.treeEdge_cuts;
                 // 寻找替代边的次数En
                 ccExperimentStats.enSum += searchMetrics.nonTreeEdges;
                 // 实际循环次数
                 ccExperimentStats.replacementScanSteps += searchMetrics.scanSteps;
-                if (searchMetrics.found) ++ccExperimentStats.replacementEarlyBreaks;
-                else ++ccExperimentStats.replacementFullScans;
+                if (searchMetrics.found) {
+                    ++ccExperimentStats.replacementEarlyBreaks;
+                    // merges 的定义是 cut 后找到替代边并执行 link 的次数。
+                    ++ccExperimentStats.merges;
+                } else {
+                    ++ccExperimentStats.replacementFullScans;
+                }
             }
             if (newTree) {
                 if (collectCCExperimentStats) {
@@ -601,11 +603,6 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
                     ++ccExperimentStats.splits;
                 }
                 comps.push_back(std::move(newTree));
-            } else {
-                if (collectCCExperimentStats) {
-                    std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
-                    ++ccExperimentStats.merges;
-                }
             }
             
             g->deleteEdge(v, u);

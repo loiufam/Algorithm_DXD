@@ -146,6 +146,20 @@ the timeout and rerun to obtain complete per-solve statistics.
 Use `--resume` together with a larger timeout to retain completed rows and rerun
 only timeout/error cases.
 
+To rerun only the two counters needed to supplement an existing experiment,
+start the focused runner in a separate Python process:
+
+```bash
+python3 bin/run_cc_merge_cut_experiment.py --resume
+```
+
+It writes `results/cc_merges_tree_edge_cuts.csv`. Apart from the dataset and
+instance keys needed for a later join, the new table contains only `merges`
+(successful replacement-edge links after a tree-edge cut) and
+`tree_edge_cuts` (successful tree-edge cuts). Each instance is executed in a
+fresh solver subprocess; incomplete rows are left blank and retried by
+`--resume`.
+
 Two dataset collections are stored under the `benchmark/` directory.
  
 | Directory | Format | Description |
