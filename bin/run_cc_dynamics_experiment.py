@@ -18,7 +18,7 @@ SOLUTION_RE = re.compile(r"^Solutions:\s*(\S+)", re.MULTILINE)
 
 RAW_FIELDS = (
     "dataset", "instance", "input", "status", "stats_complete", "time_s", "cc_cpu_s", "solutions",
-    "cc_calls", "dec_cc_calls", "inc_cc_calls", "merges", "splits",
+    "cc_calls", "dec_cc_calls", "inc_cc_calls", "merges", "tree_edge_cuts", "splits",
     "merge_per_cc", "split_per_cc", "avg_v", "avg_e", "avg_vd", "avg_ed",
     "avg_en_per_update", "avg_en_per_ed", "replacement_search_calls",
     "replacement_scan_steps", "avg_scan_per_search", "early_break_rate", "full_scan_rate",
@@ -63,7 +63,7 @@ def run_case(executable, input_path, timeout):
     if process.returncode != 0:
         return {"status": f"error({process.returncode})"}
     stats = {name: float(value) for name, value in STAT_RE.findall(output)}
-    required = ("Complete", "Calls", "Dec Calls", "Inc Calls", "Merges", "Splits",
+    required = ("Complete", "Calls", "Dec Calls", "Inc Calls", "Merges", "Tree Edge Cuts", "Splits",
                 "Vertex Sum", "Edge Sum", "Update Vertex Sum", "Update Edge Sum",
                 "En Samples", "En Sum", "En Positive Updates", "En Update Average Sum",
                 "Replacement Searches", "Replacement Scan Steps", "Early Breaks", "Full Scans")
@@ -87,6 +87,7 @@ def run_case(executable, input_path, timeout):
         "dec_cc_calls": int(stats["Dec Calls"]),
         "inc_cc_calls": int(stats["Inc Calls"]),
         "merges": int(stats["Merges"]),
+        "tree_edge_cuts": int(stats["Tree Edge Cuts"]),
         "splits": int(stats["Splits"]),
         "merge_per_cc": ratio(stats["Merges"], calls),
         "split_per_cc": ratio(stats["Splits"], calls),
