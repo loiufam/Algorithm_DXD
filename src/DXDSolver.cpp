@@ -476,6 +476,7 @@ void DanceDNNF::logCCExperimentStats(bool complete) {
     logger.logLine("CC Stats Dec Calls: " + std::to_string(stats.decCalls));
     logger.logLine("CC Stats Inc Calls: " + std::to_string(stats.incCalls));
     logger.logLine("CC Stats Merges: " + std::to_string(stats.merges));
+    logger.logLine("CC Stats Tree Edge Cuts: " + std::to_string(stats.treeEdge_cuts)); 
     logger.logLine("CC Stats Splits: " + std::to_string(stats.splits));
     logger.logLine("CC Stats Vertex Sum: " + std::to_string(stats.verticesSum));
     logger.logLine("CC Stats Edge Sum: " + std::to_string(stats.edgesSum));

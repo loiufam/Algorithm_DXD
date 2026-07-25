@@ -463,9 +463,13 @@ void DancingMatrix::recordCCUpdateStart(const std::set<int>& changedVertices,
     std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
     if (restoring) ++ccExperimentStats.incCalls;
     else ++ccExperimentStats.decCalls;
+    // 累计图顶点数
     ccExperimentStats.verticesSum += active.size();
+    // 累计图边数
     ccExperimentStats.edgesSum += graphEdges;
+    // 累积修改图顶点数
     ccExperimentStats.updateVerticesSum += changedVertices.size();
+    // 累积影响图边数 
     ccExperimentStats.updateEdgesSum += affectedEdges.size();
 }
 
@@ -477,7 +481,7 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
     uint64_t enSamplesThisUpdate = 0;
 
     // if (!isGraphSyncEnabled()) return;
-    // if (deletedVertices.empty()) return;
+    if (deletedVertices.empty()) return;
 
     auto& comps = getComponents();
     auto* g = getGraph();
@@ -562,6 +566,11 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
 
         // 删除所有树边
         for (int u : treeNeighbors) {
+            // 删除的树边累积求和
+            if (collectCCExperimentStats) {
+                std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+                ++ccExperimentStats.treeEdge_cuts; 
+            }
 
             if (!g->hasEdge(v, u)) continue;
 
@@ -579,7 +588,9 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
                 std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
                 ++ccExperimentStats.replacementSearchCalls;
                 ++ccExperimentStats.enSamples;
+                // 寻找替代边的次数En
                 ccExperimentStats.enSum += searchMetrics.nonTreeEdges;
+                // 实际循环次数
                 ccExperimentStats.replacementScanSteps += searchMetrics.scanSteps;
                 if (searchMetrics.found) ++ccExperimentStats.replacementEarlyBreaks;
                 else ++ccExperimentStats.replacementFullScans;
@@ -590,6 +601,11 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
                     ++ccExperimentStats.splits;
                 }
                 comps.push_back(std::move(newTree));
+            } else {
+                if (collectCCExperimentStats) {
+                    std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+                    ++ccExperimentStats.merges;
+                }
             }
             
             g->deleteEdge(v, u);
@@ -648,12 +664,11 @@ void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
         std::vector<int> neighbors = g->getAllNeighbors(v); 
 
         for (int u : neighbors) {
-            // P1-2 守卫：邻居 u 是否应该被恢复，对应"u 在当前矩阵中是否仍是激活行"。
+            // 邻居 u 是否应该被恢复，对应"u 在当前矩阵中是否仍是激活行"。
             //  - 矩阵-图一致性：行 r 在矩阵中激活 ⇔ 顶点 r 在某棵活跃 ETT 中
             //  - DecUpdateCC 移除 v 时会调用 tree->removeVertex(v)，把 v 从所有 ETT 的 vertices 中 erase
             //  - 因此 findEulerTourTree(u)!=nullptr 等价于 "u 当前在矩阵中激活"
             //  - restoredSet.count(u) 是冗余兜底（同批恢复的 u 已经在前一个循环 push 进 comps）
-            // 没有这条守卫时，u 是已被永久 cover 的"幽灵行"也会被 restoreEdge → 状态污染。
             splaytree::EulerTourTree* treeU = findEulerTourTree(u);
             const bool uActive = (treeU != nullptr) || restoredSet.count(u);
             if (!uActive) continue;
@@ -670,10 +685,6 @@ void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
 
             if (treeU != treeV) {
                 treeU->link(u, v, treeV);
-                if (collectCCExperimentStats) {
-                    std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
-                    ++ccExperimentStats.merges;
-                }
             } else {
                 treeU->addNonTreeEdge(splaytree::Edge(v, u));
             }

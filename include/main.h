@@ -21,6 +21,7 @@ public:
     std::string alg;
     std::string input;
     std::string dep_mode = "d"; // default to dynamic decomposition
+    // std::string ALGORITHM_DXD_SOURCE_DIR = "/home/lyh/projects/lyh/Alg_DXD/Algorithm_DXD";
     int         threads = 8;
     bool        debug   = false;
     bool        full_cc_stats = false;

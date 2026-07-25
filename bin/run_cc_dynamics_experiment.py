@@ -139,7 +139,7 @@ def summaries(raw_rows):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--report", type=Path, default=common.DEFAULT_REPORT)
-    parser.add_argument("--executable", type=Path, default=common.ROOT / "bin/main")
+    parser.add_argument("--executable", type=Path, default=common.ROOT / "bin/main-1")
     parser.add_argument("--raw-output", type=Path,
                         default=common.ROOT / "results/cc_dynamics_instances.csv")
     parser.add_argument("--summary-output", type=Path,

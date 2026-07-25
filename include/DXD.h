@@ -115,9 +115,6 @@ class DanceDNNF : DancingMatrix {
 
         static constexpr int SMALL_INSTANCE_ROWS = 100;
         static constexpr int SMALL_INSTANCE_COLS = 30;
-        // Three consecutive one-component results mean that decomposition is
-        // not paying for itself.  From that point the current search switches
-        // to the non-decomposing, single-threaded DXZ path.
         static constexpr int NO_SPLIT_LIMIT = 3;
         static constexpr int SMALL_BLOCK_ROWS = 64;
         static constexpr int SMALL_BLOCK_COLS = 12;
@@ -267,8 +264,6 @@ class DanceDNNF : DancingMatrix {
         void updateAdaptiveDecompositionState(const Block& block, size_t numBlocks) {
             if (dxd_mode) return;
 
-            // Experiment mode intentionally preserves every dynamic update so
-            // its counters remain reproducible even when production heuristics change.
             if (collectCCExperimentStats) return;
 
             if (numBlocks > 1) {

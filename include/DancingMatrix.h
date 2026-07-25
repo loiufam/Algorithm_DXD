@@ -81,7 +81,7 @@ class DancingMatrix
 
         struct CCExperimentStats {
             uint64_t decCalls = 0, incCalls = 0;
-            uint64_t merges = 0, splits = 0;
+            uint64_t merges = 0, splits = 0, treeEdge_cuts = 0;
             long double verticesSum = 0, edgesSum = 0;
             long double updateVerticesSum = 0, updateEdgesSum = 0;
             uint64_t enSamples = 0, enSum = 0;
