@@ -585,7 +585,7 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
                 // searched 只会在树边成功 cut 后置位，因此不会把失败的
                 // deleteEdge 或已被删除的图边误计为 tree-edge cut。
                 ++ccExperimentStats.treeEdge_cuts;
-                // 寻找替代边的次数En
+                // 此次搜索开始时所在 ETT 中的非树边候选集大小（上界）。
                 ccExperimentStats.enSum += searchMetrics.nonTreeEdges;
                 // 实际循环次数
                 ccExperimentStats.replacementScanSteps += searchMetrics.scanSteps;

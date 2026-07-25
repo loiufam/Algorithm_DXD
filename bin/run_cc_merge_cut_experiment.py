@@ -63,16 +63,15 @@ def main():
         print(f"[{number}/{len(names)}] {name}", flush=True)
         measured = dynamics.run_case(args.executable, path, args.timeout)
         # Keep identifiers for the later join, but deliberately emit only the
-        # two requested measurements.  Failed/partial runs remain blank and
-        # are retried by --resume.
+        # two requested measurements.  The solver flushes valid cumulative
+        # counters at its internal timeout, so retain timeout_partial values.
+        has_counters = measured.get("status") in {"success", "timeout_partial"}
         row = {
             "dataset": path.parent.name,
             "instance": name,
-            "merges": measured.get("merges", "") if measured.get("status") == "success" else "",
+            "merges": measured.get("merges", "") if has_counters else "",
             "tree_edge_cuts": (
-                measured.get("tree_edge_cuts", "")
-                if measured.get("status") == "success"
-                else ""
+                measured.get("tree_edge_cuts", "") if has_counters else ""
             ),
         }
         rows = [existing for existing in rows if existing["instance"] != name]

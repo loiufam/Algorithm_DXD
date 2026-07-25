@@ -157,8 +157,30 @@ It writes `results/cc_merges_tree_edge_cuts.csv`. Apart from the dataset and
 instance keys needed for a later join, the new table contains only `merges`
 (successful replacement-edge links after a tree-edge cut) and
 `tree_edge_cuts` (successful tree-edge cuts). Each instance is executed in a
-fresh solver subprocess; incomplete rows are left blank and retried by
-`--resume`.
+fresh solver subprocess. Counters flushed at the solver's internal timeout are
+valid cumulative partial results and are retained; rows are left blank only if
+the process fails before emitting counters.
+
+The full CC-statistics counters have these relationships and meanings:
+
+- `Calls = Dec Calls + Inc Calls`. Graph and update vertex/edge sums are
+  snapshots accumulated once per call, so divide them by `Calls` for their
+  per-update averages.
+- `Tree Edge Cuts = En Samples = Replacement Searches`. Every successfully
+  cut tree edge starts exactly one replacement-edge search and contributes one
+  sample.
+- `En Sum` is the sum of the non-tree-edge candidate-set size at the start of
+  each search. It is a search-work upper bound, not the number of edges actually
+  inspected. `Replacement Scan Steps` is the actual number inspected; an early
+  match makes it smaller than `En Sum`.
+- `Early Breaks` counts searches that found and linked a replacement edge and
+  therefore equals `Merges`. `Full Scans` counts searches without a replacement
+  and therefore equals `Splits`; both pairs sum to `Replacement Searches`.
+- `En Positive Updates` is the number of `DecUpdateCC` calls containing at
+  least one replacement search. `En Update Average Sum` sums, over those calls,
+  each call's average candidate-set size. Divide it by `En Positive Updates`
+  to obtain the macro-average per such decremental update. By contrast,
+  `En Sum / En Samples` is the search-weighted micro-average.
 
 Two dataset collections are stored under the `benchmark/` directory.
  
