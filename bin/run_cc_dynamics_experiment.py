@@ -145,7 +145,7 @@ def main():
                         default=common.ROOT / "results/cc_dynamics_instances.csv")
     parser.add_argument("--summary-output", type=Path,
                         default=common.ROOT / "results/cc_dynamics_summary.csv")
-    parser.add_argument("--timeout", type=int, default=1500)
+    parser.add_argument("--timeout", type=int, default=600)
     parser.add_argument("--limit", type=int)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--resume", action="store_true",
@@ -170,10 +170,13 @@ def main():
     if args.resume and args.raw_output.is_file():
         with args.raw_output.open(encoding="utf-8", newline="") as stream:
             raw = list(csv.DictReader(stream))
-    completed = {row["instance"] for row in raw if row["status"] == "success"}
+    completed = {
+            row["instance"] for row in raw 
+            if row["status"] in {"success", "timeout_partial"}
+        }
     for number, name in enumerate(names, 1):
         if name in completed:
-            print(f"[{number}/{len(names)}] {name} (already complete)", flush=True)
+            print(f"[{number}/{len(names)}] {name} (already recorded)", flush=True)
             continue
         path = inputs[name]
         print(f"[{number}/{len(names)}] {name}", flush=True)

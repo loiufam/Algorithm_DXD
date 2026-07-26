@@ -23,13 +23,13 @@ def write_rows(path, rows):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--report", type=Path, default=common.DEFAULT_REPORT)
-    parser.add_argument("--executable", type=Path, default=common.ROOT / "bin/main-1")
+    parser.add_argument("--executable", type=Path, default=common.ROOT / "bin/main-2")
     parser.add_argument(
         "--output",
         type=Path,
         default=common.ROOT / "results/cc_merges_tree_edge_cuts.csv",
     )
-    parser.add_argument("--timeout", type=int, default=1500)
+    parser.add_argument("--timeout", type=int, default=600)
     parser.add_argument("--limit", type=int)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--resume", action="store_true")
@@ -62,9 +62,7 @@ def main():
         path = inputs[name]
         print(f"[{number}/{len(names)}] {name}", flush=True)
         measured = dynamics.run_case(args.executable, path, args.timeout)
-        # Keep identifiers for the later join, but deliberately emit only the
-        # two requested measurements.  The solver flushes valid cumulative
-        # counters at its internal timeout, so retain timeout_partial values.
+
         has_counters = measured.get("status") in {"success", "timeout_partial"}
         row = {
             "dataset": path.parent.name,
