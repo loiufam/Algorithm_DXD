@@ -14,10 +14,11 @@ import run_cc_experiment as common
 STAT_RE = re.compile(r"^CC Stats ([^:]+):\s*([\d.]+)$", re.MULTILINE)
 TIME_RE = re.compile(r"^Time:\s*([\d.]+)\s*s", re.MULTILINE)
 CC_TIME_RE = re.compile(r"^Dyn CC CPU:\s*([\d.]+)\s*s", re.MULTILINE)
+CC_RATIO_RE = re.compile(r"^Dyn CC CPU Ratio:\s*([\d.]+)", re.MULTILINE)
 SOLUTION_RE = re.compile(r"^Solutions:\s*(\S+)", re.MULTILINE)
 
 RAW_FIELDS = (
-    "dataset", "instance", "input", "status", "stats_complete", "time_s", "cc_cpu_s", "solutions",
+    "dataset", "instance", "input", "status", "stats_complete", "time_s", "cc_cpu_s", "cc_cpu_ratio", "solutions",
     "cc_calls", "dec_cc_calls", "inc_cc_calls", "merges", "tree_edge_cuts", "splits",
     "merge_per_cc", "split_per_cc", "avg_v", "avg_e", "avg_vd", "avg_ed",
     "avg_en_per_update", "avg_en_per_ed", "replacement_search_calls",
@@ -76,6 +77,7 @@ def parse_measurement(output, forced_partial=False):
     en_updates = stats["En Positive Updates"]
     time_match = TIME_RE.search(output)
     cc_time_match = CC_TIME_RE.search(output)
+    cc_ratio_match = CC_RATIO_RE.search(output)
     solution_match = SOLUTION_RE.search(output)
     complete = bool(stats["Complete"]) and not forced_partial
     return {
@@ -83,6 +85,7 @@ def parse_measurement(output, forced_partial=False):
         "stats_complete": int(complete),
         "time_s": time_match.group(1) if time_match else "",
         "cc_cpu_s": cc_time_match.group(1) if cc_time_match else "",
+        "cc_cpu_ratio": cc_ratio_match.group(1) if cc_ratio_match else "",
         "solutions": solution_match.group(1) if solution_match else "",
         "cc_calls": int(calls),
         "dec_cc_calls": int(stats["Dec Calls"]),
@@ -114,8 +117,8 @@ def run_case(executable, input_path, timeout):
         process = subprocess.run(command, capture_output=True, text=True, timeout=timeout + 30)
     except subprocess.TimeoutExpired as error:
         # TimeoutExpired retains output captured before subprocess.run killed the
-        # child.  The solver emits an initial counter snapshot, so even a long,
-        # non-interruptible CC update can still produce a valid censored row.
+        # child.  The solver emits periodic counter snapshots, so even a long,
+        # non-interruptible CC update leaves a recent valid censored row.
         stdout = error.stdout or ""
         stderr = error.stderr or ""
         if isinstance(stdout, bytes):
