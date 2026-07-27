@@ -98,6 +98,7 @@ class DanceDNNF : DancingMatrix {
         // 累计连通分量处理的 CPU 时间。实验使用单线程运行，因此
         // std::clock() 的进程 CPU 时间就是当前算法线程消耗的 CPU 时间。
         double ccCpuTime = 0.0;
+        double nextCCStatsSnapshotTime = 0.0;
         std::atomic<bool> deferDynamicUpdateMeasurement{false};
         std::mutex deferredRowsMutex;
         std::set<int> deferredDeletedRows;

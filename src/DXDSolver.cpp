@@ -257,6 +257,14 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     // std::cout << oss.str();
     // printComponents();
 
+    // A dynamic-connectivity operation can run past the subprocess grace
+    // period without reaching another timeout check.  Keep a recent, fully
+    // flushed snapshot so a hard kill retains the work done up to that point.
+    if (collectCCExperimentStats && timer.getElapsedTime() >= nextCCStatsSnapshotTime) {
+        logCCExperimentStats(false);
+        nextCCStatsSnapshotTime = timer.getElapsedTime() + 1.0;
+    }
+
     if(timer.timeBoundBroken()) {
         throw std::runtime_error("Time bound broken");
     }
@@ -500,6 +508,7 @@ void DanceDNNF::startDXD() {
     MAX_B_COUNT = 1;
     ccCpuTime = 0.0;
     if (collectCCExperimentStats) ccExperimentStats.reset();
+    nextCCStatsSnapshotTime = 0.0;
     resetAdaptiveDecompositionState();
 
     {
@@ -571,6 +580,7 @@ void DanceDNNF::startMultiThreadDXD() {
     MAX_B_COUNT = 1;
     ccCpuTime = 0.0;
     if (collectCCExperimentStats) ccExperimentStats.reset();
+    nextCCStatsSnapshotTime = 0.0;
     resetAdaptiveDecompositionState();
     if (!collectCCExperimentStats && isSmallInstanceForDynamicEtt()) {
         dynamic_ett_disabled = true;
