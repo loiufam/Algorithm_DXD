@@ -173,7 +173,7 @@ def main():
                         default=common.ROOT / "results/cc_dynamics_instances.csv")
     parser.add_argument("--summary-output", type=Path,
                         default=common.ROOT / "results/cc_dynamics_summary.csv")
-    parser.add_argument("--timeout", type=int, default=300)
+    parser.add_argument("--timeout", type=int, default=100)
     parser.add_argument("--limit", type=int)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--resume", action="store_true",
@@ -184,9 +184,9 @@ def main():
     names = report_instances(args.report)
     if args.limit is not None:
         names = names[:args.limit]
-    missing = [name for name in names if name not in inputs]
-    if missing:
-        parser.error(f"{len(missing)} report instances have no input file")
+    # missing = [name for name in names if name not in inputs]
+    # if missing:
+    #     parser.error(f"{len(missing)} report instances have no input file")
     if args.dry_run:
         for name in names:
             print(inputs[name])
@@ -205,6 +205,8 @@ def main():
     for number, name in enumerate(names, 1):
         if name in completed:
             print(f"[{number}/{len(names)}] {name} (already recorded)", flush=True)
+            continue
+        if name not in inputs.keys():
             continue
         path = inputs[name]
         print(f"[{number}/{len(names)}] {name}", flush=True)

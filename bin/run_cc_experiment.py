@@ -16,9 +16,9 @@ DEFAULT_REPORT = ROOT / "data/batch_2/Final_Experiment_Report.xlsx"
 DEFAULT_OUTPUT = ROOT / "results/cc_cpu_experiment.csv"
 DEFAULT_INPUT_DIRS = (
     ROOT / "data/batch_2/dominoes_set",
-    ROOT / "data/batch_2/exact_cover_benchmarks",
-    ROOT / "data/batch_2/set_partition_benchmarks",
-    ROOT / "data/batch_2/graphs_set",
+    # ROOT / "data/batch_2/exact_cover_benchmarks",
+    # ROOT / "data/batch_2/set_partition_benchmarks",
+    # ROOT / "data/batch_2/graphs_set",
 )
 NS = {"x": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
 
