@@ -63,7 +63,7 @@ def main():
         print(f"[{number}/{len(names)}] {name}", flush=True)
         measured = dynamics.run_case(args.executable, path, args.timeout)
 
-        has_counters = measured.get("status") in {"success", "timeout_partial"}
+        has_counters = measured.get("status") in {"success", "sampled"}
         row = {
             "dataset": path.parent.name,
             "instance": name,
