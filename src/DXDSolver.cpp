@@ -257,13 +257,10 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     // std::cout << oss.str();
     // printComponents();
 
-    // A dynamic-connectivity operation can run past the subprocess grace
-    // period without reaching another timeout check.  Keep a recent, fully
-    // flushed snapshot so a hard kill retains the work done up to that point.
-    if (collectCCExperimentStats && timer.getElapsedTime() >= nextCCStatsSnapshotTime) {
-        logCCExperimentStats(false);
-        nextCCStatsSnapshotTime = timer.getElapsedTime() + 1.0;
-    }
+    // if (collectCCExperimentStats && timer.getElapsedTime() >= nextCCStatsSnapshotTime) {
+    //     logCCExperimentStats(false);
+    //     nextCCStatsSnapshotTime = timer.getElapsedTime() + 1.0;
+    // }
 
     if(timer.timeBoundBroken()) {
         throw std::runtime_error("Time bound broken");
@@ -314,7 +311,10 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             updateAdaptiveDecompositionState(block, curBlock.size());
 
             if (int(curBlock.size()) > 1) {
-                if (collectCCExperimentStats) ++ccExperimentStats.cc_decompose;
+                if (collectCCExperimentStats) {
+                    std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+                    ++ccExperimentStats.cc_decompose;
+                }
             // std::cout << "Detected " << curBlock.size() << " independent blocks at depth " << depth << ".\n";
 
                 const bool stopDynamicUpdates =
@@ -470,11 +470,15 @@ size_t DanceDNNF::countZDDSize() const {
 
 void DanceDNNF::logCCExperimentStats(bool complete) {
     if (!collectCCExperimentStats) return;
-    const auto& stats = ccExperimentStats;
+    CCExperimentStats stats;
+    {
+        std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+        stats = ccExperimentStats;
+    }
     logger.logLine("CC Stats Complete: " + std::to_string(complete ? 1 : 0));
     logger.logLine("CC Stats Calls: " + std::to_string(stats.calls()));
     logger.logLine("CC Stats Dec Calls: " + std::to_string(stats.decCalls));
-    // logger.logLine("CC Stats Inc Calls: " + std::to_string(stats.incCalls));
+    logger.logLine("CC Stats Inc Calls: " + std::to_string(stats.incCalls));
     logger.logLine("CC Stats Merges: " + std::to_string(stats.merges));
     logger.logLine("CC Stats Tree Edge Cuts: " + std::to_string(stats.treeEdge_cuts)); 
     logger.logLine("CC Stats Splits: " + std::to_string(stats.splits));
@@ -612,9 +616,9 @@ void DanceDNNF::startMultiThreadDXD() {
    
         searchTime = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
         logger.logLine("Time: " + std::to_string(searchTime) + " s");
-        logger.logLine("Dyn CC CPU: " + std::to_string(ccCpuTime) + " s");
-        logger.logLine("Dyn CC CPU Ratio: " +
-                       std::to_string(searchTime > 0.0 ? ccCpuTime / searchTime : 0.0));
+        // logger.logLine("Dyn CC CPU: " + std::to_string(ccCpuTime) + " s");
+        // logger.logLine("Dyn CC CPU Ratio: " +
+        //                std::to_string(searchTime > 0.0 ? ccCpuTime / searchTime : 0.0));
         logCCExperimentStats(true);
         timeout = false;
 
