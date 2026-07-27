@@ -177,9 +177,9 @@ def main():
     parser.add_argument("--executable", type=Path, default=common.ROOT / "bin/main")
     parser.add_argument("--raw-output", type=Path, default=common.ROOT / "results/cc_dynamics_instances.csv")
     parser.add_argument("--summary-output", type=Path, default=common.ROOT / "results/cc_dynamics_summary.csv")
-    parser.add_argument("--search-seconds", type=int, default=60,
+    parser.add_argument("--search-seconds", type=int, default=30,
                         help="gracefully stop search and roll back after this many seconds")
-    parser.add_argument("--timeout", type=int, default=120,
+    parser.add_argument("--timeout", type=int, default=60,
                         help="safety timeout after the algorithm starts")
     parser.add_argument("--limit", type=int)
     parser.add_argument("--dry-run", action="store_true")
@@ -205,7 +205,7 @@ def main():
     if args.resume and args.raw_output.is_file():
         with args.raw_output.open(encoding="utf-8", newline="") as stream:
             raw = list(csv.DictReader(stream))
-    completed = {row["instance"] for row in raw if row["status"] in {"success", "sampled"}}
+    completed = {row["instance"] for row in raw if row["status"] in {"success", "invalid"}}
     for number, item in enumerate(runnable, 1):
         name = item["instance"]
         if name in completed:
