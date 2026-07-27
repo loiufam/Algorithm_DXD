@@ -86,6 +86,46 @@ def eligible_instances(report):
             })
     return selected
 
+def read_case_names(path):
+    """Read instance names separated by newlines or commas, preserving order."""
+    names = []
+    seen = set()
+    for name in re.split(r"[,\r\n]+", path.read_text(encoding="utf-8")):
+        name = name.strip()
+        if name and name not in seen:
+            names.append(name)
+            seen.add(name)
+    if not names:
+        raise ValueError(f"case file is empty: {path}")
+    return names
+
+
+def instances_from_case_file(path, report):
+    """Build rows for explicitly requested cases, adding report data when present."""
+    report_rows = iter(read_xlsx_rows(report))
+    header = next(report_rows)
+    required = ("Instance", "#cols", "#rows", "DXD-T1", "DynDXD-T1")
+    missing = [name for name in required if name not in header]
+    if missing:
+        raise ValueError(f"report is missing columns: {', '.join(missing)}")
+    columns = {name: header.index(name) for name in required}
+    metadata = {}
+    for row in report_rows:
+        row += [""] * (len(header) - len(row))
+        name = row[columns["Instance"]].strip()
+        metadata[name] = {
+            "instance": name,
+            "cols": row[columns["#cols"]].strip(),
+            "rows": row[columns["#rows"]].strip(),
+            "report_dxd_time_s": row[columns["DXD-T1"]].strip(),
+            "report_dyndxd_time_s": row[columns["DynDXD-T1"]].strip(),
+        }
+
+    blank = {"cols": "", "rows": "", "report_dxd_time_s": "",
+             "report_dyndxd_time_s": ""}
+    return [{"instance": name, **blank, **metadata.get(name, {})}
+            for name in read_case_names(path)]
+
 
 def input_index(input_dirs):
     index = {}
@@ -151,13 +191,27 @@ def main():
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
     parser.add_argument("--executable", type=Path, default=ROOT / "bin/main")
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument(
+        "--case-file", type=Path,
+        help="run only names in this UTF-8 text file (one per line; commas also accepted)",
+    )
     parser.add_argument("--input-dir", action="append", type=Path, dest="input_dirs")
     parser.add_argument("--timeout", type=int, default=1500)
     parser.add_argument("--limit", type=int, help="run only the first N selected cases")
     parser.add_argument("--dry-run", action="store_true", help="only list selected inputs")
     args = parser.parse_args()
 
-    selected = eligible_instances(args.report)
+    if args.case_file:
+        try:
+            selected = instances_from_case_file(args.case_file, args.report)
+        except (OSError, ValueError, zipfile.BadZipFile) as error:
+            parser.error(str(error))
+        output = args.output or (
+            ROOT / "results" / f"cc_cpu_experiment_{args.case_file.stem}.csv"
+        )
+    else:
+        selected = eligible_instances(args.report)
+        output = args.output or DEFAULT_OUTPUT
     if args.limit is not None:
         selected = selected[:args.limit]
     inputs = input_index(args.input_dirs or DEFAULT_INPUT_DIRS)
@@ -167,7 +221,8 @@ def main():
         print(f"warning: {len(missing)} selected instances have no input file", file=sys.stderr)
 
     runnable = [item for item in selected if item["instance"] in inputs]
-    print(f"report selected {len(selected)} cases; {len(runnable)} input files found")
+    source = "case file" if args.case_file else "report"
+    print(f"{source} selected {len(selected)} cases; {len(runnable)} input files found")
     if args.dry_run:
         for item in runnable:
             print(inputs[item["instance"]])
@@ -176,6 +231,7 @@ def main():
         parser.error(f"executable not found: {args.executable}; build the project first")
 
     results = []
+    write_results(output, results)
     for number, item in enumerate(runnable, 1):
         name = item["instance"]
         path = inputs[name]
@@ -197,9 +253,9 @@ def main():
         if dyn["solutions"] and dxd["solutions"] and dyn["solutions"] != dxd["solutions"]:
             result["dyndxd_status"] = result["dxd_status"] = "solution_mismatch"
         results.append(result)
-        write_results(args.output, results)
+        write_results(output, results)
 
-    print(f"wrote {len(results)} rows to {args.output}")
+    print(f"wrote {len(results)} rows to {output}")
     return 0
 
 
