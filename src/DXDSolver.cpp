@@ -257,6 +257,14 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     // std::cout << oss.str();
     // printComponents();
 
+    // A dynamic-connectivity operation can run past the subprocess grace
+    // period without reaching another timeout check.  Keep a recent, fully
+    // flushed snapshot so a hard kill retains the work done up to that point.
+    if (collectCCExperimentStats && timer.getElapsedTime() >= nextCCStatsSnapshotTime) {
+        logCCExperimentStats(false);
+        nextCCStatsSnapshotTime = timer.getElapsedTime() + 1.0;
+    }
+
     if(timer.timeBoundBroken()) {
         throw std::runtime_error("Time bound broken");
     }
@@ -297,7 +305,9 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         // if (canComputeComponents) {
             vector<Block> curBlock;
             if (useETT) {
+                const std::clock_t ccStart = std::clock();
                 curBlock = getComponentsByETT(block.cols);
+                ccCpuTime += static_cast<double>(std::clock() - ccStart) / CLOCKS_PER_SEC;
             } else {
                 // DXD 从头执行 BFS，并把 BFS 与 Block 集合构建整体计入 CC CPU。
                 const std::clock_t ccStart = std::clock();
@@ -315,10 +325,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
                     !collectCCExperimentStats &&
                     curBlock.size() >= DYNAMIC_STOP_COMPONENT_COUNT;
                 if (stopDynamicUpdates) {
-                    if (depth == 1) {
-                        deferDynamicUpdateMeasurement.store(true, std::memory_order_release);
-                    }
-
                     disableDynamicEttForCurrentState();
                     if (isThreadLocal()) {
                         tlsState->decomposition_disabled = true;
@@ -362,7 +368,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         coverInBlock(choose->col, block, deleted_rows);
     }
     if(shouldMaintainDynamicEtt(depth)) timedDecUpdateCC(deleted_rows);
-    rememberDeferredDeletedRows(deleted_rows);
 
     Node* curC = choose->down;
     while(curC != choose) {
@@ -379,7 +384,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             curR = curR->right;
         }
         if(shouldMaintainDynamicEtt(depth)) timedDecUpdateCC(deleted_rows_);
-        rememberDeferredDeletedRows(deleted_rows_);
  
         auto [result, sub_node] = DXD(block, depth + 1);
 
@@ -500,6 +504,7 @@ void DanceDNNF::startDXD() {
     MAX_B_COUNT = 1;
     ccCpuTime = 0.0;
     if (collectCCExperimentStats) ccExperimentStats.reset();
+    nextCCStatsSnapshotTime = 0.0;
     resetAdaptiveDecompositionState();
 
     {
@@ -571,6 +576,7 @@ void DanceDNNF::startMultiThreadDXD() {
     MAX_B_COUNT = 1;
     ccCpuTime = 0.0;
     if (collectCCExperimentStats) ccExperimentStats.reset();
+    nextCCStatsSnapshotTime = 0.0;
     resetAdaptiveDecompositionState();
     if (!collectCCExperimentStats && isSmallInstanceForDynamicEtt()) {
         dynamic_ett_disabled = true;
@@ -602,9 +608,10 @@ void DanceDNNF::startMultiThreadDXD() {
         timer.markStopTime();
    
         searchTime = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
-        measureDeferredDynamicUpdate();
         logger.logLine("Time: " + std::to_string(searchTime) + " s");
         logger.logLine("Dyn CC CPU: " + std::to_string(ccCpuTime) + " s");
+        logger.logLine("Dyn CC CPU Ratio: " +
+                       std::to_string(searchTime > 0.0 ? ccCpuTime / searchTime : 0.0));
         logCCExperimentStats(true);
         timeout = false;
 
@@ -622,8 +629,11 @@ void DanceDNNF::startMultiThreadDXD() {
     } catch (std::runtime_error &e) {
         timeout = true;
         timer.markStopTime();
-        logger.logLine("Time: " + std::to_string(timer.getElapsedTime()) + " s");
+        const double elapsed = timer.getElapsedTime();
+        logger.logLine("Time: " + std::to_string(elapsed) + " s");
         logger.logLine("Dyn CC CPU: " + std::to_string(ccCpuTime) + " s");
+        logger.logLine("Dyn CC CPU Ratio: " +
+                       std::to_string(elapsed > 0.0 ? ccCpuTime / elapsed : 0.0));
         logCCExperimentStats(false);
         logger.logLine("DynDXD搜索超时: " + std::string(e.what()));
         return;

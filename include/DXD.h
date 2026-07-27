@@ -98,9 +98,7 @@ class DanceDNNF : DancingMatrix {
         // 累计连通分量处理的 CPU 时间。实验使用单线程运行，因此
         // std::clock() 的进程 CPU 时间就是当前算法线程消耗的 CPU 时间。
         double ccCpuTime = 0.0;
-        std::atomic<bool> deferDynamicUpdateMeasurement{false};
-        std::mutex deferredRowsMutex;
-        std::set<int> deferredDeletedRows;
+        double nextCCStatsSnapshotTime = 0.0;
         bool debug = false;
 
         // 构建Decision-ZDNNF
@@ -217,48 +215,11 @@ class DanceDNNF : DancingMatrix {
             ccCpuTime += static_cast<double>(std::clock() - start) / CLOCKS_PER_SEC;
         }
 
-        void rememberDeferredDeletedRows(const std::set<int>& deletedRows) {
-            if (!deferDynamicUpdateMeasurement.load(std::memory_order_acquire) ||
-                deletedRows.empty()) return;
-
-            std::lock_guard<std::mutex> lock(deferredRowsMutex);
-            if (deferredDeletedRows.empty()) {
-                deferredDeletedRows = deletedRows;
-                deferDynamicUpdateMeasurement.store(false, std::memory_order_release);
-            }
-        }
-
-        void measureDeferredDynamicUpdate() {
-            std::set<int> deletedRows;
-            {
-                std::lock_guard<std::mutex> lock(deferredRowsMutex);
-                deletedRows = deferredDeletedRows;
-            }
-            if (deletedRows.empty()) return;
-
-            SubGraph* outerSubgraph = activeSubgraph_;
-            activeSubgraph_ = graph->subgraphOf(*deletedRows.begin());
-            // A multi-block root disables maintenance before its workers run,
-            // but Dyn CC CPU must still contain one real Dec/Inc cycle.  Time
-            // the pair as a single interval so neither half is lost to the
-            // granularity of std::clock().
-            const std::clock_t start = std::clock();
-            DecUpdateCC(deletedRows);
-            IncUpdateCC(deletedRows);
-            const std::clock_t elapsed = std::clock() - start;
-            ccCpuTime += static_cast<double>(std::max<std::clock_t>(elapsed, 1)) /
-                         CLOCKS_PER_SEC;
-            activeSubgraph_ = outerSubgraph;
-        }
-
         void resetAdaptiveDecompositionState() {
             dynamic_ett_disabled = false;
             decomposition_disabled = false;
             dxz_fallback_mode = false;
             main_no_split_count = 0;
-            deferDynamicUpdateMeasurement.store(false, std::memory_order_relaxed);
-            std::lock_guard<std::mutex> lock(deferredRowsMutex);
-            deferredDeletedRows.clear();
         }
 
         void updateAdaptiveDecompositionState(const Block& block, size_t numBlocks) {

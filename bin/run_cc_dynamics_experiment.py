@@ -14,10 +14,11 @@ import run_cc_experiment as common
 STAT_RE = re.compile(r"^CC Stats ([^:]+):\s*([\d.]+)$", re.MULTILINE)
 TIME_RE = re.compile(r"^Time:\s*([\d.]+)\s*s", re.MULTILINE)
 CC_TIME_RE = re.compile(r"^Dyn CC CPU:\s*([\d.]+)\s*s", re.MULTILINE)
+CC_RATIO_RE = re.compile(r"^Dyn CC CPU Ratio:\s*([\d.]+)", re.MULTILINE)
 SOLUTION_RE = re.compile(r"^Solutions:\s*(\S+)", re.MULTILINE)
 
 RAW_FIELDS = (
-    "dataset", "instance", "input", "status", "stats_complete", "time_s", "cc_cpu_s", "solutions",
+    "dataset", "instance", "input", "status", "stats_complete", "time_s", "cc_cpu_s", "cc_cpu_ratio", "solutions",
     "cc_calls", "dec_cc_calls", "inc_cc_calls", "merges", "tree_edge_cuts", "splits",
     "merge_per_cc", "split_per_cc", "avg_v", "avg_e", "avg_vd", "avg_ed",
     "avg_en_per_update", "avg_en_per_ed", "replacement_search_calls",
@@ -50,25 +51,25 @@ def ratio(numerator, denominator):
     return numerator / denominator if denominator else 0.0
 
 
-def run_case(executable, input_path, timeout):
-    command = [str(executable), "-a", "ddxd", "-i", str(input_path),
-               "-t", "1", "--full-cc-stats", "--time-limit", str(timeout)]
-    try:
-        # Let the solver hit its own bound and flush partial counters cleanly.
-        process = subprocess.run(command, capture_output=True, text=True, timeout=timeout + 30)
-    except subprocess.TimeoutExpired:
-        return {"status": "timeout"}
-
-    output = process.stdout + process.stderr
-    if process.returncode != 0:
-        return {"status": f"error({process.returncode})"}
-    stats = {name: float(value) for name, value in STAT_RE.findall(output)}
+def parse_measurement(output, forced_partial=False):
+    """Parse the last complete counter snapshot emitted by the solver."""
     required = ("Complete", "Calls", "Dec Calls", "Inc Calls", "Merges", "Tree Edge Cuts", "Splits",
                 "Vertex Sum", "Edge Sum", "Update Vertex Sum", "Update Edge Sum",
                 "En Samples", "En Sum", "En Positive Updates", "En Update Average Sum",
                 "Replacement Searches", "Replacement Scan Steps", "Early Breaks", "Full Scans")
-    if any(name not in stats for name in required):
-        return {"status": "missing_stats"}
+    # A hard kill may interrupt the newest multi-line snapshot.  Split at each
+    # Complete marker and use only the newest snapshot containing every field,
+    # rather than combining a partial new snapshot with stale older values.
+    starts = [match.start() for match in re.finditer(r"^CC Stats Complete:", output, re.MULTILINE)]
+    snapshots = []
+    for index, start in enumerate(starts):
+        end = starts[index + 1] if index + 1 < len(starts) else len(output)
+        candidate = {name: float(value) for name, value in STAT_RE.findall(output[start:end])}
+        if all(name in candidate for name in required):
+            snapshots.append(candidate)
+    if not snapshots:
+        return None
+    stats = snapshots[-1]
 
     calls = stats["Calls"]
     searches = stats["Replacement Searches"]
@@ -76,12 +77,15 @@ def run_case(executable, input_path, timeout):
     en_updates = stats["En Positive Updates"]
     time_match = TIME_RE.search(output)
     cc_time_match = CC_TIME_RE.search(output)
+    cc_ratio_match = CC_RATIO_RE.search(output)
     solution_match = SOLUTION_RE.search(output)
+    complete = bool(stats["Complete"]) and not forced_partial
     return {
-        "status": "success" if stats["Complete"] else "timeout_partial",
-        "stats_complete": int(stats["Complete"]),
+        "status": "success" if complete else "timeout_partial",
+        "stats_complete": int(complete),
         "time_s": time_match.group(1) if time_match else "",
         "cc_cpu_s": cc_time_match.group(1) if cc_time_match else "",
+        "cc_cpu_ratio": cc_ratio_match.group(1) if cc_ratio_match else "",
         "solutions": solution_match.group(1) if solution_match else "",
         "cc_calls": int(calls),
         "dec_cc_calls": int(stats["Dec Calls"]),
@@ -103,6 +107,30 @@ def run_case(executable, input_path, timeout):
         "early_break_rate": ratio(stats["Early Breaks"], searches),
         "full_scan_rate": ratio(stats["Full Scans"], searches),
     }
+
+
+def run_case(executable, input_path, timeout):
+    command = [str(executable), "-a", "ddxd", "-i", str(input_path),
+               "-t", "1", "--full-cc-stats", "--time-limit", str(timeout)]
+    try:
+        # Let the solver hit its own bound and flush partial counters cleanly.
+        process = subprocess.run(command, capture_output=True, text=True, timeout=timeout + 30)
+    except subprocess.TimeoutExpired as error:
+        # TimeoutExpired retains output captured before subprocess.run killed the
+        # child.  The solver emits periodic counter snapshots, so even a long,
+        # non-interruptible CC update leaves a recent valid censored row.
+        stdout = error.stdout or ""
+        stderr = error.stderr or ""
+        if isinstance(stdout, bytes):
+            stdout = stdout.decode(errors="replace")
+        if isinstance(stderr, bytes):
+            stderr = stderr.decode(errors="replace")
+        return parse_measurement(stdout + stderr, forced_partial=True) or {"status": "timeout"}
+
+    output = process.stdout + process.stderr
+    if process.returncode != 0:
+        return {"status": f"error({process.returncode})"}
+    return parse_measurement(output) or {"status": "missing_stats"}
 
 
 def write_csv(path, fields, rows):
