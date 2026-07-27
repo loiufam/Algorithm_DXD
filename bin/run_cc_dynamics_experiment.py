@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Measure full DynDXD dynamic-connectivity behavior without adaptive shutdown."""
+"""Collect the CC counters printed by single-thread DynDXD sampling runs."""
 
 import argparse
 import csv
@@ -13,124 +13,136 @@ import run_cc_experiment as common
 
 STAT_RE = re.compile(r"^CC Stats ([^:]+):\s*([\d.]+)$", re.MULTILINE)
 TIME_RE = re.compile(r"^Time:\s*([\d.]+)\s*s", re.MULTILINE)
-CC_TIME_RE = re.compile(r"^Dyn CC CPU:\s*([\d.]+)\s*s", re.MULTILINE)
-CC_RATIO_RE = re.compile(r"^Dyn CC CPU Ratio:\s*([\d.]+)", re.MULTILINE)
-SOLUTION_RE = re.compile(r"^Solutions:\s*(\S+)", re.MULTILINE)
+START_MARKER = "开始多线程DXD搜索..."
 
-RAW_FIELDS = (
-    "dataset", "instance", "input", "status", "stats_complete", "time_s", "cc_cpu_s", "cc_cpu_ratio", "solutions",
-    "cc_calls", "dec_cc_calls", "inc_cc_calls", "merges", "tree_edge_cuts", "splits",
-    "merge_per_cc", "split_per_cc", "avg_v", "avg_e", "avg_vd", "avg_ed",
-    "avg_en_per_update", "avg_en_per_ed", "replacement_search_calls",
-    "replacement_scan_steps", "avg_scan_per_search", "early_break_rate", "full_scan_rate",
-)
-SUMMARY_FIELDS = (
-    "dataset", "solved", "avg_cc_calls", "avg_merges", "avg_splits",
-    "merge_per_cc", "split_per_cc", "avg_v", "avg_e", "avg_vd", "avg_ed",
-    "avg_en", "avg_en_per_ed", "avg_scan", "early_break_rate", "full_scan_rate",
+# Keep one CSV column for every CC Stats line emitted by the solver.  Apart
+# from identifying/status columns, no derived rates or legacy counters are
+# stored, so the CSV can be checked directly against solver output.
+STAT_FIELDS = {
+    "Complete": "stats_complete",
+    "Calls": "cc_calls",
+    "Dec Calls": "dec_cc_calls",
+    "Inc Calls": "inc_cc_calls",
+    "Merges": "merges",
+    "Tree Edge Cuts": "tree_edge_cuts",
+    "Splits": "splits",
+    "Decompose": "decompose",
+    "Dec Vertex Sum": "dec_vertex_sum",
+    "Dec Edge Sum": "dec_edge_sum",
+    "DecUpdate Vertex Sum": "dec_update_vertex_sum",
+    "DecUpdate Edge Sum": "dec_update_edge_sum",
+    "Inc Vertex Sum": "inc_vertex_sum",
+    "Inc Edge Sum": "inc_edge_sum",
+    "IncUpdate Vertex Sum": "inc_update_vertex_sum",
+    "IncUpdate Edge Sum": "inc_update_edge_sum",
+    "En Sum": "en_sum",
+    "Replacement Searches": "replacement_searches",
+    "Replacement Scan Steps": "replacement_scan_steps",
+}
+IDENTITY_FIELDS = ("dataset", "instance", "input", "status", "validation_errors", "time_s")
+RAW_FIELDS = IDENTITY_FIELDS + tuple(STAT_FIELDS.values())
+SUMMARY_FIELDS = ("dataset", "valid_runs") + tuple(
+    f"avg_{field}" for field in STAT_FIELDS.values() if field != "stats_complete"
 )
 
 
 def report_instances(report):
-    rows = iter(common.read_xlsx_rows(report))
-    header = next(rows)
-    name_col = header.index("Instance")
-    dyn_col = header.index("DynDXD-T1")
-    selected = []
-    for row in rows:
-        row += [""] * (len(header) - len(row))
-        try:
-            float(row[dyn_col])
-        except ValueError:
-            continue
-        selected.append(row[name_col].strip())
-    return selected
+    """Use exactly the report selection shared with run_cc_experiment.py."""
+    return common.eligible_instances(report)
 
 
-def ratio(numerator, denominator):
-    return numerator / denominator if denominator else 0.0
+def validate_stats(stats):
+    """Return violated invariants for a fully rolled-back statistics sample."""
+    errors = []
+    check = lambda condition, message: errors.append(message) if not condition else None
+    check(stats["Calls"] == stats["Dec Calls"] + stats["Inc Calls"],
+          "Calls != Dec Calls + Inc Calls")
+    check(stats["Dec Calls"] == stats["Inc Calls"],
+          "Dec Calls != Inc Calls (search did not fully roll back)")
+    check(stats["Tree Edge Cuts"] == stats["Replacement Searches"],
+          "Tree Edge Cuts != Replacement Searches")
+    check(stats["Merges"] + stats["Splits"] == stats["Tree Edge Cuts"],
+          "Merges + Splits != Tree Edge Cuts")
+    check(stats["Replacement Scan Steps"] <= stats["En Sum"],
+          "Replacement Scan Steps > En Sum")
+    check(stats["DecUpdate Vertex Sum"] <= stats["Dec Vertex Sum"],
+          "DecUpdate Vertex Sum > Dec Vertex Sum")
+    check(stats["DecUpdate Edge Sum"] <= stats["Dec Edge Sum"],
+          "DecUpdate Edge Sum > Dec Edge Sum")
+    check(stats["IncUpdate Vertex Sum"] <= stats["Inc Vertex Sum"],
+          "IncUpdate Vertex Sum > Inc Vertex Sum")
+    check(stats["IncUpdate Edge Sum"] <= stats["Inc Edge Sum"],
+          "IncUpdate Edge Sum > Inc Edge Sum")
+    check(stats["DecUpdate Vertex Sum"] == stats["IncUpdate Vertex Sum"],
+          "decremental/incremental update vertex sums differ")
+    check(stats["DecUpdate Edge Sum"] == stats["IncUpdate Edge Sum"],
+          "decremental/incremental update edge sums differ")
+    return errors
 
 
 def parse_measurement(output, forced_partial=False):
-    """Parse the last complete counter snapshot emitted by the solver."""
-    required = ("Complete", "Calls", "Dec Calls", "Inc Calls", "Merges", "Tree Edge Cuts", "Splits",
-                "Vertex Sum", "Edge Sum", "Update Vertex Sum", "Update Edge Sum",
-                "En Samples", "En Sum", "En Positive Updates", "En Update Average Sum",
-                "Replacement Searches", "Replacement Scan Steps", "Early Breaks", "Full Scans")
-    # A hard kill may interrupt the newest multi-line snapshot.  Split at each
-    # Complete marker and use only the newest snapshot containing every field,
-    # rather than combining a partial new snapshot with stale older values.
-    starts = [match.start() for match in re.finditer(r"^CC Stats Complete:", output, re.MULTILINE)]
+    """Parse and validate the newest complete set of emitted CC Stats fields."""
+    starts = [m.start() for m in re.finditer(r"^CC Stats Complete:", output, re.MULTILINE)]
     snapshots = []
     for index, start in enumerate(starts):
         end = starts[index + 1] if index + 1 < len(starts) else len(output)
         candidate = {name: float(value) for name, value in STAT_RE.findall(output[start:end])}
-        if all(name in candidate for name in required):
+        if all(name in candidate for name in STAT_FIELDS):
             snapshots.append(candidate)
     if not snapshots:
         return None
+
     stats = snapshots[-1]
-
-    calls = stats["Calls"]
-    searches = stats["Replacement Searches"]
-    en_samples = stats["En Samples"]
-    en_updates = stats["En Positive Updates"]
-    time_match = TIME_RE.search(output)
-    cc_time_match = CC_TIME_RE.search(output)
-    cc_ratio_match = CC_RATIO_RE.search(output)
-    solution_match = SOLUTION_RE.search(output)
-    complete = bool(stats["Complete"]) and not forced_partial
-    return {
-        "status": "success" if complete else "timeout_partial",
-        "stats_complete": int(complete),
-        "time_s": time_match.group(1) if time_match else "",
-        "cc_cpu_s": cc_time_match.group(1) if cc_time_match else "",
-        "cc_cpu_ratio": cc_ratio_match.group(1) if cc_ratio_match else "",
-        "solutions": solution_match.group(1) if solution_match else "",
-        "cc_calls": int(calls),
-        "dec_cc_calls": int(stats["Dec Calls"]),
-        "inc_cc_calls": int(stats["Inc Calls"]),
-        "merges": int(stats["Merges"]),
-        "tree_edge_cuts": int(stats["Tree Edge Cuts"]),
-        "splits": int(stats["Splits"]),
-        "merge_per_cc": ratio(stats["Merges"], calls),
-        "split_per_cc": ratio(stats["Splits"], calls),
-        "avg_v": ratio(stats["Vertex Sum"], calls),
-        "avg_e": ratio(stats["Edge Sum"], calls),
-        "avg_vd": ratio(stats["Update Vertex Sum"], calls),
-        "avg_ed": ratio(stats["Update Edge Sum"], calls),
-        "avg_en_per_update": ratio(stats["En Update Average Sum"], en_updates),
-        "avg_en_per_ed": ratio(stats["En Sum"], en_samples),
-        "replacement_search_calls": int(searches),
-        "replacement_scan_steps": int(stats["Replacement Scan Steps"]),
-        "avg_scan_per_search": ratio(stats["Replacement Scan Steps"], searches),
-        "early_break_rate": ratio(stats["Early Breaks"], searches),
-        "full_scan_rate": ratio(stats["Full Scans"], searches),
+    errors = validate_stats(stats)
+    solved = bool(stats["Complete"]) and not forced_partial
+    result = {
+        output_name: int(stats[log_name])
+        for log_name, output_name in STAT_FIELDS.items()
     }
+    time_match = TIME_RE.search(output)
+    result.update({
+        "status": "invalid" if errors else ("success" if solved else "sampled"),
+        "validation_errors": "; ".join(errors),
+        "time_s": time_match.group(1) if time_match else "",
+    })
+    return result
 
 
-def run_case(executable, input_path, timeout):
-    command = [str(executable), "-a", "ddxd", "-i", str(input_path),
-               "-t", "1", "--full-cc-stats", "--time-limit", str(timeout)]
+def run_case(executable, input_path, search_seconds, process_timeout=None):
+    """Wait through initialization, then apply the subprocess safety timeout."""
+    if process_timeout is None:
+        # Backward-compatible entry point for the focused merge/cut runner.
+        process_timeout = search_seconds + 30
+    command = [str(executable), "-a", "ddxd", "-i", str(input_path), "-t", "1",
+               "--full-cc-stats", "--time-limit", str(search_seconds)]
+    process = subprocess.Popen(
+        command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        text=True, bufsize=1,
+    )
+    prefix = []
+    assert process.stdout is not None
+    # Initialization is deliberately not timed.  The safety timeout starts
+    # only after the solver confirms that the algorithm itself has begun.
+    for line in process.stdout:
+        prefix.append(line)
+        if START_MARKER in line:
+            break
+    else:
+        process.wait()
+        return {"status": f"error({process.returncode})", "validation_errors": "algorithm did not start"}
+
     try:
-        # Let the solver hit its own bound and flush partial counters cleanly.
-        process = subprocess.run(command, capture_output=True, text=True, timeout=timeout + 30)
-    except subprocess.TimeoutExpired as error:
-        # TimeoutExpired retains output captured before subprocess.run killed the
-        # child.  The solver emits periodic counter snapshots, so even a long,
-        # non-interruptible CC update leaves a recent valid censored row.
-        stdout = error.stdout or ""
-        stderr = error.stderr or ""
-        if isinstance(stdout, bytes):
-            stdout = stdout.decode(errors="replace")
-        if isinstance(stderr, bytes):
-            stderr = stderr.decode(errors="replace")
-        return parse_measurement(stdout + stderr, forced_partial=True) or {"status": "timeout"}
+        suffix, _ = process.communicate(timeout=process_timeout)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        suffix, _ = process.communicate()
+        measured = parse_measurement("".join(prefix) + suffix, forced_partial=True)
+        return measured or {"status": "timeout", "validation_errors": "process safety timeout"}
 
-    output = process.stdout + process.stderr
+    output = "".join(prefix) + suffix
     if process.returncode != 0:
-        return {"status": f"error({process.returncode})"}
-    return parse_measurement(output) or {"status": "missing_stats"}
+        return {"status": f"error({process.returncode})", "validation_errors": "solver process failed"}
+    return parse_measurement(output) or {"status": "missing_stats", "validation_errors": "no complete snapshot"}
 
 
 def write_csv(path, fields, rows):
@@ -144,23 +156,17 @@ def write_csv(path, fields, rows):
 def summaries(raw_rows):
     grouped = defaultdict(list)
     for row in raw_rows:
-        grouped[row["dataset"]]
-        if row["status"] == "success":
+        if row["status"] in {"success", "sampled"}:
             grouped[row["dataset"]].append(row)
-    mapping = {
-        "avg_cc_calls": "cc_calls", "avg_merges": "merges", "avg_splits": "splits",
-        "merge_per_cc": "merge_per_cc", "split_per_cc": "split_per_cc",
-        "avg_v": "avg_v", "avg_e": "avg_e", "avg_vd": "avg_vd", "avg_ed": "avg_ed",
-        "avg_en": "avg_en_per_update", "avg_en_per_ed": "avg_en_per_ed",
-        "avg_scan": "avg_scan_per_search", "early_break_rate": "early_break_rate",
-        "full_scan_rate": "full_scan_rate",
-    }
+        else:
+            grouped[row["dataset"]]
     result = []
+    numeric = [field for field in STAT_FIELDS.values() if field != "stats_complete"]
     for dataset, rows in sorted(grouped.items()):
-        summary = {"dataset": dataset, "solved": len(rows)}
+        summary = {"dataset": dataset, "valid_runs": len(rows)}
         if rows:
-            for output_name, raw_name in mapping.items():
-                summary[output_name] = sum(float(row[raw_name]) for row in rows) / len(rows)
+            for field in numeric:
+                summary[f"avg_{field}"] = sum(float(row[field]) for row in rows) / len(rows)
         result.append(summary)
     return result
 
@@ -169,27 +175,28 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--report", type=Path, default=common.DEFAULT_REPORT)
     parser.add_argument("--executable", type=Path, default=common.ROOT / "bin/main")
-    parser.add_argument("--raw-output", type=Path,
-                        default=common.ROOT / "results/cc_dynamics_instances.csv")
-    parser.add_argument("--summary-output", type=Path,
-                        default=common.ROOT / "results/cc_dynamics_summary.csv")
-    parser.add_argument("--timeout", type=int, default=100)
+    parser.add_argument("--raw-output", type=Path, default=common.ROOT / "results/cc_dynamics_instances.csv")
+    parser.add_argument("--summary-output", type=Path, default=common.ROOT / "results/cc_dynamics_summary.csv")
+    parser.add_argument("--search-seconds", type=int, default=60,
+                        help="gracefully stop search and roll back after this many seconds")
+    parser.add_argument("--timeout", type=int, default=120,
+                        help="safety timeout after the algorithm starts")
     parser.add_argument("--limit", type=int)
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--resume", action="store_true",
-                        help="keep successful rows and rerun timeout/error rows")
+    parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
+    if args.search_seconds < 1 or args.timeout <= args.search_seconds:
+        parser.error("require 1 <= --search-seconds < --timeout")
 
     inputs = common.input_index(common.DEFAULT_INPUT_DIRS)
-    names = report_instances(args.report)
+    selected = report_instances(args.report)
     if args.limit is not None:
-        names = names[:args.limit]
-    # missing = [name for name in names if name not in inputs]
-    # if missing:
-    #     parser.error(f"{len(missing)} report instances have no input file")
+        selected = selected[:args.limit]
+    runnable = [item for item in selected if item["instance"] in inputs]
+    print(f"report selected {len(selected)} cases; {len(runnable)} input files found")
     if args.dry_run:
-        for name in names:
-            print(inputs[name])
+        for item in runnable:
+            print(inputs[item["instance"]])
         return 0
     if not args.executable.is_file():
         parser.error(f"executable not found: {args.executable}")
@@ -198,30 +205,24 @@ def main():
     if args.resume and args.raw_output.is_file():
         with args.raw_output.open(encoding="utf-8", newline="") as stream:
             raw = list(csv.DictReader(stream))
-    completed = {
-            row["instance"] for row in raw 
-            if row["status"] in {"success", "timeout_partial"}
-        }
-    for number, name in enumerate(names, 1):
+    completed = {row["instance"] for row in raw if row["status"] in {"success", "sampled"}}
+    for number, item in enumerate(runnable, 1):
+        name = item["instance"]
         if name in completed:
-            print(f"[{number}/{len(names)}] {name} (already recorded)", flush=True)
-            continue
-        if name not in inputs.keys():
             continue
         path = inputs[name]
-        print(f"[{number}/{len(names)}] {name}", flush=True)
-        measured = run_case(args.executable, path, args.timeout)
+        print(f"[{number}/{len(runnable)}] {name}", flush=True)
+        measured = run_case(args.executable, path, args.search_seconds, args.timeout)
         row = {field: "" for field in RAW_FIELDS}
         row.update(measured)
         row.update({"dataset": path.parent.name, "instance": name,
                     "input": str(path.relative_to(common.ROOT))})
-        raw = [existing for existing in raw if existing["instance"] != name]
+        raw = [old for old in raw if old["instance"] != name]
         raw.append(row)
         write_csv(args.raw_output, RAW_FIELDS, raw)
         write_csv(args.summary_output, SUMMARY_FIELDS, summaries(raw))
 
     print(f"wrote {len(raw)} instance rows to {args.raw_output}")
-    print(f"wrote dataset averages to {args.summary_output}")
     return 0
 
 

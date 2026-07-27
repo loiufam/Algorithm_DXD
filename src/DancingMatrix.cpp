@@ -627,7 +627,7 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
         comps.end()
     );
 
-    // 记录分裂后产生分块的数
+    // 记录本次减量更新中替代边搜索的平均候选集大小。
     if (collectCCExperimentStats && enSamplesThisUpdate > 0) {
         std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
         ++ccExperimentStats.enPositiveUpdates;

@@ -77,7 +77,8 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(vector<Block
         activeSubgraph_ = outerSubgraph;
     };
 
-    for (size_t i = 0; i < blocks.size(); ++i) {
+    try {
+        for (size_t i = 0; i < blocks.size(); ++i) {
 
         if (i >= stash.size() || !stash[i]) {
             std::cerr << "serialSearch: component " << i << " missing\n";
@@ -107,6 +108,20 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(vector<Block
         }
         totalResult = totalResult * result;
         subNodes.push_back(node);
+        }
+    } catch (...) {
+        // A statistics sampling deadline is raised from a recursive DXD call.
+        // Preserve the current component before restoring the outer forest so
+        // every stack frame can finish its own matrix/ETT rollback.
+        for (size_t i = 0; i < stash.size(); ++i) {
+            if (!stash[i] && !comps.empty()) {
+                stash[i] = std::move(comps.front());
+                comps.clear();
+                break;
+            }
+        }
+        restoreStash();
+        throw;
     }
     restoreStash();
     
@@ -314,7 +329,10 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             updateAdaptiveDecompositionState(block, curBlock.size());
 
             if (int(curBlock.size()) > 1) {
-                if (collectCCExperimentStats) ++ccExperimentStats.cc_decompose;
+                if (collectCCExperimentStats) {
+                    std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+                    ++ccExperimentStats.cc_decompose;
+                }
             // std::cout << "Detected " << curBlock.size() << " independent blocks at depth " << depth << ".\n";
 
                 const bool stopDynamicUpdates =
@@ -366,10 +384,30 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     if(shouldMaintainDynamicEtt(depth)) timedDecUpdateCC(deleted_rows);
 
     Node* curC = choose->down;
-    while(curC != choose) {
+    bool rowCovered = false;
+    set<int> deleted_rows_;
+
+    auto restoreCurrentFrame = [&]() {
+        if (rowCovered) {
+            Node* curR = curC->left;
+            while (curR != curC) {
+                if (useDxzSearch) uncover(curR->col);
+                else uncoverInBlock(curR->col, block);
+                curR = curR->left;
+            }
+            if (shouldMaintainDynamicEtt(depth)) timedIncUpdateCC(deleted_rows_);
+            rowCovered = false;
+        }
+        if (useDxzSearch) uncover(choose->col);
+        else uncoverInBlock(choose->col, block);
+        if (shouldMaintainDynamicEtt(depth)) timedIncUpdateCC(deleted_rows);
+    };
+
+    try {
+        while(curC != choose) {
         
         Node* curR = curC->right;
-        set<int> deleted_rows_;
+        deleted_rows_.clear();
 
         while (curR != curC) {
             if (useDxzSearch) {
@@ -380,6 +418,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             curR = curR->right;
         }
         if(shouldMaintainDynamicEtt(depth)) timedDecUpdateCC(deleted_rows_);
+        rowCovered = true;
  
         auto [result, sub_node] = DXD(block, depth + 1);
 
@@ -398,8 +437,13 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             curR = curR->left;
         }
         if(shouldMaintainDynamicEtt(depth)) timedIncUpdateCC(deleted_rows_);
+        rowCovered = false;
 
         curC = curC->down;
+        }
+    } catch (...) {
+        restoreCurrentFrame();
+        throw;
     }
     if (useDxzSearch) {
         uncover(choose->col);
@@ -470,11 +514,18 @@ size_t DanceDNNF::countZDDSize() const {
 
 void DanceDNNF::logCCExperimentStats(bool complete) {
     if (!collectCCExperimentStats) return;
-    const auto& stats = ccExperimentStats;
+    // Parallel decomposition tasks can update the counters while the main
+    // search emits a periodic timeout snapshot.  Copy a coherent snapshot
+    // under the same mutex used by all counter writers.
+    CCExperimentStats stats;
+    {
+        std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+        stats = ccExperimentStats;
+    }
     logger.logLine("CC Stats Complete: " + std::to_string(complete ? 1 : 0));
     logger.logLine("CC Stats Calls: " + std::to_string(stats.calls()));
     logger.logLine("CC Stats Dec Calls: " + std::to_string(stats.decCalls));
-    // logger.logLine("CC Stats Inc Calls: " + std::to_string(stats.incCalls));
+    logger.logLine("CC Stats Inc Calls: " + std::to_string(stats.incCalls));
     logger.logLine("CC Stats Merges: " + std::to_string(stats.merges));
     logger.logLine("CC Stats Tree Edge Cuts: " + std::to_string(stats.treeEdge_cuts)); 
     logger.logLine("CC Stats Splits: " + std::to_string(stats.splits));
@@ -489,14 +540,10 @@ void DanceDNNF::logCCExperimentStats(bool complete) {
     logger.logLine("CC Stats Inc Edge Sum: " + std::to_string(stats.E2));
     logger.logLine("CC Stats IncUpdate Vertex Sum: " + std::to_string(stats.Vi));
     logger.logLine("CC Stats IncUpdate Edge Sum: " + std::to_string(stats.Ei)); 
-    // logger.logLine("CC Stats En Samples: " + std::to_string(stats.enSamples));
+
     logger.logLine("CC Stats En Sum: " + std::to_string(stats.enSum));
-    // logger.logLine("CC Stats En Positive Updates: " + std::to_string(stats.enPositiveUpdates));
-    // logger.logLine("CC Stats En Update Average Sum: " + std::to_string(stats.enUpdateAverageSum));
     logger.logLine("CC Stats Replacement Searches: " + std::to_string(stats.replacementSearchCalls));
     logger.logLine("CC Stats Replacement Scan Steps: " + std::to_string(stats.replacementScanSteps));
-    // logger.logLine("CC Stats Early Breaks: " + std::to_string(stats.replacementEarlyBreaks));
-    // logger.logLine("CC Stats Full Scans: " + std::to_string(stats.replacementFullScans));
 }
 
 // DXD DXZ入口
