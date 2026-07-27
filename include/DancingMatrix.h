@@ -81,9 +81,11 @@ class DancingMatrix
 
         struct CCExperimentStats {
             uint64_t decCalls = 0, incCalls = 0;
-            uint64_t merges = 0, splits = 0, treeEdge_cuts = 0;
-            long double verticesSum = 0, edgesSum = 0;
-            long double updateVerticesSum = 0, updateEdgesSum = 0;
+            uint64_t merges = 0, splits = 0, treeEdge_cuts = 0, cc_decompose = 0;
+            long double V1 = 0, E1 = 0; // 减量式图规模统计
+            long double V2 = 0, E2 = 0; // 增量式图规模统计 
+            long double Vd = 0, Ed = 0; // 减量式更新顶点数、边数
+            long double Vi = 0, Ei = 0; // 增量式更新顶点数、边数 
             uint64_t enSamples = 0, enSum = 0;
             uint64_t enPositiveUpdates = 0;
             long double enUpdateAverageSum = 0;

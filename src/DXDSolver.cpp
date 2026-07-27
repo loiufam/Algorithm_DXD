@@ -269,9 +269,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         throw std::runtime_error("Time bound broken");
     }
 
-    // Capture the mode for this stack frame.  A deeper call may cross the
-    // adaptive threshold; its parent must still undo operations using the
-    // same representation with which it covered them.
     const bool useDxzSearch = dxz_mode || isDxzFallbackMode();
 
     if (useDxzSearch && isSolved()) {
@@ -280,8 +277,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         return {DNNFResult(1), T};
     }
 
-    // Keep fallback cache entries in a separate key space: unlike DXD, DXZ
-    // does not mutate Block::cols while descending.
     size_t state = useDxzSearch
         ? (encodeColState() ^ size_t{0xd6e8feb86659fd93ULL})
         : hashBlockState(block.cols);
@@ -319,6 +314,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             updateAdaptiveDecompositionState(block, curBlock.size());
 
             if (int(curBlock.size()) > 1) {
+                if (collectCCExperimentStats) ++ccExperimentStats.cc_decompose;
             // std::cout << "Detected " << curBlock.size() << " independent blocks at depth " << depth << ".\n";
 
                 const bool stopDynamicUpdates =
@@ -478,22 +474,29 @@ void DanceDNNF::logCCExperimentStats(bool complete) {
     logger.logLine("CC Stats Complete: " + std::to_string(complete ? 1 : 0));
     logger.logLine("CC Stats Calls: " + std::to_string(stats.calls()));
     logger.logLine("CC Stats Dec Calls: " + std::to_string(stats.decCalls));
-    logger.logLine("CC Stats Inc Calls: " + std::to_string(stats.incCalls));
+    // logger.logLine("CC Stats Inc Calls: " + std::to_string(stats.incCalls));
     logger.logLine("CC Stats Merges: " + std::to_string(stats.merges));
     logger.logLine("CC Stats Tree Edge Cuts: " + std::to_string(stats.treeEdge_cuts)); 
     logger.logLine("CC Stats Splits: " + std::to_string(stats.splits));
-    logger.logLine("CC Stats Vertex Sum: " + std::to_string(stats.verticesSum));
-    logger.logLine("CC Stats Edge Sum: " + std::to_string(stats.edgesSum));
-    logger.logLine("CC Stats Update Vertex Sum: " + std::to_string(stats.updateVerticesSum));
-    logger.logLine("CC Stats Update Edge Sum: " + std::to_string(stats.updateEdgesSum));
-    logger.logLine("CC Stats En Samples: " + std::to_string(stats.enSamples));
+    logger.logLine("CC Stats Decompose: " + std::to_string(stats.cc_decompose));
+
+    logger.logLine("CC Stats Dec Vertex Sum: " + std::to_string(stats.V1));
+    logger.logLine("CC Stats Dec Edge Sum: " + std::to_string(stats.E1));
+    logger.logLine("CC Stats DecUpdate Vertex Sum: " + std::to_string(stats.Vd));
+    logger.logLine("CC Stats DecUpdate Edge Sum: " + std::to_string(stats.Ed));
+
+    logger.logLine("CC Stats Inc Vertex Sum: " + std::to_string(stats.V2));
+    logger.logLine("CC Stats Inc Edge Sum: " + std::to_string(stats.E2));
+    logger.logLine("CC Stats IncUpdate Vertex Sum: " + std::to_string(stats.Vi));
+    logger.logLine("CC Stats IncUpdate Edge Sum: " + std::to_string(stats.Ei)); 
+    // logger.logLine("CC Stats En Samples: " + std::to_string(stats.enSamples));
     logger.logLine("CC Stats En Sum: " + std::to_string(stats.enSum));
-    logger.logLine("CC Stats En Positive Updates: " + std::to_string(stats.enPositiveUpdates));
-    logger.logLine("CC Stats En Update Average Sum: " + std::to_string(stats.enUpdateAverageSum));
+    // logger.logLine("CC Stats En Positive Updates: " + std::to_string(stats.enPositiveUpdates));
+    // logger.logLine("CC Stats En Update Average Sum: " + std::to_string(stats.enUpdateAverageSum));
     logger.logLine("CC Stats Replacement Searches: " + std::to_string(stats.replacementSearchCalls));
     logger.logLine("CC Stats Replacement Scan Steps: " + std::to_string(stats.replacementScanSteps));
-    logger.logLine("CC Stats Early Breaks: " + std::to_string(stats.replacementEarlyBreaks));
-    logger.logLine("CC Stats Full Scans: " + std::to_string(stats.replacementFullScans));
+    // logger.logLine("CC Stats Early Breaks: " + std::to_string(stats.replacementEarlyBreaks));
+    // logger.logLine("CC Stats Full Scans: " + std::to_string(stats.replacementFullScans));
 }
 
 // DXD DXZ入口

@@ -461,16 +461,20 @@ void DancingMatrix::recordCCUpdateStart(const std::set<int>& changedVertices,
     }
 
     std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
-    if (restoring) ++ccExperimentStats.incCalls;
-    else ++ccExperimentStats.decCalls;
-    // 累计图顶点数
-    ccExperimentStats.verticesSum += active.size();
-    // 累计图边数
-    ccExperimentStats.edgesSum += graphEdges;
-    // 累积修改图顶点数
-    ccExperimentStats.updateVerticesSum += changedVertices.size();
-    // 累积影响图边数 
-    ccExperimentStats.updateEdgesSum += affectedEdges.size();
+    if (restoring) {
+        ++ccExperimentStats.incCalls;
+        ccExperimentStats.V2 += active.size(); 
+        ccExperimentStats.E2 += graphEdges;  
+        ccExperimentStats.Vi += changedVertices.size();
+        ccExperimentStats.Ei += affectedEdges.size(); 
+    }
+    else {
+        ++ccExperimentStats.decCalls;
+        ccExperimentStats.V1 += active.size();
+        ccExperimentStats.E1 += graphEdges;
+        ccExperimentStats.Vd += changedVertices.size();
+        ccExperimentStats.Ed += affectedEdges.size();
+    }
 }
 
 // 减量式更新单连通分量
@@ -623,6 +627,7 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
         comps.end()
     );
 
+    // 记录分裂后产生分块的数
     if (collectCCExperimentStats && enSamplesThisUpdate > 0) {
         std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
         ++ccExperimentStats.enPositiveUpdates;
