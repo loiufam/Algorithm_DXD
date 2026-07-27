@@ -212,7 +212,7 @@ def main():
         help="run only names in this UTF-8 text file (one per line; commas also accepted)",
     )
     parser.add_argument("--input-dir", action="append", type=Path, dest="input_dirs")
-    parser.add_argument("--timeout", type=int, default=1500)
+    parser.add_argument("--timeout", type=int, default=600)
     parser.add_argument("--limit", type=int, help="run only the first N selected cases")
     parser.add_argument("--dry-run", action="store_true", help="only list selected inputs")
     args = parser.parse_args()

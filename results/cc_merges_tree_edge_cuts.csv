@@ -436,3 +436,13 @@ exact_cover_benchmarks,latin7-blk-00006,152952,312616
 exact_cover_benchmarks,latin7-blk-00007,108,162
 exact_cover_benchmarks,latin7-blk-00008,150169,304159
 exact_cover_benchmarks,latin7-blk-00009,148718,297609
+set_partition_benchmarks,meteor,7160,8101
+set_partition_benchmarks,sppnw08,87128,127671
+set_partition_benchmarks,sppnw09,,
+set_partition_benchmarks,sppnw10,47647,81098
+set_partition_benchmarks,sppnw12,20178,29291
+set_partition_benchmarks,sppnw15,26670,31445
+set_partition_benchmarks,sppnw19,,
+set_partition_benchmarks,sppnw20,912,960
+set_partition_benchmarks,sppnw21,767,810
+set_partition_benchmarks,sppnw22,882,948
