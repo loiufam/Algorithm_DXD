@@ -272,13 +272,10 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     // std::cout << oss.str();
     // printComponents();
 
-    // A dynamic-connectivity operation can run past the subprocess grace
-    // period without reaching another timeout check.  Keep a recent, fully
-    // flushed snapshot so a hard kill retains the work done up to that point.
-    if (collectCCExperimentStats && timer.getElapsedTime() >= nextCCStatsSnapshotTime) {
-        logCCExperimentStats(false);
-        nextCCStatsSnapshotTime = timer.getElapsedTime() + 1.0;
-    }
+    // if (collectCCExperimentStats && timer.getElapsedTime() >= nextCCStatsSnapshotTime) {
+    //     logCCExperimentStats(false);
+    //     nextCCStatsSnapshotTime = timer.getElapsedTime() + 1.0;
+    // }
 
     if(timer.timeBoundBroken()) {
         throw std::runtime_error("Time bound broken");
@@ -659,9 +656,9 @@ void DanceDNNF::startMultiThreadDXD() {
    
         searchTime = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
         logger.logLine("Time: " + std::to_string(searchTime) + " s");
-        logger.logLine("Dyn CC CPU: " + std::to_string(ccCpuTime) + " s");
-        logger.logLine("Dyn CC CPU Ratio: " +
-                       std::to_string(searchTime > 0.0 ? ccCpuTime / searchTime : 0.0));
+        // logger.logLine("Dyn CC CPU: " + std::to_string(ccCpuTime) + " s");
+        // logger.logLine("Dyn CC CPU Ratio: " +
+        //                std::to_string(searchTime > 0.0 ? ccCpuTime / searchTime : 0.0));
         logCCExperimentStats(true);
         timeout = false;
 
