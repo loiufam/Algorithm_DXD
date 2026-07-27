@@ -129,13 +129,29 @@ def run_solver(executable, algorithm, input_path, timeout):
     }
 
 
+def estimate_dxd_cc_cost(dyn, dxd):
+    """Project DXD's BFS CC share onto the DynDXD wall-clock time."""
+    try:
+        dxd_time = float(dxd["time_s"])
+        dxd_cc_time = float(dxd["cc_cpu_s"])
+        dyndxd_time = float(dyn["time_s"])
+    except (KeyError, TypeError, ValueError):
+        return "", ""
+    if dxd_time <= 0.0:
+        return "", ""
+
+    dxd_cc_ratio = dxd_cc_time / dxd_time
+    return dxd_cc_ratio, dyndxd_time * dxd_cc_ratio
+
+
 def write_results(path, rows):
     path.parent.mkdir(parents=True, exist_ok=True)
     fields = (
         "instance", "input", "rows", "cols",
         "report_dyndxd_time_s", "report_dxd_time_s",
         "dyndxd_status", "dyndxd_time_s", "dyndxd_cc_cpu_s",
-        "dxd_status", "dxd_time_s", "dxd_cc_cpu_s",
+        "dxd_status", "dxd_time_s", "dxd_cc_cpu_s", "dxd_cc_cpu_ratio",
+        "dyndxd_cc_cpu_from_dxd_ratio_s",
         "solutions", "max_blocks",
     )
     with path.open("w", encoding="utf-8", newline="") as output:
@@ -182,6 +198,7 @@ def main():
         print(f"[{number}/{len(runnable)}] {name}", flush=True)
         dyn = run_solver(args.executable, "ddxd", path, args.timeout)
         dxd = run_solver(args.executable, "dxd", path, args.timeout)
+        dxd_cc_ratio, projected_cc_time = estimate_dxd_cc_cost(dyn, dxd)
         result = {
             **item,
             "input": str(path.relative_to(ROOT)),
@@ -191,6 +208,8 @@ def main():
             "dxd_status": dxd["status"],
             "dxd_time_s": dxd["time_s"],
             "dxd_cc_cpu_s": dxd["cc_cpu_s"],
+            "dxd_cc_cpu_ratio": dxd_cc_ratio,
+            "dyndxd_cc_cpu_from_dxd_ratio_s": projected_cc_time,
             "solutions": dyn["solutions"] or dxd["solutions"],
             "max_blocks": dyn["max_blocks"],
         }

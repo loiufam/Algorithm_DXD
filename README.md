@@ -121,6 +121,12 @@ python3 bin/run_cc_experiment.py
 
 The default output is `results/cc_cpu_experiment.csv`. Use `--dry-run` to list
 the selected inputs, or `--limit N` for a short smoke test.
+For each instance the runner executes both algorithms. It records DXD's BFS
+connected-component share as `dxd_cc_cpu_ratio = dxd_cc_cpu_s / dxd_time_s`,
+then projects that baseline share onto the DynDXD runtime as
+`dyndxd_cc_cpu_from_dxd_ratio_s = dyndxd_time_s * dxd_cc_cpu_ratio`. A DynDXD
+run by itself cannot know this DXD baseline without either a separate DXD run
+or a previously recorded ratio.
 
 ### Full dynamic-connectivity statistics
 
@@ -143,6 +149,10 @@ to the solver as its internal bound. If that bound is reached, the instance CSV
 keeps the partial counters with `status=timeout_partial` and
 `stats_complete=0`, but dataset averages exclude that censored row. Increase
 the timeout and rerun to obtain complete per-solve statistics.
+The solver also prints `Dyn CC CPU Ratio`, the fraction of measured search
+time spent maintaining dynamic connectivity, and the raw CSV stores it as
+`cc_cpu_ratio`. This timing includes only connectivity work actually performed
+during the search; it does not run a synthetic delete/restore cycle afterward.
 Use `--resume` together with a larger timeout to retain completed rows and rerun
 only timeout/error cases.
 
