@@ -111,13 +111,11 @@ class DanceDNNF : DancingMatrix {
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> parallelSearchUseOmp(
             vector<Block>& blocks, int depth, bool disableDynamicUpdates = false);
 
-        static constexpr int SMALL_INSTANCE_ROWS = 100;
-        static constexpr int SMALL_INSTANCE_COLS = 30;
+        static constexpr int ETT_STOP_ROWS = 200;
         static constexpr int NO_SPLIT_LIMIT = 3;
         static constexpr int SMALL_BLOCK_ROWS = 64;
         static constexpr int SMALL_BLOCK_COLS = 12;
         static constexpr int NESTED_DYNAMIC_DEPTH_LIMIT = 2;
-        static constexpr size_t DYNAMIC_STOP_COMPONENT_COUNT = 4;
 
         bool dynamic_ett_disabled = false;
         bool decomposition_disabled = false;
@@ -125,9 +123,14 @@ class DanceDNNF : DancingMatrix {
         // traversal.  Parallel sub-blocks must remain confined to Block::cols.
         bool dxz_fallback_mode = false;
         int main_no_split_count = 0;
+        std::atomic<unsigned> smallEttProbeFrames{0};
 
         bool isSmallInstanceForDynamicEtt() const {
-            return ROWS <= SMALL_INSTANCE_ROWS || COLS <= SMALL_INSTANCE_COLS;
+            return ROWS < ETT_STOP_ROWS;
+        }
+
+        bool isSmallBlockForDynamicEtt(const Block& block) const {
+            return block.rows.size() < ETT_STOP_ROWS;
         }
 
         bool isLargeEnoughToStopAfterNoSplit(const Block& block) const {
@@ -178,8 +181,8 @@ class DanceDNNF : DancingMatrix {
             if (!useETT || dxd_mode) return false;
             if (isCurrentDynamicEttDisabled()) return false;
 
-            if (isSmallInstanceForDynamicEtt()) {
-                dynamic_ett_disabled = true;
+            if (isSmallBlockForDynamicEtt(block)) {
+                disableDynamicEttForCurrentState();
                 return false;
             }
 
@@ -219,6 +222,7 @@ class DanceDNNF : DancingMatrix {
             decomposition_disabled = false;
             dxz_fallback_mode = false;
             main_no_split_count = 0;
+            smallEttProbeFrames.store(0, std::memory_order_relaxed);
         }
 
         void updateAdaptiveDecompositionState(const Block& block, size_t numBlocks) {
