@@ -6,6 +6,7 @@ import csv
 import re
 import subprocess
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import run_cc_experiment as common
@@ -27,15 +28,15 @@ STAT_FIELDS = {
     "Tree Edge Cuts": "tree_edge_cuts",
     "Splits": "splits",
     "Decompose": "decompose",
-    "Dec Vertex Sum": "dec_vertex_sum",
-    "Dec Edge Sum": "dec_edge_sum",
-    "DecUpdate Vertex Sum": "dec_update_vertex_sum",
-    "DecUpdate Edge Sum": "dec_update_edge_sum",
-    "Inc Vertex Sum": "inc_vertex_sum",
-    "Inc Edge Sum": "inc_edge_sum",
-    "IncUpdate Vertex Sum": "inc_update_vertex_sum",
-    "IncUpdate Edge Sum": "inc_update_edge_sum",
-    "En Sum": "en_sum",
+    "CC Computations": "cc_computations",
+    "V Sum": "vertex_sum",
+    "E Sum": "edge_sum",
+    "Vd Sum": "updated_vertex_sum",
+    "Ed Sum": "updated_edge_sum",
+    "ETT En Sum": "ett_full_edge_sum",
+    "ETT Er Sum": "ett_replacement_scan_sum",
+    "Non-ETT E Sum": "non_ett_edge_sum",
+    "Dyn Total Edge Sum": "dynamic_scanned_edge_sum",
     "Replacement Searches": "replacement_searches",
     "Replacement Scan Steps": "replacement_scan_steps",
 }
@@ -63,20 +64,17 @@ def validate_stats(stats):
           "Tree Edge Cuts != Replacement Searches")
     check(stats["Merges"] + stats["Splits"] == stats["Tree Edge Cuts"],
           "Merges + Splits != Tree Edge Cuts")
-    check(stats["Replacement Scan Steps"] <= stats["En Sum"],
-          "Replacement Scan Steps > En Sum")
-    check(stats["DecUpdate Vertex Sum"] <= stats["Dec Vertex Sum"],
-          "DecUpdate Vertex Sum > Dec Vertex Sum")
-    check(stats["DecUpdate Edge Sum"] <= stats["Dec Edge Sum"],
-          "DecUpdate Edge Sum > Dec Edge Sum")
-    check(stats["IncUpdate Vertex Sum"] <= stats["Inc Vertex Sum"],
-          "IncUpdate Vertex Sum > Inc Vertex Sum")
-    check(stats["IncUpdate Edge Sum"] <= stats["Inc Edge Sum"],
-          "IncUpdate Edge Sum > Inc Edge Sum")
-    check(stats["DecUpdate Vertex Sum"] == stats["IncUpdate Vertex Sum"],
-          "decremental/incremental update vertex sums differ")
-    check(stats["DecUpdate Edge Sum"] == stats["IncUpdate Edge Sum"],
-          "decremental/incremental update edge sums differ")
+    check(stats["ETT Er Sum"] == stats["Replacement Scan Steps"],
+          "ETT Er Sum != Replacement Scan Steps")
+    check(stats["ETT Er Sum"] <= stats["ETT En Sum"],
+          "ETT replacement scans exceed ETT full-edge total")
+    check(stats["E Sum"] == stats["ETT En Sum"] + stats["Non-ETT E Sum"],
+          "E Sum != ETT En Sum + Non-ETT E Sum")
+    check(stats["Dyn Total Edge Sum"] ==
+          stats["ETT Er Sum"] + stats["Non-ETT E Sum"],
+          "Dyn Total Edge Sum != ETT Er Sum + Non-ETT E Sum")
+    check(stats["Vd Sum"] <= stats["V Sum"], "Vd Sum > V Sum")
+    check(stats["Ed Sum"] <= stats["E Sum"], "Ed Sum > E Sum")
     return errors
 
 
@@ -114,7 +112,7 @@ def run_case(executable, input_path, search_seconds, process_timeout=None):
         # Backward-compatible entry point for the focused merge/cut runner.
         process_timeout = search_seconds + 30
     command = [str(executable), "-a", "ddxd", "-i", str(input_path), "-t", "1",
-               "--full-cc-stats", "--time-limit", str(search_seconds)]
+               "--enable-cc-stats", "--time-limit", str(search_seconds)]
     process = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         text=True, bufsize=1,
@@ -177,10 +175,18 @@ def main():
     parser.add_argument("--executable", type=Path, default=common.ROOT / "bin/main")
     parser.add_argument("--raw-output", type=Path, default=common.ROOT / "results/cc_dynamics_instances.csv")
     parser.add_argument("--summary-output", type=Path, default=common.ROOT / "results/cc_dynamics_summary.csv")
-    parser.add_argument("--search-seconds", type=int, default=30,
+    parser.add_argument("--search-seconds", type=int, default=600,
                         help="gracefully stop search and roll back after this many seconds")
-    parser.add_argument("--timeout", type=int, default=60,
+    parser.add_argument("--timeout", type=int, default=1200,
                         help="safety timeout after the algorithm starts")
+    parser.add_argument(
+        "--dataset", action="append", dest="datasets",
+        help="run only this input-directory dataset; may be repeated",
+    )
+    parser.add_argument(
+        "--workers", type=int, default=4,
+        help="number of cases to run concurrently (default: 4)",
+    )
     parser.add_argument("--limit", type=int)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--resume", action="store_true")
@@ -188,8 +194,25 @@ def main():
     if args.search_seconds < 1 or args.timeout <= args.search_seconds:
         parser.error("require 1 <= --search-seconds < --timeout")
 
+    if args.workers < 1:
+        parser.error("--workers must be at least 1")
+
     inputs = common.input_index(common.DEFAULT_INPUT_DIRS)
     selected = report_instances(args.report)
+    known_datasets = {path.parent.name for path in inputs.values()}
+    requested_datasets = set(args.datasets or ())
+    unknown_datasets = requested_datasets - known_datasets
+    if unknown_datasets:
+        parser.error(
+            "unknown --dataset value(s): " + ", ".join(sorted(unknown_datasets)) +
+            "; choose from: " + ", ".join(sorted(known_datasets))
+        )
+    if requested_datasets:
+        selected = [
+            item for item in selected
+            if item["instance"] in inputs and
+            inputs[item["instance"]].parent.name in requested_datasets
+        ]
     if args.limit is not None:
         selected = selected[:args.limit]
     runnable = [item for item in selected if item["instance"] in inputs]
@@ -205,22 +228,40 @@ def main():
     if args.resume and args.raw_output.is_file():
         with args.raw_output.open(encoding="utf-8", newline="") as stream:
             raw = list(csv.DictReader(stream))
-    completed = {row["instance"] for row in raw if row["status"] in {"success", "invalid"}}
+    completed = {
+        (row["dataset"], row["instance"])
+        for row in raw if row["status"] in {"success", "invalid"}
+    }
+    pending = []
     for number, item in enumerate(runnable, 1):
-        name = item["instance"]
-        if name in completed:
-            continue
-        path = inputs[name]
-        print(f"[{number}/{len(runnable)}] {name}", flush=True)
-        measured = run_case(args.executable, path, args.search_seconds, args.timeout)
-        row = {field: "" for field in RAW_FIELDS}
-        row.update(measured)
-        row.update({"dataset": path.parent.name, "instance": name,
-                    "input": str(path.relative_to(common.ROOT))})
-        raw = [old for old in raw if old["instance"] != name]
-        raw.append(row)
-        write_csv(args.raw_output, RAW_FIELDS, raw)
-        write_csv(args.summary_output, SUMMARY_FIELDS, summaries(raw))
+        path = inputs[item["instance"]]
+        key = (path.parent.name, item["instance"])
+        if key not in completed:
+            pending.append((number, item, path))
+
+    def execute(entry):
+        number, item, path = entry
+        print(f"[{number}/{len(runnable)}] [{path.parent.name}] {item['instance']}", flush=True)
+        return entry, run_case(args.executable, path, args.search_seconds, args.timeout)
+
+    with ThreadPoolExecutor(max_workers=args.workers) as executor:
+        futures = [executor.submit(execute, entry) for entry in pending]
+        for future in as_completed(futures):
+            (_, item, path), measured = future.result()
+            name = item["instance"]
+            dataset = path.parent.name
+            row = {field: "" for field in RAW_FIELDS}
+            row.update(measured)
+            row.update({"dataset": dataset, "instance": name,
+                        "input": str(path.relative_to(common.ROOT))})
+            raw = [
+                old for old in raw
+                if (old["dataset"], old["instance"]) != (dataset, name)
+            ]
+            raw.append(row)
+            raw.sort(key=lambda value: (value["dataset"], value["instance"]))
+            write_csv(args.raw_output, RAW_FIELDS, raw)
+            write_csv(args.summary_output, SUMMARY_FIELDS, summaries(raw))
 
     print(f"wrote {len(raw)} instance rows to {args.raw_output}")
     return 0

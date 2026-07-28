@@ -111,7 +111,7 @@ class DanceDNNF : DancingMatrix {
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> parallelSearchUseOmp(
             vector<Block>& blocks, int depth, bool disableDynamicUpdates = false);
 
-        static constexpr int ETT_STOP_ROWS = 200;
+        static constexpr int ETT_STOP_ROWS = 150;
         static constexpr int NO_SPLIT_LIMIT = 3;
         static constexpr int SMALL_BLOCK_ROWS = 64;
         static constexpr int SMALL_BLOCK_COLS = 12;
