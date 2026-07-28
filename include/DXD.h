@@ -117,7 +117,7 @@ class DanceDNNF : DancingMatrix {
         static constexpr int SMALL_BLOCK_ROWS = 64;
         static constexpr int SMALL_BLOCK_COLS = 12;
         static constexpr int NESTED_DYNAMIC_DEPTH_LIMIT = 2;
-        static constexpr size_t DYNAMIC_STOP_COMPONENT_COUNT = 2;
+        static constexpr size_t DYNAMIC_STOP_COMPONENT_COUNT = 4;
 
         bool dynamic_ett_disabled = false;
         bool decomposition_disabled = false;
@@ -156,11 +156,12 @@ class DanceDNNF : DancingMatrix {
             }
         }
 
-        bool shouldTryDecompose(const Block& block, int depth) {
-            (void)depth;
+        bool shouldTryDecompose(const Block& block) {
+            if (dxz_mode) return false;
+
             if (block.rows.size() <= 2 || block.cols.empty()) return false;
 
-            if (dxd_mode) return true; // DXD 模式保持静态 BFS 分解尝试。
+            if (dxd_mode) return true;
 
             if (isCurrentDecompositionDisabled()) return false;
 
@@ -202,15 +203,15 @@ class DanceDNNF : DancingMatrix {
         }
 
         void timedDecUpdateCC(const std::set<int>& deletedRows) {
-            const std::clock_t start = std::clock();
+            // const std::clock_t start = std::clock();
             DecUpdateCC(deletedRows);
-            ccCpuTime += static_cast<double>(std::clock() - start) / CLOCKS_PER_SEC;
+            // ccCpuTime += static_cast<double>(std::clock() - start) / CLOCKS_PER_SEC;
         }
 
         void timedIncUpdateCC(const std::set<int>& restoredRows) {
-            const std::clock_t start = std::clock();
+            // const std::clock_t start = std::clock();
             IncUpdateCC(restoredRows);
-            ccCpuTime += static_cast<double>(std::clock() - start) / CLOCKS_PER_SEC;
+            // ccCpuTime += static_cast<double>(std::clock() - start) / CLOCKS_PER_SEC;
         }
 
         void resetAdaptiveDecompositionState() {
@@ -222,8 +223,6 @@ class DanceDNNF : DancingMatrix {
 
         void updateAdaptiveDecompositionState(const Block& block, size_t numBlocks) {
             if (dxd_mode) return;
-
-            if (collectCCExperimentStats) return;
 
             if (numBlocks > 1) {
                 if (isThreadLocal()) {
@@ -254,7 +253,7 @@ class DanceDNNF : DancingMatrix {
         void startDXD();
         void startMultiThreadDXD();
 
-        void enableFullCCStatistics() {
+        void enableCCStatistics() {
             collectCCExperimentStats = true;
             ccExperimentStats.reset();
         }

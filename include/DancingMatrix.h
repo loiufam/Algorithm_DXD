@@ -82,15 +82,15 @@ class DancingMatrix
         struct CCExperimentStats {
             uint64_t decCalls = 0, incCalls = 0;
             uint64_t merges = 0, splits = 0, treeEdge_cuts = 0, cc_decompose = 0;
+            uint64_t ccComputations = 0, ccComponents = 0;
             uint64_t V1 = 0, E1 = 0; // 减量式图规模统计
             uint64_t V2 = 0, E2 = 0; // 增量式图规模统计 
             uint64_t Vd = 0, Ed = 0; // 减量式更新顶点数、边数
             uint64_t Vi = 0, Ei = 0; // 增量式更新顶点数、边数 
             uint64_t enSamples = 0, enSum = 0;
-            uint64_t enPositiveUpdates = 0;
-            uint64_t enUpdateAverageSum = 0;
+
             uint64_t replacementSearchCalls = 0, replacementScanSteps = 0;
-            uint64_t replacementEarlyBreaks = 0, replacementFullScans = 0;
+            uint64_t nonEttComputations = 0, nonEttEdgeSum = 0, ettEdgeSum = 0;
 
             void reset() { *this = {}; }
             uint64_t calls() const { return decCalls + incCalls; }

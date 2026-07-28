@@ -496,10 +496,6 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
 
     if (comps.empty()) return;
 
-    // 每个线程在进入一个子块时只接收一棵 ETT；但是在同一线程递归 cover
-    // 的过程中，cutWithReplacement 可能把这棵树拆成多棵树。这里按顶点
-    // 当前所属树动态路由，既保留“子块/线程无锁独立”的设计，也避免分裂
-    // 后继续假设 comps[0] 而误删其他分量的顶点。
     std::vector<int> boundaryVertices;
     std::vector<int> otherVertices;
     boundaryVertices.reserve(deletedVertices.size());
@@ -586,19 +582,16 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
                 std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
                 ++ccExperimentStats.replacementSearchCalls;
                 ++ccExperimentStats.enSamples;
-                // searched 只会在树边成功 cut 后置位，因此不会把失败的
-                // deleteEdge 或已被删除的图边误计为 tree-edge cut。
+
                 ++ccExperimentStats.treeEdge_cuts;
-                // 此次搜索开始时所在 ETT 中的非树边候选集大小（上界）。
+                // 此次搜索开始时所在 ETT 中的非树边候选集大小。
                 ccExperimentStats.enSum += searchMetrics.nonTreeEdges;
                 // 实际循环次数
                 ccExperimentStats.replacementScanSteps += searchMetrics.scanSteps;
                 if (searchMetrics.found) {
-                    ++ccExperimentStats.replacementEarlyBreaks;
+                    // ++ccExperimentStats.replacementEarlyBreaks;
                     // merges 的定义是 cut 后找到替代边并执行 link 的次数。
                     ++ccExperimentStats.merges;
-                } else {
-                    ++ccExperimentStats.replacementFullScans;
                 }
             }
             if (newTree) {
@@ -627,13 +620,7 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
         comps.end()
     );
 
-    // 记录本次减量更新中替代边搜索的平均候选集大小。
-    if (collectCCExperimentStats && enSamplesThisUpdate > 0) {
-        std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
-        ++ccExperimentStats.enPositiveUpdates;
-        ccExperimentStats.enUpdateAverageSum +=
-            static_cast<long double>(enSumThisUpdate) / enSamplesThisUpdate;
-    }
+
 
 }
 
@@ -870,7 +857,6 @@ vector<Block> DancingMatrix::getComponentsByETT(const set<int>& target_cols) {
             if (rowIt == row_to_cols.end()) continue;
 
             for (int c : rowIt->second) {
-                // ETT 分块必须与 BFS 分块使用同一当前列口径，避免把已 cover 的列放回子块。
                 if (target_cols.count(c)) {
                     block_cols.insert(c);
                 }

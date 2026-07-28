@@ -24,7 +24,7 @@ public:
     // std::string ALGORITHM_DXD_SOURCE_DIR = "/home/lyh/projects/lyh/Alg_DXD/Algorithm_DXD";
     int         threads = 8;
     bool        debug   = false;
-    bool        full_cc_stats = false;
+    bool        enable_cc_stats = false;
     int         time_limit = 1500;
  
     // ── parse ────────────────────────────────────────────────────────────────
@@ -45,8 +45,8 @@ public:
                 debug = true;
                 continue;
             }
-            if (tok == "--full-cc-stats") {
-                full_cc_stats = true;
+            if (tok == "--enable-cc-stats") {
+                enable_cc_stats = true;
                 continue;
             }
  
@@ -141,7 +141,7 @@ public:
             << "                           mdlx  – Multi-thread DLX\n"
             << "  -i, --input   <path>   Path to the input test-case file (required)\n"
             << "  -t, --threads <n>      Number of threads (default: 8).\n"
-            << "      --full-cc-stats    Keep all dynamic CC updates and emit experiment counters.\n"
+            << "      --enable-cc-stats    Keep DynDXD's adaptive behavior\n"
             << "      --time-limit <s>    Solver time limit in seconds (default: 1500).\n"
             << "                         Effective only for mdxd / mdlx.\n"
             << "                         Values > 8 are clamped to 8.\n"
@@ -203,8 +203,8 @@ private:
                       << "        Valid choices: dlx  dxz  dxd  ddxd  mdlx\n";
             return false;
         }
-        if (full_cc_stats && (alg != "ddxd" || threads != 1)) {
-            std::cerr << "[error] --full-cc-stats requires --alg ddxd --threads 1.\n";
+        if (enable_cc_stats && (alg != "ddxd" || threads != 1)) {
+            std::cerr << "[error] --enable-cc-stats requires --alg ddxd --threads 1.\n";
             return false;
         }
         if (time_limit < 1) {
