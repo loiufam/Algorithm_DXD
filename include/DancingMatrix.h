@@ -90,7 +90,7 @@ class DancingMatrix
             uint64_t enSamples = 0, enSum = 0;
 
             uint64_t replacementSearchCalls = 0, replacementScanSteps = 0;
-            uint64_t nonEttComputations = 0, nonEttEdgeSum = 0, ettEdgeSum = 0;
+            uint64_t nonEttComputations = 0, nonEttEdgeSum = 0, ettFullEdgeSum = 0;
 
             void reset() { *this = {}; }
             uint64_t calls() const { return decCalls + incCalls; }

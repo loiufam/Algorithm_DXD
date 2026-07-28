@@ -289,6 +289,24 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         }
     }
 
+    if (collectCCExperimentStats) {
+        const bool ettMaintained = shouldMaintainDynamicEtt(depth);
+        if (!ettMaintained) {
+            uint64_t currentEdges = 0;
+            std::unordered_set<int> rows(block.rows.begin(), block.rows.end());
+            for (int v : rows) {
+                for (int u : graph->neighbors(v)) {
+                    if (v < u && rows.count(u)) ++currentEdges;
+                }
+            }
+
+            std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+            ++ccExperimentStats.ccComputations;
+            ++ccExperimentStats.nonEttComputations;
+            ccExperimentStats.nonEttEdgeSum += currentEdges;
+        }
+    }
+
     if (shouldTryDecompose(block)) {
         
         vector<Block> curBlock;
@@ -332,26 +350,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             return {result, decompNode};
         }
 
-    }
-
-    if (collectCCExperimentStats) {
-        std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
-        ++ccExperimentStats.ccComputations;
-
-        uint64_t currentEdges = 0;
-
-        std::unordered_set<int> rows(block.rows.begin(), block.rows.end());
-        for (int v : rows) {
-            for (int u : graph->neighbors(v)) {
-                if (v < u && rows.count(u)) ++currentEdges;
-            }
-        }
-        
-        if (decomposition_disabled) {
-            ++ccExperimentStats.nonEttComputations;
-            ccExperimentStats.nonEttEdgeSum += currentEdges;
-        }
-        
     }
 
     ColumnHeader* choose = useDxzSearch ? selectCol() : selectOptimalColumn(block.cols);
@@ -524,21 +522,21 @@ void DanceDNNF::logCCExperimentStats(bool complete) {
     logger.logLine("CC Stats CC Computations: " + std::to_string(stats.ccComputations));
     // logger.logLine("CC Stats Components: " + std::to_string(stats.ccComponents));
 
-    logger.logLine("CC Stats Dec Vertex Sum: " + std::to_string(stats.V1));
-    logger.logLine("CC Stats Dec Edge Sum: " + std::to_string(stats.E1));
-    logger.logLine("CC Stats DecUpdate Vertex Sum: " + std::to_string(stats.Vd));
-    logger.logLine("CC Stats DecUpdate Edge Sum: " + std::to_string(stats.Ed));
+    logger.logLine("CC Stats V Sum: " + std::to_string(stats.V1));
+    logger.logLine("CC Stats E Sum: " + std::to_string(stats.ettFullEdgeSum + stats.nonEttEdgeSum));
+    logger.logLine("CC Stats Vd Sum: " + std::to_string(stats.Vd));
+    logger.logLine("CC Stats Ed Sum: " + std::to_string(stats.Ed));
 
-    logger.logLine("CC Stats Inc Vertex Sum: " + std::to_string(stats.V2));
-    logger.logLine("CC Stats Inc Edge Sum: " + std::to_string(stats.E2));
-    logger.logLine("CC Stats IncUpdate Vertex Sum: " + std::to_string(stats.Vi));
-    logger.logLine("CC Stats IncUpdate Edge Sum: " + std::to_string(stats.Ei)); 
+    // logger.logLine("CC Stats Inc Vertex Sum: " + std::to_string(stats.V2));
+    // logger.logLine("CC Stats Inc Edge Sum: " + std::to_string(stats.E2));
+    // logger.logLine("CC Stats IncUpdate Vertex Sum: " + std::to_string(stats.Vi));
+    // logger.logLine("CC Stats IncUpdate Edge Sum: " + std::to_string(stats.Ei)); 
 
-    logger.logLine("CC Stats En Sum: " + std::to_string(stats.enSum));
+    logger.logLine("CC Stats ETT En Sum: " + std::to_string(stats.ettFullEdgeSum));
     logger.logLine("CC Stats ETT Er Sum: " + std::to_string(stats.replacementScanSteps));
     // logger.logLine("CC Stats Non-ETT Computations: " + std::to_string(stats.nonEttComputations));
     logger.logLine("CC Stats Non-ETT E Sum: " + std::to_string(stats.nonEttEdgeSum));
-    logger.logLine("CC Stats Total Edge Sum: " +
+    logger.logLine("CC Stats Dyn Total Edge Sum: " +
                    std::to_string(stats.replacementScanSteps + stats.nonEttEdgeSum));
     logger.logLine("CC Stats Replacement Searches: " + std::to_string(stats.replacementSearchCalls));
     logger.logLine("CC Stats Replacement Scan Steps: " + std::to_string(stats.replacementScanSteps));

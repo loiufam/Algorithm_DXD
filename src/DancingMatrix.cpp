@@ -572,6 +572,17 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
             if (!currentTree) {
                 break;
             }
+
+            uint64_t replacementFullGraphEdges = 0;
+            if (collectCCExperimentStats) {
+                for (int a : currentTree->vertices) {
+                    for (int b : g->neighbors(a)) {
+                        if (a < b && currentTree->vertices.count(b)) {
+                            ++replacementFullGraphEdges;
+                        }
+                    }
+                }
+            }
             
             splaytree::ReplacementSearchMetrics searchMetrics;
             auto newTree = currentTree->cutWithReplacement(
@@ -582,6 +593,7 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
                 std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
                 ++ccExperimentStats.replacementSearchCalls;
                 ++ccExperimentStats.enSamples;
+                ccExperimentStats.ettFullEdgeSum += replacementFullGraphEdges;
 
                 ++ccExperimentStats.treeEdge_cuts;
                 // 此次搜索开始时所在 ETT 中的非树边候选集大小。
