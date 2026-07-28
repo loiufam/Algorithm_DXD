@@ -444,10 +444,12 @@ void DancingMatrix::recordCCUpdateStart(const std::set<int>& changedVertices,
     }
 
     uint64_t graphEdges = 0;
-    for (int v : active) {
-        for (int u : graph->neighbors(v)) {
-            if (active.count(u) && v < u) ++graphEdges;
-        }
+    for (const auto& tree : comps) {
+        if (!tree || tree->vertices.empty()) continue;
+        // Every ETT is a tree plus its explicit non-tree-edge set, so its
+        // current full edge count is available without scanning adjacency.
+        graphEdges += tree->vertices.size() - 1;
+        graphEdges += tree->nonTreeEdges.size();
     }
 
     std::unordered_set<splaytree::Edge, splaytree::EdgeHash> affectedEdges;
@@ -573,16 +575,11 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
                 break;
             }
 
-            uint64_t replacementFullGraphEdges = 0;
-            if (collectCCExperimentStats) {
-                for (int a : currentTree->vertices) {
-                    for (int b : g->neighbors(a)) {
-                        if (a < b && currentTree->vertices.count(b)) {
-                            ++replacementFullGraphEdges;
-                        }
-                    }
-                }
-            }
+            const uint64_t replacementFullGraphEdges =
+                currentTree->vertices.empty()
+                    ? 0
+                    : currentTree->vertices.size() - 1 +
+                          currentTree->nonTreeEdges.size();
             
             splaytree::ReplacementSearchMetrics searchMetrics;
             auto newTree = currentTree->cutWithReplacement(

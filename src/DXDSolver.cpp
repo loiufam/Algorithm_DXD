@@ -289,9 +289,31 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         }
     }
 
+    // ETT sampling is limited to two real update frames. A residual block is
+    // normally eligible only while at least 200 rows remain; components made
+    // directly by the initial decomposition are also eligible so an instance
+    // starting below the boundary still produces genuine measurements. The
+    // counter is deterministic for the supported single-thread stats mode.
+    constexpr unsigned ETT_PROBE_FRAME_LIMIT = 2;
+    const bool eligibleForEttProbe = !isSmallBlockForDynamicEtt(block) || depth <= 2;
+    bool allowEttProbe = false;
+    if (eligibleForEttProbe) {
+        const unsigned probe = smallEttProbeFrames.fetch_add(1, std::memory_order_relaxed);
+        allowEttProbe = probe < ETT_PROBE_FRAME_LIMIT;
+    }
+    const bool maintainEttForFrame = shouldMaintainDynamicEtt(depth) &&
+        allowEttProbe;
+    // A probe updates/restores only the frame's outer deletion. Branch updates
+    // would multiply the measurement cost and are never consulted after the
+    // bounded ETT sampling period.
+    const bool maintainEttForBranches = false;
+
     if (collectCCExperimentStats) {
-        const bool ettMaintained = shouldMaintainDynamicEtt(depth);
-        if (!ettMaintained) {
+        if (!maintainEttForFrame) {
+            // ETT may deliberately be disabled after the initial matrix has
+            // split into several blocks.  Count the static connectivity scan
+            // directly from the immutable graph instead of performing a
+            // DecUpdateCC/IncUpdateCC pair merely for instrumentation.
             uint64_t currentEdges = 0;
             std::unordered_set<int> rows(block.rows.begin(), block.rows.end());
             for (int v : rows) {
@@ -304,13 +326,16 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             ++ccExperimentStats.ccComputations;
             ++ccExperimentStats.nonEttComputations;
             ccExperimentStats.nonEttEdgeSum += currentEdges;
+            ccExperimentStats.V1 += rows.size();
+            ccExperimentStats.E1 += currentEdges;
+
         }
     }
 
-    if (shouldTryDecompose(block)) {
+    if (shouldTryDecompose(block) && (!useETT || maintainEttForFrame)) {
         
         vector<Block> curBlock;
-        if (useETT) {
+        if (maintainEttForFrame) {
             // const std::clock_t ccStart = std::clock();
             curBlock = getComponentsByETT(block.cols);
             // ccCpuTime += static_cast<double>(std::clock() - ccStart) / CLOCKS_PER_SEC;
@@ -321,7 +346,10 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         }
 
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
-        updateAdaptiveDecompositionState(block, curBlock.size());
+        // DynDXD now uses the explicit residual-matrix size boundary below;
+        // the old consecutive-no-split heuristic could disable ETT globally
+        // while another initial component still required real updates.
+        if (!useETT) updateAdaptiveDecompositionState(block, curBlock.size());
 
         if (int(curBlock.size()) > 1) {
             if (collectCCExperimentStats) {
@@ -329,18 +357,8 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
                 ++ccExperimentStats.cc_decompose;
             }
 
-            const bool stopDynamicUpdates = curBlock.size() >= DYNAMIC_STOP_COMPONENT_COUNT;
-            if (stopDynamicUpdates) {
-                disableDynamicEttForCurrentState();
-                if (isThreadLocal()) {
-                    tlsState->decomposition_disabled = true;
-                } else {
-                    decomposition_disabled = true;
-                }
-            }
-
             auto decompResult = isParallelSearch
-                ? parallelSearchUseOmp(curBlock, depth, stopDynamicUpdates)
+                ? parallelSearchUseOmp(curBlock, depth, false)
                 : serialSearch(curBlock, depth);
 
             auto [result, decompNode] = decompResult;
@@ -370,7 +388,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     } else {
         coverInBlock(choose->col, block, deleted_rows);
     }
-    if(shouldMaintainDynamicEtt(depth)) timedDecUpdateCC(deleted_rows);
+    if (maintainEttForFrame) timedDecUpdateCC(deleted_rows);
 
     Node* curC = choose->down;
     bool rowCovered = false;
@@ -384,12 +402,12 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
                 else uncoverInBlock(curR->col, block);
                 curR = curR->left;
             }
-            if (shouldMaintainDynamicEtt(depth)) timedIncUpdateCC(deleted_rows_);
+            if (maintainEttForBranches) timedIncUpdateCC(deleted_rows_);
             rowCovered = false;
         }
         if (useDxzSearch) uncover(choose->col);
         else uncoverInBlock(choose->col, block);
-        if (shouldMaintainDynamicEtt(depth)) timedIncUpdateCC(deleted_rows);
+        if (maintainEttForFrame) timedIncUpdateCC(deleted_rows);
     };
 
     try {
@@ -406,7 +424,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             }
             curR = curR->right;
         }
-        if(shouldMaintainDynamicEtt(depth)) timedDecUpdateCC(deleted_rows_);
+        if (maintainEttForBranches) timedDecUpdateCC(deleted_rows_);
         rowCovered = true;
  
         auto [result, sub_node] = DXD(block, depth + 1);
@@ -425,7 +443,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             }
             curR = curR->left;
         }
-        if(shouldMaintainDynamicEtt(depth)) timedIncUpdateCC(deleted_rows_);
+        if (maintainEttForBranches) timedIncUpdateCC(deleted_rows_);
         rowCovered = false;
 
         curC = curC->down;
@@ -439,7 +457,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     } else {
         uncoverInBlock(choose->col, block);
     }
-    if(shouldMaintainDynamicEtt(depth)) timedIncUpdateCC(deleted_rows);
+    if (maintainEttForFrame) timedIncUpdateCC(deleted_rows);
 
     // std::cout << "\n============================\n";
     // std::cout << "[After] DXD called at depth " << depth << "\n";
