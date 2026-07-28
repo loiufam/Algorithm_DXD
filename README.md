@@ -82,22 +82,22 @@ The compiled binary is placed at `build/main`.
  
 ```bash
 # Count solutions with single-thread DLX
-./main -a dlx -i ../data/run_set/Aarnet.txt
+./main -a dlx -i ../data/graphs_set/AttMpls.txt
  
 # Compile a ZDD over the solution set
-./main -a dxz -i ../data/exact_cover_benchmark/hard.txt
+./main -a dxz -i ../data/graphs_set/AttMpls.txt
  
 # Single-thread DXD (Decision-DNNF compilation)
-./main -a dxd -i ../data/run_set/Aarnet.txt
+./main -a dxd -i ../data/graphs_set/AttMpls.txt
  
 # Multi-thread DXD with 8 threads (default)
-./main -a mdxd -i ../data/run_set/Aarnet.txt
+./main -a mdxd -i ../data/graphs_set/AttMpls.txt
  
 # Multi-thread DXD with 4 threads
-./main -a mdxd -i ../data/run_set/Aarnet.txt -t 4
+./main -a mdxd -i ../data/graphs_set/AttMpls.txt -t 4
  
 # Single-thread baseline for mdxd (useful for speedup measurement)
-./main -a mdxd -i ../data/run_set/Aarnet.txt -t 1
+./main -a mdxd -i ../data/rugraphs_setn_set/AttMpls.txt -t 1
  
 ```
 
@@ -105,94 +105,7 @@ The compiled binary is placed at `build/main`.
  
 ## Benchmarks
 
-### Single-thread CC timing experiment
-
-Builds produce the conventional `build/main` executable and mirror it to
-`bin/main`. The dedicated experiment
-runner reads `data/batch_2/Final_Experiment_Report.xlsx`, selects instances for
-which both `DXD-T1` and `DynDXD-T1` completed, and records wall-clock search
-time plus CC CPU time in CSV format:
-
-```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j4
-python3 bin/run_cc_experiment.py
-```
-
-The default output is `results/cc_cpu_experiment.csv`. Use `--dry-run` to list
-the selected inputs, or `--limit N` for a short smoke test.
-For each instance the runner executes both algorithms. It records DXD's BFS
-connected-component share as `dxd_cc_cpu_ratio = dxd_cc_cpu_s / dxd_time_s`,
-then projects that baseline share onto the DynDXD runtime as
-`dyndxd_cc_cpu_from_dxd_ratio_s = dyndxd_time_s * dxd_cc_cpu_ratio`. A DynDXD
-run by itself cannot know this DXD baseline without either a separate DXD run
-or a previously recorded ratio.
-
-### Full dynamic-connectivity statistics
-
-The structural CC experiment has a dedicated runtime mode, so production
-DynDXD keeps its adaptive shutdown while the unoptimized experiment remains
-reproducible from the same revision:
-
-```bash
-python3 bin/run_cc_dynamics_experiment.py
-```
-
-The runner passes `--full-cc-stats`, which prevents DynDXD from disabling
-dynamic updates and emits per-instance raw counters. It writes
-`results/cc_dynamics_instances.csv` and dataset-level macro averages to
-`results/cc_dynamics_summary.csv`. The summary separates merge/split counts
-and rates, graph/update sizes, non-tree-edge sizes, replacement scan work, and
-early-break/full-scan rates. Use `--limit N` for a smoke test; expect this mode
-to be substantially slower than normal DynDXD. `--timeout SECONDS` is passed
-to the solver as its internal bound. If that bound is reached, the instance CSV
-keeps the partial counters with `status=timeout_partial` and
-`stats_complete=0`, but dataset averages exclude that censored row. Increase
-the timeout and rerun to obtain complete per-solve statistics.
-The solver also prints `Dyn CC CPU Ratio`, the fraction of measured search
-time spent maintaining dynamic connectivity, and the raw CSV stores it as
-`cc_cpu_ratio`. This timing includes only connectivity work actually performed
-during the search; it does not run a synthetic delete/restore cycle afterward.
-Use `--resume` together with a larger timeout to retain completed rows and rerun
-only timeout/error cases.
-
-To rerun only the two counters needed to supplement an existing experiment,
-start the focused runner in a separate Python process:
-
-```bash
-python3 bin/run_cc_merge_cut_experiment.py --resume
-```
-
-It writes `results/cc_merges_tree_edge_cuts.csv`. Apart from the dataset and
-instance keys needed for a later join, the new table contains only `merges`
-(successful replacement-edge links after a tree-edge cut) and
-`tree_edge_cuts` (successful tree-edge cuts). Each instance is executed in a
-fresh solver subprocess. Counters flushed at the solver's internal timeout are
-valid cumulative partial results and are retained; rows are left blank only if
-the process fails before emitting counters.
-
-The full CC-statistics counters have these relationships and meanings:
-
-- `Calls = Dec Calls + Inc Calls`. Graph and update vertex/edge sums are
-  snapshots accumulated once per call, so divide them by `Calls` for their
-  per-update averages.
-- `Tree Edge Cuts = En Samples = Replacement Searches`. Every successfully
-  cut tree edge starts exactly one replacement-edge search and contributes one
-  sample.
-- `En Sum` is the sum of the non-tree-edge candidate-set size at the start of
-  each search. It is a search-work upper bound, not the number of edges actually
-  inspected. `Replacement Scan Steps` is the actual number inspected; an early
-  match makes it smaller than `En Sum`.
-- `Early Breaks` counts searches that found and linked a replacement edge and
-  therefore equals `Merges`. `Full Scans` counts searches without a replacement
-  and therefore equals `Splits`; both pairs sum to `Replacement Searches`.
-- `En Positive Updates` is the number of `DecUpdateCC` calls containing at
-  least one replacement search. `En Update Average Sum` sums, over those calls,
-  each call's average candidate-set size. Divide it by `En Positive Updates`
-  to obtain the macro-average per such decremental update. By contrast,
-  `En Sum / En Samples` is the search-weighted micro-average.
-
-Two dataset collections are stored under the `benchmark/` directory.
+Four dataset collections are stored under the `benchmark/` directory.
  
 | Directory | Format | Description |
 |-----------|--------|-------------|
