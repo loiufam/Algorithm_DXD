@@ -77,7 +77,7 @@ class DanceDNNF : DancingMatrix {
             omp_set_num_threads(pool_size); // 设置并行线程数
             std::cout << "设置并行线程数为: " << pool_size << std::endl;
 
-            if (pool_size > 2) isParallelSearch = true;
+            if (pool_size > 1) isParallelSearch = true;
             timer.setTimeBound(TIME_LIMIT_SECONDS);
         }
 
@@ -164,8 +164,6 @@ class DanceDNNF : DancingMatrix {
 
             if (isCurrentDecompositionDisabled()) return false;
 
-            // DynDXD 的动态分解一旦关闭，就直接继续搜索，不能回退到 BFS。
-            // 这样 Dyn CC CPU 只对应动态连通分量维护，不混入静态重计算。
             if (useETT && isCurrentDynamicEttDisabled()) return false;
 
             if (!isGraphSyncEnabled() && useETT && !isCurrentDynamicEttDisabled()) {

@@ -312,14 +312,13 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         // if (canComputeComponents) {
             vector<Block> curBlock;
             if (useETT) {
-                const std::clock_t ccStart = std::clock();
+                // const std::clock_t ccStart = std::clock();
                 curBlock = getComponentsByETT(block.cols);
-                ccCpuTime += static_cast<double>(std::clock() - ccStart) / CLOCKS_PER_SEC;
+                // ccCpuTime += static_cast<double>(std::clock() - ccStart) / CLOCKS_PER_SEC;
             } else {
-                // DXD 从头执行 BFS，并把 BFS 与 Block 集合构建整体计入 CC CPU。
-                const std::clock_t ccStart = std::clock();
+                // const std::clock_t ccStart = std::clock();
                 curBlock = getComponentsByBFS(block.cols);
-                ccCpuTime += static_cast<double>(std::clock() - ccStart) / CLOCKS_PER_SEC;
+                // ccCpuTime += static_cast<double>(std::clock() - ccStart) / CLOCKS_PER_SEC;
             }
 
             MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
@@ -332,9 +331,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
                 }
             // std::cout << "Detected " << curBlock.size() << " independent blocks at depth " << depth << ".\n";
 
-                const bool stopDynamicUpdates =
-                    !collectCCExperimentStats &&
-                    curBlock.size() >= DYNAMIC_STOP_COMPONENT_COUNT;
+                const bool stopDynamicUpdates = curBlock.size() >= DYNAMIC_STOP_COMPONENT_COUNT; // 优化DynDXD
                 if (stopDynamicUpdates) {
                     disableDynamicEttForCurrentState();
                     if (isThreadLocal()) {
