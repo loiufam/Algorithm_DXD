@@ -17,18 +17,18 @@ TIME_RE = re.compile(r"^Time:\s*([\d.]+)\s*s", re.MULTILINE)
 # These names deliberately mirror logCCExperimentStats().  Keeping this map in
 # log order makes a raw CSV row directly comparable with the solver output.
 STAT_FIELDS = {
-    "Complete": "stats_complete",
-    "Init Graph Edges": "init_graph_edges",
-    "Query": "query",
-    "Splits": "splits",
-    "ETT CC Times": "ett_cc_times",
-    "ETT Dec Calls": "ett_dec_calls",
-    "ETT DXD Vertex Sum": "ett_dxd_vertex_sum",
-    "ETT DXD Edge Sum": "ett_dxd_edge_sum",
-    "Dyn ETT Updated Vertex Sum": "dyn_ett_updated_vertex_sum",
-    "Dyn ETT Updated Edge Sum": "dyn_ett_updated_edge_sum",
-    "Dyn ETT Deleted Tree Edge Sum": "dyn_ett_deleted_tree_edge_sum",
-    "Dyn ETT Replacement Scan Steps": "dyn_ett_replacement_scan_steps",
+    "Complete": "Status",
+    "Init Graph Edges": "Init_Graph_E",
+    "Query": "Query",
+    "Splits": "Splits",
+    "ETT CC Times": "ETT_cc_times",
+    "ETT Dec Calls": "ETT_dec_calls",
+    "ETT DXD Vertex Sum": "ETT_DXD_V",
+    "ETT DXD Edge Sum": "ETT_DXD_E",
+    "Dyn ETT Updated Vertex Sum": "ETT_Vd",
+    "Dyn ETT Updated Edge Sum": "ETT_Ed",
+    # "Dyn ETT Deleted Tree Edge Sum": "Dyn_ETT_Deleted_Tree_Edge_Sum",
+    "Dyn ETT Replacement Scan Steps": "ETT_Er",
 }
 IDENTITY_FIELDS = ("dataset", "instance", "input", "status", "time_s", "error")
 CSV_FIELDS = IDENTITY_FIELDS + tuple(STAT_FIELDS.values())
@@ -57,7 +57,7 @@ def parse_measurement(output):
         csv_name: int(float(stats[log_name]))
         for log_name, csv_name in STAT_FIELDS.items()
     }
-    complete = bool(result["stats_complete"])
+    complete = bool(result["Status"])
     time_match = TIME_RE.search(output)
     result.update({
         "status": "success" if complete else "time_out",
@@ -172,7 +172,7 @@ def main():
         default=common.ROOT / "results/cc_dynamics_all.csv",
         help="final CSV containing all per-dataset rows",
     )
-    parser.add_argument("--timeout", type=int, default=600, help="seconds per case")
+    parser.add_argument("--timeout", type=int, default=1500, help="seconds per case")
     parser.add_argument("--cc-ett-threshold", type=int, default=0)
     parser.add_argument(
         "--dataset", action="append", dest="datasets",
