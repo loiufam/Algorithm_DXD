@@ -109,7 +109,8 @@ class DanceDNNF : DancingMatrix {
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> DXD(Block& block, int depth);
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> serialSearch(vector<Block>& blocks, int depth);
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> parallelSearchUseOmp(
-            vector<Block>& blocks, int depth, bool disableDynamicUpdates = false);
+            vector<Block>& blocks, int depth, bool disableDynamicUpdates = false,
+            bool componentTreesAvailable = true);
 
         static constexpr int ETT_STOP_ROWS = 150;
         static constexpr int NO_SPLIT_LIMIT = 3;
@@ -119,6 +120,8 @@ class DanceDNNF : DancingMatrix {
 
         bool dynamic_ett_disabled = false;
         bool decomposition_disabled = false;
+        bool bfs_fallback = false;
+        size_t bfs_stop_area = 0;
         // Only the non-partitioned main search may use the global DXZ matrix
         // traversal.  Parallel sub-blocks must remain confined to Block::cols.
         bool dxz_fallback_mode = false;
@@ -126,11 +129,11 @@ class DanceDNNF : DancingMatrix {
         std::atomic<unsigned> smallEttProbeFrames{0};
 
         bool isSmallInstanceForDynamicEtt() const {
-            return ROWS < ETT_STOP_ROWS;
+            return static_cast<size_t>(ROWS) <= ccEttThreshold;
         }
 
         bool isSmallBlockForDynamicEtt(const Block& block) const {
-            return block.rows.size() < ETT_STOP_ROWS;
+            return block.rows.size() <= ccEttThreshold;
         }
 
         bool isLargeEnoughToStopAfterNoSplit(const Block& block) const {
@@ -168,41 +171,21 @@ class DanceDNNF : DancingMatrix {
 
             if (isCurrentDecompositionDisabled()) return false;
 
-            if (useETT && isCurrentDynamicEttDisabled()) return false;
-
-            if (!isGraphSyncEnabled() && useETT && !isCurrentDynamicEttDisabled()) {
-                return false;
-            }
-
             return true;
         }
 
         bool shouldUseDynamicEtt(Block& block, int depth) {
             if (!useETT || dxd_mode) return false;
             if (isCurrentDynamicEttDisabled()) return false;
-
-            if (isSmallBlockForDynamicEtt(block)) {
-                disableDynamicEttForCurrentState();
-                return false;
-            }
-
-            if (isThreadLocal()) {
-                const bool smallBlock = block.rows.size() <= SMALL_BLOCK_ROWS ||
-                                        block.cols.size() <= SMALL_BLOCK_COLS;
-                const bool deepNested = tlsState->decompose_depth >= NESTED_DYNAMIC_DEPTH_LIMIT ||
-                                        depth >= NESTED_DYNAMIC_DEPTH_LIMIT + 2;
-                if ((smallBlock || deepNested || tlsState->no_split_count >= NO_SPLIT_LIMIT)) {
-                    tlsState->dynamic_ett_disabled = true;
-                    return false;
-                }
-            }
-
-            return true;
+            (void)block;
+            (void)depth;
+            return isThreadLocal() ? !tlsState->bfs_fallback : !bfs_fallback;
         }
 
         bool shouldMaintainDynamicEtt(int depth) const {
             (void)depth;
-            return useETT && !dxd_mode && !isCurrentDynamicEttDisabled();
+            return useETT && !dxd_mode && !isCurrentDynamicEttDisabled() &&
+                   isGraphSyncEnabled();
         }
 
         void timedDecUpdateCC(const std::set<int>& deletedRows, bool ettPeriod) {
@@ -225,6 +208,8 @@ class DanceDNNF : DancingMatrix {
             dynamic_ett_disabled = false;
             decomposition_disabled = false;
             dxz_fallback_mode = false;
+            bfs_fallback = false;
+            bfs_stop_area = std::max<size_t>(1, InitBlock.rows.size() * InitBlock.cols.size() / 2);
             main_no_split_count = 0;
             smallEttProbeFrames.store(0, std::memory_order_relaxed);
         }
@@ -242,15 +227,25 @@ class DanceDNNF : DancingMatrix {
             }
 
             if (isThreadLocal()) {
-                if (++tlsState->no_split_count >= NO_SPLIT_LIMIT) {
-                    tlsState->dynamic_ett_disabled = true;
+                ++tlsState->no_split_count;
+                if (!tlsState->bfs_fallback && tlsState->no_split_count >= NO_SPLIT_LIMIT) {
+                    tlsState->bfs_fallback = true;
+                    tlsState->no_split_count = 0;
+                } else if (tlsState->bfs_fallback &&
+                           block.rows.size() * block.cols.size() <= tlsState->bfs_stop_area &&
+                           tlsState->no_split_count >= NO_SPLIT_LIMIT) {
                     tlsState->decomposition_disabled = true;
                 }
                 return;
             }
 
-            if (++main_no_split_count >= NO_SPLIT_LIMIT) {
-                dynamic_ett_disabled = true;
+            ++main_no_split_count;
+            if (!bfs_fallback && main_no_split_count >= NO_SPLIT_LIMIT) {
+                bfs_fallback = true;
+                main_no_split_count = 0;
+            } else if (bfs_fallback &&
+                       block.rows.size() * block.cols.size() <= bfs_stop_area &&
+                       main_no_split_count >= NO_SPLIT_LIMIT) {
                 decomposition_disabled = true;
                 dxz_fallback_mode = true;
                 turnOffGraphSync();

@@ -61,7 +61,7 @@ def main():
             continue
         path = inputs[name]
         print(f"[{number}/{len(names)}] {name}", flush=True)
-        measured = dynamics.run_case(args.executable, path, args.timeout)
+        measured = dynamics.run_case(args.executable, path)
 
         has_counters = measured.get("status") in {"success", "sampled"}
         row = {
