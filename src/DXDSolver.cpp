@@ -303,7 +303,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         currentRows = 0;
         for (int row : block.rows) currentRows += graph->hasVertex(row) ? 1 : 0;
     }
-    const bool ettStatisticsPeriod = currentRows > ETT_STOP_ROWS;
+    const bool ettStatisticsPeriod = currentRows > ccEttThreshold;
 
     if (shouldTryDecompose(block)) {
         
@@ -491,6 +491,7 @@ void DanceDNNF::logCCExperimentStats(bool complete) {
         stats = ccExperimentStats;
     }
     logger.logLine("CC Stats Complete: " + std::to_string(complete ? 1 : 0));
+    logger.logLine("CC Stats ETT Row Threshold: " + std::to_string(ccEttThreshold));
     logger.logLine("CC Stats Calls: " + std::to_string(stats.calls()));
     logger.logLine("CC Stats Dec Calls: " + std::to_string(stats.decCalls));
     logger.logLine("CC Stats Inc Calls: " + std::to_string(stats.incCalls));

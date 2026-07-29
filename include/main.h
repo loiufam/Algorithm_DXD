@@ -26,6 +26,8 @@ public:
     bool        debug   = false;
     bool        enable_cc_stats = false;
     int         time_limit = 1500;
+    // 0 selects the instance-size-based automatic threshold.
+    int         cc_ett_threshold = 0;
  
     // ── parse ────────────────────────────────────────────────────────────────
     // Returns true on success, false if --help was requested or an error
@@ -54,7 +56,7 @@ public:
             if (tok == "-a" || tok == "--alg"     ||
                 tok == "-i" || tok == "--input"   ||
                 tok == "-t" || tok == "--threads" ||
-                tok == "--time-limit" ||
+                tok == "--time-limit" || tok == "--cc-ett-threshold" ||
                 tok == "-m" || tok == "--mode") {
  
                 if (i + 1 >= argc) {
@@ -89,6 +91,12 @@ public:
                         return false;
                     }
                 }
+                else if (tok == "--cc-ett-threshold") {
+                    try { cc_ett_threshold = std::stoi(val); } catch (...) {
+                        std::cerr << "[error] --cc-ett-threshold requires an integer.\n";
+                        return false;
+                    }
+                }
                 continue;
             }
  
@@ -111,6 +119,13 @@ public:
                     if (key == "--threads") {
                         try { threads = std::stoi(val); } catch (...) {
                             std::cerr << "[error] --threads value must be an integer.\n";
+                            return false;
+                        }
+                        continue;
+                    }
+                    if (key == "--cc-ett-threshold") {
+                        try { cc_ett_threshold = std::stoi(val); } catch (...) {
+                            std::cerr << "[error] --cc-ett-threshold value must be an integer.\n";
                             return false;
                         }
                         continue;
@@ -142,6 +157,8 @@ public:
             << "  -i, --input   <path>   Path to the input test-case file (required)\n"
             << "  -t, --threads <n>      Number of threads (default: 8).\n"
             << "      --enable-cc-stats    Keep DynDXD's adaptive behavior\n"
+            << "      --cc-ett-threshold <rows>  ETT statistics boundary (default: auto).\n"
+            << "                                  auto: >2000=>200, >1000=>100, >100=>50, else 30.\n"
             << "      --time-limit <s>    Solver time limit in seconds (default: 1500).\n"
             << "                         Effective only for mdxd / mdlx.\n"
             << "                         Values > 8 are clamped to 8.\n"
@@ -209,6 +226,10 @@ private:
         }
         if (time_limit < 1) {
             std::cerr << "[error] --time-limit must be >= 1.\n";
+            return false;
+        }
+        if (cc_ett_threshold < 0) {
+            std::cerr << "[error] --cc-ett-threshold must be >= 0 (0 means auto).\n";
             return false;
         }
  

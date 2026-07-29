@@ -99,6 +99,7 @@ class DancingMatrix
         };
 
         bool collectCCExperimentStats = false;
+        size_t ccEttThreshold = 150;
         CCExperimentStats ccExperimentStats;
         std::mutex ccExperimentStatsMutex;
 

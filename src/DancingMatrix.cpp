@@ -476,7 +476,7 @@ void DancingMatrix::recordCCComputation(const Block& block, bool decomposed) {
         }
     }
 
-    const bool ettPeriod = vertices > 150;
+    const bool ettPeriod = vertices > ccEttThreshold;
     std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
     ++ccExperimentStats.ccComputations;
     if (decomposed) ++ccExperimentStats.cc_decompose;

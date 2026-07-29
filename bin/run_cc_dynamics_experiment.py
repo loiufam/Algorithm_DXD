@@ -21,6 +21,7 @@ START_MARKER = "开始多线程DXD搜索..."
 # stored, so the CSV can be checked directly against solver output.
 STAT_FIELDS = {
     "Complete": "stats_complete",
+    "ETT Row Threshold": "ett_row_threshold",
     "Calls": "cc_calls",
     "Dec Calls": "dec_cc_calls",
     "Inc Calls": "inc_cc_calls",
@@ -123,13 +124,15 @@ def parse_measurement(output, forced_partial=False):
     return result
 
 
-def run_case(executable, input_path, search_seconds, process_timeout=None):
+def run_case(executable, input_path, search_seconds, process_timeout=None,
+             ett_row_threshold=0):
     """Wait through initialization, then apply the subprocess safety timeout."""
     if process_timeout is None:
         # Backward-compatible entry point for the focused merge/cut runner.
         process_timeout = search_seconds + 30
     command = [str(executable), "-a", "ddxd", "-i", str(input_path), "-t", "1",
-               "--enable-cc-stats", "--time-limit", str(search_seconds)]
+               "--enable-cc-stats", "--cc-ett-threshold", str(ett_row_threshold),
+               "--time-limit", str(search_seconds)]
     process = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         text=True, bufsize=1,
@@ -197,6 +200,11 @@ def main():
     parser.add_argument("--timeout", type=int, default=1200,
                         help="safety timeout after the algorithm starts")
     parser.add_argument(
+        "--cc-ett-threshold", type=int, default=0,
+        help=("active-row boundary for ETT statistics (default: 0/auto: "
+              ">2000=>200, >1000=>100, >100=>50, otherwise 30)"),
+    )
+    parser.add_argument(
         "--dataset", action="append", dest="datasets",
         help="run only this input-directory dataset; may be repeated",
     )
@@ -213,6 +221,8 @@ def main():
 
     if args.workers < 1:
         parser.error("--workers must be at least 1")
+    if args.cc_ett_threshold < 0:
+        parser.error("--cc-ett-threshold must be non-negative (0 means auto)")
 
     inputs = common.input_index(common.DEFAULT_INPUT_DIRS)
     selected = report_instances(args.report)
@@ -259,7 +269,8 @@ def main():
     def execute(entry):
         number, item, path = entry
         print(f"[{number}/{len(runnable)}] [{path.parent.name}] {item['instance']}", flush=True)
-        return entry, run_case(args.executable, path, args.search_seconds, args.timeout)
+        return entry, run_case(args.executable, path, args.search_seconds, args.timeout,
+                               args.cc_ett_threshold)
 
     with ThreadPoolExecutor(max_workers=args.workers) as executor:
         futures = [executor.submit(execute, entry) for entry in pending]
