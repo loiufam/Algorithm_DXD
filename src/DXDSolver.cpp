@@ -48,7 +48,12 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(vector<Block
     vector<shared_ptr<DNNFNode>> subNodes;
     subNodes.reserve(blocks.size());
 
-    if (!useETT) {
+    // Graph-only CC instrumentation intentionally leaves the real ETT forest
+    // empty.  In that mode the blocks came from the dancing-matrix BFS and
+    // must use the ordinary independent-block path.  Entering the ETT path
+    // with an empty forest used to report "component missing" and incorrectly
+    // turn a valid component into a zero count.
+    if (!useETT || getComponents().empty()) {
         for (size_t i = 0; i < blocks.size(); ++i) {
             auto [result, node] = DXD(blocks[i], parent_depth + 1);
             if (result.isZero()) {
@@ -289,61 +294,22 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         }
     }
 
-    // ETT sampling is limited to two real update frames. A residual block is
-    // normally eligible only while at least 200 rows remain; components made
-    // directly by the initial decomposition are also eligible so an instance
-    // starting below the boundary still produces genuine measurements. The
-    // counter is deterministic for the supported single-thread stats mode.
-    constexpr unsigned ETT_PROBE_FRAME_LIMIT = 2;
-    const bool eligibleForEttProbe = !isSmallBlockForDynamicEtt(block) || depth <= 2;
-    bool allowEttProbe = false;
-    if (eligibleForEttProbe) {
-        const unsigned probe = smallEttProbeFrames.fetch_add(1, std::memory_order_relaxed);
-        allowEttProbe = probe < ETT_PROBE_FRAME_LIMIT;
+    // The ETT itself is intentionally disabled for this experiment.  BFS
+    // remains the source of solver results while the dedicated graph-only
+    // instrumentation models the updates that an ETT would receive.
+    const bool trackGraphStatistics = collectCCExperimentStats && graph;
+    size_t currentRows = block.rows.size();
+    if (trackGraphStatistics) {
+        currentRows = 0;
+        for (int row : block.rows) currentRows += graph->hasVertex(row) ? 1 : 0;
     }
-    const bool maintainEttForFrame = shouldMaintainDynamicEtt(depth) &&
-        allowEttProbe;
-    // A probe updates/restores only the frame's outer deletion. Branch updates
-    // would multiply the measurement cost and are never consulted after the
-    // bounded ETT sampling period.
-    const bool maintainEttForBranches = false;
+    const bool ettStatisticsPeriod = currentRows > ccEttThreshold;
 
-    if (collectCCExperimentStats) {
-        if (!maintainEttForFrame) {
-            // ETT may deliberately be disabled after the initial matrix has
-            // split into several blocks.  Count the static connectivity scan
-            // directly from the immutable graph instead of performing a
-            // DecUpdateCC/IncUpdateCC pair merely for instrumentation.
-            uint64_t currentEdges = 0;
-            std::unordered_set<int> rows(block.rows.begin(), block.rows.end());
-            for (int v : rows) {
-                for (int u : graph->neighbors(v)) {
-                    if (v < u && rows.count(u)) ++currentEdges;
-                }
-            }
-
-            std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
-            ++ccExperimentStats.ccComputations;
-            ++ccExperimentStats.nonEttComputations;
-            ccExperimentStats.nonEttEdgeSum += currentEdges;
-            ccExperimentStats.V1 += rows.size();
-            ccExperimentStats.E1 += currentEdges;
-
-        }
-    }
-
-    if (shouldTryDecompose(block) && (!useETT || maintainEttForFrame)) {
+    if (shouldTryDecompose(block)) {
         
         vector<Block> curBlock;
-        if (maintainEttForFrame) {
-            // const std::clock_t ccStart = std::clock();
-            curBlock = getComponentsByETT(block.cols);
-            // ccCpuTime += static_cast<double>(std::clock() - ccStart) / CLOCKS_PER_SEC;
-        } else {
-            // const std::clock_t ccStart = std::clock();
-            curBlock = getComponentsByBFS(block.cols);
-            // ccCpuTime += static_cast<double>(std::clock() - ccStart) / CLOCKS_PER_SEC;
-        }
+        curBlock = getComponentsByBFS(block.cols);
+        if (collectCCExperimentStats) recordCCComputation(block, curBlock.size() > 1);
 
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
         // DynDXD now uses the explicit residual-matrix size boundary below;
@@ -352,11 +318,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         if (!useETT) updateAdaptiveDecompositionState(block, curBlock.size());
 
         if (int(curBlock.size()) > 1) {
-            if (collectCCExperimentStats) {
-                std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
-                ++ccExperimentStats.cc_decompose;
-            }
-
             auto decompResult = isParallelSearch
                 ? parallelSearchUseOmp(curBlock, depth, false)
                 : serialSearch(curBlock, depth);
@@ -388,7 +349,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     } else {
         coverInBlock(choose->col, block, deleted_rows);
     }
-    if (maintainEttForFrame) timedDecUpdateCC(deleted_rows);
+    if (trackGraphStatistics) timedDecUpdateCC(deleted_rows, ettStatisticsPeriod);
 
     Node* curC = choose->down;
     bool rowCovered = false;
@@ -402,12 +363,12 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
                 else uncoverInBlock(curR->col, block);
                 curR = curR->left;
             }
-            if (maintainEttForBranches) timedIncUpdateCC(deleted_rows_);
+            if (trackGraphStatistics) timedIncUpdateCC(deleted_rows_, ettStatisticsPeriod);
             rowCovered = false;
         }
         if (useDxzSearch) uncover(choose->col);
         else uncoverInBlock(choose->col, block);
-        if (maintainEttForFrame) timedIncUpdateCC(deleted_rows);
+        if (trackGraphStatistics) timedIncUpdateCC(deleted_rows, ettStatisticsPeriod);
     };
 
     try {
@@ -424,7 +385,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             }
             curR = curR->right;
         }
-        if (maintainEttForBranches) timedDecUpdateCC(deleted_rows_);
+        if (trackGraphStatistics) timedDecUpdateCC(deleted_rows_, ettStatisticsPeriod);
         rowCovered = true;
  
         auto [result, sub_node] = DXD(block, depth + 1);
@@ -443,7 +404,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             }
             curR = curR->left;
         }
-        if (maintainEttForBranches) timedIncUpdateCC(deleted_rows_);
+        if (trackGraphStatistics) timedIncUpdateCC(deleted_rows_, ettStatisticsPeriod);
         rowCovered = false;
 
         curC = curC->down;
@@ -457,7 +418,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     } else {
         uncoverInBlock(choose->col, block);
     }
-    if (maintainEttForFrame) timedIncUpdateCC(deleted_rows);
+    if (trackGraphStatistics) timedIncUpdateCC(deleted_rows, ettStatisticsPeriod);
 
     // std::cout << "\n============================\n";
     // std::cout << "[After] DXD called at depth " << depth << "\n";
@@ -530,33 +491,46 @@ void DanceDNNF::logCCExperimentStats(bool complete) {
         stats = ccExperimentStats;
     }
     logger.logLine("CC Stats Complete: " + std::to_string(complete ? 1 : 0));
+    logger.logLine("CC Stats ETT Row Threshold: " + std::to_string(ccEttThreshold));
     logger.logLine("CC Stats Calls: " + std::to_string(stats.calls()));
     logger.logLine("CC Stats Dec Calls: " + std::to_string(stats.decCalls));
     logger.logLine("CC Stats Inc Calls: " + std::to_string(stats.incCalls));
     logger.logLine("CC Stats Merges: " + std::to_string(stats.merges));
     logger.logLine("CC Stats Tree Edge Cuts: " + std::to_string(stats.treeEdge_cuts)); 
+    logger.logLine("CC Stats Non-Tree Edge Cuts: " + std::to_string(stats.non_treeEdge_cuts));
     logger.logLine("CC Stats Splits: " + std::to_string(stats.splits));
     logger.logLine("CC Stats Decompose: " + std::to_string(stats.cc_decompose));
     logger.logLine("CC Stats CC Computations: " + std::to_string(stats.ccComputations));
     // logger.logLine("CC Stats Components: " + std::to_string(stats.ccComponents));
 
-    logger.logLine("CC Stats V Sum: " + std::to_string(stats.V1));
-    logger.logLine("CC Stats E Sum: " + std::to_string(stats.ettFullEdgeSum + stats.nonEttEdgeSum));
-    logger.logLine("CC Stats Vd Sum: " + std::to_string(stats.Vd));
-    logger.logLine("CC Stats Ed Sum: " + std::to_string(stats.Ed));
+    logger.logLine("CC Stats V Sum: " + std::to_string(stats.ettV + stats.nonEttV));
+    logger.logLine("CC Stats E Sum: " +
+                   std::to_string(stats.ettE + stats.ettFullEdgeSum + stats.nonEttE));
+    logger.logLine("CC Stats Vd Sum: " + std::to_string(stats.ettVd + stats.nonEttVd));
+    logger.logLine("CC Stats Ed Sum: " + std::to_string(stats.ettEd + stats.nonEttEd));
+    logger.logLine("CC Stats ETT V Sum: " + std::to_string(stats.ettV));
+    logger.logLine("CC Stats ETT E Sum: " +
+                   std::to_string(stats.ettE + stats.ettFullEdgeSum));
+    logger.logLine("CC Stats ETT Vd Sum: " + std::to_string(stats.ettVd));
+    logger.logLine("CC Stats ETT Ed Sum: " + std::to_string(stats.ettEd));
+    logger.logLine("CC Stats Non-ETT V Sum: " + std::to_string(stats.nonEttV));
+    logger.logLine("CC Stats Non-ETT E Sum: " + std::to_string(stats.nonEttE));
+    logger.logLine("CC Stats Non-ETT Vd Sum: " + std::to_string(stats.nonEttVd));
+    logger.logLine("CC Stats Non-ETT Ed Sum: " + std::to_string(stats.nonEttEd));
+    logger.logLine("CC Stats ETT CC Times: " + std::to_string(stats.ettCcTimes));
+    logger.logLine("CC Stats Non-ETT CC Times: " + std::to_string(stats.nonEttCcTimes));
 
     // logger.logLine("CC Stats Inc Vertex Sum: " + std::to_string(stats.V2));
     // logger.logLine("CC Stats Inc Edge Sum: " + std::to_string(stats.E2));
     // logger.logLine("CC Stats IncUpdate Vertex Sum: " + std::to_string(stats.Vi));
     // logger.logLine("CC Stats IncUpdate Edge Sum: " + std::to_string(stats.Ei)); 
 
-    logger.logLine("CC Stats ETT En Sum: " + std::to_string(stats.ettFullEdgeSum));
+    logger.logLine("CC Stats ETT En Sum: " + std::to_string(stats.enSum));
     logger.logLine("CC Stats ETT Er Sum: " + std::to_string(stats.replacementScanSteps));
     // logger.logLine("CC Stats Non-ETT Computations: " + std::to_string(stats.nonEttComputations));
-    logger.logLine("CC Stats Non-ETT E Sum: " + std::to_string(stats.nonEttEdgeSum));
     logger.logLine("CC Stats Dyn Total Edge Sum: " +
-                   std::to_string(stats.replacementScanSteps + stats.nonEttEdgeSum));
-    logger.logLine("CC Stats Replacement Searches: " + std::to_string(stats.replacementSearchCalls));
+                   std::to_string(stats.replacementScanSteps + stats.nonEttE));
+    logger.logLine("CC Stats Replacement Searches: " + std::to_string(stats.treeEdge_cuts));
     logger.logLine("CC Stats Replacement Scan Steps: " + std::to_string(stats.replacementScanSteps));
 }
 

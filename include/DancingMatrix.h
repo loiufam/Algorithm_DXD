@@ -81,11 +81,13 @@ class DancingMatrix
 
         struct CCExperimentStats {
             uint64_t decCalls = 0, incCalls = 0;
-            uint64_t merges = 0, splits = 0, treeEdge_cuts = 0, cc_decompose = 0;
+            uint64_t merges = 0, splits = 0, treeEdge_cuts = 0, non_treeEdge_cuts = 0, cc_decompose = 0;
             uint64_t ccComputations = 0, ccComponents = 0;
             uint64_t V1 = 0, E1 = 0; // 减量式图规模统计
             uint64_t V2 = 0, E2 = 0; // 增量式图规模统计 
-            uint64_t Vd = 0, Ed = 0; // 减量式更新顶点数、边数
+            uint64_t ettV = 0, ettE = 0, ettVd = 0, ettEd = 0;
+            uint64_t nonEttV = 0, nonEttE = 0, nonEttVd = 0, nonEttEd = 0;
+            uint64_t ettCcTimes = 0, nonEttCcTimes = 0;
             uint64_t Vi = 0, Ei = 0; // 增量式更新顶点数、边数 
             uint64_t enSamples = 0, enSum = 0;
 
@@ -97,10 +99,13 @@ class DancingMatrix
         };
 
         bool collectCCExperimentStats = false;
+        size_t ccEttThreshold = 150;
         CCExperimentStats ccExperimentStats;
         std::mutex ccExperimentStatsMutex;
 
-        void recordCCUpdateStart(const std::set<int>& vertices, bool restoring);
+        void recordCCUpdateStart(const std::set<int>& vertices, bool restoring,
+                                 bool ettPeriod);
+        void recordCCComputation(const Block& block, bool decomposed);
 
         // 列状态
         size_t getColumnState() const;
@@ -317,6 +322,15 @@ class DancingMatrix
 
         // 从图构建生成森林
         void buildSpanningForest();
+        void buildStatsSpanningForest();
+
+        // Graph-only dynamic-connectivity instrumentation.  It deliberately
+        // has no dependency on the ETT implementation, so it can be removed
+        // by disabling CC statistics without affecting the solver.
+        std::vector<std::unordered_set<int>> statsForest;
+        std::unordered_set<splaytree::Edge, splaytree::EdgeHash> statsNonTreeEdges;
+        uint64_t statsActiveEdgeCount = 0;
+        bool statsForestReady = false;
         std::vector<splaytree::Edge> bfsSpanningTree(int start, std::unordered_set<int>& visited, std::unordered_set<int>& componentVertices);
         void processBoundaryVertex(int v, splaytree::EulerTourTree* tree, SubGraph* g);
 };

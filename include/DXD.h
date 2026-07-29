@@ -205,15 +205,19 @@ class DanceDNNF : DancingMatrix {
             return useETT && !dxd_mode && !isCurrentDynamicEttDisabled();
         }
 
-        void timedDecUpdateCC(const std::set<int>& deletedRows) {
+        void timedDecUpdateCC(const std::set<int>& deletedRows, bool ettPeriod) {
             // const std::clock_t start = std::clock();
-            DecUpdateCC(deletedRows);
+            recordCCUpdateStart(deletedRows, false, ettPeriod);
             // ccCpuTime += static_cast<double>(std::clock() - start) / CLOCKS_PER_SEC;
         }
 
-        void timedIncUpdateCC(const std::set<int>& restoredRows) {
+        bool isEttStatisticsPeriod(const Block& block) const {
+            return block.rows.size() > ccEttThreshold;
+        }
+
+        void timedIncUpdateCC(const std::set<int>& restoredRows, bool ettPeriod) {
             // const std::clock_t start = std::clock();
-            IncUpdateCC(restoredRows);
+            recordCCUpdateStart(restoredRows, true, ettPeriod);
             // ccCpuTime += static_cast<double>(std::clock() - start) / CLOCKS_PER_SEC;
         }
 
@@ -260,6 +264,19 @@ class DanceDNNF : DancingMatrix {
         void enableCCStatistics() {
             collectCCExperimentStats = true;
             ccExperimentStats.reset();
+        }
+
+        static size_t automaticCCETTThreshold(size_t instanceRows) {
+            if (instanceRows > 2000) return 200;
+            if (instanceRows > 1000) return 100;
+            if (instanceRows > 100) return 50;
+            return 30;
+        }
+
+        // A zero override selects the threshold from the original instance
+        // size.  A positive value remains available for reproducible studies.
+        void setCCETTThreshold(size_t rows) {
+            ccEttThreshold = rows == 0 ? automaticCCETTThreshold(ROWS) : rows;
         }
 
         void setTimeLimit(long seconds) { timer.setTimeBound(seconds); }
