@@ -75,9 +75,6 @@ public:
     // 连通分量信息
     std::unordered_set<int> vertices;                          // 顶点集合
     std::unordered_set<Edge, EdgeHash> nonTreeEdges;           // 非树边集合
-    // Per-vertex index for replacement searches.  Scanning the component-wide
-    // nonTreeEdges set for every cut makes a vertex deletion quadratic on
-    // dense row-projection graphs.
     std::unordered_map<int, std::unordered_set<int>> nonTreeNeighbors;
     
     // 每个顶点的occurrence节点列表（用于O(1)查找）

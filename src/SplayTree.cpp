@@ -527,9 +527,6 @@ Edge EulerTourTree::findReplacementEdge(Node* rootU, Node* rootV,
         metrics->searched = true;
     }
 
-    // Every crossing edge is incident to the smaller side.  The adjacency
-    // index therefore reduces a replacement search from O(all non-tree
-    // edges) to O(non-tree incidences on the smaller cut side).
     Node* smallerRoot = getSize(rootU) <= getSize(rootV) ? rootU : rootV;
     std::vector<Node*> nodes;
     collectNodes(smallerRoot, nodes);
@@ -545,9 +542,7 @@ Edge EulerTourTree::findReplacementEdge(Node* rootU, Node* rootV,
         auto adjacency = nonTreeNeighbors.find(from);
         if (adjacency == nonTreeNeighbors.end()) continue;
         for (int to : adjacency->second) {
-            // Internal edges are seen from both endpoints and cannot replace
-            // the cut.  Excluding them also makes scanSteps count candidates
-            // that can actually cross the cut.
+
             if (smallerVertices.count(to)) continue;
             if (metrics) ++metrics->scanSteps;
             Edge e(from, to);
@@ -721,8 +716,6 @@ void EulerTourTree::removeVertex(int v) {
     vertices.erase(v);
     edgeNodes.erase(v);
     
-    // The adjacency index gives exactly the incident edges; do not scan every
-    // non-tree edge in the component when removing one vertex.
     auto adjacency = nonTreeNeighbors.find(v);
     if (adjacency != nonTreeNeighbors.end()) {
         std::vector<int> neighbors(adjacency->second.begin(), adjacency->second.end());

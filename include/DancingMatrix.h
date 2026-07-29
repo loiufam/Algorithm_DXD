@@ -3,7 +3,6 @@
 
 #include "ThreadPool.h"
 #include "DynamicConnectivity.h"
-// #include "BlockDetector.h"
 #include "common.h"
 
 using col_id = int;
@@ -80,6 +79,8 @@ class DancingMatrix
         bool dxd_mode = false;
 
         struct CCExperimentStats {
+            uint64_t graph_init_edges = 0;
+            uint64_t dec_calls = 0; // decUpdate操作调用次数
             uint64_t cc_decompose = 0; // 分解总数
             uint64_t ccComputations = 0; // 连通分量查询总次数
  
@@ -319,9 +320,6 @@ class DancingMatrix
         void buildSpanningForest();
         void buildStatsSpanningForest();
 
-        // Graph-only dynamic-connectivity instrumentation.  It deliberately
-        // has no dependency on the ETT implementation, so it can be removed
-        // by disabling CC statistics without affecting the solver.
         std::vector<std::unordered_set<int>> statsForest;
         std::unordered_set<splaytree::Edge, splaytree::EdgeHash> statsNonTreeEdges;
         uint64_t statsActiveEdgeCount = 0;

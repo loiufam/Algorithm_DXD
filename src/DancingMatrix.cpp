@@ -173,7 +173,7 @@ DancingMatrix::DancingMatrix( const string& file_path, bool useIg , bool useETT 
 
     InitBlock = Block(rowsSet, colsSet);
 
-    if(useETT){
+    if(useETT) {
         graph = make_unique<Graph>(ROWS);
         buildGraphFromMatrix();
         buildSpanningForest();
@@ -190,11 +190,6 @@ DancingMatrix::DancingMatrix( const string& file_path, bool useIg , bool useETT 
 }
 
 DancingMatrix::~DancingMatrix() = default;
-
-void DancingMatrix::initialize() {
-    buildGraphFromMatrix();
-    buildSpanningForest();
-}
 
 void DancingMatrix::buildStatsSpanningForest() {
     statsForest.assign(ROWS, {});
@@ -267,9 +262,6 @@ void DancingMatrix::cleanupThreadLocalState() {
 // 将矩阵的行映射为无向图的顶点，构建邻接表存储所有边
 void DancingMatrix::buildGraphFromMatrix() {
 
-    // Deduplicate while generating the row-projection graph.  The previous
-    // vector + global sort retained every duplicate produced by columns with
-    // overlapping row sets and paid O(E log E) before ETT construction.
     std::unordered_set<splaytree::Edge, splaytree::EdgeHash> temp_edges;
 
     for (const auto& [col, rows] : col_to_rows) {
@@ -290,6 +282,10 @@ void DancingMatrix::buildGraphFromMatrix() {
 
     for (const auto& edge : temp_edges) {
         graph->addEdge(edge.u, edge.v);
+        
+        if (collectCCExperimentStats) {
+            ccExperimentStats.graph_init_edges++;
+        }
     }
 
     // graph->printGraph();
@@ -402,10 +398,6 @@ void DancingMatrix::buildSpanningForest() {
                         }
                     }
                 }
-                // 更新vertexToComponent映射
-                // for (int vertex : comp_vertices) {
-                //     vertexToComponent[vertex] = tree.get();
-                // }
 
                 components.push_back(std::move(tree)); // 保存生成的树
                 break;
@@ -483,6 +475,7 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
     if (comps.empty()) return;
     
     if (collectCCExperimentStats) {
+        ccExperimentStats.dec_calls++;
         // 统计 V, E 
         uint64_t vertexCount = 0;
         uint64_t edgeCount = 0;
@@ -624,18 +617,12 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
 void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
     if (restoredVertices.empty()) return;
 
-    // std::cout << "IncUpdateCC: Restoring vertices: {";
-    // for (int v : restoredVertices) {
-    //     std::cout << " " << v;
-    // }
-    // std::cout << " }\n";
     auto& comps = getComponents();
     auto* g = getGraph();
     if (!g && graph && !restoredVertices.empty()) {
         g = graph->subgraphOf(*restoredVertices.begin());
     }
     if (!g) {
-        // std::cerr << "getGraph() returned nullptr in IncUpdateCC\n";
         return;
     }
 
@@ -656,11 +643,7 @@ void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
         std::vector<int> neighbors = g->getAllNeighbors(v); 
 
         for (int u : neighbors) {
-            // 邻居 u 是否应该被恢复，对应"u 在当前矩阵中是否仍是激活行"。
-            //  - 矩阵-图一致性：行 r 在矩阵中激活 ⇔ 顶点 r 在某棵活跃 ETT 中
-            //  - DecUpdateCC 移除 v 时会调用 tree->removeVertex(v)，把 v 从所有 ETT 的 vertices 中 erase
-            //  - 因此 findEulerTourTree(u)!=nullptr 等价于 "u 当前在矩阵中激活"
-            //  - restoredSet.count(u) 是冗余兜底（同批恢复的 u 已经在前一个循环 push 进 comps）
+
             splaytree::EulerTourTree* treeU = findEulerTourTree(u);
             const bool uActive = (treeU != nullptr) || restoredSet.count(u);
             if (!uActive) continue;
@@ -688,9 +671,7 @@ void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
             [](const std::unique_ptr<splaytree::EulerTourTree>& t) { return t->isEmpty(); }),
         comps.end()
     );
-    // Restoring is the inverse used for backtracking, not another residual
-    // transition.  Counting it again made Vd/Ed almost twice their actual
-    // value and incomparable with the pre-deletion V/E baseline.
+
 }
 
 std::vector<std::unordered_set<int>> DancingMatrix::getConnectedComponents() const {

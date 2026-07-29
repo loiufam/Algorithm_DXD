@@ -48,11 +48,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(vector<Block
     vector<shared_ptr<DNNFNode>> subNodes;
     subNodes.reserve(blocks.size());
 
-    // Graph-only CC instrumentation intentionally leaves the real ETT forest
-    // empty.  In that mode the blocks came from the dancing-matrix BFS and
-    // must use the ordinary independent-block path.  Entering the ETT path
-    // with an empty forest used to report "component missing" and incorrectly
-    // turn a valid component into a zero count.
     if (!useETT || isCurrentDynamicEttDisabled() || getComponents().empty()) {
         for (size_t i = 0; i < blocks.size(); ++i) {
             auto [result, node] = DXD(blocks[i], parent_depth + 1);
@@ -66,7 +61,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(vector<Block
         return {totalResult, decompNode};
     }
     
-    // ── ETT: thread-local component management 
     SubGraph* outerSubgraph = activeSubgraph_;
 
     std::vector<std::unique_ptr<splaytree::EulerTourTree>> stash;
@@ -97,10 +91,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(vector<Block
 
         auto [result, node] = DXD(blocks[i], parent_depth + 1);
 
-        // if (comps.size() > 1) {
-        //     std::cerr << "serialSearch: invariant violated, comps.size()=" << comps.size()
-        //               << " after DXD(block " << i << ") returned\n";
-        // }
         if (!comps.empty()) {
             stash[i] = std::move(comps[0]);
             comps.clear();
@@ -260,14 +250,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(
 // DXD DynDXD
 std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int depth) {
     
-
-    // printComponents();
-
-    // if (collectCCExperimentStats && timer.getElapsedTime() >= nextCCStatsSnapshotTime) {
-    //     logCCExperimentStats(false);
-    //     nextCCStatsSnapshotTime = timer.getElapsedTime() + 1.0;
-    // }
-
     if(timer.timeBoundBroken()) {
         throw std::runtime_error("Time bound broken");
     }
@@ -281,8 +263,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     }
 
     size_t state = useDxzSearch
-        ? (encodeColState() ^ size_t{0xd6e8feb86659fd93ULL})
-        : hashBlockState(block.cols);
+        ? (encodeColState() ^ size_t{0xd6e8feb86659fd93ULL}) : hashBlockState(block.cols);
     {
         std::shared_lock<std::shared_mutex> readLock(cacheMutex);
         auto countIt = countCache.find(state);
@@ -320,15 +301,11 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         }
 
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
-        // DynDXD now uses the explicit residual-matrix size boundary below;
-        // the old consecutive-no-split heuristic could disable ETT globally
-        // while another initial component still required real updates.
+
         updateAdaptiveDecompositionState(block, curBlock.size());
 
         if (int(curBlock.size()) > 1) {
-            // Every worker receives and maintains its own component ETT.  It
-            // may independently fall back to BFS after repeated failed ETT
-            // probes, but the forest remains synchronized for backtracking.
+
             const bool treesAvailable = useETT && !isCurrentDynamicEttDisabled();
             auto decompResult = isParallelSearch
                 ? parallelSearchUseOmp(curBlock, depth, false, treesAvailable)
@@ -361,8 +338,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     } else {
         coverInBlock(choose->col, block, deleted_rows);
     }
-    // Pair every dynamic update with its inverse even if the adaptive policy
-    // switches to BFS/DXZ deeper in this frame.
+
     const bool frameEttUpdated = shouldMaintainDynamicEtt(depth);
     if (frameEttUpdated) DecUpdateCC(deleted_rows);
 
@@ -439,11 +415,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     }
     if (frameEttUpdated) IncUpdateCC(deleted_rows);
 
-    // std::cout << "\n============================\n";
-    // std::cout << "[After] DXD called at depth " << depth << "\n";
-    // printComponents();
-
-    // 插入缓存
     setCacheCount(state, totalResult);
     setCache(state, x);
     return {totalResult, x};
@@ -508,10 +479,12 @@ void DanceDNNF::logCCExperimentStats(bool complete) {
         stats = ccExperimentStats;
     }
     logger.logLine("CC Stats Complete: " + std::to_string(complete ? 1 : 0));
+    logger.logLine("CC Stats Init Graph Edges: " + std::to_string(stats.graph_init_edges));
 
     logger.logLine("CC Stats Query: " + std::to_string(stats.ccComputations));
     logger.logLine("CC Stats Splits: " + std::to_string(stats.cc_decompose));
     logger.logLine("CC Stats ETT CC Times: " + std::to_string(stats.ettCcTimes));
+    logger.logLine("CC Stats ETT Dec Calls:" + std::to_string(stats.dec_calls));
 
     // DXD: |V| + |E|
     // ETT V
@@ -537,7 +510,6 @@ void DanceDNNF::startDXD() {
     MAX_B_COUNT = 1;
     ccCpuTime = 0.0;
     if (collectCCExperimentStats) ccExperimentStats.reset();
-    // nextCCStatsSnapshotTime = 0.0;
     resetAdaptiveDecompositionState();
 
     {
@@ -610,14 +582,7 @@ void DanceDNNF::startMultiThreadDXD() {
     MAX_B_COUNT = 1;
     ccCpuTime = 0.0;
     if (collectCCExperimentStats) ccExperimentStats.reset();
-    // nextCCStatsSnapshotTime = 0.0;
     resetAdaptiveDecompositionState();
-    // if (isSmallInstanceForDynamicEtt()) {
-    //     dynamic_ett_disabled = true;
-    //     decomposition_disabled = true;
-    //     dxz_fallback_mode = true;
-    //     turnOffGraphSync();
-    // }
 
     {
         std::unique_lock<std::shared_mutex> cacheLock(cacheMutex);
@@ -889,34 +854,7 @@ void DanceDNNF::start_MDLX(DecomMode mode) {
 // ═════════════════════════════════════════════════════════════════════════════
 // Solution enumeration
 // ═════════════════════════════════════════════════════════════════════════════
- 
-// ─────────────────────────────────────────────────────────────────────────────
-// enumerateDFS  (file-scope static helper, not a class member)
-//
-// Depth-first traversal of the Decision-DNNF DAG.
-//
-// Parameters
-//   node         – current node
-//   hi_path      – row-ids accumulated on hi-branches from the root to here
-//   count        – running solution counter (in/out)
-//   max_sols     – cap; stop once count reaches this (0 = unlimited)
-//   on_solution  – callback(sorted_row_vector, 1-based_index) per solution
-//   memo         – solution-list cache keyed on node->id for Decomposed nodes;
-//                  shared nodes are expanded only once
-//
-// Decision node  Decision(label, left=lo, right=hi):
-//   lo (left)  → row `label` not selected; recurse without changing hi_path
-//   hi (right) → row `label` selected; push label, recurse, pop
-//
-// Decomposed node  Decomposed(children=[c0,c1,...]):
-//   Each child encodes an independent sub-problem.
-//   Solutions = Cartesian product of all children's solution sets,
-//   each result prefixed with the hi_path accumulated from ancestors.
-//   Children are memoised so shared sub-trees are only expanded once.
-//
-// Terminal T (label==-1): valid path → invoke callback
-// Terminal F (label==-2): dead end   → silent return
-// ─────────────────────────────────────────────────────────────────────────────
+
 static void enumerateDFS(
     const shared_ptr<DNNFNode>&                          node,
     vector<int>&                                         hi_path,
@@ -962,9 +900,6 @@ static void enumerateDFS(
             return;
         }
  
-        // Retrieve or compute the solution list for one child.
-        // We pass max_sols=0 when filling the memo so the cached list is
-        // complete and can be reused by any parent context.
         auto getChildSols =
             [&](const shared_ptr<DNNFNode>& child) -> const vector<vector<int>>& {
             auto it = memo.find(child->id);

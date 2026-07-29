@@ -122,8 +122,6 @@ class DanceDNNF : DancingMatrix {
         bool decomposition_disabled = false;
         bool bfs_fallback = false;
         size_t bfs_stop_area = 0;
-        // Only the non-partitioned main search may use the global DXZ matrix
-        // traversal.  Parallel sub-blocks must remain confined to Block::cols.
         bool dxz_fallback_mode = false;
         int main_no_split_count = 0;
         std::atomic<unsigned> smallEttProbeFrames{0};
@@ -255,8 +253,6 @@ class DanceDNNF : DancingMatrix {
             return 30;
         }
 
-        // A zero override selects the threshold from the original instance
-        // size.  A positive value remains available for reproducible studies.
         void setCCETTThreshold(size_t rows) {
             ccEttThreshold = rows == 0 ? automaticCCETTThreshold(ROWS) : rows;
         }
@@ -335,9 +331,7 @@ class DanceDNNF : DancingMatrix {
             startDXD();
         }
 
-        // Hash (row-variable, lo-id, hi-id).  Using node ids instead of labels
-        // avoids false collisions: labels are reused row indices, while ids are
-        // globally unique per node.
+
         inline size_t gen_key(int r, const DNNFNode* lo, const DNNFNode* hi) const {
             auto mix = [](size_t x) -> size_t {
                 x ^= x >> 30; x *= 0xbf58476d1ce4e5b9ULL;
