@@ -26,6 +26,7 @@ STAT_FIELDS = {
     "Inc Calls": "inc_cc_calls",
     "Merges": "merges",
     "Tree Edge Cuts": "tree_edge_cuts",
+    "Non-Tree Edge Cuts": "non_tree_edge_cuts",
     "Splits": "splits",
     "Decompose": "decompose",
     "CC Computations": "cc_computations",
@@ -33,9 +34,18 @@ STAT_FIELDS = {
     "E Sum": "edge_sum",
     "Vd Sum": "updated_vertex_sum",
     "Ed Sum": "updated_edge_sum",
+    "ETT V Sum": "ett_vertex_sum",
+    "ETT E Sum": "ett_edge_sum",
+    "ETT Vd Sum": "ett_updated_vertex_sum",
+    "ETT Ed Sum": "ett_updated_edge_sum",
+    "Non-ETT V Sum": "non_ett_vertex_sum",
+    "Non-ETT E Sum": "non_ett_edge_sum",
+    "Non-ETT Vd Sum": "non_ett_updated_vertex_sum",
+    "Non-ETT Ed Sum": "non_ett_updated_edge_sum",
+    "ETT CC Times": "ett_cc_times",
+    "Non-ETT CC Times": "non_ett_cc_times",
     "ETT En Sum": "ett_full_edge_sum",
     "ETT Er Sum": "ett_replacement_scan_sum",
-    "Non-ETT E Sum": "non_ett_edge_sum",
     "Dyn Total Edge Sum": "dynamic_scanned_edge_sum",
     "Replacement Searches": "replacement_searches",
     "Replacement Scan Steps": "replacement_scan_steps",
@@ -66,15 +76,22 @@ def validate_stats(stats):
           "Merges + Splits != Tree Edge Cuts")
     check(stats["ETT Er Sum"] == stats["Replacement Scan Steps"],
           "ETT Er Sum != Replacement Scan Steps")
-    check(stats["ETT Er Sum"] <= stats["ETT En Sum"],
-          "ETT replacement scans exceed ETT full-edge total")
-    check(stats["E Sum"] == stats["ETT En Sum"] + stats["Non-ETT E Sum"],
-          "E Sum != ETT En Sum + Non-ETT E Sum")
+    check((stats["ETT E Sum"] == 0 and stats["ETT Er Sum"] == 0) or
+          stats["ETT Er Sum"] < stats["ETT E Sum"],
+          "ETT Er Sum is not smaller than ETT E Sum")
+    check(stats["V Sum"] == stats["ETT V Sum"] + stats["Non-ETT V Sum"],
+          "V Sum != ETT V Sum + Non-ETT V Sum")
+    check(stats["E Sum"] == stats["ETT E Sum"] + stats["Non-ETT E Sum"],
+          "E Sum != ETT E Sum + Non-ETT E Sum")
+    check(stats["Vd Sum"] == stats["ETT Vd Sum"] + stats["Non-ETT Vd Sum"],
+          "Vd Sum != ETT Vd Sum + Non-ETT Vd Sum")
+    check(stats["Ed Sum"] == stats["ETT Ed Sum"] + stats["Non-ETT Ed Sum"],
+          "Ed Sum != ETT Ed Sum + Non-ETT Ed Sum")
+    check(stats["CC Computations"] == stats["ETT CC Times"] + stats["Non-ETT CC Times"],
+          "CC Computations != ETT CC Times + Non-ETT CC Times")
     check(stats["Dyn Total Edge Sum"] ==
           stats["ETT Er Sum"] + stats["Non-ETT E Sum"],
           "Dyn Total Edge Sum != ETT Er Sum + Non-ETT E Sum")
-    check(stats["Vd Sum"] <= stats["V Sum"], "Vd Sum > V Sum")
-    check(stats["Ed Sum"] <= stats["E Sum"], "Ed Sum > E Sum")
     return errors
 
 

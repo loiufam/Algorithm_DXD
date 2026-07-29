@@ -205,15 +205,19 @@ class DanceDNNF : DancingMatrix {
             return useETT && !dxd_mode && !isCurrentDynamicEttDisabled();
         }
 
-        void timedDecUpdateCC(const std::set<int>& deletedRows) {
+        void timedDecUpdateCC(const std::set<int>& deletedRows, bool ettPeriod) {
             // const std::clock_t start = std::clock();
-            DecUpdateCC(deletedRows);
+            recordCCUpdateStart(deletedRows, false, ettPeriod);
             // ccCpuTime += static_cast<double>(std::clock() - start) / CLOCKS_PER_SEC;
         }
 
-        void timedIncUpdateCC(const std::set<int>& restoredRows) {
+        bool isEttStatisticsPeriod(const Block& block) const {
+            return block.rows.size() > ETT_STOP_ROWS;
+        }
+
+        void timedIncUpdateCC(const std::set<int>& restoredRows, bool ettPeriod) {
             // const std::clock_t start = std::clock();
-            IncUpdateCC(restoredRows);
+            recordCCUpdateStart(restoredRows, true, ettPeriod);
             // ccCpuTime += static_cast<double>(std::clock() - start) / CLOCKS_PER_SEC;
         }
 
