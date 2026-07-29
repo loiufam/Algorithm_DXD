@@ -28,6 +28,7 @@ public:
     int         time_limit = 1500;
     // 0 selects the instance-size-based automatic threshold.
     int         cc_ett_threshold = 0;
+    int         bfs_area_threshold = 0;
  
     // ── parse ────────────────────────────────────────────────────────────────
     // Returns true on success, false if --help was requested or an error
@@ -57,6 +58,7 @@ public:
                 tok == "-i" || tok == "--input"   ||
                 tok == "-t" || tok == "--threads" ||
                 tok == "--time-limit" || tok == "--cc-ett-threshold" ||
+                tok == "--bfs-area-threshold" ||
                 tok == "-m" || tok == "--mode") {
  
                 if (i + 1 >= argc) {
@@ -97,6 +99,12 @@ public:
                         return false;
                     }
                 }
+                else if (tok == "--bfs-area-threshold") {
+                    try { bfs_area_threshold = std::stoi(val); } catch (...) {
+                        std::cerr << "[error] --bfs-area-threshold requires an integer.\n";
+                        return false;
+                    }
+                }
                 continue;
             }
  
@@ -130,6 +138,13 @@ public:
                         }
                         continue;
                     }
+                    if (key == "--bfs-area-threshold") {
+                        try { bfs_area_threshold = std::stoi(val); } catch (...) {
+                            std::cerr << "[error] --bfs-area-threshold value must be an integer.\n";
+                            return false;
+                        }
+                        continue;
+                    }
                 }
             }
  
@@ -159,6 +174,8 @@ public:
             << "      --enable-cc-stats    Keep DynDXD's adaptive behavior\n"
             << "      --cc-ett-threshold <rows>  ETT statistics boundary (default: auto).\n"
             << "                                  auto: >2000=>200, >1000=>100, >100=>50, else 30.\n"
+            << "      --bfs-area-threshold <n>   Switch ETT to BFS only when rows*cols <= n.\n"
+            << "                                  Default: 100000; 0 selects the default.\n"
             << "      --time-limit <s>    Solver time limit in seconds (default: 1500).\n"
             << "                         Effective only for mdxd / mdlx.\n"
             << "                         Values > 8 are clamped to 8.\n"
@@ -230,6 +247,10 @@ private:
         }
         if (cc_ett_threshold < 0) {
             std::cerr << "[error] --cc-ett-threshold must be >= 0 (0 means auto).\n";
+            return false;
+        }
+        if (bfs_area_threshold < 0) {
+            std::cerr << "[error] --bfs-area-threshold must be >= 0 (0 means auto).\n";
             return false;
         }
  

@@ -233,7 +233,7 @@ void DancingMatrix::initThreadLocalState(const Block& block, std::unique_ptr<spl
     tlsState->subgraph  = nullptr; 
     tlsState->nextTreeId = 0;
     tlsState->bfs_fallback = false;
-    tlsState->bfs_stop_area = std::max<size_t>(1, block.rows.size() * block.cols.size() / 2);
+    tlsState->bfs_stop_area = 0;
 
     if (!tree) { 
         std::cout << "Warning: Initializing thread local state with an empty tree." << std::endl;
