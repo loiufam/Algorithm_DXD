@@ -175,9 +175,9 @@ DancingMatrix::DancingMatrix( const string& file_path, bool useIg , bool useETT 
 
     if(useETT){
         graph = make_unique<Graph>(ROWS);
-        initialize();
+        buildGraphFromMatrix();
         
-        cout << "ETT initialization complete." << endl;
+        cout << "Statistics graph initialization complete." << endl;
     }
 
     // if (useIg) {
@@ -193,6 +193,36 @@ DancingMatrix::~DancingMatrix() = default;
 void DancingMatrix::initialize() {
     buildGraphFromMatrix();
     buildSpanningForest();
+}
+
+void DancingMatrix::buildStatsSpanningForest() {
+    statsForest.assign(ROWS, {});
+    statsNonTreeEdges.clear();
+    statsActiveEdgeCount = 0;
+    std::vector<bool> visited(ROWS, false);
+    std::queue<int> queue;
+    for (int start = 0; start < ROWS; ++start) {
+        if (visited[start]) continue;
+        visited[start] = true;
+        queue.push(start);
+        while (!queue.empty()) {
+            const int u = queue.front();
+            queue.pop();
+            for (int v : graph->getNeighbors(u)) {
+                if (!visited[v]) {
+                    visited[v] = true;
+                    queue.push(v);
+                    statsForest[u].insert(v);
+                    statsForest[v].insert(u);
+                } else if (!statsForest[u].count(v)) {
+                    statsNonTreeEdges.emplace(u, v);
+                }
+            }
+        }
+    }
+    for (int u = 0; u < ROWS; ++u) statsActiveEdgeCount += statsForest[u].size();
+    statsActiveEdgeCount = statsActiveEdgeCount / 2 + statsNonTreeEdges.size();
+    statsForestReady = true;
 }
 
 void DancingMatrix::initThreadLocalState(const Block& block, std::unique_ptr<splaytree::EulerTourTree> tree) {
@@ -433,56 +463,167 @@ void DancingMatrix::processBoundaryVertex(int v, splaytree::EulerTourTree* tree,
     tree->removeVertex(v);
 }
 
+void DancingMatrix::recordCCComputation(const Block& block, bool decomposed) {
+    if (!collectCCExperimentStats || !graph) return;
+    uint64_t vertices = 0, edges = 0;
+    for (int u : block.rows) {
+        if (!graph->hasVertex(u)) continue;
+        ++vertices;
+        for (int v : graph->getAllNeighbors(u)) {
+            if (u < v && block.rows.count(v) && graph->hasVertex(v) && graph->hasEdge(u, v)) {
+                ++edges;
+            }
+        }
+    }
+
+    const bool ettPeriod = vertices > 150;
+    std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+    ++ccExperimentStats.ccComputations;
+    if (decomposed) ++ccExperimentStats.cc_decompose;
+    if (ettPeriod) {
+        ++ccExperimentStats.ettCcTimes;
+        ccExperimentStats.ettV += vertices;
+        ccExperimentStats.ettE += edges;
+    } else {
+        ++ccExperimentStats.nonEttCcTimes;
+        ccExperimentStats.nonEttV += vertices;
+        ccExperimentStats.nonEttE += edges;
+    }
+}
+
 void DancingMatrix::recordCCUpdateStart(const std::set<int>& changedVertices,
-                                        bool restoring) {
-    if (!collectCCExperimentStats) return;
+                                        bool restoring, bool ettPeriod) {
+    if (!collectCCExperimentStats || !graph || changedVertices.empty()) return;
+    if (!statsForestReady) buildStatsSpanningForest();
 
-    auto& comps = getComponents();
-    std::unordered_set<int> active;
-    for (const auto& tree : comps) {
-        if (tree) active.insert(tree->vertices.begin(), tree->vertices.end());
-    }
+    auto forestReachable = [&](int start, int target) {
+        if (start == target) return true;
+        std::vector<char> seen(ROWS, 0);
+        std::queue<int> pending;
+        seen[start] = 1;
+        pending.push(start);
+        while (!pending.empty()) {
+            int u = pending.front(); pending.pop();
+            for (int v : statsForest[u]) {
+                if (!graph->hasVertex(v) || seen[v]) continue;
+                if (v == target) return true;
+                seen[v] = 1;
+                pending.push(v);
+            }
+        }
+        return false;
+    };
 
-    uint64_t graphEdges = 0;
-    for (const auto& tree : comps) {
-        if (!tree || tree->vertices.empty()) continue;
-        // Every ETT is a tree plus its explicit non-tree-edge set, so its
-        // current full edge count is available without scanning adjacency.
-        graphEdges += tree->vertices.size() - 1;
-        graphEdges += tree->nonTreeEdges.size();
-    }
+    uint64_t vd = 0, ed = 0;
+    if (!restoring) {
+        std::unordered_set<splaytree::Edge, splaytree::EdgeHash> removedEdges;
+        for (int v : changedVertices) {
+            if (!graph->hasVertex(v)) continue;
+            ++vd;
+            for (int u : graph->getAllNeighbors(v)) {
+                if (graph->hasVertex(u) && graph->hasEdge(v, u)) removedEdges.emplace(v, u);
+            }
+        }
+        ed = removedEdges.size();
 
-    std::unordered_set<splaytree::Edge, splaytree::EdgeHash> affectedEdges;
-    for (int v : changedVertices) {
-        const auto neighbors = restoring ? graph->getAllNeighbors(v) : graph->neighbors(v);
-        for (int u : neighbors) {
-            if (!restoring || active.count(u) || changedVertices.count(u)) {
-                affectedEdges.emplace(v, u);
+        for (const auto& edge : removedEdges) {
+            if (ettPeriod) {
+                auto nt = statsNonTreeEdges.find(edge);
+                if (nt != statsNonTreeEdges.end()) {
+                    statsNonTreeEdges.erase(nt);
+                    std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+                    ++ccExperimentStats.non_treeEdge_cuts;
+                } else {
+                    // ETT E is the full graph size presented to each dynamic
+                    // replacement query.  With this sampling point Er (the
+                    // actually inspected candidates) is directly comparable
+                    // to, and bounded by, ETT E.
+                    {
+                        std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+                        ccExperimentStats.ettFullEdgeSum += statsActiveEdgeCount;
+                    }
+                    statsForest[edge.u].erase(edge.v);
+                    statsForest[edge.v].erase(edge.u);
+                    // Removing one forest edge partitions that tree.  Mark one
+                    // side once, then test every non-tree candidate in O(1).
+                    // The previous implementation ran a complete BFS for each
+                    // candidate and made real benchmark instances time out.
+                    std::vector<char> cutSide(ROWS, 0);
+                    std::queue<int> sideQueue;
+                    cutSide[edge.u] = 1;
+                    sideQueue.push(edge.u);
+                    while (!sideQueue.empty()) {
+                        const int x = sideQueue.front();
+                        sideQueue.pop();
+                        for (int y : statsForest[x]) {
+                            if (!graph->hasVertex(y) || cutSide[y]) continue;
+                            cutSide[y] = 1;
+                            sideQueue.push(y);
+                        }
+                    }
+
+                    uint64_t scanned = 0;
+                    const uint64_t candidates = statsNonTreeEdges.size();
+                    bool replaced = false;
+                    for (auto it = statsNonTreeEdges.begin(); it != statsNonTreeEdges.end(); ++it) {
+                        ++scanned;
+                        if (cutSide[it->u] != cutSide[it->v]) {
+                            const auto replacement = *it;
+                            statsNonTreeEdges.erase(it);
+                            statsForest[replacement.u].insert(replacement.v);
+                            statsForest[replacement.v].insert(replacement.u);
+                            replaced = true;
+                            break;
+                        }
+                    }
+                    std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+                    ++ccExperimentStats.treeEdge_cuts;
+                    ccExperimentStats.enSum += candidates;
+                    ccExperimentStats.replacementScanSteps += scanned;
+                    if (replaced) ++ccExperimentStats.merges;
+                    else ++ccExperimentStats.splits;
+                }
+            }
+            graph->deleteEdge(edge.u, edge.v);
+            --statsActiveEdgeCount;
+        }
+        for (int v : changedVertices) if (graph->hasVertex(v)) graph->deleteVertex(v);
+    } else {
+        for (int v : changedVertices) {
+            if (graph->hasVertex(v)) continue;
+            graph->restoreVertex(v);
+            ++vd;
+            for (int u : graph->getAllNeighbors(v)) {
+                if (!graph->hasVertex(u) || (changedVertices.count(u) && u > v)) continue;
+                graph->restoreEdge(v, u);
+                ++statsActiveEdgeCount;
+                ++ed;
+                if (ettPeriod) {
+                    if (forestReachable(v, u)) statsNonTreeEdges.emplace(v, u);
+                    else {
+                        statsForest[v].insert(u);
+                        statsForest[u].insert(v);
+                    }
+                }
             }
         }
     }
 
     std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
-    if (restoring) {
-        ++ccExperimentStats.incCalls;
-        ccExperimentStats.V2 += active.size(); 
-        ccExperimentStats.E2 += graphEdges;  
-        ccExperimentStats.Vi += changedVertices.size();
-        ccExperimentStats.Ei += affectedEdges.size(); 
-    }
-    else {
-        ++ccExperimentStats.decCalls;
-        ccExperimentStats.V1 += active.size();
-        ccExperimentStats.E1 += graphEdges;
-        ccExperimentStats.Vd += changedVertices.size();
-        ccExperimentStats.Ed += affectedEdges.size();
+    if (restoring) ++ccExperimentStats.incCalls;
+    else ++ccExperimentStats.decCalls;
+    if (ettPeriod) {
+        ccExperimentStats.ettVd += vd;
+        ccExperimentStats.ettEd += ed;
+    } else {
+        ccExperimentStats.nonEttVd += vd;
+        ccExperimentStats.nonEttEd += ed;
     }
 }
 
 // 减量式更新单连通分量
 void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
 
-    recordCCUpdateStart(deletedVertices, false);
     uint64_t enSumThisUpdate = 0;
     uint64_t enSamplesThisUpdate = 0;
 
@@ -634,7 +775,6 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
 }
 
 void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
-    recordCCUpdateStart(restoredVertices, true);
     // if (!isGraphSyncEnabled()) return;
     // if (restoredVertices.empty()) return;
 
