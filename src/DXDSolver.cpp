@@ -497,6 +497,8 @@ void DanceDNNF::logCCExperimentStats(bool complete) {
     logger.logLine("CC Stats Dyn ETT Updated Vertex Sum: " + std::to_string(stats.ettVd));
     // ETT Ed
     logger.logLine("CC Stats Dyn ETT Updated Edge Sum: " + std::to_string(stats.ettEd)); 
+    logger.logLine("CC Stats Dyn ETT Deleted Tree Edge Sum: " +
+                   std::to_string(stats.ettDeletedTreeEdges));
     // ETT Er
     logger.logLine("CC Stats Dyn ETT Replacement Scan Steps: " +
                    std::to_string(stats.ettEr));

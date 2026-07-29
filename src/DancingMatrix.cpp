@@ -280,12 +280,13 @@ void DancingMatrix::buildGraphFromMatrix() {
         }
     }
 
+    // The graph is built in the base-class constructor, before callers can
+    // enable experiment statistics.  Record this immutable graph property
+    // regardless of whether collection has been enabled yet.
+    ccExperimentStats.graph_init_edges = temp_edges.size();
+
     for (const auto& edge : temp_edges) {
         graph->addEdge(edge.u, edge.v);
-        
-        if (collectCCExperimentStats) {
-            ccExperimentStats.graph_init_edges++;
-        }
     }
 
     // graph->printGraph();
@@ -419,7 +420,7 @@ splaytree::EulerTourTree* DancingMatrix::findEulerTourTree(int v) {
     return nullptr;
 }
 
-void DancingMatrix::processBoundaryVertex(int v, splaytree::EulerTourTree* tree, SubGraph* g){
+bool DancingMatrix::processBoundaryVertex(int v, splaytree::EulerTourTree* tree, SubGraph* g){
     // 处理所有相邻边(包含非树边)
     std::vector<int> neighbors = g->neighbors(v);
     
@@ -435,7 +436,7 @@ void DancingMatrix::processBoundaryVertex(int v, splaytree::EulerTourTree* tree,
             g->deleteEdge(v, u);
         }
         tree->removeVertex(v);
-        return;
+        return false;
     }
 
     // 删除非树边
@@ -453,6 +454,7 @@ void DancingMatrix::processBoundaryVertex(int v, splaytree::EulerTourTree* tree,
     
     // 删除顶点
     tree->removeVertex(v);
+    return true;
 }
 
 // 减量式更新单连通分量
@@ -460,6 +462,7 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
 
 
     uint64_t deletedVertexCount = 0;
+    uint64_t deletedTreeEdgeCount = 0;
     std::unordered_set<splaytree::Edge, splaytree::EdgeHash> deletedEdges;
 
     // if (!isGraphSyncEnabled()) return;
@@ -516,7 +519,7 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
     for (int v : boundaryVertices) {
         splaytree::EulerTourTree* tree = findEulerTourTree(v);
         if (!tree) continue;
-        processBoundaryVertex(v, tree, g);
+        if (processBoundaryVertex(v, tree, g)) ++deletedTreeEdgeCount;
     }
 
     // 再处理非边界点；同样不假设当前线程只有 comps[0]。
@@ -537,7 +540,7 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
         }
         // 原本非边界顶点，可能变成边界顶点
         if (currentDegree == 1) {
-            processBoundaryVertex(v, tree, g);
+            if (processBoundaryVertex(v, tree, g)) ++deletedTreeEdgeCount;
             continue;
         }
         
@@ -575,6 +578,7 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
             splaytree::ReplacementSearchMetrics searchMetrics;
             auto newTree = currentTree->cutWithReplacement(
                 v, u, collectCCExperimentStats ? &searchMetrics : nullptr);
+            ++deletedTreeEdgeCount;
             if (collectCCExperimentStats && searchMetrics.searched) {
                 std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
                 // ETT Er
@@ -610,6 +614,7 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
         std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
         ccExperimentStats.ettVd += deletedVertexCount;
         ccExperimentStats.ettEd += deletedEdges.size();
+        ccExperimentStats.ettDeletedTreeEdges += deletedTreeEdgeCount;
     }
 
 }
