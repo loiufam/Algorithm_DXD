@@ -543,9 +543,13 @@ void DanceDNNF::startDXD() {
         timeout = false;
 
         solutionCount = ResSols.toString();
-        logger.logLine("Solutions: " + solutionCount);
-        if (solutionCount.size() > 12) logger.logLine("Solutions (scientific): " + ResSols.toScientificString(3)); 
-    
+
+        if (solutionCount.size() > 12) {
+            logger.logLine("Solutions (scientific): " + ResSols.toScientificString(3));
+        } else {
+            logger.logLine("Solutions: " + solutionCount);
+        }
+
         logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
 
 
@@ -554,8 +558,8 @@ void DanceDNNF::startDXD() {
             size_t zdd_size = countZDDSize();
             logger.logLine("ZDD Size: " + std::to_string(zdd_size));
         } else {
-            // size_t dnnf_size = countDNNFNodes();
-            // logger.logLine("DNNF Size: " + std::to_string(dnnf_size));
+            size_t dnnf_size = countDNNFNodes();
+            logger.logLine("DNNF Size: " + std::to_string(dnnf_size));
         }
 
 
@@ -576,7 +580,7 @@ void DanceDNNF::startDXD() {
 // DynDXD
 void DanceDNNF::startMultiThreadDXD() {
 
-    logger.logLine("开始多线程DXD搜索...");
+    // logger.logLine("开始多线程DXD搜索...");
     
     // isParallelSearch = true;
     MAX_B_COUNT = 1;
@@ -613,8 +617,11 @@ void DanceDNNF::startMultiThreadDXD() {
         timeout = false;
 
         solutionCount = ResSols.toString();
-        logger.logLine("Solutions: " + solutionCount);
-        if (solutionCount.size() > 12) logger.logLine("Solutions (scientific): " + ResSols.toScientificString(3));
+        if (solutionCount.size() > 12) {
+            logger.logLine("Solutions (scientific): " + ResSols.toScientificString(3));
+        } else {
+            logger.logLine("Solutions: " + solutionCount);
+        }
     
         logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
             

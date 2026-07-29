@@ -87,7 +87,11 @@ class DancingMatrix
             uint64_t ettV = 0, ettE = 0, ettVd = 0, ettEd = 0, ettEr = 0; // ETT 相关统计
             uint64_t ettCcTimes = 0; // 调用ETT次数
 
-            void reset() { *this = {}; }
+            void reset() {
+                const uint64_t initialGraphEdges = graph_init_edges;
+                *this = {};
+                graph_init_edges = initialGraphEdges;
+            }
         };
 
         bool collectCCExperimentStats = false;
