@@ -484,10 +484,12 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
     
     if (collectCCExperimentStats) {
         // 统计 V, E 
+        uint64_t vertexCount = 0;
+        uint64_t edgeCount = 0;
         for (auto& tree : comps) {
             if (!tree) continue;
-            ccExperimentStats.ettV += tree->vertices.size();
-            ccExperimentStats.ettE += tree->getEdgeCount();
+            vertexCount += tree->vertices.size();
+            edgeCount += tree->getEdgeCount();
         }
         
         for (int v : deletedVertices) {
@@ -495,6 +497,9 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
             ++deletedVertexCount;
             for (int u : g->neighbors(v)) deletedEdges.emplace(v, u);
         }
+        std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+        ccExperimentStats.ettV += vertexCount;
+        ccExperimentStats.ettE += edgeCount;
     }
 
     std::vector<int> boundaryVertices;
@@ -635,13 +640,9 @@ void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
     }
 
     std::unordered_set<int> restoredSet(restoredVertices.begin(), restoredVertices.end());
-    uint64_t restoredVertexCount = 0;
-    uint64_t restoredEdgeCount = 0;
-
     for (int v : restoredVertices) {
         if (!g->hasVertex(v)) {
             g->restoreVertex(v);
-            ++restoredVertexCount;
         }
     }
 
@@ -668,7 +669,6 @@ void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
 
             if (!g->hasEdge(v, u)) {
                 g->restoreEdge(v, u);
-                ++restoredEdgeCount;
             }
             treeU = findEulerTourTree(u);
             if (!treeU) continue;
@@ -688,11 +688,9 @@ void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
             [](const std::unique_ptr<splaytree::EulerTourTree>& t) { return t->isEmpty(); }),
         comps.end()
     );
-    if (collectCCExperimentStats) {
-        std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
-        ccExperimentStats.ettVd += restoredVertexCount;
-        ccExperimentStats.ettEd += restoredEdgeCount;
-    }
+    // Restoring is the inverse used for backtracking, not another residual
+    // transition.  Counting it again made Vd/Ed almost twice their actual
+    // value and incomparable with the pre-deletion V/E baseline.
 }
 
 std::vector<std::unordered_set<int>> DancingMatrix::getConnectedComponents() const {

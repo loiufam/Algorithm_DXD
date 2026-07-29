@@ -159,7 +159,7 @@ Node* EulerTourTree::concatenate(Node* leftTree, Node* rightTree) {
 
 void EulerTourTree::mergeTrees(EulerTourTree* other) {
     vertices.insert(other->vertices.begin(), other->vertices.end());
-    nonTreeEdges.insert(other->nonTreeEdges.begin(), other->nonTreeEdges.end());
+    for (const Edge& edge : other->nonTreeEdges) addNonTreeEdge(edge);
 
     for (auto& [v, edges] : other->edgeNodes) {
         for (auto& [u, node] : edges) {
@@ -170,6 +170,7 @@ void EulerTourTree::mergeTrees(EulerTourTree* other) {
     other->root = nullptr;
     other->vertices.clear();
     other->nonTreeEdges.clear();
+    other->nonTreeNeighbors.clear();
     other->edgeNodes.clear();
 }
 
@@ -429,9 +430,9 @@ std::pair<std::unique_ptr<EulerTourTree>, std::unique_ptr<EulerTourTree>> EulerT
         bool inLargeV = T_large->vertices.count(e.v);
 
         if (inSmallU && inSmallV) {
-            T_small->nonTreeEdges.insert(e);
+            T_small->addNonTreeEdge(e);
         } else if (inLargeU && inLargeV) {
-            T_large->nonTreeEdges.insert(e);
+            T_large->addNonTreeEdge(e);
         }
         // 其余 cross-component 情况：两端被分裂到不同树，丢弃该非树边
     }
@@ -439,6 +440,7 @@ std::pair<std::unique_ptr<EulerTourTree>, std::unique_ptr<EulerTourTree>> EulerT
     root = nullptr;
     vertices.clear();
     nonTreeEdges.clear();
+    nonTreeNeighbors.clear();
     edgeNodes.clear();
     
     return {std::move(treeU), std::move(treeV)};
@@ -525,18 +527,42 @@ Edge EulerTourTree::findReplacementEdge(Node* rootU, Node* rootV,
         metrics->searched = true;
     }
 
-    for (const Edge& e : nonTreeEdges) {
-        if (metrics) ++metrics->scanSteps;
-        Node* nodeU = getRepresentative(e.u);
-        Node* nodeV = getRepresentative(e.v);
+    // Every crossing edge is incident to the smaller side.  The adjacency
+    // index therefore reduces a replacement search from O(all non-tree
+    // edges) to O(non-tree incidences on the smaller cut side).
+    Node* smallerRoot = getSize(rootU) <= getSize(rootV) ? rootU : rootV;
+    std::vector<Node*> nodes;
+    collectNodes(smallerRoot, nodes);
+    std::unordered_set<int> smallerVertices;
+    smallerVertices.reserve(nodes.size());
+    for (Node* node : nodes) {
+        smallerVertices.insert(node->u);
+        if (node->isEdge()) smallerVertices.insert(node->v);
+    }
 
-        if (!nodeU || !nodeV) continue;
-    
-        Node* rU = findRoot(nodeU);
-        Node* rV = findRoot(nodeV);
+    if (metrics) metrics->nonTreeEdges = nonTreeEdges.size();
+    for (int from : smallerVertices) {
+        auto adjacency = nonTreeNeighbors.find(from);
+        if (adjacency == nonTreeNeighbors.end()) continue;
+        for (int to : adjacency->second) {
+            // Internal edges are seen from both endpoints and cannot replace
+            // the cut.  Excluding them also makes scanSteps count candidates
+            // that can actually cross the cut.
+            if (smallerVertices.count(to)) continue;
+            if (metrics) ++metrics->scanSteps;
+            Edge e(from, to);
+            Node* nodeU = getRepresentative(e.u);
+            Node* nodeV = getRepresentative(e.v);
+
+            if (!nodeU || !nodeV) continue;
+
+            Node* rU = findRoot(nodeU);
+            Node* rV = findRoot(nodeV);
         
-        if ((rU == rootU && rV == rootV) || (rU == rootV && rV == rootU)) {
-            return e;
+            if ((rU == rootU && rV == rootV) || (rU == rootV && rV == rootU)) {
+                if (metrics) metrics->found = true;
+                return e;
+            }
         }
     }
     
@@ -559,7 +585,7 @@ std::unique_ptr<EulerTourTree> EulerTourTree::cutWithReplacement(
     Edge replacement = findReplacementEdge(treeU, treeV, metrics);
 
     if (replacement.u != -1) {
-        nonTreeEdges.erase(replacement);
+        removeNonTreeEdge(replacement);
 
         root = joinTreesViaEdge(treeU, treeV, replacement.u, replacement.v);
         return nullptr; // 没有产生新分量
@@ -606,8 +632,10 @@ std::unique_ptr<EulerTourTree> EulerTourTree::cutWithReplacement(
             bool inSmallV = newTree->vertices.count(it->v);
 
             if (inSmallU && inSmallV) {
-                newTree->nonTreeEdges.insert(*it);
-                it = nonTreeEdges.erase(it); // 安全删除并移动迭代器
+                const Edge edge = *it;
+                ++it;
+                removeNonTreeEdge(edge);
+                newTree->addNonTreeEdge(edge);
             } else {
                 ++it;
             }
@@ -693,14 +721,12 @@ void EulerTourTree::removeVertex(int v) {
     vertices.erase(v);
     edgeNodes.erase(v);
     
-    // 删除相关的非树边 - 使用迭代器安全删除
-    auto edgeIt = nonTreeEdges.begin();
-    while (edgeIt != nonTreeEdges.end()) {
-        if (edgeIt->u == v || edgeIt->v == v) {
-            edgeIt = nonTreeEdges.erase(edgeIt);
-        } else {
-            ++edgeIt;
-        }
+    // The adjacency index gives exactly the incident edges; do not scan every
+    // non-tree edge in the component when removing one vertex.
+    auto adjacency = nonTreeNeighbors.find(v);
+    if (adjacency != nonTreeNeighbors.end()) {
+        std::vector<int> neighbors(adjacency->second.begin(), adjacency->second.end());
+        for (int u : neighbors) removeNonTreeEdge(Edge(v, u));
     }
 }
 
