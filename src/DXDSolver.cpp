@@ -572,14 +572,15 @@ void DanceDNNF::startDXD() {
 
         searchTime = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
         logger.logLine("Time: " + std::to_string(searchTime) + " s");
-        if (!dxz_mode) logger.logLine("DXD CC CPU: " + std::to_string(ccCpuTime) + " s");
+        // if (!dxz_mode) logger.logLine("DXD CC CPU: " + std::to_string(ccCpuTime) + " s");
         timeout = false;
 
         solutionCount = ResSols.toString();
         logger.logLine("Solutions: " + solutionCount);
         if (solutionCount.size() > 12) logger.logLine("Solutions (scientific): " + ResSols.toScientificString(3)); 
     
-        // if(!controlOUTPUT) logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
+        logger.logLine("Max Blocks: " + std::to_string(MAX_B_COUNT));
+
 
 
         if(dxz_mode) {
