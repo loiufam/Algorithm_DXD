@@ -254,7 +254,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         throw std::runtime_error("Time bound broken");
     }
 
-    const bool useDxzSearch = dxz_mode || isDxzFallbackMode();
+    const bool useDxzSearch = dxz_mode;
 
     if (useDxzSearch && isSolved()) {
         return {DNNFResult(1), T};

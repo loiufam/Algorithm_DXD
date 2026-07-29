@@ -256,6 +256,8 @@ class DancingMatrix
             int no_split_count = 0;
             int decompose_depth = 0;
             bool bfs_fallback = false;
+            // Zero until the first BFS query.  Afterwards this is half of that
+            // query's block area and is the point where CC queries stop.
             size_t bfs_stop_area = 0;
             bool dynamic_ett_disabled = false;
             bool decomposition_disabled = false;
