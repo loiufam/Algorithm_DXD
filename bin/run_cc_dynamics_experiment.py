@@ -195,9 +195,9 @@ def main():
     parser.add_argument("--executable", type=Path, default=common.ROOT / "bin/main")
     parser.add_argument("--raw-output", type=Path, default=common.ROOT / "results/cc_dynamics_instances.csv")
     parser.add_argument("--summary-output", type=Path, default=common.ROOT / "results/cc_dynamics_summary.csv")
-    parser.add_argument("--search-seconds", type=int, default=600,
+    parser.add_argument("--search-seconds", type=int, default=180,
                         help="gracefully stop search and roll back after this many seconds")
-    parser.add_argument("--timeout", type=int, default=1200,
+    parser.add_argument("--timeout", type=int, default=300,
                         help="safety timeout after the algorithm starts")
     parser.add_argument(
         "--cc-ett-threshold", type=int, default=0,
@@ -257,7 +257,7 @@ def main():
             raw = list(csv.DictReader(stream))
     completed = {
         (row["dataset"], row["instance"])
-        for row in raw if row["status"] in {"success", "invalid"}
+        for row in raw if row["status"] in {"success", "sampled"}
     }
     pending = []
     for number, item in enumerate(runnable, 1):
