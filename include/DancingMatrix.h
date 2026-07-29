@@ -94,6 +94,13 @@ class DancingMatrix
             uint64_t replacementSearchCalls = 0, replacementScanSteps = 0;
             uint64_t nonEttComputations = 0, nonEttEdgeSum = 0, ettFullEdgeSum = 0;
 
+            // Focused comparison counters.  DXD totals model a BFS at every
+            // DynDXD CC probe; Dyn BFS totals include only actual fallback
+            // scans.  These are populated only in single-thread stats mode.
+            uint64_t dxdBfsVertices = 0, dxdBfsEdges = 0;
+            uint64_t dynBfsVertices = 0, dynBfsEdges = 0;
+            uint64_t ccGraphVertices = 0, ccGraphEdges = 0;
+
             void reset() { *this = {}; }
             uint64_t calls() const { return decCalls + incCalls; }
         };
@@ -105,7 +112,9 @@ class DancingMatrix
 
         void recordCCUpdateStart(const std::set<int>& vertices, bool restoring,
                                  bool ettPeriod);
-        void recordCCComputation(const Block& block, bool decomposed);
+        void recordCCComputation(bool decomposed, bool usedEtt,
+                                 uint64_t graphVertices, uint64_t graphEdges,
+                                 uint64_t bfsEdgeScans);
 
         // 列状态
         size_t getColumnState() const;
@@ -187,7 +196,13 @@ class DancingMatrix
             return root->right == root;
         }
 
-        vector<Block> getComponentsByBFS(const set<int>& target_cols);
+        struct BFSScanMetrics {
+            uint64_t vertices = 0;
+            uint64_t graphEdges = 0;
+            uint64_t edgeScans = 0;
+        };
+        vector<Block> getComponentsByBFS(const set<int>& target_cols,
+                                         BFSScanMetrics* metrics = nullptr);
         vector<Block> getComponentsByETT(const set<int>& target_cols);
 
         void turnOnGraphSync() {
@@ -256,6 +271,8 @@ class DancingMatrix
             int nextTreeId = 0;
             int no_split_count = 0;
             int decompose_depth = 0;
+            bool bfs_fallback = false;
+            size_t bfs_stop_area = 0;
             bool dynamic_ett_disabled = false;
             bool decomposition_disabled = false;
             bool initialized = false;

@@ -53,7 +53,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(vector<Block
     // must use the ordinary independent-block path.  Entering the ETT path
     // with an empty forest used to report "component missing" and incorrectly
     // turn a valid component into a zero count.
-    if (!useETT || getComponents().empty()) {
+    if (!useETT || isCurrentDynamicEttDisabled() || getComponents().empty()) {
         for (size_t i = 0; i < blocks.size(); ++i) {
             auto [result, node] = DXD(blocks[i], parent_depth + 1);
             if (result.isZero()) {
@@ -133,7 +133,8 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(vector<Block
 //   Launch one OpenMP thread per independent block.
 //   Returns the product of counts AND the Decomposed-AND node.
 std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(
-    vector<Block>& blocks, int parent_depth, bool disableDynamicUpdates) {
+    vector<Block>& blocks, int parent_depth, bool disableDynamicUpdates,
+    bool componentTreesAvailable) {
 
     const int n = blocks.size();
     std::atomic<bool> has_failure(false);
@@ -143,7 +144,8 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(
     std::vector<std::unique_ptr<splaytree::EulerTourTree>> returned(n);
     
     auto& comps = getComponents();
-    if(useETT) {
+    const bool manageTrees = useETT && componentTreesAvailable;
+    if(manageTrees) {
         for (int i = 0; i < n; ++i)
             extracted[i] = std::move(comps[i]);
         comps.clear();
@@ -156,26 +158,25 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(
     for (int i = 0; i < n; i++) {
         if (has_failure.load(std::memory_order_acquire) || 
             has_timeout.load(std::memory_order_acquire)) {
-            if(useETT) returned[i] = std::move(extracted[i]);
+            if(manageTrees) returned[i] = std::move(extracted[i]);
             continue;
         }
 
         std::unique_ptr<ThreadLocalState> outerTls;
-        if (useETT) {
+        if (manageTrees) {
 
             outerTls = std::move(tlsState);
         }
 
         try {
             // === 初始化线程局部状态 ===
-            if(useETT) {
+            if(manageTrees) {
                 const int outerDepth = outerTls ? outerTls->decompose_depth : 0;
                 initThreadLocalState(blocks[i], std::move(extracted[i]));
                 if (tlsState) {
                     tlsState->decompose_depth = outerDepth + 1;
                     if (disableDynamicUpdates) {
                         tlsState->dynamic_ett_disabled = true;
-                        tlsState->decomposition_disabled = true;
                     }
                 }
             }
@@ -190,7 +191,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(
                 nodes[i] = node;
             }
 
-            if (useETT && tlsState && !tlsState->components.empty()) {
+            if (manageTrees && tlsState && !tlsState->components.empty()) {
                 returned[i] = std::move(tlsState->components.front());
             }
         } catch (const std::runtime_error& e) {
@@ -202,32 +203,32 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(
                 std::cerr << "Thread " << omp_get_thread_num() 
                          << " error: " << msg << "\n";
             }
-            if (useETT && tlsState && !tlsState->components.empty()) {
+            if (manageTrees && tlsState && !tlsState->components.empty()) {
                 returned[i] = std::move(tlsState->components.front());
             }
         } catch (const std::exception& e) {
             has_failure.store(true, std::memory_order_release);
             std::cerr << "Thread " << omp_get_thread_num() 
                      << " exception: " << e.what() << "\n";
-            if (useETT && tlsState && !tlsState->components.empty()) {
+            if (manageTrees && tlsState && !tlsState->components.empty()) {
                 returned[i] = std::move(tlsState->components.front());
             }
         } catch (...) {
             has_failure.store(true, std::memory_order_release);
             std::cerr << "Thread " << omp_get_thread_num() 
                      << " unknown error\n";
-            if (useETT && tlsState && !tlsState->components.empty()) {
+            if (manageTrees && tlsState && !tlsState->components.empty()) {
                 returned[i] = std::move(tlsState->components.front());
             }
         }
 
-        if (useETT) {
+        if (manageTrees) {
             cleanupThreadLocalState();
             tlsState = std::move(outerTls);
         }
     }
 
-    if (useETT) {
+    if (manageTrees) {
         comps.resize(n);
         for (int i = 0; i < n; ++i)
             comps[i] = std::move(returned[i]);
@@ -294,32 +295,39 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         }
     }
 
-    // The ETT itself is intentionally disabled for this experiment.  BFS
-    // remains the source of solver results while the dedicated graph-only
-    // instrumentation models the updates that an ETT would receive.
-    const bool trackGraphStatistics = collectCCExperimentStats && graph;
-    size_t currentRows = block.rows.size();
-    if (trackGraphStatistics) {
-        currentRows = 0;
-        for (int row : block.rows) currentRows += graph->hasVertex(row) ? 1 : 0;
-    }
-    const bool ettStatisticsPeriod = currentRows > ccEttThreshold;
-
     if (shouldTryDecompose(block)) {
-        
-        vector<Block> curBlock;
-        curBlock = getComponentsByBFS(block.cols);
-        if (collectCCExperimentStats) recordCCComputation(block, curBlock.size() > 1);
+        const bool useDynamicEtt = shouldUseDynamicEtt(block, depth);
+        BFSScanMetrics bfsMetrics;
+        vector<Block> bfsBlocks;
+        if (collectCCExperimentStats || !useDynamicEtt) {
+            // In stats mode this scan is the DXD baseline at the exact same
+            // residual state as the DynDXD CC probe.  Outside stats mode an
+            // ETT probe never pays this cost.
+            bfsBlocks = getComponentsByBFS(
+                block.cols, collectCCExperimentStats ? &bfsMetrics : nullptr);
+        }
+        vector<Block> curBlock = useDynamicEtt
+            ? getComponentsByETT(block.cols)
+            : std::move(bfsBlocks);
+        if (collectCCExperimentStats) {
+            recordCCComputation(curBlock.size() > 1, useDynamicEtt,
+                                bfsMetrics.vertices, bfsMetrics.graphEdges,
+                                bfsMetrics.edgeScans);
+        }
 
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
         // DynDXD now uses the explicit residual-matrix size boundary below;
         // the old consecutive-no-split heuristic could disable ETT globally
         // while another initial component still required real updates.
-        if (!useETT) updateAdaptiveDecompositionState(block, curBlock.size());
+        updateAdaptiveDecompositionState(block, curBlock.size());
 
         if (int(curBlock.size()) > 1) {
+            // Every worker receives and maintains its own component ETT.  It
+            // may independently fall back to BFS after repeated failed ETT
+            // probes, but the forest remains synchronized for backtracking.
+            const bool treesAvailable = useETT && !isCurrentDynamicEttDisabled();
             auto decompResult = isParallelSearch
-                ? parallelSearchUseOmp(curBlock, depth, false)
+                ? parallelSearchUseOmp(curBlock, depth, false, treesAvailable)
                 : serialSearch(curBlock, depth);
 
             auto [result, decompNode] = decompResult;
@@ -349,10 +357,14 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     } else {
         coverInBlock(choose->col, block, deleted_rows);
     }
-    if (trackGraphStatistics) timedDecUpdateCC(deleted_rows, ettStatisticsPeriod);
+    // Pair every dynamic update with its inverse even if the adaptive policy
+    // switches to BFS/DXZ deeper in this frame.
+    const bool frameEttUpdated = shouldMaintainDynamicEtt(depth);
+    if (frameEttUpdated) DecUpdateCC(deleted_rows);
 
     Node* curC = choose->down;
     bool rowCovered = false;
+    bool rowEttUpdated = false;
     set<int> deleted_rows_;
 
     auto restoreCurrentFrame = [&]() {
@@ -363,12 +375,13 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
                 else uncoverInBlock(curR->col, block);
                 curR = curR->left;
             }
-            if (trackGraphStatistics) timedIncUpdateCC(deleted_rows_, ettStatisticsPeriod);
+            if (rowEttUpdated) IncUpdateCC(deleted_rows_);
+            rowEttUpdated = false;
             rowCovered = false;
         }
         if (useDxzSearch) uncover(choose->col);
         else uncoverInBlock(choose->col, block);
-        if (trackGraphStatistics) timedIncUpdateCC(deleted_rows, ettStatisticsPeriod);
+        if (frameEttUpdated) IncUpdateCC(deleted_rows);
     };
 
     try {
@@ -385,7 +398,8 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             }
             curR = curR->right;
         }
-        if (trackGraphStatistics) timedDecUpdateCC(deleted_rows_, ettStatisticsPeriod);
+        rowEttUpdated = shouldMaintainDynamicEtt(depth);
+        if (rowEttUpdated) DecUpdateCC(deleted_rows_);
         rowCovered = true;
  
         auto [result, sub_node] = DXD(block, depth + 1);
@@ -404,7 +418,8 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             }
             curR = curR->left;
         }
-        if (trackGraphStatistics) timedIncUpdateCC(deleted_rows_, ettStatisticsPeriod);
+        if (rowEttUpdated) IncUpdateCC(deleted_rows_);
+        rowEttUpdated = false;
         rowCovered = false;
 
         curC = curC->down;
@@ -418,7 +433,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     } else {
         uncoverInBlock(choose->col, block);
     }
-    if (trackGraphStatistics) timedIncUpdateCC(deleted_rows, ettStatisticsPeriod);
+    if (frameEttUpdated) IncUpdateCC(deleted_rows);
 
     // std::cout << "\n============================\n";
     // std::cout << "[After] DXD called at depth " << depth << "\n";
@@ -491,47 +506,24 @@ void DanceDNNF::logCCExperimentStats(bool complete) {
         stats = ccExperimentStats;
     }
     logger.logLine("CC Stats Complete: " + std::to_string(complete ? 1 : 0));
-    logger.logLine("CC Stats ETT Row Threshold: " + std::to_string(ccEttThreshold));
-    logger.logLine("CC Stats Calls: " + std::to_string(stats.calls()));
-    logger.logLine("CC Stats Dec Calls: " + std::to_string(stats.decCalls));
-    logger.logLine("CC Stats Inc Calls: " + std::to_string(stats.incCalls));
-    logger.logLine("CC Stats Merges: " + std::to_string(stats.merges));
-    logger.logLine("CC Stats Tree Edge Cuts: " + std::to_string(stats.treeEdge_cuts)); 
-    logger.logLine("CC Stats Non-Tree Edge Cuts: " + std::to_string(stats.non_treeEdge_cuts));
-    logger.logLine("CC Stats Splits: " + std::to_string(stats.splits));
     logger.logLine("CC Stats Decompose: " + std::to_string(stats.cc_decompose));
     logger.logLine("CC Stats CC Computations: " + std::to_string(stats.ccComputations));
-    // logger.logLine("CC Stats Components: " + std::to_string(stats.ccComponents));
-
-    logger.logLine("CC Stats V Sum: " + std::to_string(stats.ettV + stats.nonEttV));
-    logger.logLine("CC Stats E Sum: " +
-                   std::to_string(stats.ettE + stats.ettFullEdgeSum + stats.nonEttE));
-    logger.logLine("CC Stats Vd Sum: " + std::to_string(stats.ettVd + stats.nonEttVd));
-    logger.logLine("CC Stats Ed Sum: " + std::to_string(stats.ettEd + stats.nonEttEd));
-    logger.logLine("CC Stats ETT V Sum: " + std::to_string(stats.ettV));
-    logger.logLine("CC Stats ETT E Sum: " +
-                   std::to_string(stats.ettE + stats.ettFullEdgeSum));
-    logger.logLine("CC Stats ETT Vd Sum: " + std::to_string(stats.ettVd));
-    logger.logLine("CC Stats ETT Ed Sum: " + std::to_string(stats.ettEd));
-    logger.logLine("CC Stats Non-ETT V Sum: " + std::to_string(stats.nonEttV));
-    logger.logLine("CC Stats Non-ETT E Sum: " + std::to_string(stats.nonEttE));
-    logger.logLine("CC Stats Non-ETT Vd Sum: " + std::to_string(stats.nonEttVd));
-    logger.logLine("CC Stats Non-ETT Ed Sum: " + std::to_string(stats.nonEttEd));
     logger.logLine("CC Stats ETT CC Times: " + std::to_string(stats.ettCcTimes));
-    logger.logLine("CC Stats Non-ETT CC Times: " + std::to_string(stats.nonEttCcTimes));
+    logger.logLine("CC Stats BFS CC Times: " + std::to_string(stats.nonEttCcTimes));
+    logger.logLine("CC Stats CC Graph Vertex Sum: " + std::to_string(stats.ccGraphVertices));
+    logger.logLine("CC Stats CC Graph Edge Sum: " + std::to_string(stats.ccGraphEdges));
+    logger.logLine("CC Stats DXD BFS Vertex Scan Sum: " + std::to_string(stats.dxdBfsVertices));
+    logger.logLine("CC Stats DXD BFS Edge Scan Sum: " + std::to_string(stats.dxdBfsEdges));
+    logger.logLine("CC Stats Dyn ETT Updated Vertex Sum: " + std::to_string(stats.ettVd));
+    logger.logLine("CC Stats Dyn ETT Updated Edge Sum: " + std::to_string(stats.ettEd));
+    logger.logLine("CC Stats Dyn ETT Replacement Scan Steps: " +
+                   std::to_string(stats.replacementScanSteps));
+    logger.logLine("CC Stats Dyn BFS Vertex Scan Sum: " + std::to_string(stats.dynBfsVertices));
+    logger.logLine("CC Stats Dyn BFS Edge Scan Sum: " + std::to_string(stats.dynBfsEdges));
 
-    // logger.logLine("CC Stats Inc Vertex Sum: " + std::to_string(stats.V2));
-    // logger.logLine("CC Stats Inc Edge Sum: " + std::to_string(stats.E2));
-    // logger.logLine("CC Stats IncUpdate Vertex Sum: " + std::to_string(stats.Vi));
-    // logger.logLine("CC Stats IncUpdate Edge Sum: " + std::to_string(stats.Ei)); 
-
-    logger.logLine("CC Stats ETT En Sum: " + std::to_string(stats.enSum));
-    logger.logLine("CC Stats ETT Er Sum: " + std::to_string(stats.replacementScanSteps));
-    // logger.logLine("CC Stats Non-ETT Computations: " + std::to_string(stats.nonEttComputations));
-    logger.logLine("CC Stats Dyn Total Edge Sum: " +
-                   std::to_string(stats.replacementScanSteps + stats.nonEttE));
-    logger.logLine("CC Stats Replacement Searches: " + std::to_string(stats.treeEdge_cuts));
-    logger.logLine("CC Stats Replacement Scan Steps: " + std::to_string(stats.replacementScanSteps));
+    // Detailed cut/merge/split and graph-size counters remain available in
+    // CCExperimentStats for debugging, but are intentionally not emitted by
+    // the focused DXD-vs-DynDXD experiment.
 }
 
 // DXD DXZ入口
