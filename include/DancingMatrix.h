@@ -80,41 +80,19 @@ class DancingMatrix
         bool dxd_mode = false;
 
         struct CCExperimentStats {
-            uint64_t decCalls = 0, incCalls = 0;
-            uint64_t merges = 0, splits = 0, treeEdge_cuts = 0, non_treeEdge_cuts = 0, cc_decompose = 0;
-            uint64_t ccComputations = 0, ccComponents = 0;
-            uint64_t V1 = 0, E1 = 0; // 减量式图规模统计
-            uint64_t V2 = 0, E2 = 0; // 增量式图规模统计 
-            uint64_t ettV = 0, ettE = 0, ettVd = 0, ettEd = 0;
-            uint64_t nonEttV = 0, nonEttE = 0, nonEttVd = 0, nonEttEd = 0;
-            uint64_t ettCcTimes = 0, nonEttCcTimes = 0;
-            uint64_t Vi = 0, Ei = 0; // 增量式更新顶点数、边数 
-            uint64_t enSamples = 0, enSum = 0;
-
-            uint64_t replacementSearchCalls = 0, replacementScanSteps = 0;
-            uint64_t nonEttComputations = 0, nonEttEdgeSum = 0, ettFullEdgeSum = 0;
-
-            // Focused comparison counters.  DXD totals model a BFS at every
-            // DynDXD CC probe; Dyn BFS totals include only actual fallback
-            // scans.  These are populated only in single-thread stats mode.
-            uint64_t dxdBfsVertices = 0, dxdBfsEdges = 0;
-            uint64_t dynBfsVertices = 0, dynBfsEdges = 0;
-            uint64_t ccGraphVertices = 0, ccGraphEdges = 0;
+            uint64_t cc_decompose = 0; // 分解总数
+            uint64_t ccComputations = 0; // 连通分量查询总次数
+ 
+            uint64_t ettV = 0, ettE = 0, ettVd = 0, ettEd = 0, ettEr = 0; // ETT 相关统计
+            uint64_t ettCcTimes = 0; // 调用ETT次数
 
             void reset() { *this = {}; }
-            uint64_t calls() const { return decCalls + incCalls; }
         };
 
         bool collectCCExperimentStats = false;
         size_t ccEttThreshold = 150;
         CCExperimentStats ccExperimentStats;
         std::mutex ccExperimentStatsMutex;
-
-        void recordCCUpdateStart(const std::set<int>& vertices, bool restoring,
-                                 bool ettPeriod);
-        void recordCCComputation(bool decomposed, bool usedEtt,
-                                 uint64_t graphVertices, uint64_t graphEdges,
-                                 uint64_t bfsEdgeScans);
 
         // 列状态
         size_t getColumnState() const;

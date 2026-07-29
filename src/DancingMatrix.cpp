@@ -463,158 +463,9 @@ void DancingMatrix::processBoundaryVertex(int v, splaytree::EulerTourTree* tree,
     tree->removeVertex(v);
 }
 
-void DancingMatrix::recordCCComputation(bool decomposed, bool usedEtt,
-                                        uint64_t graphVertices, uint64_t graphEdges,
-                                        uint64_t bfsEdgeScans) {
-    if (!collectCCExperimentStats) return;
-    std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
-    ++ccExperimentStats.ccComputations;
-    if (decomposed) ++ccExperimentStats.cc_decompose;
-    ccExperimentStats.ccGraphVertices += graphVertices;
-    ccExperimentStats.ccGraphEdges += graphEdges;
-    ccExperimentStats.dxdBfsVertices += graphVertices;
-    ccExperimentStats.dxdBfsEdges += bfsEdgeScans;
-    if (usedEtt) {
-        ++ccExperimentStats.ettCcTimes;
-    } else {
-        ++ccExperimentStats.nonEttCcTimes;
-        ccExperimentStats.dynBfsVertices += graphVertices;
-        ccExperimentStats.dynBfsEdges += bfsEdgeScans;
-    }
-}
-
-void DancingMatrix::recordCCUpdateStart(const std::set<int>& changedVertices,
-                                        bool restoring, bool ettPeriod) {
-    if (!collectCCExperimentStats || !graph || changedVertices.empty()) return;
-    if (!statsForestReady) buildStatsSpanningForest();
-
-    auto forestReachable = [&](int start, int target) {
-        if (start == target) return true;
-        std::vector<char> seen(ROWS, 0);
-        std::queue<int> pending;
-        seen[start] = 1;
-        pending.push(start);
-        while (!pending.empty()) {
-            int u = pending.front(); pending.pop();
-            for (int v : statsForest[u]) {
-                if (!graph->hasVertex(v) || seen[v]) continue;
-                if (v == target) return true;
-                seen[v] = 1;
-                pending.push(v);
-            }
-        }
-        return false;
-    };
-
-    uint64_t vd = 0, ed = 0;
-    if (!restoring) {
-        std::unordered_set<splaytree::Edge, splaytree::EdgeHash> removedEdges;
-        for (int v : changedVertices) {
-            if (!graph->hasVertex(v)) continue;
-            ++vd;
-            for (int u : graph->getAllNeighbors(v)) {
-                if (graph->hasVertex(u) && graph->hasEdge(v, u)) removedEdges.emplace(v, u);
-            }
-        }
-        ed = removedEdges.size();
-
-        for (const auto& edge : removedEdges) {
-            if (ettPeriod) {
-                auto nt = statsNonTreeEdges.find(edge);
-                if (nt != statsNonTreeEdges.end()) {
-                    statsNonTreeEdges.erase(nt);
-                    std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
-                    ++ccExperimentStats.non_treeEdge_cuts;
-                } else {
-                    // ETT E is the full graph size presented to each dynamic
-                    // replacement query.  With this sampling point Er (the
-                    // actually inspected candidates) is directly comparable
-                    // to, and bounded by, ETT E.
-                    {
-                        std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
-                        ccExperimentStats.ettFullEdgeSum += statsActiveEdgeCount;
-                    }
-                    statsForest[edge.u].erase(edge.v);
-                    statsForest[edge.v].erase(edge.u);
-                    // Removing one forest edge partitions that tree.  Mark one
-                    // side once, then test every non-tree candidate in O(1).
-                    // The previous implementation ran a complete BFS for each
-                    // candidate and made real benchmark instances time out.
-                    std::vector<char> cutSide(ROWS, 0);
-                    std::queue<int> sideQueue;
-                    cutSide[edge.u] = 1;
-                    sideQueue.push(edge.u);
-                    while (!sideQueue.empty()) {
-                        const int x = sideQueue.front();
-                        sideQueue.pop();
-                        for (int y : statsForest[x]) {
-                            if (!graph->hasVertex(y) || cutSide[y]) continue;
-                            cutSide[y] = 1;
-                            sideQueue.push(y);
-                        }
-                    }
-
-                    uint64_t scanned = 0;
-                    const uint64_t candidates = statsNonTreeEdges.size();
-                    bool replaced = false;
-                    for (auto it = statsNonTreeEdges.begin(); it != statsNonTreeEdges.end(); ++it) {
-                        ++scanned;
-                        if (cutSide[it->u] != cutSide[it->v]) {
-                            const auto replacement = *it;
-                            statsNonTreeEdges.erase(it);
-                            statsForest[replacement.u].insert(replacement.v);
-                            statsForest[replacement.v].insert(replacement.u);
-                            replaced = true;
-                            break;
-                        }
-                    }
-                    std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
-                    ++ccExperimentStats.treeEdge_cuts;
-                    ccExperimentStats.enSum += candidates;
-                    ccExperimentStats.replacementScanSteps += scanned;
-                    if (replaced) ++ccExperimentStats.merges;
-                    else ++ccExperimentStats.splits;
-                }
-            }
-            graph->deleteEdge(edge.u, edge.v);
-            --statsActiveEdgeCount;
-        }
-        for (int v : changedVertices) if (graph->hasVertex(v)) graph->deleteVertex(v);
-    } else {
-        for (int v : changedVertices) {
-            if (graph->hasVertex(v)) continue;
-            graph->restoreVertex(v);
-            ++vd;
-            for (int u : graph->getAllNeighbors(v)) {
-                if (!graph->hasVertex(u) || (changedVertices.count(u) && u > v)) continue;
-                graph->restoreEdge(v, u);
-                ++statsActiveEdgeCount;
-                ++ed;
-                if (ettPeriod) {
-                    if (forestReachable(v, u)) statsNonTreeEdges.emplace(v, u);
-                    else {
-                        statsForest[v].insert(u);
-                        statsForest[u].insert(v);
-                    }
-                }
-            }
-        }
-    }
-
-    std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
-    if (restoring) ++ccExperimentStats.incCalls;
-    else ++ccExperimentStats.decCalls;
-    if (ettPeriod) {
-        ccExperimentStats.ettVd += vd;
-        ccExperimentStats.ettEd += ed;
-    } else {
-        ccExperimentStats.nonEttVd += vd;
-        ccExperimentStats.nonEttEd += ed;
-    }
-}
-
 // 减量式更新单连通分量
 void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
+
 
     uint64_t deletedVertexCount = 0;
     std::unordered_set<splaytree::Edge, splaytree::EdgeHash> deletedEdges;
@@ -630,8 +481,15 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
     }
 
     if (comps.empty()) return;
-
+    
     if (collectCCExperimentStats) {
+        // 统计 V, E 
+        for (auto& tree : comps) {
+            if (!tree) continue;
+            ccExperimentStats.ettV += tree->vertices.size();
+            ccExperimentStats.ettE += tree->getEdgeCount();
+        }
+        
         for (int v : deletedVertices) {
             if (!g->hasVertex(v)) continue;
             ++deletedVertexCount;
@@ -721,9 +579,8 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
                 v, u, collectCCExperimentStats ? &searchMetrics : nullptr);
             if (collectCCExperimentStats && searchMetrics.searched) {
                 std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
-                // Only the actual candidate inspections are needed for the
-                // focused DynDXD complexity comparison.
-                ccExperimentStats.replacementScanSteps += searchMetrics.scanSteps;
+                // ETT Er
+                ccExperimentStats.ettEr += searchMetrics.scanSteps;
             }
             if (newTree) {
                 comps.push_back(std::move(newTree));
@@ -756,8 +613,6 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
         ccExperimentStats.ettVd += deletedVertexCount;
         ccExperimentStats.ettEd += deletedEdges.size();
     }
-
-
 
 }
 

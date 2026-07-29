@@ -164,10 +164,9 @@ class DanceDNNF : DancingMatrix {
 
         bool shouldTryDecompose(const Block& block) {
             if (dxz_mode) return false;
-
-            if (block.rows.size() <= 2 || block.cols.empty()) return false;
-
             if (dxd_mode) return true;
+
+            if (block.rows.size() <= 20 || block.cols.empty()) return false;
 
             if (isCurrentDecompositionDisabled()) return false;
 
@@ -188,20 +187,8 @@ class DanceDNNF : DancingMatrix {
                    isGraphSyncEnabled();
         }
 
-        void timedDecUpdateCC(const std::set<int>& deletedRows, bool ettPeriod) {
-            // const std::clock_t start = std::clock();
-            recordCCUpdateStart(deletedRows, false, ettPeriod);
-            // ccCpuTime += static_cast<double>(std::clock() - start) / CLOCKS_PER_SEC;
-        }
-
         bool isEttStatisticsPeriod(const Block& block) const {
             return block.rows.size() > ccEttThreshold;
-        }
-
-        void timedIncUpdateCC(const std::set<int>& restoredRows, bool ettPeriod) {
-            // const std::clock_t start = std::clock();
-            recordCCUpdateStart(restoredRows, true, ettPeriod);
-            // ccCpuTime += static_cast<double>(std::clock() - start) / CLOCKS_PER_SEC;
         }
 
         void resetAdaptiveDecompositionState() {

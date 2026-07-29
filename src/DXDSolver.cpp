@@ -300,19 +300,23 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         BFSScanMetrics bfsMetrics;
         vector<Block> bfsBlocks;
         if (collectCCExperimentStats || !useDynamicEtt) {
-            // In stats mode this scan is the DXD baseline at the exact same
-            // residual state as the DynDXD CC probe.  Outside stats mode an
-            // ETT probe never pays this cost.
             bfsBlocks = getComponentsByBFS(
                 block.cols, collectCCExperimentStats ? &bfsMetrics : nullptr);
         }
-        vector<Block> curBlock = useDynamicEtt
-            ? getComponentsByETT(block.cols)
-            : std::move(bfsBlocks);
+        vector<Block> curBlock = useDynamicEtt? getComponentsByETT(block.cols) : std::move(bfsBlocks);
+        
         if (collectCCExperimentStats) {
-            recordCCComputation(curBlock.size() > 1, useDynamicEtt,
-                                bfsMetrics.vertices, bfsMetrics.graphEdges,
-                                bfsMetrics.edgeScans);
+            std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+            
+            ++ccExperimentStats.ccComputations;
+            
+            if (curBlock.size() > 1) {
+                ccExperimentStats.cc_decompose++;
+            }
+
+            if (useDynamicEtt) {
+                ++ccExperimentStats.ettCcTimes;
+            }
         }
 
         MAX_B_COUNT = std::max(MAX_B_COUNT, curBlock.size());
@@ -497,33 +501,32 @@ size_t DanceDNNF::countZDDSize() const {
 
 void DanceDNNF::logCCExperimentStats(bool complete) {
     if (!collectCCExperimentStats) return;
-    // Parallel decomposition tasks can update the counters while the main
-    // search emits a periodic timeout snapshot.  Copy a coherent snapshot
-    // under the same mutex used by all counter writers.
+
     CCExperimentStats stats;
     {
         std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
         stats = ccExperimentStats;
     }
     logger.logLine("CC Stats Complete: " + std::to_string(complete ? 1 : 0));
-    logger.logLine("CC Stats Decompose: " + std::to_string(stats.cc_decompose));
-    logger.logLine("CC Stats CC Computations: " + std::to_string(stats.ccComputations));
-    logger.logLine("CC Stats ETT CC Times: " + std::to_string(stats.ettCcTimes));
-    logger.logLine("CC Stats BFS CC Times: " + std::to_string(stats.nonEttCcTimes));
-    logger.logLine("CC Stats CC Graph Vertex Sum: " + std::to_string(stats.ccGraphVertices));
-    logger.logLine("CC Stats CC Graph Edge Sum: " + std::to_string(stats.ccGraphEdges));
-    logger.logLine("CC Stats DXD BFS Vertex Scan Sum: " + std::to_string(stats.dxdBfsVertices));
-    logger.logLine("CC Stats DXD BFS Edge Scan Sum: " + std::to_string(stats.dxdBfsEdges));
-    logger.logLine("CC Stats Dyn ETT Updated Vertex Sum: " + std::to_string(stats.ettVd));
-    logger.logLine("CC Stats Dyn ETT Updated Edge Sum: " + std::to_string(stats.ettEd));
-    logger.logLine("CC Stats Dyn ETT Replacement Scan Steps: " +
-                   std::to_string(stats.replacementScanSteps));
-    logger.logLine("CC Stats Dyn BFS Vertex Scan Sum: " + std::to_string(stats.dynBfsVertices));
-    logger.logLine("CC Stats Dyn BFS Edge Scan Sum: " + std::to_string(stats.dynBfsEdges));
 
-    // Detailed cut/merge/split and graph-size counters remain available in
-    // CCExperimentStats for debugging, but are intentionally not emitted by
-    // the focused DXD-vs-DynDXD experiment.
+    logger.logLine("CC Stats Query: " + std::to_string(stats.ccComputations));
+    logger.logLine("CC Stats Splits: " + std::to_string(stats.cc_decompose));
+    logger.logLine("CC Stats ETT CC Times: " + std::to_string(stats.ettCcTimes));
+
+    // DXD: |V| + |E|
+    // ETT V
+    logger.logLine("CC Stats ETT DXD Vertex Sum: " + std::to_string(stats.ettV));
+    // ETT E
+    logger.logLine("CC Stats ETT DXD Edge Sum: " + std::to_string(stats.ettE));
+    
+    // DynDXD: |Ed| x (log |V| + |Er| ) + |Vd|
+    // ETT Vd
+    logger.logLine("CC Stats Dyn ETT Updated Vertex Sum: " + std::to_string(stats.ettVd));
+    // ETT Ed
+    logger.logLine("CC Stats Dyn ETT Updated Edge Sum: " + std::to_string(stats.ettEd)); 
+    // ETT Er
+    logger.logLine("CC Stats Dyn ETT Replacement Scan Steps: " +
+                   std::to_string(stats.ettEr));
 }
 
 // DXD DXZ入口

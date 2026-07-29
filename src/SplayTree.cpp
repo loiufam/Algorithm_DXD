@@ -523,7 +523,6 @@ Edge EulerTourTree::findReplacementEdge(Node* rootU, Node* rootV,
 
     if (metrics) {
         metrics->searched = true;
-        metrics->nonTreeEdges = nonTreeEdges.size();
     }
 
     for (const Edge& e : nonTreeEdges) {
@@ -537,7 +536,6 @@ Edge EulerTourTree::findReplacementEdge(Node* rootU, Node* rootV,
         Node* rV = findRoot(nodeV);
         
         if ((rU == rootU && rV == rootV) || (rU == rootV && rV == rootU)) {
-            if (metrics) metrics->found = true;
             return e;
         }
     }

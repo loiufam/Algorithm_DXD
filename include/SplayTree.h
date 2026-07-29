@@ -147,6 +147,7 @@ public:
     std::unordered_set<Edge, EdgeHash> getNonTreeEdges() const { return nonTreeEdges; }
     bool isEmpty() const { return vertices.empty(); }
     bool hasVertex(int v) const { return vertices.count(v) > 0; }
+    int getEdgeCount() const { return nonTreeEdges.size() + edgeNodes.size(); }
    
     // 获取顶点的代表节点（用于快速更新 vertexToComponent）
     Node* getVertexRepresentative(int v) const {
