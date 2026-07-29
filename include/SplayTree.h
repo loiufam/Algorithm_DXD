@@ -75,6 +75,10 @@ public:
     // 连通分量信息
     std::unordered_set<int> vertices;                          // 顶点集合
     std::unordered_set<Edge, EdgeHash> nonTreeEdges;           // 非树边集合
+    // Per-vertex index for replacement searches.  Scanning the component-wide
+    // nonTreeEdges set for every cut makes a vertex deletion quadratic on
+    // dense row-projection graphs.
+    std::unordered_map<int, std::unordered_set<int>> nonTreeNeighbors;
     
     // 每个顶点的occurrence节点列表（用于O(1)查找）
     // std::unordered_map<int, std::vector<Node*>> vertexOccurrences;
@@ -123,7 +127,8 @@ public:
     // EulerTourTree& operator=(const EulerTourTree&) = delete;
     EulerTourTree(const EulerTourTree& o)
     : treeId(o.treeId), compId(o.compId), root(o.root),
-        vertices(o.vertices), nonTreeEdges(o.nonTreeEdges), edgeNodes(o.edgeNodes) {}
+        vertices(o.vertices), nonTreeEdges(o.nonTreeEdges),
+        nonTreeNeighbors(o.nonTreeNeighbors), edgeNodes(o.edgeNodes) {}
     
     // 基本操作
     int getTreeId() const { return treeId; }
@@ -143,7 +148,11 @@ public:
     bool isConnected(int u, int v) const;
     void setVertices(const std::unordered_set<int>& verts) { vertices = verts; }
     std::unordered_set<int> getVertices() const { return vertices; }
-    void setNonTreeEdges(const std::unordered_set<Edge, EdgeHash>& edges) { nonTreeEdges = edges; }
+    void setNonTreeEdges(const std::unordered_set<Edge, EdgeHash>& edges) {
+        nonTreeEdges.clear();
+        nonTreeNeighbors.clear();
+        for (const Edge& edge : edges) addNonTreeEdge(edge);
+    }
     std::unordered_set<Edge, EdgeHash> getNonTreeEdges() const { return nonTreeEdges; }
     bool isEmpty() const { return vertices.empty(); }
     bool hasVertex(int v) const { return vertices.count(v) > 0; }
@@ -176,8 +185,23 @@ public:
     }
 
     // 非树边操作
-    void addNonTreeEdge(const Edge& e) { nonTreeEdges.insert(e); }
-    void removeNonTreeEdge(const Edge& e) { nonTreeEdges.erase(e); }
+    void addNonTreeEdge(const Edge& e) {
+        if (nonTreeEdges.insert(e).second) {
+            nonTreeNeighbors[e.u].insert(e.v);
+            nonTreeNeighbors[e.v].insert(e.u);
+        }
+    }
+    void removeNonTreeEdge(const Edge& e) {
+        if (!nonTreeEdges.erase(e)) return;
+        auto eraseNeighbor = [&](int from, int to) {
+            auto it = nonTreeNeighbors.find(from);
+            if (it == nonTreeNeighbors.end()) return;
+            it->second.erase(to);
+            if (it->second.empty()) nonTreeNeighbors.erase(it);
+        };
+        eraseNeighbor(e.u, e.v);
+        eraseNeighbor(e.v, e.u);
+    }
     bool hasNonTreeEdge(const Edge& e) const { return nonTreeEdges.count(e) > 0; }
     bool isTreeEdge(int u, int v) const {
         if (u > v) std::swap(u, v);

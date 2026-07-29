@@ -1,6 +1,9 @@
 # Exact Cover Solvers
  
 This repository implements algorithms for solving the **exact cover problem** efficiently.
+
+DynDXD 中 ETT 的维护方式以及降级到 BFS/DXZ 的实际条件见
+[`docs/dyndxd_ett_lifecycle.md`](docs/dyndxd_ett_lifecycle.md)。
 Key components include:
  
 - **Dancing Links (DLX)** matrix representation for compact constraint encoding
