@@ -122,7 +122,7 @@ class DanceDNNF : DancingMatrix {
         bool decomposition_disabled = false;
         bool bfs_fallback = false;
         size_t bfs_stop_area = 0;
-        bool dxz_fallback_mode = false;
+        size_t bfs_area_threshold = 100000;
         int main_no_split_count = 0;
         std::atomic<unsigned> smallEttProbeFrames{0};
 
@@ -146,10 +146,6 @@ class DanceDNNF : DancingMatrix {
         bool isCurrentDecompositionDisabled() const {
             return decomposition_disabled ||
                    (isThreadLocal() && tlsState->decomposition_disabled);
-        }
-
-        bool isDxzFallbackMode() const {
-            return !dxd_mode && !isThreadLocal() && dxz_fallback_mode;
         }
 
         void disableDynamicEttForCurrentState() {
@@ -192,9 +188,8 @@ class DanceDNNF : DancingMatrix {
         void resetAdaptiveDecompositionState() {
             dynamic_ett_disabled = false;
             decomposition_disabled = false;
-            dxz_fallback_mode = false;
             bfs_fallback = false;
-            bfs_stop_area = std::max<size_t>(1, InitBlock.rows.size() * InitBlock.cols.size() / 2);
+            bfs_stop_area = 0;
             main_no_split_count = 0;
             smallEttProbeFrames.store(0, std::memory_order_relaxed);
         }
@@ -213,26 +208,32 @@ class DanceDNNF : DancingMatrix {
 
             if (isThreadLocal()) {
                 ++tlsState->no_split_count;
-                if (!tlsState->bfs_fallback && tlsState->no_split_count >= NO_SPLIT_LIMIT) {
+                const size_t area = block.rows.size() * block.cols.size();
+                if (!tlsState->bfs_fallback &&
+                    tlsState->no_split_count >= NO_SPLIT_LIMIT &&
+                    area <= bfs_area_threshold) {
                     tlsState->bfs_fallback = true;
                     tlsState->no_split_count = 0;
-                } else if (tlsState->bfs_fallback &&
-                           block.rows.size() * block.cols.size() <= tlsState->bfs_stop_area &&
-                           tlsState->no_split_count >= NO_SPLIT_LIMIT) {
+                } else if (tlsState->bfs_fallback && tlsState->bfs_stop_area == 0) {
+                    // This update follows the first BFS query.
+                    tlsState->bfs_stop_area = std::max<size_t>(1, area / 2);
+                } else if (tlsState->bfs_fallback && area <= tlsState->bfs_stop_area) {
                     tlsState->decomposition_disabled = true;
                 }
                 return;
             }
 
             ++main_no_split_count;
-            if (!bfs_fallback && main_no_split_count >= NO_SPLIT_LIMIT) {
+            const size_t area = block.rows.size() * block.cols.size();
+            if (!bfs_fallback && main_no_split_count >= NO_SPLIT_LIMIT &&
+                area <= bfs_area_threshold) {
                 bfs_fallback = true;
                 main_no_split_count = 0;
-            } else if (bfs_fallback &&
-                       block.rows.size() * block.cols.size() <= bfs_stop_area &&
-                       main_no_split_count >= NO_SPLIT_LIMIT) {
+            } else if (bfs_fallback && bfs_stop_area == 0) {
+                // This update follows the first BFS query.
+                bfs_stop_area = std::max<size_t>(1, area / 2);
+            } else if (bfs_fallback && area <= bfs_stop_area) {
                 decomposition_disabled = true;
-                dxz_fallback_mode = true;
                 turnOffGraphSync();
             }
         }
@@ -255,6 +256,10 @@ class DanceDNNF : DancingMatrix {
 
         void setCCETTThreshold(size_t rows) {
             ccEttThreshold = rows == 0 ? automaticCCETTThreshold(ROWS) : rows;
+        }
+
+        void setBFSAreaThreshold(size_t area) {
+            bfs_area_threshold = area == 0 ? size_t{100000} : area;
         }
 
         void setTimeLimit(long seconds) { timer.setTimeBound(seconds); }
