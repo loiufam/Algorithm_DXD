@@ -176,6 +176,7 @@ DancingMatrix::DancingMatrix( const string& file_path, bool useIg , bool useETT 
     if(useETT){
         graph = make_unique<Graph>(ROWS);
         buildGraphFromMatrix();
+        buildSpanningForest();
         
         cout << "Statistics graph initialization complete." << endl;
     }
@@ -236,6 +237,8 @@ void DancingMatrix::initThreadLocalState(const Block& block, std::unique_ptr<spl
     tlsState->components.clear();
     tlsState->subgraph  = nullptr; 
     tlsState->nextTreeId = 0;
+    tlsState->bfs_fallback = false;
+    tlsState->bfs_stop_area = std::max<size_t>(1, block.rows.size() * block.cols.size() / 2);
 
     if (!tree) { 
         std::cout << "Warning: Initializing thread local state with an empty tree." << std::endl;
@@ -264,7 +267,10 @@ void DancingMatrix::cleanupThreadLocalState() {
 // 将矩阵的行映射为无向图的顶点，构建邻接表存储所有边
 void DancingMatrix::buildGraphFromMatrix() {
 
-    std::vector<std::pair<int, int>> temp_edges;
+    // Deduplicate while generating the row-projection graph.  The previous
+    // vector + global sort retained every duplicate produced by columns with
+    // overlapping row sets and paid O(E log E) before ETT construction.
+    std::unordered_set<splaytree::Edge, splaytree::EdgeHash> temp_edges;
 
     for (const auto& [col, rows] : col_to_rows) {
         if (rows.size() <= 1) continue;
@@ -277,19 +283,13 @@ void DancingMatrix::buildGraphFromMatrix() {
                 // 确保 u < v，将无向边标准化
                 if (u > v) std::swap(u, v);
                 
-                temp_edges.emplace_back(u, v);
+                temp_edges.emplace(u, v);
             }
         }
     }
 
-    std::sort(temp_edges.begin(), temp_edges.end());
-    
-    auto last = std::unique(temp_edges.begin(), temp_edges.end());
-    
-    temp_edges.erase(last, temp_edges.end());
-
     for (const auto& edge : temp_edges) {
-        graph->addEdge(edge.first, edge.second);
+        graph->addEdge(edge.u, edge.v);
     }
 
     // graph->printGraph();
@@ -463,31 +463,23 @@ void DancingMatrix::processBoundaryVertex(int v, splaytree::EulerTourTree* tree,
     tree->removeVertex(v);
 }
 
-void DancingMatrix::recordCCComputation(const Block& block, bool decomposed) {
-    if (!collectCCExperimentStats || !graph) return;
-    uint64_t vertices = 0, edges = 0;
-    for (int u : block.rows) {
-        if (!graph->hasVertex(u)) continue;
-        ++vertices;
-        for (int v : graph->getAllNeighbors(u)) {
-            if (u < v && block.rows.count(v) && graph->hasVertex(v) && graph->hasEdge(u, v)) {
-                ++edges;
-            }
-        }
-    }
-
-    const bool ettPeriod = vertices > ccEttThreshold;
+void DancingMatrix::recordCCComputation(bool decomposed, bool usedEtt,
+                                        uint64_t graphVertices, uint64_t graphEdges,
+                                        uint64_t bfsEdgeScans) {
+    if (!collectCCExperimentStats) return;
     std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
     ++ccExperimentStats.ccComputations;
     if (decomposed) ++ccExperimentStats.cc_decompose;
-    if (ettPeriod) {
+    ccExperimentStats.ccGraphVertices += graphVertices;
+    ccExperimentStats.ccGraphEdges += graphEdges;
+    ccExperimentStats.dxdBfsVertices += graphVertices;
+    ccExperimentStats.dxdBfsEdges += bfsEdgeScans;
+    if (usedEtt) {
         ++ccExperimentStats.ettCcTimes;
-        ccExperimentStats.ettV += vertices;
-        ccExperimentStats.ettE += edges;
     } else {
         ++ccExperimentStats.nonEttCcTimes;
-        ccExperimentStats.nonEttV += vertices;
-        ccExperimentStats.nonEttE += edges;
+        ccExperimentStats.dynBfsVertices += graphVertices;
+        ccExperimentStats.dynBfsEdges += bfsEdgeScans;
     }
 }
 
@@ -624,8 +616,8 @@ void DancingMatrix::recordCCUpdateStart(const std::set<int>& changedVertices,
 // 减量式更新单连通分量
 void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
 
-    uint64_t enSumThisUpdate = 0;
-    uint64_t enSamplesThisUpdate = 0;
+    uint64_t deletedVertexCount = 0;
+    std::unordered_set<splaytree::Edge, splaytree::EdgeHash> deletedEdges;
 
     // if (!isGraphSyncEnabled()) return;
     if (deletedVertices.empty()) return;
@@ -638,6 +630,14 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
     }
 
     if (comps.empty()) return;
+
+    if (collectCCExperimentStats) {
+        for (int v : deletedVertices) {
+            if (!g->hasVertex(v)) continue;
+            ++deletedVertexCount;
+            for (int u : g->neighbors(v)) deletedEdges.emplace(v, u);
+        }
+    }
 
     std::vector<int> boundaryVertices;
     std::vector<int> otherVertices;
@@ -716,39 +716,16 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
                 break;
             }
 
-            const uint64_t replacementFullGraphEdges =
-                currentTree->vertices.empty()
-                    ? 0
-                    : currentTree->vertices.size() - 1 +
-                          currentTree->nonTreeEdges.size();
-            
             splaytree::ReplacementSearchMetrics searchMetrics;
             auto newTree = currentTree->cutWithReplacement(
                 v, u, collectCCExperimentStats ? &searchMetrics : nullptr);
             if (collectCCExperimentStats && searchMetrics.searched) {
-                enSumThisUpdate += searchMetrics.nonTreeEdges;
-                ++enSamplesThisUpdate;
                 std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
-                ++ccExperimentStats.replacementSearchCalls;
-                ++ccExperimentStats.enSamples;
-                ccExperimentStats.ettFullEdgeSum += replacementFullGraphEdges;
-
-                ++ccExperimentStats.treeEdge_cuts;
-                // 此次搜索开始时所在 ETT 中的非树边候选集大小。
-                ccExperimentStats.enSum += searchMetrics.nonTreeEdges;
-                // 实际循环次数
+                // Only the actual candidate inspections are needed for the
+                // focused DynDXD complexity comparison.
                 ccExperimentStats.replacementScanSteps += searchMetrics.scanSteps;
-                if (searchMetrics.found) {
-                    // ++ccExperimentStats.replacementEarlyBreaks;
-                    // merges 的定义是 cut 后找到替代边并执行 link 的次数。
-                    ++ccExperimentStats.merges;
-                }
             }
             if (newTree) {
-                if (collectCCExperimentStats) {
-                    std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
-                    ++ccExperimentStats.splits;
-                }
                 comps.push_back(std::move(newTree));
             }
             
@@ -760,6 +737,10 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
             finalTree->removeVertex(v);
         }
     }
+
+    for (int v : deletedVertices) {
+        if (g->hasVertex(v)) g->deleteVertex(v);
+    }
     
     // 更新连通分量
     comps.erase(
@@ -770,13 +751,18 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
         comps.end()
     );
 
+    if (collectCCExperimentStats) {
+        std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+        ccExperimentStats.ettVd += deletedVertexCount;
+        ccExperimentStats.ettEd += deletedEdges.size();
+    }
+
 
 
 }
 
 void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
-    // if (!isGraphSyncEnabled()) return;
-    // if (restoredVertices.empty()) return;
+    if (restoredVertices.empty()) return;
 
     // std::cout << "IncUpdateCC: Restoring vertices: {";
     // for (int v : restoredVertices) {
@@ -785,12 +771,24 @@ void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
     // std::cout << " }\n";
     auto& comps = getComponents();
     auto* g = getGraph();
+    if (!g && graph && !restoredVertices.empty()) {
+        g = graph->subgraphOf(*restoredVertices.begin());
+    }
     if (!g) {
         // std::cerr << "getGraph() returned nullptr in IncUpdateCC\n";
         return;
     }
 
     std::unordered_set<int> restoredSet(restoredVertices.begin(), restoredVertices.end());
+    uint64_t restoredVertexCount = 0;
+    uint64_t restoredEdgeCount = 0;
+
+    for (int v : restoredVertices) {
+        if (!g->hasVertex(v)) {
+            g->restoreVertex(v);
+            ++restoredVertexCount;
+        }
+    }
 
     for (int v : restoredVertices) {
         auto newTree = std::make_unique<splaytree::EulerTourTree>(nextTreeId++);
@@ -815,6 +813,7 @@ void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
 
             if (!g->hasEdge(v, u)) {
                 g->restoreEdge(v, u);
+                ++restoredEdgeCount;
             }
             treeU = findEulerTourTree(u);
             if (!treeU) continue;
@@ -834,6 +833,11 @@ void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
             [](const std::unique_ptr<splaytree::EulerTourTree>& t) { return t->isEmpty(); }),
         comps.end()
     );
+    if (collectCCExperimentStats) {
+        std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+        ccExperimentStats.ettVd += restoredVertexCount;
+        ccExperimentStats.ettEd += restoredEdgeCount;
+    }
 }
 
 std::vector<std::unordered_set<int>> DancingMatrix::getConnectedComponents() const {
@@ -925,7 +929,8 @@ void DancingMatrix::testCutEdge(int u, int v) {
     tree1Ptr->printEulerTour();
 }
 
-vector<Block> DancingMatrix::getComponentsByBFS(const set<int>& target_cols) {
+vector<Block> DancingMatrix::getComponentsByBFS(const set<int>& target_cols,
+                                                BFSScanMetrics* metrics) {
     vector<Block> components;
     
     if (target_cols.empty()) {
@@ -946,6 +951,7 @@ vector<Block> DancingMatrix::getComponentsByBFS(const set<int>& target_cols) {
             
             // 初始化 BFS 队列
             visited_cols[start_col] = true;
+            if (metrics) ++metrics->vertices;
             col_queue.push(start_col);
             
             while (!col_queue.empty()) {
@@ -958,19 +964,26 @@ vector<Block> DancingMatrix::getComponentsByBFS(const set<int>& target_cols) {
                 // 沿着当前列向下遍历
                 Node* node_in_col = ColIndex[c].down;
                 while (node_in_col != &ColIndex[c]) {
+                    if (metrics) {
+                        ++metrics->graphEdges;
+                        ++metrics->edgeScans;
+                    }
                     int r = node_in_col->row; 
                     
                     if (!visited_rows[r]) {
                         visited_rows[r] = true;
+                        if (metrics) ++metrics->vertices;
                         block.rows.insert(r); 
                         
                         // 沿着当前行向右遍历，寻找相连的列
                         Node* node_in_row = node_in_col->right;
                         while (node_in_row != node_in_col) {
+                            if (metrics) ++metrics->edgeScans;
                             int next_c = node_in_row->col;
                             
                             if (target_cols.count(next_c) && !visited_cols[next_c]) {
                                 visited_cols[next_c] = true;
+                                if (metrics) ++metrics->vertices;
                                 col_queue.push(next_c);
                             }
                             node_in_row = node_in_row->right;
