@@ -134,11 +134,33 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(
     std::vector<std::unique_ptr<splaytree::EulerTourTree>> returned(n);
     
     auto& comps = getComponents();
-    const bool manageTrees = useETT && componentTreesAvailable;
-    if(manageTrees) {
-        for (int i = 0; i < n; ++i)
-            extracted[i] = std::move(comps[i]);
-        comps.clear();
+    bool manageTrees = useETT && componentTreesAvailable;
+    const bool manageThreadState = useETT;
+    if (manageTrees) {
+        // ETT and BFS block vectors are not guaranteed to have identical
+        // ordering.  Older code indexed comps[i] unconditionally; a stale or
+        // shorter forest therefore caused SIGSEGV (-11) before CC statistics
+        // could be printed.  Match by a representative row and fall back to
+        // tree-free child tasks if the forest cannot represent every block.
+        std::vector<int> treeForBlock(n, -1);
+        std::vector<bool> treeUsed(comps.size(), false);
+        for (int i = 0; i < n && manageTrees; ++i) {
+            for (size_t j = 0; j < comps.size(); ++j) {
+                if (treeUsed[j] || !comps[j]) continue;
+                const int representative = comps[j]->getAnyVertex();
+                if (representative >= 0 && blocks[i].rows.count(representative)) {
+                    treeForBlock[i] = static_cast<int>(j);
+                    treeUsed[j] = true;
+                    break;
+                }
+            }
+            if (treeForBlock[i] < 0) manageTrees = false;
+        }
+        if (manageTrees) {
+            for (int i = 0; i < n; ++i)
+                extracted[i] = std::move(comps[treeForBlock[i]]);
+            comps.clear();
+        }
     }
 
     std::vector<DNNFResult> results(n);
@@ -153,19 +175,19 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(
         }
 
         std::unique_ptr<ThreadLocalState> outerTls;
-        if (manageTrees) {
-
+        if (manageThreadState) {
             outerTls = std::move(tlsState);
         }
 
         try {
             // === 初始化线程局部状态 ===
-            if(manageTrees) {
+            if(manageThreadState) {
                 const int outerDepth = outerTls ? outerTls->decompose_depth : 0;
-                initThreadLocalState(blocks[i], std::move(extracted[i]));
+                initThreadLocalState(blocks[i],
+                    manageTrees ? std::move(extracted[i]) : nullptr);
                 if (tlsState) {
                     tlsState->decompose_depth = outerDepth + 1;
-                    if (disableDynamicUpdates) {
+                    if (disableDynamicUpdates || !manageTrees) {
                         tlsState->dynamic_ett_disabled = true;
                     }
                 }
@@ -212,7 +234,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(
             }
         }
 
-        if (manageTrees) {
+        if (manageThreadState) {
             cleanupThreadLocalState();
             tlsState = std::move(outerTls);
         }
@@ -254,7 +276,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         throw std::runtime_error("Time bound broken");
     }
 
-    const bool useDxzSearch = dxz_mode || isDxzFallbackMode();
+    const bool useDxzSearch = dxz_mode;
 
     if (useDxzSearch && isSolved()) {
         return {DNNFResult(1), T};
@@ -307,8 +329,10 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         if (int(curBlock.size()) > 1) {
 
             const bool treesAvailable = useETT && !isCurrentDynamicEttDisabled();
+            // 分块一经出现就并行。子任务不再维护 ETT，只允许
+            // 在面积阈值内执行一次 BFS 并最多再嵌套一层。
             auto decompResult = isParallelSearch
-                ? parallelSearchUseOmp(curBlock, depth, false, treesAvailable)
+                ? parallelSearchUseOmp(curBlock, depth, true, treesAvailable)
                 : serialSearch(curBlock, depth);
 
             auto [result, decompNode] = decompResult;
