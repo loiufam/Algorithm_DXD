@@ -68,12 +68,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(
 
     auto& comps = getComponents();
 
-    // A BFS decomposition and the ETT forest do not have a shared ordering
-    // contract.  In particular, the single-thread adaptive BFS fallback can
-    // return the same components in a different order.  Pairing blocks with
-    // comps[i] used to attach the wrong subgraph to a block; subsequent graph
-    // updates then operated on vertices from another component and could
-    // eventually dereference stale ETT nodes.
     std::vector<std::unique_ptr<splaytree::EulerTourTree>> forest;
     forest.swap(comps);
     stash.resize(blocks.size());
@@ -89,8 +83,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(
             }
         }
         if (!stash[i]) {
-            // Restore every tree before reporting an inconsistent
-            // decomposition.  Never continue with a mismatched tree/block.
             for (auto& tree : stash)
                 if (tree) comps.push_back(std::move(tree));
             for (auto& tree : forest)
@@ -212,11 +204,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(
     bool manageTrees = useETT && componentTreesAvailable;
     const bool manageThreadState = useETT;
     if (manageTrees) {
-        // ETT and BFS block vectors are not guaranteed to have identical
-        // ordering.  Older code indexed comps[i] unconditionally; a stale or
-        // shorter forest therefore caused SIGSEGV (-11) before CC statistics
-        // could be printed.  Match by a representative row and fall back to
-        // tree-free child tasks if the forest cannot represent every block.
         std::vector<int> treeForBlock(n, -1);
         std::vector<bool> treeUsed(comps.size(), false);
         for (int i = 0; i < n && manageTrees; ++i) {
@@ -644,8 +631,8 @@ void DanceDNNF::logCCExperimentStats(bool complete) {
     logger.logLine("CC Stats Dyn ETT Updated Vertex Sum: " + std::to_string(stats.ettVd));
     // ETT Ed
     logger.logLine("CC Stats Dyn ETT Updated Edge Sum: " + std::to_string(stats.ettEd)); 
-    logger.logLine("CC Stats Dyn ETT Deleted Tree Edge Sum: " +
-                   std::to_string(stats.ettDeletedTreeEdges));
+    // logger.logLine("CC Stats Dyn ETT Deleted Tree Edge Sum: " +
+    //                std::to_string(stats.ettDeletedTreeEdges));
     // ETT Er
     logger.logLine("CC Stats Dyn ETT Replacement Scan Steps: " +
                    std::to_string(stats.ettEr));

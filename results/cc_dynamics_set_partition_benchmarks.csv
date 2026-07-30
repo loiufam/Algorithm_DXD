@@ -1,0 +1,18 @@
+dataset,instance,input,status,time_s,error,Status,Init_Graph_E,Query,Splits,ETT_cc_times,ETT_dec_calls,ETT_DXD_V,ETT_DXD_E,ETT_Vd,ETT_Ed,ETT_Er
+set_partition_benchmarks,delta,data/batch_2/set_partition_benchmarks/delta.txt,success,62.881621,,1,253034,4,0,3,4,4172,822973,420,130309,695
+set_partition_benchmarks,meteor,data/batch_2/set_partition_benchmarks/meteor.txt,success,1355.916625,,1,1358342,4,1,3,4,8476,4356933,1150,855517,816
+set_partition_benchmarks,sppnw08,data/batch_2/set_partition_benchmarks/sppnw08.txt,success,1.020393,,1,72294,2,1,2,2,863,143343,352,70138,440
+set_partition_benchmarks,sppnw09,data/batch_2/set_partition_benchmarks/sppnw09.txt,time_out,,process timeout,,,,,,,,,,,
+set_partition_benchmarks,sppnw10,data/batch_2/set_partition_benchmarks/sppnw10.txt,success,20.585220,,1,302628,3,1,3,15,1881,600427,853,302628,890
+set_partition_benchmarks,sppnw12,data/batch_2/set_partition_benchmarks/sppnw12.txt,success,9.168910,,1,146210,7,1,6,69,2574,467694,459,82725,702
+set_partition_benchmarks,sppnw15,data/batch_2/set_partition_benchmarks/sppnw15.txt,success,2.806749,,1,81675,5,1,4,6,1335,195381,374,77772,489
+set_partition_benchmarks,sppnw19,data/batch_2/set_partition_benchmarks/sppnw19.txt,time_out,,process timeout,,,,,,,,,,,
+set_partition_benchmarks,sppnw20,data/batch_2/set_partition_benchmarks/sppnw20.txt,success,7.539931,,1,186545,4,0,3,4,1574,377372,637,185660,872
+set_partition_benchmarks,sppnw21,data/batch_2/set_partition_benchmarks/sppnw21.txt,success,5.195095,,1,135538,4,0,3,4,1455,283081,444,128588,584
+set_partition_benchmarks,sppnw22,data/batch_2/set_partition_benchmarks/sppnw22.txt,success,9.102949,,1,143284,4,0,3,4,1659,308506,547,141115,603
+set_partition_benchmarks,sppnw23,data/batch_2/set_partition_benchmarks/sppnw23.txt,success,5.119181,,1,224607,5,1,4,5,2808,890204,543,212127,950
+set_partition_benchmarks,sppnw24,data/batch_2/set_partition_benchmarks/sppnw24.txt,success,140.064703,,1,855421,4,0,3,29,3646,1722244,1823,889134,1648
+set_partition_benchmarks,sppnw25,data/batch_2/set_partition_benchmarks/sppnw25.txt,success,116.438359,,1,647025,4,0,3,4,2955,1283186,1113,642498,406
+set_partition_benchmarks,sppnw26,data/batch_2/set_partition_benchmarks/sppnw26.txt,success,18.147329,,1,226642,4,0,3,4,2919,897831,112,25887,748
+set_partition_benchmarks,sppnw27,data/batch_2/set_partition_benchmarks/sppnw27.txt,success,74.785753,,1,845764,2,1,2,2,2704,1687264,1225,839987,1527
+set_partition_benchmarks,sppnw28,data/batch_2/set_partition_benchmarks/sppnw28.txt,success,154.082166,,1,702911,4,0,3,51,4777,1926735,2359,948404,1363

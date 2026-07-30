@@ -1,0 +1,10 @@
+dataset,instance,input,status,time_s,error,Status,Init_Graph_E,Query,Splits,ETT_cc_times,ETT_dec_calls,ETT_DXD_V,ETT_DXD_E,ETT_Vd,ETT_Ed,ETT_Er
+dominoes_set,dominoes_10x10,data/batch_2/dominoes_set/dominoes_10x10.txt,success,0.019094,,1,484,4,0,3,4,708,1907,8,23,9
+dominoes_set,dominoes_10x12,data/batch_2/dominoes_set/dominoes_10x12.txt,success,0.026772,,1,592,4,0,3,4,860,2339,8,23,7
+dominoes_set,dominoes_12x12,data/batch_2/dominoes_set/dominoes_12x12.txt,success,0.138686,,1,724,4,0,3,4,1044,2867,8,23,7
+dominoes_set,dominoes_8x10,data/batch_2/dominoes_set/dominoes_8x10.txt,success,0.004765,,1,376,4,0,3,4,556,1475,8,23,7
+dominoes_set,dominoes_8x8,data/batch_2/dominoes_set/dominoes_8x8.txt,success,0.003368,,1,292,4,0,3,4,436,1139,8,23,9
+dominoes_set,tetrominoes_4x5,data/batch_2/dominoes_set/tetrominoes_4x5.txt,success,0.114701,,1,7667,4,0,3,4,522,22717,96,5908,158
+dominoes_set,tetrominoes_4x7,data/batch_2/dominoes_set/tetrominoes_4x7.txt,success,0.314343,,1,14109,4,0,3,4,906,48249,96,6442,230
+dominoes_set,tetrominoes_6x6,data/batch_2/dominoes_set/tetrominoes_6x6.txt,success,1.121242,,1,25016,4,0,3,4,1366,86771,130,10779,312
+dominoes_set,tetrominoes_6x8,data/batch_2/dominoes_set/tetrominoes_6x8.txt,success,4.175776,,1,39264,4,0,3,4,2054,143753,131,11251,324
