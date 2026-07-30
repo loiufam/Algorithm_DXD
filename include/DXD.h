@@ -98,7 +98,7 @@ class DanceDNNF : DancingMatrix {
         double decomposeTime = 0.0;
         // 累计连通分量处理的 CPU 时间。实验使用单线程运行，因此
         // std::clock() 的进程 CPU 时间就是当前算法线程消耗的 CPU 时间。
-        double ccCpuTime = 0.0;
+        std::atomic<std::clock_t> ccCpuTicks{0};
         double nextCCStatsSnapshotTime = 0.0;
         bool debug = false;
 
@@ -122,6 +122,26 @@ class DanceDNNF : DancingMatrix {
         bool bfs_probe_done = false;
         size_t bfs_area_threshold = 100000;
         int main_no_split_count = 0;
+        size_t ccEttMaxCalls = 0;
+        size_t ccEttCallsUsed = 0;
+
+        bool isCCETTCallBudgetExhausted() const {
+            return collectCCExperimentStats && ccEttMaxCalls > 0 &&
+                   ccEttCallsUsed >= ccEttMaxCalls;
+        }
+
+        void stopCCForETTCallBudget() {
+            if (isThreadLocal()) {
+                tlsState->dynamic_ett_disabled = true;
+                tlsState->decomposition_disabled = true;
+                tlsState->bfs_probe_done = true;
+            } else {
+                dynamic_ett_disabled = true;
+                decomposition_disabled = true;
+                bfs_probe_done = true;
+                turnOffGraphSync();
+            }
+        }
 
         bool isCurrentDynamicEttDisabled() const {
             return dynamic_ett_disabled ||
@@ -144,6 +164,11 @@ class DanceDNNF : DancingMatrix {
         bool shouldTryDecompose(const Block& block) {
             if (dxz_mode) return false;
             if (dxd_mode) return true;
+
+            if (isCCETTCallBudgetExhausted()) {
+                stopCCForETTCallBudget();
+                return false;
+            }
 
             if (block.rows.size() <= 20 || block.cols.empty()) return false;
 
@@ -192,6 +217,7 @@ class DanceDNNF : DancingMatrix {
             bfs_fallback = false;
             bfs_probe_done = false;
             main_no_split_count = 0;
+            ccEttCallsUsed = 0;
         }
 
         void updateAdaptiveDecompositionState(const Block& block, size_t numBlocks) {
@@ -258,6 +284,10 @@ class DanceDNNF : DancingMatrix {
 
         void setCCETTThreshold(size_t rows) {
             ccEttThreshold = rows == 0 ? automaticCCETTThreshold(ROWS) : rows;
+        }
+
+        void setCCETTMaxCalls(size_t calls) {
+            ccEttMaxCalls = calls;
         }
 
         void setBFSAreaThreshold(size_t area) {
@@ -354,6 +384,15 @@ class DanceDNNF : DancingMatrix {
         void addTriedNumbers(int count) {
             std::lock_guard<std::mutex> lock(tried_numbers_mutex);
             tried_numbers += count;
+        }
+
+        void addCCCpuTicks(std::clock_t start) {
+            ccCpuTicks.fetch_add(std::clock() - start, std::memory_order_relaxed);
+        }
+
+        double getCCCpuTime() const {
+            return static_cast<double>(ccCpuTicks.load(std::memory_order_relaxed)) /
+                   static_cast<double>(CLOCKS_PER_SEC);
         }
 
 

@@ -62,8 +62,29 @@ BFS，然后停止 CC 查询，但不切换 DXZ。
 
 ## 5. 统计口径
 
+- `DXD CC CPU`：普通 DXD 中 `coverInBlock`、`uncoverInBlock` 与
+  `getComponentsByBFS` 的累计 CPU 时间。它包含为矩阵 BFS 更新二部关联状态的
+  舞蹈链操作；
+- `Dyn CC CPU`：DynDXD 启用 ETT 维护期间 `DecUpdateCC` 与 `IncUpdateCC` 的
+  累计 CPU 时间，不包含普通舞蹈链 cover/uncover，也不包含统计模式下用于对照
+  的 BFS 扫描；
+- `DXD/Dyn CC CPU Ratio`：上述累计 CPU 时间除以对应搜索阶段耗时；初始化行投影
+  图和 ETT 森林发生在搜索计时之前，不计入该比率；
 - `ETT DXD Vertex/Edge Sum`：执行动态删除前的活跃森林规模之和，作为静态
   DXD 完整 CC 扫描的比较基线；
 - `Dyn ETT Updated Vertex/Edge Sum`：只统计前向删除，不重复统计回溯恢复；
 - `Dyn ETT Replacement Scan Steps`：删除树边时，从切割较小侧实际检查的跨侧
   非树边候选数。
+
+## 6. 超时用例的全局 ETT 调用预算
+
+统计模式的 `--cc-ett-max-calls N` 为整个实例设置全局 ETT CC 查询预算。第 N 次
+ETT 查询仍会计入输出；查询完成后立即停止 ETT 更新，并禁止所有当前及后继分量
+继续执行 ETT 或 BFS CC 查询。该选项只允许与
+`--enable-cc-stats -t 1` 一起使用。
+
+默认值 `0` 表示不限制，完整保留每个初始分量“三次 ETT + 至多一次 BFS”的正常
+策略，因而默认实验结果保持可复现。`run_cc_dynamics_experiment.py` 的同名选项会把
+预算写入 `ett_max_calls` CSV 列；配合 `--resume` 和非零预算时，已有成功项保持不动，
+只重新执行之前的 `time_out` 项。预算仍为默认 `0` 时，resume 行为与原实验一致，
+成功和超时项都不会重跑。
