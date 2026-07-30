@@ -128,7 +128,7 @@ def run_dataset(dataset, entries, args):
     rows = read_csv(output) if args.resume else []
     completed = {
         row["instance"] for row in rows
-        if row.get("status") in SUCCESS_STATUSES | {"time_out"}
+        if row.get("status") in SUCCESS_STATUSES
     }
 
     for number, (item, path) in enumerate(entries, 1):
@@ -172,7 +172,7 @@ def main():
         default=common.ROOT / "results/cc_dynamics_all.csv",
         help="final CSV containing all per-dataset rows",
     )
-    parser.add_argument("--timeout", type=int, default=1500, help="seconds per case")
+    parser.add_argument("--timeout", type=int, default=1800, help="seconds per case")
     parser.add_argument("--cc-ett-threshold", type=int, default=0)
     parser.add_argument(
         "--dataset", action="append", dest="datasets",

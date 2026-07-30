@@ -137,11 +137,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(
     bool manageTrees = useETT && componentTreesAvailable;
     const bool manageThreadState = useETT;
     if (manageTrees) {
-        // ETT and BFS block vectors are not guaranteed to have identical
-        // ordering.  Older code indexed comps[i] unconditionally; a stale or
-        // shorter forest therefore caused SIGSEGV (-11) before CC statistics
-        // could be printed.  Match by a representative row and fall back to
-        // tree-free child tasks if the forest cannot represent every block.
         std::vector<int> treeForBlock(n, -1);
         std::vector<bool> treeUsed(comps.size(), false);
         for (int i = 0; i < n && manageTrees; ++i) {
