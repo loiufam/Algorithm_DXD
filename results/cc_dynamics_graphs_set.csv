@@ -1,7 +1,7 @@
 dataset,instance,input,status,time_s,error,Status,Init_Graph_E,Query,Splits,ETT_cc_times,ETT_dec_calls,ETT_DXD_V,ETT_DXD_E,ETT_Vd,ETT_Ed,ETT_Er
 graphs_set,AsnetAm,data/batch_2/graphs_set/AsnetAm.txt,success,0.154356,,1,163911,8,1,4,68,814,5477,256,2891,127
 graphs_set,AttMpls,data/batch_2/graphs_set/AttMpls.txt,success,0.007411,,1,1518,6,1,4,76,589,4770,289,2039,132
-graphs_set,Bellcanada,data/batch_2/graphs_set/Bellcanada.txt,error,,solver exited with -11; no CC Stats block,,,,,,,,,,,
+graphs_set,Bellcanada,data/batch_2/graphs_set/Bellcanada.txt,time_out,1813.335320,solver time limit reached,0,239239,3823,1058,4,23523,799888,51807978,448504,48434596,72893
 graphs_set,Bellsouth,data/batch_2/graphs_set/Bellsouth.txt,success,23.795194,,1,79941,33,20,19,280,15009,1687415,11771,1621143,1181
 graphs_set,BeyondTheNetwork,data/batch_2/graphs_set/BeyondTheNetwork.txt,success,0.861310,,1,140433,7,1,4,35,1732,157742,544,72374,448
 graphs_set,BtNorthAmerica,data/batch_2/graphs_set/BtNorthAmerica.txt,success,0.183545,,1,4336,65,7,4,1512,18276,100758,7974,70815,2167
@@ -11,11 +11,11 @@ graphs_set,Cesnet201006,data/batch_2/graphs_set/Cesnet201006.txt,success,0.06758
 graphs_set,Chinanet,data/batch_2/graphs_set/Chinanet.txt,success,0.029767,,1,1749,8,1,4,204,2542,16035,1455,12915,400
 graphs_set,Columbus,data/batch_2/graphs_set/Columbus.txt,success,0.086348,,1,51655,10,1,4,10,1337,47351,77,4450,189
 graphs_set,Cudi,data/batch_2/graphs_set/Cudi.txt,success,4.034516,,1,20277,763,31,4,10355,165846,1337608,63067,937856,17822
-graphs_set,Deltacom,data/batch_2/graphs_set/Deltacom.txt,error,,solver exited with -11; no CC Stats block,,,,,,,,,,,
+graphs_set,Deltacom,data/batch_2/graphs_set/Deltacom.txt,success,4.809999,,1,24905,10488,2780,4,43094,871517,3176216,167894,1261046,52023
 graphs_set,DeutscheTelekom,data/batch_2/graphs_set/DeutscheTelekom.txt,success,0.015731,,1,4032,8,1,4,121,1199,7292,613,5228,161
 graphs_set,Dfn,data/batch_2/graphs_set/Dfn.txt,success,4.479294,,1,14857,333,73,7,3546,64877,869343,29064,712182,7681
 graphs_set,DialtelecomCz,data/batch_2/graphs_set/DialtelecomCz.txt,success,18.594838,,1,352435,9,3,4,53,2994,896770,903,300213,116
-graphs_set,Forthnet,data/batch_2/graphs_set/Forthnet.txt,error,,solver exited with -11; no CC Stats block,,,,,,,,,,,
+graphs_set,Forthnet,data/batch_2/graphs_set/Forthnet.txt,success,13.189738,,1,11657,7510,3117,4,22167,679228,7777076,144267,2292659,36703
 graphs_set,Garr200902,data/batch_2/graphs_set/Garr200902.txt,success,0.496615,,1,6293,55,3,4,1410,19917,176509,9738,139783,2431
 graphs_set,Garr200908,data/batch_2/graphs_set/Garr200908.txt,success,0.296192,,1,6082,78,1,4,1995,25711,160321,12055,116079,3288
 graphs_set,Garr200909,data/batch_2/graphs_set/Garr200909.txt,success,0.038051,,1,4127,9,1,4,173,2209,17628,1178,13026,309

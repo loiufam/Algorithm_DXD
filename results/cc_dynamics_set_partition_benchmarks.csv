@@ -1,6 +1,6 @@
 dataset,instance,input,status,time_s,error,Status,Init_Graph_E,Query,Splits,ETT_cc_times,ETT_dec_calls,ETT_DXD_V,ETT_DXD_E,ETT_Vd,ETT_Ed,ETT_Er
 set_partition_benchmarks,delta,data/batch_2/set_partition_benchmarks/delta.txt,success,76.103221,,1,253034,6,0,3,10,7829,1332981,866,224568,1218
-set_partition_benchmarks,meteor,data/batch_2/set_partition_benchmarks/meteor.txt,error,,solver exited with -2; no CC Stats block,,,,,,,,,,,
+set_partition_benchmarks,meteor,data/batch_2/set_partition_benchmarks/meteor.txt,time_out,,process timeout,,,,,,,,,,,
 set_partition_benchmarks,sppnw08,data/batch_2/set_partition_benchmarks/sppnw08.txt,error,,solver exited with -2; no CC Stats block,,,,,,,,,,,
 set_partition_benchmarks,sppnw09,data/batch_2/set_partition_benchmarks/sppnw09.txt,error,,solver exited with -2; no CC Stats block,,,,,,,,,,,
 set_partition_benchmarks,sppnw10,data/batch_2/set_partition_benchmarks/sppnw10.txt,success,22.883003,,1,302628,11,2,8,100,3396,620738,1826,318543,1267

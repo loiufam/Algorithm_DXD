@@ -67,12 +67,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(vector<Block
 
     auto& comps = getComponents();
 
-    // A BFS decomposition and the ETT forest do not have a shared ordering
-    // contract.  In particular, the single-thread adaptive BFS fallback can
-    // return the same components in a different order.  Pairing blocks with
-    // comps[i] used to attach the wrong subgraph to a block; subsequent graph
-    // updates then operated on vertices from another component and could
-    // eventually dereference stale ETT nodes.
     std::vector<std::unique_ptr<splaytree::EulerTourTree>> forest;
     forest.swap(comps);
     stash.resize(blocks.size());
@@ -88,8 +82,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(vector<Block
             }
         }
         if (!stash[i]) {
-            // Restore every tree before reporting an inconsistent
-            // decomposition.  Never continue with a mismatched tree/block.
+            // Restore every tree before reporting an inconsistent decomposition.
             for (auto& tree : stash)
                 if (tree) comps.push_back(std::move(tree));
             for (auto& tree : forest)
@@ -697,9 +690,9 @@ void DanceDNNF::startMultiThreadDXD() {
         timer.markStopTime();
         const double elapsed = timer.getElapsedTime();
         logger.logLine("Time: " + std::to_string(elapsed) + " s");
-        logger.logLine("Dyn CC CPU: " + std::to_string(ccCpuTime) + " s");
-        logger.logLine("Dyn CC CPU Ratio: " +
-                       std::to_string(elapsed > 0.0 ? ccCpuTime / elapsed : 0.0));
+        // logger.logLine("Dyn CC CPU: " + std::to_string(ccCpuTime) + " s");
+        // logger.logLine("Dyn CC CPU Ratio: " +
+        //                std::to_string(elapsed > 0.0 ? ccCpuTime / elapsed : 0.0));
         logCCExperimentStats(false);
         logger.logLine("DynDXD搜索超时: " + std::string(e.what()));
         return;
