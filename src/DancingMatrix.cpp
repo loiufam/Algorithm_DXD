@@ -283,7 +283,9 @@ void DancingMatrix::buildGraphFromMatrix() {
 
     ccExperimentStats.graph_init_edges = temp_edges.size();
     for (const auto& edge : temp_edges) {
-        graph->addEdge(edge.u, edge.v);
+        // temp_edges already guarantees uniqueness.  Avoid Graph::addEdge's
+        // duplicate lookup, which is quadratic on dense projected graphs.
+        graph->addUniqueEdge(edge.u, edge.v);
     }
 
     // graph->printGraph();
