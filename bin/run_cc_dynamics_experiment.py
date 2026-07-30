@@ -30,7 +30,9 @@ STAT_FIELDS = {
     "Dyn ETT Deleted Tree Edge Sum": "dyn_ett_deleted_tree_edge_sum",
     "Dyn ETT Replacement Scan Steps": "dyn_ett_replacement_scan_steps",
 }
-IDENTITY_FIELDS = ("dataset", "instance", "input", "status", "time_s", "error")
+IDENTITY_FIELDS = (
+    "dataset", "instance", "input", "ett_max_calls", "status", "time_s", "error",
+)
 CSV_FIELDS = IDENTITY_FIELDS + tuple(STAT_FIELDS.values())
 SUCCESS_STATUSES = {"success"}
 
@@ -67,11 +69,12 @@ def parse_measurement(output):
     return result
 
 
-def run_case(executable, input_path, timeout, ett_row_threshold=0):
+def run_case(executable, input_path, timeout, ett_row_threshold=0, ett_max_calls=0):
     """Run one case and convert all failures into a row so the batch continues."""
     command = [
         str(executable), "-a", "ddxd", "-i", str(input_path), "-t", "1",
         "--enable-cc-stats", "--cc-ett-threshold", str(ett_row_threshold),
+        "--cc-ett-max-calls", str(ett_max_calls),
         "--time-limit", str(timeout),
     ]
     try:
@@ -126,9 +129,10 @@ def run_dataset(dataset, entries, args):
     """Run every case in one dataset sequentially and checkpoint each row."""
     output = dataset_output(args.output_dir, dataset)
     rows = read_csv(output) if args.resume else []
+    completed_statuses = SUCCESS_STATUSES | ({"time_out"} if args.cc_ett_max_calls == 0 else set())
     completed = {
         row["instance"] for row in rows
-        if row.get("status") in SUCCESS_STATUSES | {"time_out"}
+        if row.get("status") in completed_statuses
     }
 
     for number, (item, path) in enumerate(entries, 1):
@@ -138,7 +142,10 @@ def run_dataset(dataset, entries, args):
             continue
         print(f"[{dataset} {number}/{len(entries)}] {name}", flush=True)
         try:
-            measured = run_case(args.executable, path, args.timeout, args.cc_ett_threshold)
+            measured = run_case(
+                args.executable, path, args.timeout,
+                args.cc_ett_threshold, args.cc_ett_max_calls,
+            )
         except Exception as error:
             # A malformed output or an isolated runner failure must not prevent
             # later instances in this dataset from being attempted.
@@ -149,6 +156,7 @@ def run_dataset(dataset, entries, args):
             "dataset": dataset,
             "instance": name,
             "input": str(path.relative_to(common.ROOT)),
+            "ett_max_calls": args.cc_ett_max_calls,
         })
         rows = [old for old in rows if old["instance"] != name]
         rows.append(row)
@@ -175,6 +183,10 @@ def main():
     parser.add_argument("--timeout", type=int, default=600, help="seconds per case")
     parser.add_argument("--cc-ett-threshold", type=int, default=0)
     parser.add_argument(
+        "--cc-ett-max-calls", type=int, default=0,
+        help="global ETT-query budget; 0 preserves the unlimited default policy",
+    )
+    parser.add_argument(
         "--dataset", action="append", dest="datasets",
         help="run only this input-directory dataset; may be repeated",
     )
@@ -192,6 +204,8 @@ def main():
         parser.error("--timeout must be at least 1")
     if args.cc_ett_threshold < 0:
         parser.error("--cc-ett-threshold must be non-negative (0 means auto)")
+    if args.cc_ett_max_calls < 0:
+        parser.error("--cc-ett-max-calls must be non-negative (0 means unlimited)")
 
     inputs = common.input_index(common.DEFAULT_INPUT_DIRS)
     selected = report_instances(args.report)

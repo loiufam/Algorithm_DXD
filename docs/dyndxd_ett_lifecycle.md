@@ -13,37 +13,30 @@
 
 - 单线程搜索暂存外层森林，每次只把当前分量的 ETT 和子图交给该子块，
   子块结束后再放回森林；
-- 多线程搜索一旦发现多分块就启动 OpenMP。子任务使用
-  `thread_local ThreadLocalState`，但从进入并行搜索开始不再更新 ETT；
-- 每个第一层并行子块只在 `rows * cols` 不大于 BFS 阈值时执行一次
-  BFS。如果仍是单分块，后续不再查询连通分量；如果产生多分块，允许再嵌套
-  一层 OpenMP，嵌套子块不再做 CC 查询。
+- 初始 ETT 查询得到的各个分量拥有独立的查询计数；
+- 如果某个分量在后三次 ETT 查询中的任意一次发生分块，立即停止维护 ETT，
+  且其所有子块都不再执行 ETT 或 BFS 查询；
+- 多线程搜索发现多分块后使用 `thread_local ThreadLocalState` 保存相同的状态。
 
 ## 2. ETT 查询切换为 BFS
 
-`NO_SPLIT_LIMIT` 当前为 3。一个状态连续三次连通分量查询都只得到一个块，
-并且当前 `rows * cols` 不大于 BFS 面积阈值时，才设置
-`bfs_fallback=true`。默认阈值为 100000，可用
-`--bfs-area-threshold` 调整。这使大块继续使用增量 ETT，而对约
-1000 行、100 列以内的块尽早使用开销较低的 BFS。从下一次查询开始：
+`NO_SPLIT_LIMIT` 当前为 3。初始 ETT 查询如果直接得到多个块，不计入这三次；
+之后每个分量最多观察三次 ETT 查询：
 
-- 连通分量由舞蹈矩阵 BFS 计算，而不是从 ETT 森林读取；
-- 在单线程或尚未发生并行分块时，ETT **仍继续随 cover/uncover 做减量和
-  增量维护**，以保证回溯一致性；并行子任务则按第 1 节的规则停止 ETT 维护；
-- 若 BFS 找到多个块，`no_split_count` 清零。新创建的并行子块 TLS 会从
-  `bfs_fallback=false` 开始；未创建新 TLS 的主线程状态不会自动清除该标志。
+- 三次都没有分块时，立即停止该分量的 ETT 增量维护；
+- 三次中的任意一次发生分块时，也立即停止维护，并禁止所有后继块继续查询 CC；
+- 三次均未分块的分量等到 `rows * cols` 不大于 BFS 面积阈值后，只执行一次
+  舞蹈矩阵 BFS。默认阈值为 100000，可用 `--bfs-area-threshold` 调整；
+- 这次 BFS 无论是否产生多分块，当前分量和所有后继块都不再执行 CC 查询。
 
-因此，“降为 BFS”目前只表示更换 CC 查询方式，并不等于立即销毁或停止维护
-ETT。
+已进入递归帧的 `DecUpdateCC` 仍会在回溯时执行配对的 `IncUpdateCC`，但是停止点
+之后的新递归帧不再支付 ETT 更新开销。
 
 ## 3. 停止分解（不切换到 DXZ）
 
-第一次实际执行 BFS 时会记录当时的 `rows * cols / 2`。当后续某次
-BFS 时的块面积不大于该值后：
-
-- 主线程和线程局部子块都只设置
-  `decomposition_disabled=true`；主线程同时关闭图同步，后续继续使用
-  普通的块内 DXD 决策搜索。
+唯一一次 BFS 完成后，主线程或线程局部子块立即设置
+`decomposition_disabled=true`；主线程同时关闭图同步，后续继续使用普通的
+块内 DXD 决策搜索。
 
 不能在这里切换到 DXZ。DXZ 的 `selectCol()` 遍历全局舞蹈矩阵，而当前
 递归很可能只负责一个 `Block::cols`子块（包括单线程的初始多分块）。
@@ -59,19 +52,39 @@ BFS 时的块面积不大于该值后：
 ### 初始就是多个分块
 
 第一次 ETT 查询直接得到多个块，不增加连续未分块计数。单线程依次搜索每个
-分量；多线程把分量 ETT 分发给任务。每个新建线程子块拥有独立的“ETT 查询 →
-BFS fallback → 停止分解”计数。
+分量；多线程把分量 ETT 分发给任务。每个分量独立执行“最多三次 ETT 查询 →
+必要时一次 BFS → 停止分解”的策略。
 
 ### 始终只有一个分块
 
-面积高于阈值时继续使用 ETT。面积进入阈值后，连续三次无分块才改用
-BFS；当面积缩小到第一次 BFS 面积的一半时，停止 CC 查询，但不切换
-DXZ。
+连续三次 ETT 查询无分块后立即停止维护 ETT。面积进入阈值后执行唯一一次
+BFS，然后停止 CC 查询，但不切换 DXZ。
 
 ## 5. 统计口径
 
+- `DXD CC CPU`：普通 DXD 中 `coverInBlock`、`uncoverInBlock` 与
+  `getComponentsByBFS` 的累计 CPU 时间。它包含为矩阵 BFS 更新二部关联状态的
+  舞蹈链操作；
+- `Dyn CC CPU`：DynDXD 启用 ETT 维护期间 `DecUpdateCC` 与 `IncUpdateCC` 的
+  累计 CPU 时间，不包含普通舞蹈链 cover/uncover，也不包含统计模式下用于对照
+  的 BFS 扫描；
+- `DXD/Dyn CC CPU Ratio`：上述累计 CPU 时间除以对应搜索阶段耗时；初始化行投影
+  图和 ETT 森林发生在搜索计时之前，不计入该比率；
 - `ETT DXD Vertex/Edge Sum`：执行动态删除前的活跃森林规模之和，作为静态
   DXD 完整 CC 扫描的比较基线；
 - `Dyn ETT Updated Vertex/Edge Sum`：只统计前向删除，不重复统计回溯恢复；
 - `Dyn ETT Replacement Scan Steps`：删除树边时，从切割较小侧实际检查的跨侧
   非树边候选数。
+
+## 6. 超时用例的全局 ETT 调用预算
+
+统计模式的 `--cc-ett-max-calls N` 为整个实例设置全局 ETT CC 查询预算。第 N 次
+ETT 查询仍会计入输出；查询完成后立即停止 ETT 更新，并禁止所有当前及后继分量
+继续执行 ETT 或 BFS CC 查询。该选项只允许与
+`--enable-cc-stats -t 1` 一起使用。
+
+默认值 `0` 表示不限制，完整保留每个初始分量“三次 ETT + 至多一次 BFS”的正常
+策略，因而默认实验结果保持可复现。`run_cc_dynamics_experiment.py` 的同名选项会把
+预算写入 `ett_max_calls` CSV 列；配合 `--resume` 和非零预算时，已有成功项保持不动，
+只重新执行之前的 `time_out` 项。预算仍为默认 `0` 时，resume 行为与原实验一致，
+成功和超时项都不会重跑。
