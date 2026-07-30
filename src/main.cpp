@@ -68,6 +68,7 @@ int main(int argc, char *argv[]){
                     DanceDNNF danceDNNF(args.input, logger, false, true, args.threads, args.debug); // 默认ett
                     if (args.enable_cc_stats) danceDNNF.enableCCStatistics();
                     danceDNNF.setCCETTThreshold(args.cc_ett_threshold);
+                    danceDNNF.setCCETTMaxCalls(args.cc_ett_max_calls);
                     danceDNNF.setBFSAreaThreshold(args.bfs_area_threshold);
                     danceDNNF.setTimeLimit(args.time_limit);
                     danceDNNF.startMultiThreadDXD();

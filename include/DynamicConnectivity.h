@@ -86,6 +86,13 @@ public:
 
     // ── 边操作 ──────────────────────────────
     void addEdge    (int u, int v) { insertDir(u,v); insertDir(v,u); }
+    // Initialization fast path.  The caller must guarantee that the
+    // undirected edge is new; unlike addEdge(), this avoids a linear adjacency
+    // scan before each insertion.
+    void addUniqueEdge(int u, int v) {
+        insertUniqueDir(u, v);
+        insertUniqueDir(v, u);
+    }
     void deleteEdge (int u, int v) { markDir(u,v,true);  markDir(v,u,true);  }
     void restoreEdge(int u, int v) { markDir(u,v,false); markDir(v,u,false); }
     bool hasEdge    (int u, int v) const {
@@ -186,6 +193,13 @@ private:
         if (node) { node->deleted = false; return; }
         AdjNode* n = new AdjNode(v);
         n->next    = vertices_[u].sentinel.next;
+        vertices_[u].sentinel.next = n;
+    }
+    void insertUniqueDir(int u, int v) {
+        chk(u);
+        chk(v);
+        AdjNode* n = new AdjNode(v);
+        n->next = vertices_[u].sentinel.next;
         vertices_[u].sentinel.next = n;
     }
     void markDir(int u, int v, bool del) {

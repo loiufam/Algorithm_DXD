@@ -234,7 +234,6 @@ void DancingMatrix::initThreadLocalState(const Block& block, std::unique_ptr<spl
     tlsState->nextTreeId = 0;
     tlsState->bfs_fallback = false;
     tlsState->bfs_probe_done = false;
-    tlsState->bfs_stop_area = 0;
 
     if (!tree) { 
         // Expected for descendants of a parallel split: those tasks use TLS
@@ -284,7 +283,9 @@ void DancingMatrix::buildGraphFromMatrix() {
 
     ccExperimentStats.graph_init_edges = temp_edges.size();
     for (const auto& edge : temp_edges) {
-        graph->addEdge(edge.u, edge.v);
+        // temp_edges already guarantees uniqueness.  Avoid Graph::addEdge's
+        // duplicate lookup, which is quadratic on dense projected graphs.
+        graph->addUniqueEdge(edge.u, edge.v);
     }
 
     // graph->printGraph();

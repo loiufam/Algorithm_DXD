@@ -28,6 +28,8 @@ public:
     int         time_limit = 1500;
     // 0 selects the instance-size-based automatic threshold.
     int         cc_ett_threshold = 0;
+    // 0 keeps the normal per-component 3 ETT + 1 BFS policy unlimited.
+    int         cc_ett_max_calls = 0;
     int         bfs_area_threshold = 0;
  
     // ── parse ────────────────────────────────────────────────────────────────
@@ -58,6 +60,7 @@ public:
                 tok == "-i" || tok == "--input"   ||
                 tok == "-t" || tok == "--threads" ||
                 tok == "--time-limit" || tok == "--cc-ett-threshold" ||
+                tok == "--cc-ett-max-calls" ||
                 tok == "--bfs-area-threshold" ||
                 tok == "-m" || tok == "--mode") {
  
@@ -96,6 +99,12 @@ public:
                 else if (tok == "--cc-ett-threshold") {
                     try { cc_ett_threshold = std::stoi(val); } catch (...) {
                         std::cerr << "[error] --cc-ett-threshold requires an integer.\n";
+                        return false;
+                    }
+                }
+                else if (tok == "--cc-ett-max-calls") {
+                    try { cc_ett_max_calls = std::stoi(val); } catch (...) {
+                        std::cerr << "[error] --cc-ett-max-calls requires an integer.\n";
                         return false;
                     }
                 }
@@ -138,6 +147,13 @@ public:
                         }
                         continue;
                     }
+                    if (key == "--cc-ett-max-calls") {
+                        try { cc_ett_max_calls = std::stoi(val); } catch (...) {
+                            std::cerr << "[error] --cc-ett-max-calls value must be an integer.\n";
+                            return false;
+                        }
+                        continue;
+                    }
                     if (key == "--bfs-area-threshold") {
                         try { bfs_area_threshold = std::stoi(val); } catch (...) {
                             std::cerr << "[error] --bfs-area-threshold value must be an integer.\n";
@@ -174,6 +190,8 @@ public:
             << "      --enable-cc-stats    Keep DynDXD's adaptive behavior\n"
             << "      --cc-ett-threshold <rows>  ETT statistics boundary (default: auto).\n"
             << "                                  auto: >2000=>200, >1000=>100, >100=>50, else 30.\n"
+            << "      --cc-ett-max-calls <n>      Stop all CC work after n ETT queries.\n"
+            << "                                  Statistics-only; default 0 is unlimited.\n"
             << "      --bfs-area-threshold <n>   Switch ETT to BFS only when rows*cols <= n.\n"
             << "                                  Default: 100000; 0 selects the default.\n"
             << "      --time-limit <s>    Solver time limit in seconds (default: 1500).\n"
@@ -247,6 +265,14 @@ private:
         }
         if (cc_ett_threshold < 0) {
             std::cerr << "[error] --cc-ett-threshold must be >= 0 (0 means auto).\n";
+            return false;
+        }
+        if (cc_ett_max_calls < 0) {
+            std::cerr << "[error] --cc-ett-max-calls must be >= 0 (0 means unlimited).\n";
+            return false;
+        }
+        if (cc_ett_max_calls > 0 && !enable_cc_stats) {
+            std::cerr << "[error] --cc-ett-max-calls requires --enable-cc-stats.\n";
             return false;
         }
         if (bfs_area_threshold < 0) {
