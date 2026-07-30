@@ -75,6 +75,7 @@ class DanceDNNF : DancingMatrix {
             max_depth(1) {
 
             omp_set_num_threads(pool_size); // 设置并行线程数
+            omp_set_max_active_levels(2);   // 初始分块 + 最多一层嵌套分块
             std::cout << "设置并行线程数为: " << pool_size << std::endl;
 
             if (pool_size > 1) isParallelSearch = true;
@@ -164,6 +165,14 @@ class DanceDNNF : DancingMatrix {
 
             if (isCurrentDecompositionDisabled()) return false;
 
+            // 一旦进入并行子块，ETT 不再更新。每个第一层子块
+            // 只在足够小时允许一次 BFS 探测；嵌套子块直接求解。
+            if (isThreadLocal() && tlsState->dynamic_ett_disabled) {
+                return tlsState->decompose_depth <= 1 &&
+                       !tlsState->bfs_probe_done &&
+                       block.rows.size() * block.cols.size() <= bfs_area_threshold;
+            }
+
             return true;
         }
 
@@ -196,6 +205,14 @@ class DanceDNNF : DancingMatrix {
 
         void updateAdaptiveDecompositionState(const Block& block, size_t numBlocks) {
             if (dxd_mode) return;
+
+            if (isThreadLocal() && tlsState->dynamic_ett_disabled) {
+                tlsState->bfs_probe_done = true;
+                // 这是子线程唯一一次 BFS。如果没有分块，后续专注
+                // 单块求解；如果分块，当前调用会立即启动嵌套并行。
+                tlsState->decomposition_disabled = numBlocks <= 1;
+                return;
+            }
 
             if (numBlocks > 1) {
                 if (isThreadLocal()) {
