@@ -234,7 +234,6 @@ void DancingMatrix::initThreadLocalState(const Block& block, std::unique_ptr<spl
     tlsState->nextTreeId = 0;
     tlsState->bfs_fallback = false;
     tlsState->bfs_probe_done = false;
-    tlsState->bfs_stop_area = 0;
 
     if (!tree) { 
         // Expected for descendants of a parallel split: those tasks use TLS

@@ -42,7 +42,8 @@ shared_ptr<DNNFNode> DanceDNNF::buildDecomposableNode(vector<shared_ptr<DNNFNode
 //   Process each independent block sequentially.
 //   Returns the product of solution counts AND the Decomposed-AND node that
 //   connects all sub-DNNF roots (enabling independent AND decomposition).
-std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(vector<Block>& blocks, int parent_depth) {
+std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(
+    vector<Block>& blocks, int parent_depth, bool startIndependentPolicies) {
 
     DNNFResult totalResult(1);
     vector<shared_ptr<DNNFNode>> subNodes;
@@ -67,7 +68,48 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(vector<Block
 
     auto& comps = getComponents();
 
-    stash.swap(comps);
+    // A BFS decomposition and the ETT forest do not have a shared ordering
+    // contract.  In particular, the single-thread adaptive BFS fallback can
+    // return the same components in a different order.  Pairing blocks with
+    // comps[i] used to attach the wrong subgraph to a block; subsequent graph
+    // updates then operated on vertices from another component and could
+    // eventually dereference stale ETT nodes.
+    std::vector<std::unique_ptr<splaytree::EulerTourTree>> forest;
+    forest.swap(comps);
+    stash.resize(blocks.size());
+    std::vector<bool> used(forest.size(), false);
+    for (size_t i = 0; i < blocks.size(); ++i) {
+        for (size_t j = 0; j < forest.size(); ++j) {
+            if (used[j] || !forest[j]) continue;
+            const int representative = forest[j]->getAnyVertex();
+            if (representative >= 0 && blocks[i].rows.count(representative)) {
+                stash[i] = std::move(forest[j]);
+                used[j] = true;
+                break;
+            }
+        }
+        if (!stash[i]) {
+            // Restore every tree before reporting an inconsistent
+            // decomposition.  Never continue with a mismatched tree/block.
+            for (auto& tree : stash)
+                if (tree) comps.push_back(std::move(tree));
+            for (auto& tree : forest)
+                if (tree) comps.push_back(std::move(tree));
+            activeSubgraph_ = outerSubgraph;
+            return {DNNFResult(0), F};
+        }
+    }
+    for (size_t j = 0; j < forest.size(); ++j) {
+        if (!used[j] && forest[j]) {
+            // The forest must describe exactly the blocks being searched.
+            for (auto& tree : stash)
+                if (tree) comps.push_back(std::move(tree));
+            for (auto& tree : forest)
+                if (tree) comps.push_back(std::move(tree));
+            activeSubgraph_ = outerSubgraph;
+            return {DNNFResult(0), F};
+        }
+    }
 
     auto restoreStash = [&]() {
         comps.clear();
@@ -79,7 +121,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(vector<Block
     try {
         for (size_t i = 0; i < blocks.size(); ++i) {
 
-        if (i >= stash.size() || !stash[i]) {
+        if (!stash[i]) {
             std::cerr << "serialSearch: component " << i << " missing\n";
             restoreStash();
             return {DNNFResult(0), F};
@@ -89,7 +131,40 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(vector<Block
         activeSubgraph_ = (anyV >= 0) ? graph->subgraphOf(anyV) : nullptr;
         comps.push_back(std::move(stash[i]));
 
-        auto [result, node] = DXD(blocks[i], parent_depth + 1);
+        const bool savedDynamicDisabled = dynamic_ett_disabled;
+        const bool savedDecompositionDisabled = decomposition_disabled;
+        const bool savedBfsFallback = bfs_fallback;
+        const bool savedBfsProbeDone = bfs_probe_done;
+        const int savedNoSplitCount = main_no_split_count;
+        const bool savedGraphSync = isGraphSyncEnabled();
+        auto restorePolicy = [&]() {
+            if (!startIndependentPolicies) return;
+            dynamic_ett_disabled = savedDynamicDisabled;
+            decomposition_disabled = savedDecompositionDisabled;
+            bfs_fallback = savedBfsFallback;
+            bfs_probe_done = savedBfsProbeDone;
+            main_no_split_count = savedNoSplitCount;
+            if (savedGraphSync) turnOnGraphSync();
+            else turnOffGraphSync();
+        };
+        if (startIndependentPolicies) {
+            dynamic_ett_disabled = false;
+            decomposition_disabled = false;
+            bfs_fallback = false;
+            bfs_probe_done = false;
+            main_no_split_count = 0;
+            turnOnGraphSync();
+        }
+
+        std::pair<DNNFResult, shared_ptr<DNNFNode>> childResult;
+        try {
+            childResult = DXD(blocks[i], parent_depth + 1);
+        } catch (...) {
+            restorePolicy();
+            throw;
+        }
+        restorePolicy();
+        auto& [result, node] = childResult;
 
         if (!comps.empty()) {
             stash[i] = std::move(comps[0]);
@@ -328,12 +403,26 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
 
         if (int(curBlock.size()) > 1) {
 
+            // Only the initial decomposition is free of decremental-update
+            // cost.  A split observed later during the three-query ETT trial
+            // ends CC processing for every resulting descendant.
+            const bool initialSplit = depth == 1;
+            if (!initialSplit) {
+                disableDynamicEttForCurrentState();
+                if (isThreadLocal()) {
+                    tlsState->decomposition_disabled = true;
+                } else {
+                    decomposition_disabled = true;
+                    turnOffGraphSync();
+                }
+            }
+
             const bool treesAvailable = useETT && !isCurrentDynamicEttDisabled();
-            // 分块一经出现就并行。子任务不再维护 ETT，只允许
-            // 在面积阈值内执行一次 BFS 并最多再嵌套一层。
+            // A non-initial split disables all further CC work in its
+            // descendants; an initial split starts one policy per component.
             auto decompResult = isParallelSearch
                 ? parallelSearchUseOmp(curBlock, depth, true, treesAvailable)
-                : serialSearch(curBlock, depth);
+                : serialSearch(curBlock, depth, initialSplit);
 
             auto [result, decompNode] = decompResult;
 
