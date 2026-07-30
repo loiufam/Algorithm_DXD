@@ -233,10 +233,12 @@ void DancingMatrix::initThreadLocalState(const Block& block, std::unique_ptr<spl
     tlsState->subgraph  = nullptr; 
     tlsState->nextTreeId = 0;
     tlsState->bfs_fallback = false;
+    tlsState->bfs_probe_done = false;
     tlsState->bfs_stop_area = 0;
 
     if (!tree) { 
-        std::cout << "Warning: Initializing thread local state with an empty tree." << std::endl;
+        // Expected for descendants of a parallel split: those tasks use TLS
+        // for the one-shot BFS policy but deliberately do not own/maintain ETT.
         tlsState->initialized = true; 
         return; 
     }
