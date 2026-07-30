@@ -67,7 +67,48 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(vector<Block
 
     auto& comps = getComponents();
 
-    stash.swap(comps);
+    // A BFS decomposition and the ETT forest do not have a shared ordering
+    // contract.  In particular, the single-thread adaptive BFS fallback can
+    // return the same components in a different order.  Pairing blocks with
+    // comps[i] used to attach the wrong subgraph to a block; subsequent graph
+    // updates then operated on vertices from another component and could
+    // eventually dereference stale ETT nodes.
+    std::vector<std::unique_ptr<splaytree::EulerTourTree>> forest;
+    forest.swap(comps);
+    stash.resize(blocks.size());
+    std::vector<bool> used(forest.size(), false);
+    for (size_t i = 0; i < blocks.size(); ++i) {
+        for (size_t j = 0; j < forest.size(); ++j) {
+            if (used[j] || !forest[j]) continue;
+            const int representative = forest[j]->getAnyVertex();
+            if (representative >= 0 && blocks[i].rows.count(representative)) {
+                stash[i] = std::move(forest[j]);
+                used[j] = true;
+                break;
+            }
+        }
+        if (!stash[i]) {
+            // Restore every tree before reporting an inconsistent
+            // decomposition.  Never continue with a mismatched tree/block.
+            for (auto& tree : stash)
+                if (tree) comps.push_back(std::move(tree));
+            for (auto& tree : forest)
+                if (tree) comps.push_back(std::move(tree));
+            activeSubgraph_ = outerSubgraph;
+            return {DNNFResult(0), F};
+        }
+    }
+    for (size_t j = 0; j < forest.size(); ++j) {
+        if (!used[j] && forest[j]) {
+            // The forest must describe exactly the blocks being searched.
+            for (auto& tree : stash)
+                if (tree) comps.push_back(std::move(tree));
+            for (auto& tree : forest)
+                if (tree) comps.push_back(std::move(tree));
+            activeSubgraph_ = outerSubgraph;
+            return {DNNFResult(0), F};
+        }
+    }
 
     auto restoreStash = [&]() {
         comps.clear();
@@ -79,7 +120,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(vector<Block
     try {
         for (size_t i = 0; i < blocks.size(); ++i) {
 
-        if (i >= stash.size() || !stash[i]) {
+        if (!stash[i]) {
             std::cerr << "serialSearch: component " << i << " missing\n";
             restoreStash();
             return {DNNFResult(0), F};
