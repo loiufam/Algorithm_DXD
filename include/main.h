@@ -285,8 +285,8 @@ private:
             std::cerr << "[error] --cc-ett-max-calls must be >= 0 (0 means unlimited).\n";
             return false;
         }
-        if (cc_ett_max_calls > 0 && !enable_cc_stats) {
-            std::cerr << "[error] --cc-ett-max-calls requires --enable-cc-stats.\n";
+        if (cc_ett_max_calls > 0 && !enable_cc_stats && !enable_cc_time) {
+            std::cerr << "[error] --cc-ett-max-calls requires --enable-cc-stats or --enable-cc-time.\n";
             return false;
         }
         if (bfs_area_threshold < 0) {

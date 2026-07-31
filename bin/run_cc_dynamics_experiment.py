@@ -4,6 +4,7 @@
 import argparse
 import csv
 import re
+import signal
 import subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -98,6 +99,20 @@ def run_case(executable, input_path, timeout, ett_row_threshold=0, ett_max_calls
         if process.returncode != 0 and measured["status"] == "success":
             measured.update(status="error", error=f"solver exited with {process.returncode}")
         return measured
+    if process.returncode < 0:
+        signal_number = -process.returncode
+        try:
+            signal_name = signal.Signals(signal_number).name
+        except ValueError:
+            signal_name = f"signal {signal_number}"
+        return {
+            "status": "interrupted", "time_s": "",
+            "error": (
+                f"solver interrupted by {signal_name} before emitting CC Stats; "
+                "rerun the instance (the solver's --time-limit does not include "
+                "matrix/ETT initialization)"
+            ),
+        }
     if process.returncode != 0:
         return {
             "status": "error", "time_s": "",

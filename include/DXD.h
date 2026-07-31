@@ -102,6 +102,7 @@ class DanceDNNF : DancingMatrix {
         std::atomic<std::clock_t> ccBfsCpuTicks{0};
         std::atomic<std::clock_t> ccUpdateCpuTicks{0};
         std::atomic<std::clock_t> ccCoverCpuTicks{0};
+        std::atomic<std::clock_t> ccUncoverCpuTicks{0};
         bool collectCCTime = false;
         double nextCCStatsSnapshotTime = 0.0;
         bool debug = false;
@@ -130,7 +131,7 @@ class DanceDNNF : DancingMatrix {
         size_t ccEttCallsUsed = 0;
 
         bool isCCETTCallBudgetExhausted() const {
-            return collectCCExperimentStats && ccEttMaxCalls > 0 &&
+            return (collectCCExperimentStats || collectCCTime) && ccEttMaxCalls > 0 &&
                    ccEttCallsUsed >= ccEttMaxCalls;
         }
 

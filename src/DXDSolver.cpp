@@ -386,8 +386,10 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
 
             if (useDynamicEtt) {
                 ++ccExperimentStats.ettCcTimes;
-                ++ccEttCallsUsed;
             }
+        }
+        if (useDynamicEtt && (collectCCExperimentStats || collectCCTime)) {
+            ++ccEttCallsUsed;
         }
 
         // The optional experiment budget is global across all initial
@@ -453,7 +455,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     auto timedUncoverInBlock = [&](int col) {
         const std::clock_t start = std::clock();
         uncoverInBlock(col, block);
-        if (collectCCTime && dxd_mode) addCCCpuTicks(start, ccCoverCpuTicks);
+        if (collectCCTime && dxd_mode) addCCCpuTicks(start, ccUncoverCpuTicks);
     };
     auto timedDecUpdate = [&](const set<int>& rows) {
         const std::clock_t start = std::clock();
@@ -649,6 +651,7 @@ void DanceDNNF::startDXD() {
     ccBfsCpuTicks.store(0, std::memory_order_relaxed);
     ccUpdateCpuTicks.store(0, std::memory_order_relaxed);
     ccCoverCpuTicks.store(0, std::memory_order_relaxed);
+    ccUncoverCpuTicks.store(0, std::memory_order_relaxed);
     if (collectCCExperimentStats) ccExperimentStats.reset();
     resetAdaptiveDecompositionState();
 
@@ -686,6 +689,7 @@ void DanceDNNF::startDXD() {
                            std::to_string(searchTime > 0.0 ? ccCpuTime / searchTime : 0.0));
             logger.logLine("DXD CC BFS CPU: " + std::to_string(ticksToSeconds(ccBfsCpuTicks)) + " s");
             logger.logLine("DXD CC Cover CPU: " + std::to_string(ticksToSeconds(ccCoverCpuTicks)) + " s");
+            logger.logLine("DXD CC Uncover CPU: " + std::to_string(ticksToSeconds(ccUncoverCpuTicks)) + " s");
         }
         timeout = false;
 
@@ -739,6 +743,7 @@ void DanceDNNF::startMultiThreadDXD() {
     ccBfsCpuTicks.store(0, std::memory_order_relaxed);
     ccUpdateCpuTicks.store(0, std::memory_order_relaxed);
     ccCoverCpuTicks.store(0, std::memory_order_relaxed);
+    ccUncoverCpuTicks.store(0, std::memory_order_relaxed);
     if (collectCCExperimentStats) ccExperimentStats.reset();
     resetAdaptiveDecompositionState();
 
