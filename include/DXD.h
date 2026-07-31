@@ -99,6 +99,10 @@ class DanceDNNF : DancingMatrix {
         // 累计连通分量处理的 CPU 时间。实验使用单线程运行，因此
         // std::clock() 的进程 CPU 时间就是当前算法线程消耗的 CPU 时间。
         std::atomic<std::clock_t> ccCpuTicks{0};
+        std::atomic<std::clock_t> ccBfsCpuTicks{0};
+        std::atomic<std::clock_t> ccUpdateCpuTicks{0};
+        std::atomic<std::clock_t> ccCoverCpuTicks{0};
+        bool collectCCTime = false;
         double nextCCStatsSnapshotTime = 0.0;
         bool debug = false;
 
@@ -275,6 +279,8 @@ class DanceDNNF : DancingMatrix {
             ccExperimentStats.reset();
         }
 
+        void enableCCTiming() { collectCCTime = true; }
+
         static size_t automaticCCETTThreshold(size_t instanceRows) {
             if (instanceRows > 2000) return 200;
             if (instanceRows > 1000) return 100;
@@ -386,13 +392,19 @@ class DanceDNNF : DancingMatrix {
             tried_numbers += count;
         }
 
-        void addCCCpuTicks(std::clock_t start) {
-            ccCpuTicks.fetch_add(std::clock() - start, std::memory_order_relaxed);
+        void addCCCpuTicks(std::clock_t start, std::atomic<std::clock_t>& category) {
+            const std::clock_t elapsed = std::clock() - start;
+            ccCpuTicks.fetch_add(elapsed, std::memory_order_relaxed);
+            category.fetch_add(elapsed, std::memory_order_relaxed);
         }
 
         double getCCCpuTime() const {
             return static_cast<double>(ccCpuTicks.load(std::memory_order_relaxed)) /
                    static_cast<double>(CLOCKS_PER_SEC);
+        }
+
+        static double ticksToSeconds(const std::atomic<std::clock_t>& ticks) {
+            return static_cast<double>(ticks.load(std::memory_order_relaxed)) / CLOCKS_PER_SEC;
         }
 
 
