@@ -25,6 +25,7 @@ public:
     int         threads = 8;
     bool        debug   = false;
     bool        enable_cc_stats = false;
+    bool        enable_cc_time = false;
     int         time_limit = 1500;
     // 0 selects the instance-size-based automatic threshold.
     int         cc_ett_threshold = 0;
@@ -52,6 +53,10 @@ public:
             }
             if (tok == "--enable-cc-stats") {
                 enable_cc_stats = true;
+                continue;
+            }
+            if (tok == "--enable-cc-time") {
+                enable_cc_time = true;
                 continue;
             }
  
@@ -188,6 +193,7 @@ public:
             << "  -i, --input   <path>   Path to the input test-case file (required)\n"
             << "  -t, --threads <n>      Number of threads (default: 8).\n"
             << "      --enable-cc-stats    Keep DynDXD's adaptive behavior\n"
+            << "      --enable-cc-time     Measure CC operations only (single-thread DXD/DynDXD).\n"
             << "      --cc-ett-threshold <rows>  ETT statistics boundary (default: auto).\n"
             << "                                  auto: >2000=>200, >1000=>100, >100=>50, else 30.\n"
             << "      --cc-ett-max-calls <n>      Stop all CC work after n ETT queries.\n"
@@ -257,6 +263,14 @@ private:
         }
         if (enable_cc_stats && (alg != "ddxd" || threads != 1)) {
             std::cerr << "[error] --enable-cc-stats requires --alg ddxd --threads 1.\n";
+            return false;
+        }
+        if (enable_cc_time && ((alg != "ddxd" && alg != "dxd") || threads != 1)) {
+            std::cerr << "[error] --enable-cc-time requires --alg dxd/ddxd --threads 1.\n";
+            return false;
+        }
+        if (enable_cc_time && enable_cc_stats) {
+            std::cerr << "[error] --enable-cc-time and --enable-cc-stats are separate experiment modes.\n";
             return false;
         }
         if (time_limit < 1) {
