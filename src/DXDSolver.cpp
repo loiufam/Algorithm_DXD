@@ -368,9 +368,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             const std::clock_t bfsStart = std::clock();
             bfsBlocks = getComponentsByBFS(
                 block.cols, collectCCExperimentStats ? &bfsMetrics : nullptr);
-            // Static DXD's CC cost includes scanning the active dancing
-            // matrix.  DynDXD deliberately excludes validation/statistics BFS
-            // scans and measures only dynamic ETT updates below.
             if (collectCCTime) addCCCpuTicks(bfsStart, ccBfsCpuTicks);
         }
         vector<Block> curBlock = useDynamicEtt? getComponentsByETT(block.cols) : std::move(bfsBlocks);
@@ -392,9 +389,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             ++ccEttCallsUsed;
         }
 
-        // The optional experiment budget is global across all initial
-        // components.  The Nth ETT query is retained in the statistics, then
-        // ETT maintenance and every future ETT/BFS CC query stop immediately.
         if (useDynamicEtt && isCCETTCallBudgetExhausted()) {
             stopCCForETTCallBudget();
         }
@@ -405,9 +399,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
 
         if (int(curBlock.size()) > 1) {
 
-            // Only the initial decomposition is free of decremental-update
-            // cost.  A split observed later during the three-query ETT trial
-            // ends CC processing for every resulting descendant.
             const bool initialSplit = depth == 1;
             if (!initialSplit) {
                 disableDynamicEttForCurrentState();
@@ -420,8 +411,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             }
 
             const bool treesAvailable = useETT && !isCurrentDynamicEttDisabled();
-            // A non-initial split disables all further CC work in its
-            // descendants; an initial split starts one policy per component.
+
             auto decompResult = isParallelSearch
                 ? parallelSearchUseOmp(curBlock, depth, true, treesAvailable)
                 : serialSearch(curBlock, depth, initialSplit);
@@ -465,8 +455,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     auto timedIncUpdate = [&](const set<int>& rows) {
         const std::clock_t start = std::clock();
         IncUpdateCC(rows);
-        // Incremental restoration is search bookkeeping, not part of the
-        // decremental Dyn CC operation measured by the timing experiment.
     };
 
     set<int> deleted_rows;

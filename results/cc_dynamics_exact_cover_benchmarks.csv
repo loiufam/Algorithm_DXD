@@ -5,7 +5,7 @@ exact_cover_benchmarks,bell-08,data/batch_2/exact_cover_benchmarks/bell-08.ec,,s
 exact_cover_benchmarks,bell-09,data/batch_2/exact_cover_benchmarks/bell-09.ec,,success,1.712635,,1,120975,4,0,3,2,766,150337,384,113940,394
 exact_cover_benchmarks,bell-10,data/batch_2/exact_cover_benchmarks/bell-10.ec,,success,25.420431,,1,494252,4,0,3,2,1534,615229,768,464892,545
 exact_cover_benchmarks,bell-11,data/batch_2/exact_cover_benchmarks/bell-11.ec,,success,208.328362,,1,2007555,4,0,3,2,3070,2501809,1536,1886580,1535
-exact_cover_benchmarks,bell-12,data/batch_2/exact_cover_benchmarks/bell-12.ec,2,time_out,,process timeout,,,,,,,,,,,
+exact_cover_benchmarks,bell-12,data/batch_2/exact_cover_benchmarks/bell-12.ec,3,error,,solver exited with -2; no CC Stats block,,,,,,,,,,,
 exact_cover_benchmarks,doublefact-09,data/batch_2/exact_cover_benchmarks/doublefact-09.ec,,success,0.004667,,1,360,4,0,3,123,982,3675,394,1764,195
 exact_cover_benchmarks,doublefact-11,data/batch_2/exact_cover_benchmarks/doublefact-11.ec,,success,0.003637,,1,660,4,0,3,4,202,1771,38,492,67
 exact_cover_benchmarks,doublefact-13,data/batch_2/exact_cover_benchmarks/doublefact-13.ec,,success,0.010826,,1,1092,4,0,3,4,290,3109,46,732,132

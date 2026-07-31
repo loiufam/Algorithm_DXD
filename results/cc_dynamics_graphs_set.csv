@@ -28,7 +28,7 @@ graphs_set,Garr201007,data/batch_2/graphs_set/Garr201007.txt,,success,2.115233,,
 graphs_set,Garr201008,data/batch_2/graphs_set/Garr201008.txt,,success,0.081934,,1,11322,21,1,16,13,774,19435,195,10117,138
 graphs_set,Garr201010,data/batch_2/graphs_set/Garr201010.txt,,success,9.002021,,1,603171,17,2,13,9,3369,1147218,409,129434,1061
 graphs_set,Garr201012,data/batch_2/graphs_set/Garr201012.txt,,success,0.074101,,1,10638,21,2,18,111,1526,19511,484,9426,215
-graphs_set,Garr201101,data/batch_2/graphs_set/Garr201101.txt,2,success,3.492500,,1,7139996,2,1,2,0,0,0,0,0,0
+graphs_set,Garr201101,data/batch_2/graphs_set/Garr201101.txt,2,timeout,3.492500,,1,7139996,2,1,2,0,0,0,0,0,0
 graphs_set,Garr201102,data/batch_2/graphs_set/Garr201102.txt,,success,0.042662,,1,9378,24,1,19,84,1337,17732,491,8783,305
 graphs_set,Garr201103,data/batch_2/graphs_set/Garr201103.txt,,success,0.858242,,1,46934,23,3,18,13,1123,72358,305,40015,353
 graphs_set,Garr201104,data/batch_2/graphs_set/Garr201104.txt,,success,0.289255,,1,34218,23,1,18,208,2918,75567,1021,32584,518
@@ -228,7 +228,7 @@ graphs_set,grafo10882.95,data/batch_2/graphs_set/grafo10882.95.txt,,success,0.43
 graphs_set,grafo10883.93,data/batch_2/graphs_set/grafo10883.93.txt,,success,2.532203,,1,215851,31,2,24,18,2559,344470,397,98110,1043
 graphs_set,grafo10898.95,data/batch_2/graphs_set/grafo10898.95.txt,,success,0.112792,,1,34832,33,2,25,56,1831,67523,272,14707,674
 graphs_set,grafo10905.97,data/batch_2/graphs_set/grafo10905.97.txt,,success,0.152732,,1,24435,29,1,23,50,1696,56639,281,10888,416
-graphs_set,grafo10907.99,data/batch_2/graphs_set/grafo10907.99.txt,2,success,1.784870,,1,2871829,2,1,2,0,0,0,0,0,0
+graphs_set,grafo10907.99,data/batch_2/graphs_set/grafo10907.99.txt,2,timeout,1.784870,,1,2871829,2,1,2,0,0,0,0,0,0
 graphs_set,grafo10908.98,data/batch_2/graphs_set/grafo10908.98.txt,,success,0.950838,,1,140667,25,1,19,14,2492,401316,100,11602,851
 graphs_set,grafo10918.98,data/batch_2/graphs_set/grafo10918.98.txt,,success,0.942564,,1,36379,17,1,13,8,1528,68038,68,7290,759
 graphs_set,grafo10919.97,data/batch_2/graphs_set/grafo10919.97.txt,,success,0.164776,,1,28333,25,2,19,13,1591,54873,114,7073,582
@@ -305,7 +305,7 @@ graphs_set,grafo7221.99,data/batch_2/graphs_set/grafo7221.99.txt,,success,0.0503
 graphs_set,grafo7263.99,data/batch_2/graphs_set/grafo7263.99.txt,,success,4.218874,,1,644630,20,2,16,10,3492,1269572,96,31693,1277
 graphs_set,grafo7417.39,data/batch_2/graphs_set/grafo7417.39.txt,,success,0.065165,,1,13722,41,1,31,21,1374,24786,266,9613,438
 graphs_set,grafo7785.100,data/batch_2/graphs_set/grafo7785.100.txt,,success,0.558321,,1,50012,29,1,22,16,1915,118832,353,43133,411
-graphs_set,grafo7797.100,data/batch_2/graphs_set/grafo7797.100.txt,2,success,1.356482,,1,1977104,2,1,2,0,0,0,0,0,0
+graphs_set,grafo7797.100,data/batch_2/graphs_set/grafo7797.100.txt,2,timeout,1.356482,,1,1977104,2,1,2,0,0,0,0,0,0
 graphs_set,grafo7907.80,data/batch_2/graphs_set/grafo7907.80.txt,,success,0.159938,,1,30507,25,1,19,12,1388,57460,94,5924,609
 graphs_set,grafo8008.95,data/batch_2/graphs_set/grafo8008.95.txt,,success,0.356100,,1,110399,21,2,16,11,2184,218299,97,12295,944
 graphs_set,grafo8127.78,data/batch_2/graphs_set/grafo8127.78.txt,,success,0.035921,,1,14952,28,2,24,83,1581,30141,326,5867,535
@@ -336,11 +336,11 @@ graphs_set,grafo8893.96,data/batch_2/graphs_set/grafo8893.96.txt,,success,0.0226
 graphs_set,grafo8943.98,data/batch_2/graphs_set/grafo8943.98.txt,,success,6.075200,,1,114076,21,1,16,12,2826,297431,483,92210,799
 graphs_set,grafo8963.92,data/batch_2/graphs_set/grafo8963.92.txt,,success,22.372457,,1,913735,25,2,19,13,5851,1857409,1013,469242,1099
 graphs_set,grafo9008.91,data/batch_2/graphs_set/grafo9008.91.txt,,success,0.135458,,1,29977,29,1,22,15,1585,57483,128,7125,706
-graphs_set,grafo9357.99,data/batch_2/graphs_set/grafo9357.99.txt,2,success,1.876080,,1,3559748,2,1,2,0,0,0,0,0,0
-graphs_set,grafo9362.98,data/batch_2/graphs_set/grafo9362.98.txt,2,success,0.864221,,1,53280,2,1,2,0,0,0,0,0,0
-graphs_set,grafo9691.79,data/batch_2/graphs_set/grafo9691.79.txt,2,success,0.043794,,1,13143,2,1,2,0,0,0,0,0,0
-graphs_set,grafo9738.100,data/batch_2/graphs_set/grafo9738.100.txt,2,success,9.890181,,1,40409,2,1,2,0,0,0,0,0,0
-graphs_set,grafo9788.80,data/batch_2/graphs_set/grafo9788.80.txt,2,success,0.052506,,1,19672,2,1,2,0,0,0,0,0,0
-graphs_set,grafo9973.96,data/batch_2/graphs_set/grafo9973.96.txt,2,success,0.434485,,1,133822,2,1,2,0,0,0,0,0,0
-graphs_set,grafo9984.96,data/batch_2/graphs_set/grafo9984.96.txt,2,success,0.117195,,1,34660,2,1,2,0,0,0,0,0,0
-graphs_set,grafo9995.94,data/batch_2/graphs_set/grafo9995.94.txt,2,success,0.349935,,1,53825,2,1,2,0,0,0,0,0,0
+graphs_set,grafo9357.99,data/batch_2/graphs_set/grafo9357.99.txt,2,timeout,1.876080,,1,3559748,2,1,2,0,0,0,0,0,0
+graphs_set,grafo9362.98,data/batch_2/graphs_set/grafo9362.98.txt,2,timeout,0.864221,,1,53280,2,1,2,0,0,0,0,0,0
+graphs_set,grafo9691.79,data/batch_2/graphs_set/grafo9691.79.txt,2,timeout,0.043794,,1,13143,2,1,2,0,0,0,0,0,0
+graphs_set,grafo9738.100,data/batch_2/graphs_set/grafo9738.100.txt,2,timeout,9.890181,,1,40409,2,1,2,0,0,0,0,0,0
+graphs_set,grafo9788.80,data/batch_2/graphs_set/grafo9788.80.txt,2,timeout,0.052506,,1,19672,2,1,2,0,0,0,0,0,0
+graphs_set,grafo9973.96,data/batch_2/graphs_set/grafo9973.96.txt,2,timeout,0.434485,,1,133822,2,1,2,0,0,0,0,0,0
+graphs_set,grafo9984.96,data/batch_2/graphs_set/grafo9984.96.txt,2,timeout,0.117195,,1,34660,2,1,2,0,0,0,0,0,0
+graphs_set,grafo9995.94,data/batch_2/graphs_set/grafo9995.94.txt,2,timeout,0.349935,,1,53825,2,1,2,0,0,0,0,0,0
