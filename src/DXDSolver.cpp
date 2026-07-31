@@ -464,6 +464,12 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     auto timedDecUpdate = [&](const set<int>& rows) {
         // const std::clock_t start = std::clock();
         DecUpdateCC(rows);
+        if (quickStatsUpdateLimit > 0) {
+            std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+            if (ccExperimentStats.dec_calls >= quickStatsUpdateLimit) {
+                throw QuickStatsComplete();
+            }
+        }
         // if (collectCCTime && !dxd_mode) addCCCpuTicks(start, ccUpdateCpuTicks);
     };
     auto timedIncUpdate = [&](const set<int>& rows) {
@@ -658,6 +664,15 @@ void DanceDNNF::logCCExperimentStats(bool complete) {
                    std::to_string(stats.ettEr));
 }
 
+static void logQuickStats(Logger& logger,
+                          const DancingMatrix::CCExperimentStats& stats) {
+    logger.logLine("ETT_DXD_V: " + std::to_string(stats.ettV));
+    logger.logLine("ETT_DXD_E: " + std::to_string(stats.ettE));
+    logger.logLine("ETT_Vd: " + std::to_string(stats.ettVd));
+    logger.logLine("ETT_Ed: " + std::to_string(stats.ettEd));
+    logger.logLine("ETT_Er: " + std::to_string(stats.ettEr));
+}
+
 // DXD DXZ入口
 void DanceDNNF::startDXD() {
 
@@ -785,6 +800,18 @@ void DanceDNNF::startMultiThreadDXD() {
         auto [ResSols, compiledRoot] = DXD(InitBlock, 1);  // 多线程DXD搜索
         rootDNNF = compiledRoot; 
 
+        if (quickStatsUpdateLimit > 0) {
+            timer.markStopTime();
+            CCExperimentStats stats;
+            {
+                std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+                stats = ccExperimentStats;
+            }
+            logQuickStats(logger, stats);
+            timeout = false;
+            return;
+        }
+
         auto end = std::chrono::high_resolution_clock::now();
         timer.markStopTime();
    
@@ -815,6 +842,16 @@ void DanceDNNF::startMultiThreadDXD() {
 
         logger.logLine("DNNF Size: " + std::to_string(dnnf_size));
 
+        return;
+    } catch (const QuickStatsComplete&) {
+        timer.markStopTime();
+        CCExperimentStats stats;
+        {
+            std::lock_guard<std::mutex> lock(ccExperimentStatsMutex);
+            stats = ccExperimentStats;
+        }
+        logQuickStats(logger, stats);
+        timeout = false;
         return;
     } catch (std::runtime_error &e) {
         timeout = true;

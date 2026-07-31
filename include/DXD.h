@@ -16,6 +16,11 @@ enum class NodeType { OR, Decision, Decomposed, Variable, Terminal };  // 节点
 // 模式：ETT动态连通 vs BFS静态扫描
 enum class DecomMode { Dynamic, Static };
 
+class QuickStatsComplete final : public std::exception {
+public:
+    const char* what() const noexcept override { return "quick statistics complete"; }
+};
+
 struct DNNFNode {
     size_t id;
     inline static std::atomic<size_t> id_counter{0};
@@ -130,6 +135,7 @@ class DanceDNNF : DancingMatrix {
         int main_no_split_count = 0;
         size_t ccEttMaxCalls = 0;
         size_t ccEttCallsUsed = 0;
+        size_t quickStatsUpdateLimit = 0;
 
         bool isCCETTCallBudgetExhausted() const {
             return (collectCCExperimentStats || collectCCTime) && ccEttMaxCalls > 0 &&
@@ -278,6 +284,12 @@ class DanceDNNF : DancingMatrix {
 
         void enableCCStatistics() {
             collectCCExperimentStats = true;
+            ccExperimentStats.reset();
+        }
+
+        void enableQuickStatistics(size_t updates) {
+            collectCCExperimentStats = true;
+            quickStatsUpdateLimit = updates;
             ccExperimentStats.reset();
         }
 

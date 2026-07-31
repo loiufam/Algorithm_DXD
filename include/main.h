@@ -26,6 +26,7 @@ public:
     bool        debug   = false;
     bool        enable_cc_stats = false;
     bool        enable_cc_time = false;
+    int         quick_stats_updates = 0;
     int         time_limit = 1500;
     // 0 selects the instance-size-based automatic threshold.
     int         cc_ett_threshold = 0;
@@ -66,6 +67,7 @@ public:
                 tok == "-t" || tok == "--threads" ||
                 tok == "--time-limit" || tok == "--cc-ett-threshold" ||
                 tok == "--cc-ett-max-calls" ||
+                tok == "--quick-stats" ||
                 tok == "--bfs-area-threshold" ||
                 tok == "-m" || tok == "--mode") {
  
@@ -113,6 +115,12 @@ public:
                         return false;
                     }
                 }
+                else if (tok == "--quick-stats") {
+                    try { quick_stats_updates = std::stoi(val); } catch (...) {
+                        std::cerr << "[error] --quick-stats requires an integer.\n";
+                        return false;
+                    }
+                }
                 else if (tok == "--bfs-area-threshold") {
                     try { bfs_area_threshold = std::stoi(val); } catch (...) {
                         std::cerr << "[error] --bfs-area-threshold requires an integer.\n";
@@ -155,6 +163,13 @@ public:
                     if (key == "--cc-ett-max-calls") {
                         try { cc_ett_max_calls = std::stoi(val); } catch (...) {
                             std::cerr << "[error] --cc-ett-max-calls value must be an integer.\n";
+                            return false;
+                        }
+                        continue;
+                    }
+                    if (key == "--quick-stats") {
+                        try { quick_stats_updates = std::stoi(val); } catch (...) {
+                            std::cerr << "[error] --quick-stats value must be an integer.\n";
                             return false;
                         }
                         continue;
@@ -287,6 +302,18 @@ private:
         }
         if (cc_ett_max_calls > 0 && !enable_cc_stats && !enable_cc_time) {
             std::cerr << "[error] --cc-ett-max-calls requires --enable-cc-stats or --enable-cc-time.\n";
+            return false;
+        }
+        if (quick_stats_updates < 0) {
+            std::cerr << "[error] --quick-stats must be >= 1 when specified.\n";
+            return false;
+        }
+        if (quick_stats_updates > 0 && (alg != "ddxd" || threads != 1)) {
+            std::cerr << "[error] --quick-stats requires --alg ddxd --threads 1.\n";
+            return false;
+        }
+        if (quick_stats_updates > 0 && (enable_cc_stats || enable_cc_time || cc_ett_max_calls > 0)) {
+            std::cerr << "[error] --quick-stats cannot be combined with other CC experiment modes.\n";
             return false;
         }
         if (bfs_area_threshold < 0) {

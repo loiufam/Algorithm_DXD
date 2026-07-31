@@ -68,14 +68,22 @@ int main(int argc, char *argv[]){
                     logger.logLine("启用DynDXD算法求解: " + filename);
                     // DanceDNNF danceDNNF(input_file, logger, true, false, num_threads, debug);
                     DanceDNNF danceDNNF(args.input, logger, false, true, args.threads, args.debug); // 默认ett
-                    if (args.enable_cc_stats) danceDNNF.enableCCStatistics();
+                    if (args.quick_stats_updates > 0) {
+                        danceDNNF.enableQuickStatistics(args.quick_stats_updates);
+                    } else if (args.enable_cc_stats) {
+                        danceDNNF.enableCCStatistics();
+                    }
                     if (args.enable_cc_time) danceDNNF.enableCCTiming();
                     danceDNNF.setCCETTThreshold(args.cc_ett_threshold);
                     danceDNNF.setCCETTMaxCalls(args.cc_ett_max_calls);
                     danceDNNF.setBFSAreaThreshold(args.bfs_area_threshold);
                     danceDNNF.setTimeLimit(args.time_limit);
                     danceDNNF.startMultiThreadDXD();
-                    logger.logLine("DynDXD算法求解结束: " + filename);
+                    if (args.quick_stats_updates > 0) {
+                        logger.logLine("DynDXD快捷统计结束: " + filename);
+                    } else {
+                        logger.logLine("DynDXD算法求解结束: " + filename);
+                    }
                     break;
                 }
             case AlgType::mdlx:
