@@ -1,0 +1,1382 @@
+{
+  "AsnetAm": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "AttMpls": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Bellcanada": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Bellsouth": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "BeyondTheNetwork": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "BtNorthAmerica": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Cernet": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Cesnet200706": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Cesnet201006": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Chinanet": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Columbus": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Cudi": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Deltacom": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "DeutscheTelekom": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Dfn": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "DialtelecomCz": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Forthnet": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr200902": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr200908": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr200909": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr200912": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr201001": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr201003": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr201004": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr201005": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr201007": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr201008": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr201010": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr201012": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr201101": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr201102": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr201103": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr201104": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr201105": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr201107": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr201108": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr201109": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr201110": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr201111": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr201112": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Garr201201": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Geant2009": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Geant2010": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Geant2012": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Globenet": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "HiberniaGlobal": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Highwinds": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Iij": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Internode": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Interoute": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Intranetwork": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Iris": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Latnet": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Missouri": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Ntelos": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Ntt": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Oteglobe": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Palmetto": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Pern": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "PionierL3": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "RedBestel": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Renater2010": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "RoedunetFibre": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Sinet": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Surfnet": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Switch": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "SwitchL3": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Syringa": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "TataNld": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Telcove": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Tinet": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Tw": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Ulaknet": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Uninett2010": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "UsCarrier": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "UsSignal": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "Uunet": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "VtlWavenet2008": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "VtlWavenet2011": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10006.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10072.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10084.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10093.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10099.94": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10100.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10105.93": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10112.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10113.94": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10124.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10129.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10146.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10156.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10161.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10162.93": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10171.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10175.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10176.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10179.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10184.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10195.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10203.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10204.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10205.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10207.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10209.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10215.93": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10220.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10223.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10244.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10250.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10262.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10265.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10266.94": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10269.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10273.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10275.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10288.95": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10291.93": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10293.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10297.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10298.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10303.96": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10305.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10318.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10327.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10339.95": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10346.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10351.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10353.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10354.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10359.95": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10365.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10369.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10387.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10388.95": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10409.96": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10416.96": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10418.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10420.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10421.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10426.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10432.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10436.95": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10444.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10445.94": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10446.95": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10452.94": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10453.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10467.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10469.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10484.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10488.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10492.96": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10501.96": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10502.91": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10516.94": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10522.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10523.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10532.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10533.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10534.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10536.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10547.94": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10549.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10552.96": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10560.95": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10575.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10577.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10578.96": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10586.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10589.93": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10592.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10596.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10603.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10608.93": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10624.91": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10626.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10630.94": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10632.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10634.96": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10635.95": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10637.94": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10638.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10644.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10646.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10648.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10650.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10653.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10662.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10663.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10676.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10685.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10688.95": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10689.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10693.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10695.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10696.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10698.95": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10700.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10712.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10722.96": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10726.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10736.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10737.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10750.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10758.96": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10780.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10781.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10792.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10806.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10808.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10811.96": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10814.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10825.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10829.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10831.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10836.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10849.95": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10854.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10859.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10860.93": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10861.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10864.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10866.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10878.94": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10882.95": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10883.93": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10898.95": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10905.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10907.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10908.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10918.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10919.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10926.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10937.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10943.95": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10945.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10970.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo10976.92": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11000.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11003.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11011.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11014.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11016.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11020.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11035.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11039.96": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11044.95": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11050.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11056.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11060.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11069.93": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11070.94": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11076.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11088.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11096.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11101.95": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11102.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11105.95": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11106.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11110.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11112.96": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11113.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11114.93": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11115.92": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11119.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11140.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11142.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11143.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11144.92": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11145.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11148.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11157.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11181.95": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11201.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11218.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11223.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11227.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11250.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11251.93": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11254.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11271.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11313.96": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11324.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11335.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11458.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11469.96": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11546.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo11569.93": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo3435.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo3532.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo3680.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo3712.95": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo3861.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo3890.96": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo3898.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo3979.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo3995.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo4091.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo6562.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo6625.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo6975.39": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo7221.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo7263.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo7417.39": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo7785.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo7797.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo7907.80": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8008.95": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8127.78": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8198.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8223.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8373.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8478.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8490.95": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8510.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8513.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8566.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8571.94": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8673.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8674.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8739.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8777.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8780.96": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8791.94": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8793.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8823.93": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8826.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8857.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8864.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8867.97": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8882.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8892.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8893.96": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8943.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo8963.92": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo9008.91": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo9357.99": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo9362.98": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo9691.79": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo9738.100": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo9788.80": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo9973.96": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo9984.96": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "grafo9995.94": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  }
+}

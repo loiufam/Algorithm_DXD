@@ -1,0 +1,38 @@
+{
+  "dominoes_10x10": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "dominoes_10x12": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "dominoes_12x12": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "dominoes_8x10": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "dominoes_8x8": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "tetrominoes_4x5": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "tetrominoes_4x7": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "tetrominoes_6x6": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "tetrominoes_6x8": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  }
+}

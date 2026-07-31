@@ -452,24 +452,24 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     shared_ptr<DNNFNode> x = F;
 
     auto timedCoverInBlock = [&](int col, set<int>& removedRows) {
-        const std::clock_t start = std::clock();
+        // const std::clock_t start = std::clock();
         coverInBlock(col, block, removedRows);
-        if (collectCCTime && dxd_mode) addCCCpuTicks(start, ccCoverCpuTicks);
+        // if (collectCCTime && dxd_mode) addCCCpuTicks(start, ccCoverCpuTicks);
     };
     auto timedUncoverInBlock = [&](int col) {
-        const std::clock_t start = std::clock();
+        // const std::clock_t start = std::clock();
         uncoverInBlock(col, block);
-        if (collectCCTime && dxd_mode) addCCCpuTicks(start, ccUncoverCpuTicks);
+        // if (collectCCTime && dxd_mode) addCCCpuTicks(start, ccUncoverCpuTicks);
     };
     auto timedDecUpdate = [&](const set<int>& rows) {
-        const std::clock_t start = std::clock();
+        // const std::clock_t start = std::clock();
         DecUpdateCC(rows);
-        if (collectCCTime && !dxd_mode) addCCCpuTicks(start, ccUpdateCpuTicks);
+        // if (collectCCTime && !dxd_mode) addCCCpuTicks(start, ccUpdateCpuTicks);
     };
     auto timedIncUpdate = [&](const set<int>& rows) {
-        const std::clock_t start = std::clock();
+        // const std::clock_t start = std::clock();
         IncUpdateCC(rows);
-        if (collectCCTime && !dxd_mode) addCCCpuTicks(start, ccIncrementCpuTicks);
+        // if (collectCCTime && !dxd_mode) addCCCpuTicks(start, ccIncrementCpuTicks);
     };
 
     set<int> deleted_rows;
@@ -480,7 +480,10 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     }
 
     const bool frameEttUpdated = shouldMaintainDynamicEtt(depth);
+
+    const std::clock_t start = std::clock();
     if (frameEttUpdated) timedDecUpdate(deleted_rows);
+    addCCCpuTicks(start, ccUpdateCpuTicks);
     if (isCCETTCallBudgetExhausted()) stopCCForETTCallBudget();
 
     Node* curC = choose->down;
@@ -496,13 +499,17 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
                 else timedUncoverInBlock(curR->col);
                 curR = curR->left;
             }
+            const std::clock_t start1 = std::clock();
             if (rowEttUpdated) timedIncUpdate(deleted_rows_);
+            addCCCpuTicks(start1, ccIncrementCpuTicks);
             rowEttUpdated = false;
             rowCovered = false;
         }
         if (useDxzSearch) uncover(choose->col);
         else timedUncoverInBlock(choose->col);
+        const std::clock_t start2 = std::clock();
         if (frameEttUpdated) timedIncUpdate(deleted_rows);
+        addCCCpuTicks(start2, ccIncrementCpuTicks);
     };
 
     try {
@@ -520,7 +527,9 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             curR = curR->right;
         }
         rowEttUpdated = shouldMaintainDynamicEtt(depth);
+        const std::clock_t start = std::clock();
         if (rowEttUpdated) timedDecUpdate(deleted_rows_);
+        addCCCpuTicks(start, ccUpdateCpuTicks);
         rowCovered = true;
  
         auto [result, sub_node] = DXD(block, depth + 1);
@@ -539,7 +548,9 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             }
             curR = curR->left;
         }
+        const std::clock_t start3 = std::clock();
         if (rowEttUpdated) timedIncUpdate(deleted_rows_);
+        addCCCpuTicks(start3, ccIncrementCpuTicks);
         rowEttUpdated = false;
         rowCovered = false;
 
@@ -554,7 +565,9 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     } else {
         timedUncoverInBlock(choose->col);
     }
+    const std::clock_t start4 = std::clock();
     if (frameEttUpdated) timedIncUpdate(deleted_rows);
+    addCCCpuTicks(start4, ccIncrementCpuTicks);
 
     setCacheCount(state, totalResult);
     setCache(state, x);

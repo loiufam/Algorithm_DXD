@@ -1,0 +1,14 @@
+{
+  "delta": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "meteor": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  },
+  "sppnw08": {
+    "dxd_status": "success",
+    "dyn_status": "success"
+  }
+}
