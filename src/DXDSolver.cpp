@@ -368,6 +368,9 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             const std::clock_t bfsStart = std::clock();
             bfsBlocks = getComponentsByBFS(
                 block.cols, collectCCExperimentStats ? &bfsMetrics : nullptr);
+            // Static DXD's CC cost includes scanning the active dancing
+            // matrix.  DynDXD deliberately excludes validation/statistics BFS
+            // scans and measures only dynamic ETT updates below.
             if (collectCCTime) addCCCpuTicks(bfsStart, ccBfsCpuTicks);
         }
         vector<Block> curBlock = useDynamicEtt? getComponentsByETT(block.cols) : std::move(bfsBlocks);
@@ -389,7 +392,16 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             ++ccEttCallsUsed;
         }
 
-        if (useDynamicEtt && isCCETTCallBudgetExhausted()) {
+        // The optional experiment budget is global across all initial
+        // components.  The Nth ETT query is retained in the statistics, then
+        // ETT maintenance and every future ETT/BFS CC query stop immediately.
+        // Keep the forest alive through the first decrement following the Nth
+        // query. Otherwise a small query budget can disable maintenance before
+        // any update is measured at all.
+        const bool stopAfterNextUpdate =
+            useDynamicEtt && collectCCTime && isCCETTCallBudgetExhausted();
+        if (useDynamicEtt && collectCCExperimentStats &&
+            isCCETTCallBudgetExhausted()) {
             stopCCForETTCallBudget();
         }
 
@@ -398,6 +410,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         updateAdaptiveDecompositionState(block, curBlock.size());
 
         if (int(curBlock.size()) > 1) {
+            if (stopAfterNextUpdate) stopCCForETTCallBudget();
 
             const bool initialSplit = depth == 1;
             if (!initialSplit) {
@@ -429,6 +442,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     // std::cout << "Chosen column: " << choose->col << " (size: " << choose->size << ")\n";
 
     if(choose->size <= 0) {
+        if (isCCETTCallBudgetExhausted()) stopCCForETTCallBudget();
         setCacheCount(state, DNNFResult(0));
         setCache(state, F);
         return {DNNFResult(0), F};
@@ -455,6 +469,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     auto timedIncUpdate = [&](const set<int>& rows) {
         const std::clock_t start = std::clock();
         IncUpdateCC(rows);
+        if (collectCCTime && !dxd_mode) addCCCpuTicks(start, ccIncrementCpuTicks);
     };
 
     set<int> deleted_rows;
@@ -466,6 +481,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
 
     const bool frameEttUpdated = shouldMaintainDynamicEtt(depth);
     if (frameEttUpdated) timedDecUpdate(deleted_rows);
+    if (isCCETTCallBudgetExhausted()) stopCCForETTCallBudget();
 
     Node* curC = choose->down;
     bool rowCovered = false;
@@ -638,6 +654,7 @@ void DanceDNNF::startDXD() {
     ccCpuTicks.store(0, std::memory_order_relaxed);
     ccBfsCpuTicks.store(0, std::memory_order_relaxed);
     ccUpdateCpuTicks.store(0, std::memory_order_relaxed);
+    ccIncrementCpuTicks.store(0, std::memory_order_relaxed);
     ccCoverCpuTicks.store(0, std::memory_order_relaxed);
     ccUncoverCpuTicks.store(0, std::memory_order_relaxed);
     if (collectCCExperimentStats) ccExperimentStats.reset();
@@ -730,6 +747,7 @@ void DanceDNNF::startMultiThreadDXD() {
     ccCpuTicks.store(0, std::memory_order_relaxed);
     ccBfsCpuTicks.store(0, std::memory_order_relaxed);
     ccUpdateCpuTicks.store(0, std::memory_order_relaxed);
+    ccIncrementCpuTicks.store(0, std::memory_order_relaxed);
     ccCoverCpuTicks.store(0, std::memory_order_relaxed);
     ccUncoverCpuTicks.store(0, std::memory_order_relaxed);
     if (collectCCExperimentStats) ccExperimentStats.reset();
@@ -766,6 +784,7 @@ void DanceDNNF::startMultiThreadDXD() {
                            std::to_string(searchTime > 0.0 ? ccCpuTime / searchTime : 0.0));
             logger.logLine("Dyn CC BFS CPU: " + std::to_string(ticksToSeconds(ccBfsCpuTicks)) + " s");
             logger.logLine("Dyn CC Decrement CPU: " + std::to_string(ticksToSeconds(ccUpdateCpuTicks)) + " s");
+            logger.logLine("Dyn CC Increment CPU: " + std::to_string(ticksToSeconds(ccIncrementCpuTicks)) + " s");
         }
         logCCExperimentStats(true);
         timeout = false;
@@ -796,6 +815,7 @@ void DanceDNNF::startMultiThreadDXD() {
                            std::to_string(elapsed > 0.0 ? ccCpuTime / elapsed : 0.0));
             logger.logLine("Dyn CC BFS CPU: " + std::to_string(ticksToSeconds(ccBfsCpuTicks)) + " s");
             logger.logLine("Dyn CC Decrement CPU: " + std::to_string(ticksToSeconds(ccUpdateCpuTicks)) + " s");
+            logger.logLine("Dyn CC Increment CPU: " + std::to_string(ticksToSeconds(ccIncrementCpuTicks)) + " s");
         }
         logCCExperimentStats(false);
         logger.logLine("DynDXD搜索超时: " + std::string(e.what()));

@@ -101,6 +101,7 @@ class DanceDNNF : DancingMatrix {
         std::atomic<std::clock_t> ccCpuTicks{0};
         std::atomic<std::clock_t> ccBfsCpuTicks{0};
         std::atomic<std::clock_t> ccUpdateCpuTicks{0};
+        std::atomic<std::clock_t> ccIncrementCpuTicks{0};
         std::atomic<std::clock_t> ccCoverCpuTicks{0};
         std::atomic<std::clock_t> ccUncoverCpuTicks{0};
         bool collectCCTime = false;

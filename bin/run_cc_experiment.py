@@ -28,6 +28,7 @@ TIME_RE = re.compile(r"^Time:\s*([\d.]+)\s*s", re.MULTILINE)
 CC_RE = re.compile(r"^(?:Dyn|DXD) CC CPU:\s*([\d.]+)\s*s", re.MULTILINE)
 DYN_BFS_RE = re.compile(r"^Dyn CC BFS CPU:\s*([\d.]+)\s*s", re.MULTILINE)
 DYN_DEC_RE = re.compile(r"^Dyn CC Decrement CPU:\s*([\d.]+)\s*s", re.MULTILINE)
+DYN_INC_RE = re.compile(r"^Dyn CC Increment CPU:\s*([\d.]+)\s*s", re.MULTILINE)
 DXD_BFS_RE = re.compile(r"^DXD CC BFS CPU:\s*([\d.]+)\s*s", re.MULTILINE)
 DXD_COVER_RE = re.compile(r"^DXD CC Cover CPU:\s*([\d.]+)\s*s", re.MULTILINE)
 DXD_UNCOVER_RE = re.compile(r"^DXD CC Uncover CPU:\s*([\d.]+)\s*s", re.MULTILINE)
@@ -158,7 +159,8 @@ def run_solver(executable, algorithm, input_path, timeout, cc_ett_max_calls=0):
         process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
     except subprocess.TimeoutExpired:
         return {"status": "timeout", "time_s": "", "cc_cpu_s": "",
-                "bfs_cpu_s": "", "update_cpu_s": "", "cover_cpu_s": "",
+                "bfs_cpu_s": "", "update_cpu_s": "", "increment_cpu_s": "",
+                "cover_cpu_s": "",
                 "uncover_cpu_s": "",
                 "solutions": ""}
 
@@ -174,9 +176,10 @@ def run_solver(executable, algorithm, input_path, timeout, cc_ett_max_calls=0):
 
     bfs = match(DYN_BFS_RE if algorithm == "ddxd" else DXD_BFS_RE)
     update = match(DYN_DEC_RE)
+    increment = match(DYN_INC_RE)
     cover = match(DXD_COVER_RE)
     uncover = match(DXD_UNCOVER_RE)
-    parts = (bfs, update) if algorithm == "ddxd" else (bfs, cover, uncover)
+    parts = (bfs, update, increment) if algorithm == "ddxd" else (bfs, cover, uncover)
     cc_cpu = (f"{sum(map(float, parts)):.6f}" if all(parts) else match(CC_RE))
 
     return {
@@ -185,6 +188,7 @@ def run_solver(executable, algorithm, input_path, timeout, cc_ett_max_calls=0):
         "cc_cpu_s": cc_cpu,
         "bfs_cpu_s": bfs,
         "update_cpu_s": update,
+        "increment_cpu_s": increment,
         "cover_cpu_s": cover,
         "uncover_cpu_s": uncover,
         # Retained in memory only to validate that both algorithms agree.
