@@ -3,6 +3,7 @@
 
 import argparse
 import csv
+import json
 import re
 import subprocess
 import sys
@@ -203,35 +204,85 @@ def write_results(path, rows):
         writer.writerows(rows)
 
 
+def read_results(path):
+    if not path.is_file():
+        return []
+    with path.open(encoding="utf-8", newline="") as stream:
+        return list(csv.DictReader(stream))
+
+
 def dataset_output(output_dir, dataset):
     return output_dir / f"cc_cpu_{dataset}.csv"
 
 
+def dataset_state_output(output_dir, dataset):
+    return output_dir / f"cc_cpu_{dataset}.state.json"
+
+
+def write_state(path, state):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(state, indent=2, sort_keys=True), encoding="utf-8")
+
+
+def read_state(path):
+    if not path.is_file():
+        return {}
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
 def run_dataset(dataset, entries, args):
     """Run one dataset sequentially; the four datasets run concurrently."""
-    rows = []
     output = dataset_output(args.output_dir, dataset)
-    write_results(output, rows)
+    state_path = dataset_state_output(args.output_dir, dataset)
+    rows = read_results(output) if args.resume else []
+    rows_by_name = {row["instance"]: row for row in rows}
+    state = read_state(state_path) if args.resume else {}
+
     for number, (item, path) in enumerate(entries, 1):
         name = item["instance"]
-        print(f"[{dataset} {number}/{len(entries)}] {name}", flush=True)
-        dyn = run_solver(
-            args.executable, "ddxd", path, args.timeout, args.cc_ett_max_calls
+        old_row = rows_by_name.get(name, {})
+        old_state = state.get(name, {})
+        # Old checkpoints predate the state sidecar. Infer success only when
+        # both corresponding timing fields are present; otherwise retry it.
+        dyn_status = old_state.get("dyn_status") or (
+            "success" if old_row.get("Dyn_time") and old_row.get("Dyn_cc_cpu_time") else "timeout"
         )
-        dxd = run_solver(args.executable, "dxd", path, args.timeout)
-        row = {
-            "instance": name,
-            "Dyn_time": dyn["time_s"],
-            # Solver aggregate is exactly BFS + decremental update in Dyn mode.
-            "Dyn_cc_cpu_time": dyn["cc_cpu_s"],
-            "DXD_time": dxd["time_s"],
-            # Solver aggregate is exactly BFS + cover + uncover in DXD mode.
-            "DXD_cc_cpu_time": dxd["cc_cpu_s"],
-        }
-        if dyn["solutions"] and dxd["solutions"] and dyn["solutions"] != dxd["solutions"]:
+        dxd_status = old_state.get("dxd_status") or (
+            "success" if old_row.get("DXD_time") and old_row.get("DXD_cc_cpu_time") else "timeout"
+        )
+        run_dyn = not args.resume or dyn_status == "timeout"
+        run_dxd = not args.resume or dxd_status == "timeout"
+        if not run_dyn and not run_dxd:
+            print(f"[{dataset} {number}/{len(entries)}] {name} (already recorded)", flush=True)
+            continue
+
+        retrying = []
+        if run_dyn:
+            retrying.append("Dyn")
+        if run_dxd:
+            retrying.append("DXD")
+        print(f"[{dataset} {number}/{len(entries)}] {name} ({'+'.join(retrying)})", flush=True)
+        dyn = (run_solver(args.executable, "ddxd", path, args.timeout,
+                          args.cc_ett_max_calls) if run_dyn else None)
+        dxd = run_solver(args.executable, "dxd", path, args.timeout) if run_dxd else None
+        row = dict(old_row) if old_row else {"instance": name}
+        if dyn is not None:
+            row.update(Dyn_time=dyn["time_s"], Dyn_cc_cpu_time=dyn["cc_cpu_s"])
+            dyn_status = dyn["status"]
+        if dxd is not None:
+            row.update(DXD_time=dxd["time_s"], DXD_cc_cpu_time=dxd["cc_cpu_s"])
+            dxd_status = dxd["status"]
+        if dyn and dxd and dyn["solutions"] and dxd["solutions"] and dyn["solutions"] != dxd["solutions"]:
             print(f"warning: solution mismatch for {name}", file=sys.stderr, flush=True)
-        rows.append(row)
+        rows_by_name[name] = row
+        state[name] = {"dyn_status": dyn_status, "dxd_status": dxd_status}
+        rows = sorted(rows_by_name.values(), key=lambda value: value["instance"])
         write_results(output, rows)
+        write_state(state_path, state)
     print(f"[{dataset}] wrote {len(rows)} rows to {output}", flush=True)
     return rows
 
@@ -261,6 +312,8 @@ def main():
                         help="stop Dyn CC work after N ETT queries (0: normal unlimited policy)")
     parser.add_argument("--limit", type=int, help="run only the first N selected cases")
     parser.add_argument("--dry-run", action="store_true", help="only list selected inputs")
+    parser.add_argument("--resume", action="store_true",
+                        help="keep completed timings and rerun only timed-out algorithms")
     args = parser.parse_args()
     if args.workers < 1:
         parser.error("--workers must be at least 1")
