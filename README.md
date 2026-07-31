@@ -2,8 +2,6 @@
  
 This repository implements algorithms for solving the **exact cover problem** efficiently.
 
-DynDXD 中 ETT 的维护方式以及降级到 BFS/DXZ 的实际条件见
-[`docs/dyndxd_ett_lifecycle.md`](docs/dyndxd_ett_lifecycle.md)。
 Key components include:
  
 - **Dancing Links (DLX)** matrix representation for compact constraint encoding
@@ -77,7 +75,7 @@ The compiled binary is placed at `build/main`.
 ## Usage
  
 ```
-./main -a <alg> -i <input> [-t <threads>] [-d] [-h]
+./main -a <alg> -i <input> [-t <threads>] [-h]
 ```
 
 
@@ -85,22 +83,16 @@ The compiled binary is placed at `build/main`.
  
 ```bash
 # Count solutions with single-thread DLX
-./main -a dlx -i ../data/graphs_set/AttMpls.txt
+./main -a dlx -i example.txt
  
 # Compile a ZDD over the solution set
-./main -a dxz -i ../data/graphs_set/AttMpls.txt
+./main -a dxz -i example.txt
  
 # Single-thread DXD (Decision-DNNF compilation)
-./main -a dxd -i ../data/graphs_set/AttMpls.txt
+./main -a dxd -i example.txt -t 1
  
-# Multi-thread DXD with 8 threads (default)
-./main -a mdxd -i ../data/graphs_set/AttMpls.txt
- 
-# Multi-thread DXD with 4 threads
-./main -a mdxd -i ../data/graphs_set/AttMpls.txt -t 4
- 
-# Single-thread baseline for mdxd (useful for speedup measurement)
-./main -a mdxd -i ../data/rugraphs_setn_set/AttMpls.txt -t 1
+# DynDXD with 8 threads (Dynamic connected-component)
+./main -a ddxd -i example.txt -t 8
  
 ```
 
@@ -114,11 +106,5 @@ Four dataset collections are stored under the `benchmark/` directory.
 |-----------|--------|-------------|
 | `benchmark/exact_cover_benchmark/` | Standard exact-cover format | Classic exact cover instances |
 | `benchmark/run_set/` | Graph-derived format | Instances generated from network graphs (Topology Zoo and Rome) |
-
-The input format is detected automatically from the **parent directory name**:
- 
-- parent = `exact_cover_benchmark` → read mode 1
-- parent = `run_set` → read mode 3
-If a file is placed elsewhere the solver defaults to read mode 3.
 
 ---
