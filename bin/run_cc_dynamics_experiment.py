@@ -195,7 +195,7 @@ def main():
         default=common.ROOT / "results/cc_dynamics_all.csv",
         help="final CSV containing all per-dataset rows",
     )
-    parser.add_argument("--timeout", type=int, default=1800, help="seconds per case")
+    parser.add_argument("--timeout", type=int, default=1200, help="seconds per case")
     parser.add_argument("--cc-ett-threshold", type=int, default=0)
     parser.add_argument(
         "--cc-ett-max-calls", type=int, default=0,

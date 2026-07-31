@@ -412,9 +412,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         if (int(curBlock.size()) > 1) {
             if (stopAfterNextUpdate) stopCCForETTCallBudget();
 
-            // Only the initial decomposition is free of decremental-update
-            // cost.  A split observed later during the three-query ETT trial
-            // ends CC processing for every resulting descendant.
             const bool initialSplit = depth == 1;
             if (!initialSplit) {
                 disableDynamicEttForCurrentState();
@@ -427,8 +424,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             }
 
             const bool treesAvailable = useETT && !isCurrentDynamicEttDisabled();
-            // A non-initial split disables all further CC work in its
-            // descendants; an initial split starts one policy per component.
+
             auto decompResult = isParallelSearch
                 ? parallelSearchUseOmp(curBlock, depth, true, treesAvailable)
                 : serialSearch(curBlock, depth, initialSplit);

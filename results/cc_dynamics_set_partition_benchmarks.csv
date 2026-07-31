@@ -1,18 +1,33 @@
-dataset,instance,input,status,time_s,error,Status,Init_Graph_E,Query,Splits,ETT_cc_times,ETT_dec_calls,ETT_DXD_V,ETT_DXD_E,ETT_Vd,ETT_Ed,ETT_Er
-set_partition_benchmarks,delta,data/batch_2/set_partition_benchmarks/delta.txt,success,62.881621,,1,253034,4,0,3,4,4172,822973,420,130309,695
-set_partition_benchmarks,meteor,data/batch_2/set_partition_benchmarks/meteor.txt,success,1355.916625,,1,1358342,4,1,3,4,8476,4356933,1150,855517,816
-set_partition_benchmarks,sppnw08,data/batch_2/set_partition_benchmarks/sppnw08.txt,success,1.020393,,1,72294,2,1,2,2,863,143343,352,70138,440
-set_partition_benchmarks,sppnw09,data/batch_2/set_partition_benchmarks/sppnw09.txt,time_out,,process timeout,,,,,,,,,,,
-set_partition_benchmarks,sppnw10,data/batch_2/set_partition_benchmarks/sppnw10.txt,success,20.585220,,1,302628,3,1,3,15,1881,600427,853,302628,890
-set_partition_benchmarks,sppnw12,data/batch_2/set_partition_benchmarks/sppnw12.txt,success,9.168910,,1,146210,7,1,6,69,2574,467694,459,82725,702
-set_partition_benchmarks,sppnw15,data/batch_2/set_partition_benchmarks/sppnw15.txt,success,2.806749,,1,81675,5,1,4,6,1335,195381,374,77772,489
-set_partition_benchmarks,sppnw19,data/batch_2/set_partition_benchmarks/sppnw19.txt,time_out,,process timeout,,,,,,,,,,,
-set_partition_benchmarks,sppnw20,data/batch_2/set_partition_benchmarks/sppnw20.txt,success,7.539931,,1,186545,4,0,3,4,1574,377372,637,185660,872
-set_partition_benchmarks,sppnw21,data/batch_2/set_partition_benchmarks/sppnw21.txt,success,5.195095,,1,135538,4,0,3,4,1455,283081,444,128588,584
-set_partition_benchmarks,sppnw22,data/batch_2/set_partition_benchmarks/sppnw22.txt,success,9.102949,,1,143284,4,0,3,4,1659,308506,547,141115,603
-set_partition_benchmarks,sppnw23,data/batch_2/set_partition_benchmarks/sppnw23.txt,success,5.119181,,1,224607,5,1,4,5,2808,890204,543,212127,950
-set_partition_benchmarks,sppnw24,data/batch_2/set_partition_benchmarks/sppnw24.txt,success,140.064703,,1,855421,4,0,3,29,3646,1722244,1823,889134,1648
-set_partition_benchmarks,sppnw25,data/batch_2/set_partition_benchmarks/sppnw25.txt,success,116.438359,,1,647025,4,0,3,4,2955,1283186,1113,642498,406
-set_partition_benchmarks,sppnw26,data/batch_2/set_partition_benchmarks/sppnw26.txt,success,18.147329,,1,226642,4,0,3,4,2919,897831,112,25887,748
-set_partition_benchmarks,sppnw27,data/batch_2/set_partition_benchmarks/sppnw27.txt,success,74.785753,,1,845764,2,1,2,2,2704,1687264,1225,839987,1527
-set_partition_benchmarks,sppnw28,data/batch_2/set_partition_benchmarks/sppnw28.txt,success,154.082166,,1,702911,4,0,3,51,4777,1926735,2359,948404,1363
+dataset,instance,input,ett_max_calls,status,time_s,error,Status,Init_Graph_E,Query,Splits,ETT_cc_times,ETT_dec_calls,ETT_DXD_V,ETT_DXD_E,ETT_Vd,ETT_Ed,ETT_Er
+set_partition_benchmarks,delta,data/batch_2/set_partition_benchmarks/delta.txt,,success,62.881621,,1,253034,4,0,3,4,4172,822973,420,130309,695
+set_partition_benchmarks,meteor,data/batch_2/set_partition_benchmarks/meteor.txt,,success,1355.916625,,1,1358342,4,1,3,4,8476,4356933,1150,855517,816
+set_partition_benchmarks,sppnw08,data/batch_2/set_partition_benchmarks/sppnw08.txt,,success,1.020393,,1,72294,2,1,2,2,863,143343,352,70138,440
+set_partition_benchmarks,sppnw09,data/batch_2/set_partition_benchmarks/sppnw09.txt,3,error,,solver exited with -2; no CC Stats block,,,,,,,,,,,
+set_partition_benchmarks,sppnw10,data/batch_2/set_partition_benchmarks/sppnw10.txt,,success,20.585220,,1,302628,3,1,3,15,1881,600427,853,302628,890
+set_partition_benchmarks,sppnw12,data/batch_2/set_partition_benchmarks/sppnw12.txt,,success,9.168910,,1,146210,7,1,6,69,2574,467694,459,82725,702
+set_partition_benchmarks,sppnw15,data/batch_2/set_partition_benchmarks/sppnw15.txt,,success,2.806749,,1,81675,5,1,4,6,1335,195381,374,77772,489
+set_partition_benchmarks,sppnw19,data/batch_2/set_partition_benchmarks/sppnw19.txt,2,time_out,,process timeout,,,,,,,,,,,
+set_partition_benchmarks,sppnw20,data/batch_2/set_partition_benchmarks/sppnw20.txt,,success,7.539931,,1,186545,4,0,3,4,1574,377372,637,185660,872
+set_partition_benchmarks,sppnw21,data/batch_2/set_partition_benchmarks/sppnw21.txt,,success,5.195095,,1,135538,4,0,3,4,1455,283081,444,128588,584
+set_partition_benchmarks,sppnw22,data/batch_2/set_partition_benchmarks/sppnw22.txt,,success,9.102949,,1,143284,4,0,3,4,1659,308506,547,141115,603
+set_partition_benchmarks,sppnw23,data/batch_2/set_partition_benchmarks/sppnw23.txt,,success,5.119181,,1,224607,5,1,4,5,2808,890204,543,212127,950
+set_partition_benchmarks,sppnw24,data/batch_2/set_partition_benchmarks/sppnw24.txt,,success,140.064703,,1,855421,4,0,3,29,3646,1722244,1823,889134,1648
+set_partition_benchmarks,sppnw25,data/batch_2/set_partition_benchmarks/sppnw25.txt,,success,116.438359,,1,647025,4,0,3,4,2955,1283186,1113,642498,406
+set_partition_benchmarks,sppnw26,data/batch_2/set_partition_benchmarks/sppnw26.txt,,success,18.147329,,1,226642,4,0,3,4,2919,897831,112,25887,748
+set_partition_benchmarks,sppnw27,data/batch_2/set_partition_benchmarks/sppnw27.txt,,success,74.785753,,1,845764,2,1,2,2,2704,1687264,1225,839987,1527
+set_partition_benchmarks,sppnw28,data/batch_2/set_partition_benchmarks/sppnw28.txt,,success,154.082166,,1,702911,4,0,3,51,4777,1926735,2359,948404,1363
+set_partition_benchmarks,sppnw29,data/batch_2/set_partition_benchmarks/sppnw29.txt,,success,1614.983916,,1,2858120,4,0,3,4,5698,5326268,2514,2857846,2430
+set_partition_benchmarks,sppnw30,data/batch_2/set_partition_benchmarks/sppnw30.txt,2,time_out,,process timeout,,,,,,,,,,,
+set_partition_benchmarks,sppnw31,data/batch_2/set_partition_benchmarks/sppnw31.txt,2,time_out,,process timeout,,,,,,,,,,,
+set_partition_benchmarks,sppnw32,data/batch_2/set_partition_benchmarks/sppnw32.txt,,success,0.724916,,1,32063,5,1,4,5,1036,102156,198,28551,362
+set_partition_benchmarks,sppnw33,data/batch_2/set_partition_benchmarks/sppnw33.txt,2,time_out,,process timeout,,,,,,,,,,,
+set_partition_benchmarks,sppnw34,data/batch_2/set_partition_benchmarks/sppnw34.txt,,success,37.717659,,1,338727,4,1,3,31,2197,653541,1072,342007,1027
+set_partition_benchmarks,sppnw35,data/batch_2/set_partition_benchmarks/sppnw35.txt,,success,393.988806,,1,1324348,4,0,3,4,4847,3111124,1336,1260326,1881
+set_partition_benchmarks,sppnw36,data/batch_2/set_partition_benchmarks/sppnw36.txt,2,time_out,,process timeout,,,,,,,,,,,
+set_partition_benchmarks,sppnw37,data/batch_2/set_partition_benchmarks/sppnw37.txt,,success,21.709502,,1,232474,4,0,3,4,2318,592485,628,223789,870
+set_partition_benchmarks,sppnw38,data/batch_2/set_partition_benchmarks/sppnw38.txt,,success,118.860328,,1,679589,3,2,3,5,2422,1355199,289,258036,1204
+set_partition_benchmarks,sppnw39,data/batch_2/set_partition_benchmarks/sppnw39.txt,,success,9.640025,,1,195051,4,0,3,4,1597,391489,567,190233,715
+set_partition_benchmarks,sppnw40,data/batch_2/set_partition_benchmarks/sppnw40.txt,,success,2.034941,,1,63250,4,0,3,4,1154,148655,358,62450,601
+set_partition_benchmarks,sppnw41,data/batch_2/set_partition_benchmarks/sppnw41.txt,,success,0.158061,,1,12071,4,0,3,4,643,35546,115,9465,211
+set_partition_benchmarks,sppnw42,data/batch_2/set_partition_benchmarks/sppnw42.txt,,success,39.910692,,1,482262,4,0,3,4,4245,1887051,571,364893,1065
+set_partition_benchmarks,sppnw43,data/batch_2/set_partition_benchmarks/sppnw43.txt,,success,73.734354,,1,450688,5,1,4,5,3518,1303340,893,436239,1634
