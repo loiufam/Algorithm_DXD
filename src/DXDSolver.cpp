@@ -371,7 +371,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             // Static DXD's CC cost includes scanning the active dancing
             // matrix.  DynDXD deliberately excludes validation/statistics BFS
             // scans and measures only dynamic ETT updates below.
-            if (dxd_mode) addCCCpuTicks(bfsStart);
+            if (collectCCTime) addCCCpuTicks(bfsStart, ccBfsCpuTicks);
         }
         vector<Block> curBlock = useDynamicEtt? getComponentsByETT(block.cols) : std::move(bfsBlocks);
         
@@ -386,8 +386,10 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
 
             if (useDynamicEtt) {
                 ++ccExperimentStats.ettCcTimes;
-                ++ccEttCallsUsed;
             }
+        }
+        if (useDynamicEtt && (collectCCExperimentStats || collectCCTime)) {
+            ++ccEttCallsUsed;
         }
 
         // The optional experiment budget is global across all initial
@@ -448,22 +450,23 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     auto timedCoverInBlock = [&](int col, set<int>& removedRows) {
         const std::clock_t start = std::clock();
         coverInBlock(col, block, removedRows);
-        if (dxd_mode) addCCCpuTicks(start);
+        if (collectCCTime && dxd_mode) addCCCpuTicks(start, ccCoverCpuTicks);
     };
     auto timedUncoverInBlock = [&](int col) {
         const std::clock_t start = std::clock();
         uncoverInBlock(col, block);
-        if (dxd_mode) addCCCpuTicks(start);
+        if (collectCCTime && dxd_mode) addCCCpuTicks(start, ccUncoverCpuTicks);
     };
     auto timedDecUpdate = [&](const set<int>& rows) {
         const std::clock_t start = std::clock();
         DecUpdateCC(rows);
-        if (!dxd_mode) addCCCpuTicks(start);
+        if (collectCCTime && !dxd_mode) addCCCpuTicks(start, ccUpdateCpuTicks);
     };
     auto timedIncUpdate = [&](const set<int>& rows) {
         const std::clock_t start = std::clock();
         IncUpdateCC(rows);
-        if (!dxd_mode) addCCCpuTicks(start);
+        // Incremental restoration is search bookkeeping, not part of the
+        // decremental Dyn CC operation measured by the timing experiment.
     };
 
     set<int> deleted_rows;
@@ -645,6 +648,10 @@ void DanceDNNF::startDXD() {
 
     MAX_B_COUNT = 1;
     ccCpuTicks.store(0, std::memory_order_relaxed);
+    ccBfsCpuTicks.store(0, std::memory_order_relaxed);
+    ccUpdateCpuTicks.store(0, std::memory_order_relaxed);
+    ccCoverCpuTicks.store(0, std::memory_order_relaxed);
+    ccUncoverCpuTicks.store(0, std::memory_order_relaxed);
     if (collectCCExperimentStats) ccExperimentStats.reset();
     resetAdaptiveDecompositionState();
 
@@ -675,11 +682,14 @@ void DanceDNNF::startDXD() {
 
         searchTime = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
         logger.logLine("Time: " + std::to_string(searchTime) + " s");
-        if (!dxz_mode) {
+        if (!dxz_mode && collectCCTime) {
             const double ccCpuTime = getCCCpuTime();
             logger.logLine("DXD CC CPU: " + std::to_string(ccCpuTime) + " s");
             logger.logLine("DXD CC CPU Ratio: " +
                            std::to_string(searchTime > 0.0 ? ccCpuTime / searchTime : 0.0));
+            logger.logLine("DXD CC BFS CPU: " + std::to_string(ticksToSeconds(ccBfsCpuTicks)) + " s");
+            logger.logLine("DXD CC Cover CPU: " + std::to_string(ticksToSeconds(ccCoverCpuTicks)) + " s");
+            logger.logLine("DXD CC Uncover CPU: " + std::to_string(ticksToSeconds(ccUncoverCpuTicks)) + " s");
         }
         timeout = false;
 
@@ -709,7 +719,7 @@ void DanceDNNF::startDXD() {
         timeout = true;
         if(dxz_mode) { 
             logger.logLine("DXZ搜索超时: " + std::string(e.what()));
-        } else {
+        } else if (collectCCTime) {
             const double ccCpuTime = getCCCpuTime();
             const double elapsed = timer.getElapsedTime();
             logger.logLine("DXD CC CPU: " + std::to_string(ccCpuTime) + " s");
@@ -730,6 +740,10 @@ void DanceDNNF::startMultiThreadDXD() {
     // isParallelSearch = true;
     MAX_B_COUNT = 1;
     ccCpuTicks.store(0, std::memory_order_relaxed);
+    ccBfsCpuTicks.store(0, std::memory_order_relaxed);
+    ccUpdateCpuTicks.store(0, std::memory_order_relaxed);
+    ccCoverCpuTicks.store(0, std::memory_order_relaxed);
+    ccUncoverCpuTicks.store(0, std::memory_order_relaxed);
     if (collectCCExperimentStats) ccExperimentStats.reset();
     resetAdaptiveDecompositionState();
 
@@ -757,10 +771,14 @@ void DanceDNNF::startMultiThreadDXD() {
    
         searchTime = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
         logger.logLine("Time: " + std::to_string(searchTime) + " s");
-        const double ccCpuTime = getCCCpuTime();
-        logger.logLine("Dyn CC CPU: " + std::to_string(ccCpuTime) + " s");
-        logger.logLine("Dyn CC CPU Ratio: " +
-                       std::to_string(searchTime > 0.0 ? ccCpuTime / searchTime : 0.0));
+        if (collectCCTime) {
+            const double ccCpuTime = getCCCpuTime();
+            logger.logLine("Dyn CC CPU: " + std::to_string(ccCpuTime) + " s");
+            logger.logLine("Dyn CC CPU Ratio: " +
+                           std::to_string(searchTime > 0.0 ? ccCpuTime / searchTime : 0.0));
+            logger.logLine("Dyn CC BFS CPU: " + std::to_string(ticksToSeconds(ccBfsCpuTicks)) + " s");
+            logger.logLine("Dyn CC Decrement CPU: " + std::to_string(ticksToSeconds(ccUpdateCpuTicks)) + " s");
+        }
         logCCExperimentStats(true);
         timeout = false;
 
@@ -783,10 +801,14 @@ void DanceDNNF::startMultiThreadDXD() {
         timer.markStopTime();
         const double elapsed = timer.getElapsedTime();
         logger.logLine("Time: " + std::to_string(elapsed) + " s");
-        const double ccCpuTime = getCCCpuTime();
-        logger.logLine("Dyn CC CPU: " + std::to_string(ccCpuTime) + " s");
-        logger.logLine("Dyn CC CPU Ratio: " +
-                       std::to_string(elapsed > 0.0 ? ccCpuTime / elapsed : 0.0));
+        if (collectCCTime) {
+            const double ccCpuTime = getCCCpuTime();
+            logger.logLine("Dyn CC CPU: " + std::to_string(ccCpuTime) + " s");
+            logger.logLine("Dyn CC CPU Ratio: " +
+                           std::to_string(elapsed > 0.0 ? ccCpuTime / elapsed : 0.0));
+            logger.logLine("Dyn CC BFS CPU: " + std::to_string(ticksToSeconds(ccBfsCpuTicks)) + " s");
+            logger.logLine("Dyn CC Decrement CPU: " + std::to_string(ticksToSeconds(ccUpdateCpuTicks)) + " s");
+        }
         logCCExperimentStats(false);
         logger.logLine("DynDXD搜索超时: " + std::string(e.what()));
         return;
