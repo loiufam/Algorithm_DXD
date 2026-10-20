@@ -28,10 +28,8 @@ public:
     bool        enable_cc_time = false;
     int         quick_stats_updates = 0;
     int         time_limit = 1500;
-    // 0 selects the instance-size-based automatic threshold.
-    int         cc_ett_threshold = 0;
-    // 0 keeps the normal per-component 3 ETT + 1 BFS policy unlimited.
-    int         cc_ett_max_calls = 0;
+    // Default to 3 ETT queries; explicitly passing 0 keeps the budget unlimited.
+    int         cc_ett_max_calls = 3;
     int         bfs_area_threshold = 0;
  
     // ── parse ────────────────────────────────────────────────────────────────
@@ -65,7 +63,7 @@ public:
             if (tok == "-a" || tok == "--alg"     ||
                 tok == "-i" || tok == "--input"   ||
                 tok == "-t" || tok == "--threads" ||
-                tok == "--time-limit" || tok == "--cc-ett-threshold" ||
+                tok == "--time-limit" ||
                 tok == "--cc-ett-max-calls" ||
                 tok == "--quick-stats" ||
                 tok == "--bfs-area-threshold" ||
@@ -100,12 +98,6 @@ public:
                 else if (tok == "--time-limit") {
                     try { time_limit = std::stoi(val); } catch (...) {
                         std::cerr << "[error] --time-limit requires an integer.\n";
-                        return false;
-                    }
-                }
-                else if (tok == "--cc-ett-threshold") {
-                    try { cc_ett_threshold = std::stoi(val); } catch (...) {
-                        std::cerr << "[error] --cc-ett-threshold requires an integer.\n";
                         return false;
                     }
                 }
@@ -149,13 +141,6 @@ public:
                     if (key == "--threads") {
                         try { threads = std::stoi(val); } catch (...) {
                             std::cerr << "[error] --threads value must be an integer.\n";
-                            return false;
-                        }
-                        continue;
-                    }
-                    if (key == "--cc-ett-threshold") {
-                        try { cc_ett_threshold = std::stoi(val); } catch (...) {
-                            std::cerr << "[error] --cc-ett-threshold value must be an integer.\n";
                             return false;
                         }
                         continue;
@@ -207,14 +192,14 @@ public:
             << "                           mdlx  – Multi-thread DLX\n"
             << "  -i, --input   <path>   Path to the input test-case file (required)\n"
             << "  -t, --threads <n>      Number of threads (default: 8).\n"
-            << "      --enable-cc-stats    Keep DynDXD's adaptive behavior\n"
+            << "      --enable-cc-stats    Collect CC graph/decomposition statistics\n"
+            << "                           (single-thread dxd or ddxd).\n"
             << "      --enable-cc-time     Measure CC operations only (single-thread DXD/DynDXD).\n"
-            << "      --cc-ett-threshold <rows>  ETT statistics boundary (default: auto).\n"
-            << "                                  auto: >2000=>200, >1000=>100, >100=>50, else 30.\n"
             << "      --cc-ett-max-calls <n>      Stop all CC work after n ETT queries.\n"
-            << "                                  Statistics-only; default 0 is unlimited.\n"
-            << "      --bfs-area-threshold <n>   Switch ETT to BFS only when rows*cols <= n.\n"
-            << "                                  Default: 100000; 0 selects the default.\n"
+            << "                                  Default 3; 0 is unlimited.\n"
+            << "      --bfs-area-threshold <n>   Initial-split probe selector.\n"
+            << "                                  Init area > n: probe smallest component;\n"
+            << "                                  otherwise probe largest. Default 100000.\n"
             << "      --time-limit <s>    Solver time limit in seconds (default: 1500).\n"
             << "                         Effective only for mdxd / mdlx.\n"
             << "                         Values > 8 are clamped to 8.\n"
@@ -276,8 +261,9 @@ private:
                       << "        Valid choices: dlx  dxz  dxd  ddxd  mdlx\n";
             return false;
         }
-        if (enable_cc_stats && (alg != "ddxd" || threads != 1)) {
-            std::cerr << "[error] --enable-cc-stats requires --alg ddxd --threads 1.\n";
+        if (enable_cc_stats &&
+            ((alg != "ddxd" && alg != "dxd") || threads != 1)) {
+            std::cerr << "[error] --enable-cc-stats requires --alg dxd/ddxd --threads 1.\n";
             return false;
         }
         if (enable_cc_time && ((alg != "ddxd" && alg != "dxd") || threads != 1)) {
@@ -292,16 +278,8 @@ private:
             std::cerr << "[error] --time-limit must be >= 1.\n";
             return false;
         }
-        if (cc_ett_threshold < 0) {
-            std::cerr << "[error] --cc-ett-threshold must be >= 0 (0 means auto).\n";
-            return false;
-        }
         if (cc_ett_max_calls < 0) {
             std::cerr << "[error] --cc-ett-max-calls must be >= 0 (0 means unlimited).\n";
-            return false;
-        }
-        if (cc_ett_max_calls > 0 && !enable_cc_stats && !enable_cc_time) {
-            std::cerr << "[error] --cc-ett-max-calls requires --enable-cc-stats or --enable-cc-time.\n";
             return false;
         }
         if (quick_stats_updates < 0) {
@@ -312,7 +290,8 @@ private:
             std::cerr << "[error] --quick-stats requires --alg ddxd --threads 1.\n";
             return false;
         }
-        if (quick_stats_updates > 0 && (enable_cc_stats || enable_cc_time || cc_ett_max_calls > 0)) {
+        if (quick_stats_updates > 0 &&
+            (enable_cc_stats || enable_cc_time)) {
             std::cerr << "[error] --quick-stats cannot be combined with other CC experiment modes.\n";
             return false;
         }

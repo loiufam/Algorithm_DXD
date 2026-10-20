@@ -47,6 +47,27 @@ struct SignatureHash {
     }
 };
 
+// Per-subtree DynDXD decomposition policy.  ETT probes have priority until
+// they either split the block or exhaust their three-no-split budget.  Only
+// the initial-single-block path may then fall back to BFS probes.
+enum class CCProbePhase {
+    Ett,
+    Bfs,
+    Disabled
+};
+
+enum class EttFailureAction {
+    Disable,
+    FallbackToBfs
+};
+
+struct DecompositionPolicy {
+    CCProbePhase phase = CCProbePhase::Disabled;
+    EttFailureAction ettFailureAction = EttFailureAction::Disable;
+    uint8_t noSplitCount = 0;
+    bool skipNextProbe = false;
+};
+
 // 科学计数法结构体
 struct ScientificCount {
     long double mantissa;

@@ -3,13 +3,10 @@
 
 #include "../include/DancingMatrix.h"
 #include "../include/DXDTime.h"
+#include <atomic>
 #include <ctime>
 
-const int MIN_BLOCK_ROWS = 20;
-const int MAX_BLOCK_ROWS = 200;
 const int TIME_LIMIT_SECONDS = 1500; 
-const int TIME_LIMIT_BUILDING_SECONDS = 1200;
-const int MAX_DECOMPOSE_TIMES = 5;
 using namespace std;
 
 enum class NodeType { OR, Decision, Decomposed, Variable, Terminal };  // 节点类型 AND node 分为Decision和Decomposed两种
@@ -94,23 +91,19 @@ class DanceDNNF : DancingMatrix {
         const int MAX_P_COUNT = 1; // 最大并行搜索次数   
         atomic<int> p_count{0}; // 记录当前并行的子进程数
         int detect_record = 0; // 记录第几次检测
-        size_t MAX_B_COUNT;
+        std::atomic<size_t> MAX_B_COUNT{1};
 
         double searchTime = 0.0;
         string solutionCount; // 记录解的数量
         bool timeout = false; // 是否超时
         bool isParallelSearch = false; // 是否并行搜索
         double decomposeTime = 0.0;
-        // 累计连通分量处理的 CPU 时间。实验使用单线程运行，因此
-        // std::clock() 的进程 CPU 时间就是当前算法线程消耗的 CPU 时间。
-        std::atomic<std::clock_t> ccCpuTicks{0};
+        // CC CPU timing categories.  Timing is collected only when
+        // collectCCTime is enabled and is restricted to one thread.
         std::atomic<std::clock_t> ccBfsCpuTicks{0};
-        std::atomic<std::clock_t> ccUpdateCpuTicks{0};
+        std::atomic<std::clock_t> ccDecrementCpuTicks{0};
         std::atomic<std::clock_t> ccIncrementCpuTicks{0};
-        std::atomic<std::clock_t> ccCoverCpuTicks{0};
-        std::atomic<std::clock_t> ccUncoverCpuTicks{0};
         bool collectCCTime = false;
-        double nextCCStatsSnapshotTime = 0.0;
         bool debug = false;
 
         // 构建Decision-ZDNNF
@@ -120,161 +113,102 @@ class DanceDNNF : DancingMatrix {
 
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> DXD(Block& block, int depth);
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> serialSearch(
-            vector<Block>& blocks, int depth, bool startIndependentPolicies = false);
+            vector<Block>& blocks, int depth,
+            vector<DecompositionPolicy> policies);
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> parallelSearchUseOmp(
-            vector<Block>& blocks, int depth, bool disableDynamicUpdates = false,
-            bool componentTreesAvailable = true);
+            vector<Block>& blocks, int depth, bool componentTreesAvailable,
+            vector<DecompositionPolicy> policies);
 
-        static constexpr int NO_SPLIT_LIMIT = 3;
+        static constexpr uint8_t PROBE_LIMIT = 3;
 
-        bool dynamic_ett_disabled = false;
-        bool decomposition_disabled = false;
-        bool bfs_fallback = false;
-        bool bfs_probe_done = false;
+        DecompositionPolicy decompositionPolicy;
+        // Initial-split target selection: choose the smallest component when
+        // the full instance area exceeds this value, otherwise the largest.
         size_t bfs_area_threshold = 100000;
-        int main_no_split_count = 0;
         size_t ccEttMaxCalls = 0;
-        size_t ccEttCallsUsed = 0;
+        std::atomic<size_t> ccEttCallsUsed{0};
         size_t quickStatsUpdateLimit = 0;
 
         bool isCCETTCallBudgetExhausted() const {
-            return (collectCCExperimentStats || collectCCTime) && ccEttMaxCalls > 0 &&
-                   ccEttCallsUsed >= ccEttMaxCalls;
+            return ccEttMaxCalls > 0 &&
+                   ccEttCallsUsed.load(std::memory_order_relaxed) >= ccEttMaxCalls;
+        }
+
+        bool tryReserveETTCall() {
+            if (ccEttMaxCalls == 0) {
+                ccEttCallsUsed.fetch_add(1, std::memory_order_relaxed);
+                return true;
+            }
+
+            size_t used = ccEttCallsUsed.load(std::memory_order_relaxed);
+            while (used < ccEttMaxCalls) {
+                if (ccEttCallsUsed.compare_exchange_weak(
+                        used, used + 1,
+                        std::memory_order_relaxed,
+                        std::memory_order_relaxed)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        void updateMaxBlockCount(size_t count) {
+            size_t current = MAX_B_COUNT.load(std::memory_order_relaxed);
+            while (current < count &&
+                   !MAX_B_COUNT.compare_exchange_weak(
+                       current, count,
+                       std::memory_order_relaxed,
+                       std::memory_order_relaxed)) {
+            }
         }
 
         void stopCCForETTCallBudget() {
-            if (isThreadLocal()) {
-                tlsState->dynamic_ett_disabled = true;
-                tlsState->decomposition_disabled = true;
-                tlsState->bfs_probe_done = true;
-            } else {
-                dynamic_ett_disabled = true;
-                decomposition_disabled = true;
-                bfs_probe_done = true;
-                turnOffGraphSync();
-            }
+            currentDecompositionPolicy().phase = CCProbePhase::Disabled;
+            currentDecompositionPolicy().noSplitCount = 0;
         }
 
-        bool isCurrentDynamicEttDisabled() const {
-            return dynamic_ett_disabled ||
-                   (isThreadLocal() && tlsState->dynamic_ett_disabled);
+        DecompositionPolicy& currentDecompositionPolicy() {
+            return isThreadLocal() ? tlsState->decompositionPolicy
+                                   : decompositionPolicy;
         }
 
-        bool isCurrentDecompositionDisabled() const {
-            return decomposition_disabled ||
-                   (isThreadLocal() && tlsState->decomposition_disabled);
+        const DecompositionPolicy& currentDecompositionPolicy() const {
+            return isThreadLocal() ? tlsState->decompositionPolicy
+                                   : decompositionPolicy;
         }
 
-        void disableDynamicEttForCurrentState() {
-            if (isThreadLocal()) {
-                tlsState->dynamic_ett_disabled = true;
-            } else {
-                dynamic_ett_disabled = true;
-            }
-        }
-
-        bool shouldTryDecompose(const Block& block) {
-            if (dxz_mode) return false;
-            if (dxd_mode) return true;
-
-            if (isCCETTCallBudgetExhausted()) {
-                stopCCForETTCallBudget();
-                return false;
-            }
-
-            if (block.rows.size() <= 20 || block.cols.empty()) return false;
-
-            if (isCurrentDecompositionDisabled()) return false;
-
-            // After three unsuccessful ETT queries we stop maintaining the
-            // dynamic forest immediately.  One final BFS probe is deferred
-            // until the remaining matrix is small enough.
-            if (!isThreadLocal() && bfs_fallback) {
-                return !bfs_probe_done &&
-                       block.rows.size() * block.cols.size() <= bfs_area_threshold;
-            }
-
-            // 一旦进入并行子块，ETT 不再更新。每个第一层子块
-            // 只在足够小时允许一次 BFS 探测；嵌套子块直接求解。
-            if (isThreadLocal() && tlsState->dynamic_ett_disabled) {
-                return tlsState->decompose_depth <= 1 &&
-                       !tlsState->bfs_probe_done &&
-                       block.rows.size() * block.cols.size() <= bfs_area_threshold;
-            }
-
-            return true;
-        }
-
-        bool shouldUseDynamicEtt(Block& block, int depth) {
-            if (!useETT || dxd_mode) return false;
-            if (isCurrentDynamicEttDisabled()) return false;
-            (void)block;
-            (void)depth;
-            return isThreadLocal() ? !tlsState->bfs_fallback : !bfs_fallback;
-        }
-
-        bool shouldMaintainDynamicEtt(int depth) const {
-            (void)depth;
-            return useETT && !dxd_mode && !isCurrentDynamicEttDisabled() &&
-                   isGraphSyncEnabled();
-        }
-
-        bool isEttStatisticsPeriod(const Block& block) const {
-            return block.rows.size() > ccEttThreshold;
+        bool shouldMaintainDynamicEtt() const {
+            return useETT && !dxd_mode &&
+                   currentDecompositionPolicy().phase == CCProbePhase::Ett;
         }
 
         void resetAdaptiveDecompositionState() {
-            dynamic_ett_disabled = false;
-            decomposition_disabled = false;
-            bfs_fallback = false;
-            bfs_probe_done = false;
-            main_no_split_count = 0;
-            ccEttCallsUsed = 0;
+            decompositionPolicy = DecompositionPolicy{
+                CCProbePhase::Ett, EttFailureAction::FallbackToBfs, 0, false};
+            ccEttCallsUsed.store(0, std::memory_order_relaxed);
         }
 
-        void updateAdaptiveDecompositionState(const Block& block, size_t numBlocks) {
-            if (dxd_mode) return;
-
-            if (isThreadLocal() && tlsState->dynamic_ett_disabled) {
-                tlsState->bfs_probe_done = true;
-                // This is the component's only BFS probe.  Regardless of
-                // whether it splits, descendants do not query CC again.
-                tlsState->decomposition_disabled = true;
-                return;
-            }
-
-            if (!isThreadLocal() && bfs_fallback) {
-                bfs_probe_done = true;
-                decomposition_disabled = true;
-                return;
-            }
-
+        static void updateDecompositionPolicy(DecompositionPolicy& policy,
+                                              size_t numBlocks) {
             if (numBlocks > 1) {
-                if (isThreadLocal()) {
-                    tlsState->no_split_count = 0;
-                } else {
-                    main_no_split_count = 0;
-                }
+                policy.phase = CCProbePhase::Disabled;
+                policy.noSplitCount = 0;
+                return;
+            }
+            if (numBlocks != 1 ||
+                policy.phase == CCProbePhase::Disabled) {
                 return;
             }
 
-            if (isThreadLocal()) {
-                ++tlsState->no_split_count;
-                if (!tlsState->bfs_fallback &&
-                    tlsState->no_split_count >= NO_SPLIT_LIMIT) {
-                    tlsState->bfs_fallback = true;
-                    tlsState->dynamic_ett_disabled = true;
-                    tlsState->no_split_count = 0;
-                }
-                return;
-            }
+            ++policy.noSplitCount;
+            if (policy.noSplitCount < PROBE_LIMIT) return;
 
-            ++main_no_split_count;
-            if (!bfs_fallback && main_no_split_count >= NO_SPLIT_LIMIT) {
-                bfs_fallback = true;
-                dynamic_ett_disabled = true;
-                main_no_split_count = 0;
-                turnOffGraphSync();
+            policy.noSplitCount = 0;
+            if (policy.phase == CCProbePhase::Ett &&
+                policy.ettFailureAction == EttFailureAction::FallbackToBfs) {
+                policy.phase = CCProbePhase::Bfs;
+            } else {
+                policy.phase = CCProbePhase::Disabled;
             }
         }
 
@@ -295,17 +229,6 @@ class DanceDNNF : DancingMatrix {
 
         void enableCCTiming() { collectCCTime = true; }
 
-        static size_t automaticCCETTThreshold(size_t instanceRows) {
-            if (instanceRows > 2000) return 200;
-            if (instanceRows > 1000) return 100;
-            if (instanceRows > 100) return 50;
-            return 30;
-        }
-
-        void setCCETTThreshold(size_t rows) {
-            ccEttThreshold = rows == 0 ? automaticCCETTThreshold(ROWS) : rows;
-        }
-
         void setCCETTMaxCalls(size_t calls) {
             ccEttMaxCalls = calls;
         }
@@ -315,7 +238,7 @@ class DanceDNNF : DancingMatrix {
         }
 
         void setTimeLimit(long seconds) { timer.setTimeBound(seconds); }
-        void logCCExperimentStats(bool complete);
+        void logCCExperimentStats(bool complete, bool quick = false);
 
         // ── MDLX（统一接口，mode决定分块策略）
         DNNFResult parallelSearchMDLX(vector<Block>& blocks, DecomMode mode);
@@ -351,26 +274,6 @@ class DanceDNNF : DancingMatrix {
             return fullBlock;
         };
 
-        std::shared_ptr<DNNFNode> getCache(const size_t& key){
-            std::shared_lock<std::shared_mutex> readLock(cacheMutex);
-            if(C.find(key) != C.end()){
-                return C[key];
-            }
-            return nullptr;
-        }
-
-        void setCache(const size_t& key, std::shared_ptr<DNNFNode> node){
-            std::unique_lock<std::shared_mutex> writeLock(cacheMutex);
-            if(C.find(key) == C.end()){
-                C[key] = node;
-            }
-        }
-
-        void setCacheCount(const size_t& key, DNNFResult count){
-            std::unique_lock<std::shared_mutex> writeLock(cacheMutex);
-            countCache[key] = count;
-        }
-
         int getRecordCount(){
             std::shared_lock<std::shared_mutex> readLock(recordMutex);
             return detect_record;
@@ -389,32 +292,15 @@ class DanceDNNF : DancingMatrix {
         }
 
 
-        inline size_t gen_key(int r, const DNNFNode* lo, const DNNFNode* hi) const {
-            auto mix = [](size_t x) -> size_t {
-                x ^= x >> 30; x *= 0xbf58476d1ce4e5b9ULL;
-                x ^= x >> 27; x *= 0x94d049bb133111ebULL;
-                return x ^ (x >> 31);
-            };
-            size_t h = mix(static_cast<size_t>(r));
-            h ^= mix(lo->id + 1ULL);
-            h ^= mix(hi->id + 0x9e3779b9ULL);
-            return h;
-        }
-
         void addTriedNumbers(int count) {
             std::lock_guard<std::mutex> lock(tried_numbers_mutex);
             tried_numbers += count;
         }
 
         void addCCCpuTicks(std::clock_t start, std::atomic<std::clock_t>& category) {
+            if (!collectCCTime && !collectCCExperimentStats) return;
             const std::clock_t elapsed = std::clock() - start;
-            ccCpuTicks.fetch_add(elapsed, std::memory_order_relaxed);
             category.fetch_add(elapsed, std::memory_order_relaxed);
-        }
-
-        double getCCCpuTime() const {
-            return static_cast<double>(ccCpuTicks.load(std::memory_order_relaxed)) /
-                   static_cast<double>(CLOCKS_PER_SEC);
         }
 
         static double ticksToSeconds(const std::atomic<std::clock_t>& ticks) {
@@ -423,6 +309,72 @@ class DanceDNNF : DancingMatrix {
 
 
     private:
+        struct CacheKey {
+            size_t hash;
+            vector<int> cols;
+            bool dxz;
+
+            bool operator==(const CacheKey& other) const noexcept {
+                return hash == other.hash && dxz == other.dxz &&
+                       cols == other.cols;
+            }
+        };
+
+        struct CacheKeyHash {
+            size_t operator()(const CacheKey& key) const noexcept {
+                return key.hash;
+            }
+        };
+
+        struct CacheEntry {
+            DNNFResult count;
+            shared_ptr<DNNFNode> node;
+        };
+
+        struct DecisionNodeKey {
+            int row;
+            size_t loId;
+            size_t hiId;
+
+            bool operator==(const DecisionNodeKey& other) const noexcept {
+                return row == other.row && loId == other.loId &&
+                       hiId == other.hiId;
+            }
+        };
+
+        struct DecisionNodeKeyHash {
+            static uint64_t mix(uint64_t x) noexcept {
+                x += 0x9e3779b97f4a7c15ULL;
+                x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
+                x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
+                return x ^ (x >> 31);
+            }
+
+            size_t operator()(const DecisionNodeKey& key) const noexcept {
+                uint64_t h = mix(static_cast<uint32_t>(key.row));
+                h ^= mix(key.loId + 0x9e3779b97f4a7c15ULL);
+                h ^= mix(key.hiId + 0xd6e8feb86659fd93ULL);
+                return static_cast<size_t>(h);
+            }
+        };
+
+        bool getCachedResult(const CacheKey& key, DNNFResult& count,
+                             shared_ptr<DNNFNode>& node) const {
+            std::shared_lock<std::shared_mutex> readLock(cacheMutex);
+            auto it = cache.find(key);
+            if (it == cache.end()) return false;
+
+            count = it->second.count;
+            node = it->second.node;
+            return true;
+        }
+
+        void setCachedResult(const CacheKey& key, const DNNFResult& count,
+                             const shared_ptr<DNNFNode>& node) {
+            std::unique_lock<std::shared_mutex> writeLock(cacheMutex);
+            cache.emplace(key, CacheEntry{count, node});
+        }
+
         // ThreadPool& pool;
         Logger& logger;
         bool controlOUTPUT = false;
@@ -449,14 +401,12 @@ class DanceDNNF : DancingMatrix {
 
         mutable std::shared_mutex cacheMutex;
         mutable std::shared_mutex recordMutex; // 记录互斥锁
-        unordered_map<size_t, shared_ptr<DNNFNode>> C;
+        unordered_map<CacheKey, CacheEntry, CacheKeyHash> cache;
 
         // DNNF Nodes table
         mutable std::shared_mutex tableMutex;
-        unordered_map<size_t, std::weak_ptr<DNNFNode>> node_table;
-
-         // count cache (state → count)
-        unordered_map<size_t, DNNFResult> countCache;
+        unordered_map<DecisionNodeKey, std::weak_ptr<DNNFNode>,
+                      DecisionNodeKeyHash> node_table;
 
         ThreadPool& getThreadPool(int poolSize) {
             return ThreadPoolManager::get_instance(poolSize);

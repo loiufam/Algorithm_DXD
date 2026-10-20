@@ -26,12 +26,8 @@ NS = {"x": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
 
 TIME_RE = re.compile(r"^Time:\s*([\d.]+)\s*s", re.MULTILINE)
 CC_RE = re.compile(r"^(?:Dyn|DXD) CC CPU:\s*([\d.]+)\s*s", re.MULTILINE)
-DYN_BFS_RE = re.compile(r"^Dyn CC BFS CPU:\s*([\d.]+)\s*s", re.MULTILINE)
 DYN_DEC_RE = re.compile(r"^Dyn CC Decrement CPU:\s*([\d.]+)\s*s", re.MULTILINE)
-DYN_INC_RE = re.compile(r"^Dyn CC Increment CPU:\s*([\d.]+)\s*s", re.MULTILINE)
 DXD_BFS_RE = re.compile(r"^DXD CC BFS CPU:\s*([\d.]+)\s*s", re.MULTILINE)
-DXD_COVER_RE = re.compile(r"^DXD CC Cover CPU:\s*([\d.]+)\s*s", re.MULTILINE)
-DXD_UNCOVER_RE = re.compile(r"^DXD CC Uncover CPU:\s*([\d.]+)\s*s", re.MULTILINE)
 SOL_RE = re.compile(r"^Solutions:\s*(\S+)", re.MULTILINE)
 
 
@@ -149,7 +145,7 @@ def input_index(input_dirs):
     return index
 
 
-def run_solver(executable, algorithm, input_path, timeout, cc_ett_max_calls=0):
+def run_solver(executable, algorithm, input_path, timeout, cc_ett_max_calls=3):
     command = [
         str(executable), "-a", algorithm, "-i", str(input_path), "-t", "1",
         "--enable-cc-time",
@@ -159,10 +155,7 @@ def run_solver(executable, algorithm, input_path, timeout, cc_ett_max_calls=0):
         process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
     except subprocess.TimeoutExpired:
         return {"status": "timeout", "time_s": "", "cc_cpu_s": "",
-                "bfs_cpu_s": "", "update_cpu_s": "", "increment_cpu_s": "",
-                "cover_cpu_s": "",
-                "uncover_cpu_s": "",
-                "solutions": ""}
+                "bfs_cpu_s": "", "update_cpu_s": "", "solutions": ""}
 
     output = process.stdout + process.stderr
     if process.returncode != 0 or "超时" in output:
@@ -174,13 +167,11 @@ def run_solver(executable, algorithm, input_path, timeout, cc_ett_max_calls=0):
         found = pattern.search(output)
         return found.group(1) if found else ""
 
-    bfs = match(DYN_BFS_RE if algorithm == "ddxd" else DXD_BFS_RE)
-    update = match(DYN_DEC_RE)
-    increment = match(DYN_INC_RE)
-    cover = match(DXD_COVER_RE)
-    uncover = match(DXD_UNCOVER_RE)
-    parts = (bfs, update, increment) if algorithm == "ddxd" else (bfs, cover, uncover)
-    cc_cpu = (f"{sum(map(float, parts)):.6f}" if all(parts) else match(CC_RE))
+    bfs = match(DXD_BFS_RE) if algorithm == "dxd" else ""
+    update = match(DYN_DEC_RE) if algorithm == "ddxd" else ""
+    cc_cpu = update if algorithm == "ddxd" and update else bfs
+    if not cc_cpu:
+        cc_cpu = match(CC_RE)
 
     return {
         "status": status,
@@ -188,9 +179,6 @@ def run_solver(executable, algorithm, input_path, timeout, cc_ett_max_calls=0):
         "cc_cpu_s": cc_cpu,
         "bfs_cpu_s": bfs,
         "update_cpu_s": update,
-        "increment_cpu_s": increment,
-        "cover_cpu_s": cover,
-        "uncover_cpu_s": uncover,
         # Retained in memory only to validate that both algorithms agree.
         "solutions": match(SOL_RE),
     }
@@ -312,8 +300,8 @@ def main():
                         help="number of datasets to run concurrently (default: 4)")
     parser.add_argument("--dataset", action="append", dest="datasets",
                         help="run only this dataset directory; may be repeated")
-    parser.add_argument("--cc-ett-max-calls", type=int, default=0,
-                        help="stop Dyn CC work after N ETT queries (0: normal unlimited policy)")
+    parser.add_argument("--cc-ett-max-calls", type=int, default=3,
+                        help="stop Dyn CC work after N ETT queries (default: 3; 0: unlimited)")
     parser.add_argument("--limit", type=int, help="run only the first N selected cases")
     parser.add_argument("--dry-run", action="store_true", help="only list selected inputs")
     parser.add_argument("--resume", action="store_true",

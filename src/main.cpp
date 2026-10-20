@@ -56,6 +56,7 @@ int main(int argc, char *argv[]){
                     logger.logLine("Instance: " + filename);
                     logger.logLine("启用DXD算法求解: " + filename);
                     DanceDNNF danceDNNF(args.input, logger, true, false, threads, args.debug);
+                    if (args.enable_cc_stats) danceDNNF.enableCCStatistics();
                     if (args.enable_cc_time) danceDNNF.enableCCTiming();
                     danceDNNF.setTimeLimit(args.time_limit);
                     danceDNNF.startDXD();
@@ -74,7 +75,6 @@ int main(int argc, char *argv[]){
                         danceDNNF.enableCCStatistics();
                     }
                     if (args.enable_cc_time) danceDNNF.enableCCTiming();
-                    danceDNNF.setCCETTThreshold(args.cc_ett_threshold);
                     danceDNNF.setCCETTMaxCalls(args.cc_ett_max_calls);
                     danceDNNF.setBFSAreaThreshold(args.bfs_area_threshold);
                     danceDNNF.setTimeLimit(args.time_limit);

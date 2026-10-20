@@ -79,24 +79,18 @@ class DancingMatrix
         bool dxd_mode = false;
 
         struct CCExperimentStats {
-            uint64_t graph_init_edges = 0;
-            uint64_t dec_calls = 0; // decUpdate操作调用次数
-            uint64_t cc_decompose = 0; // 分解总数
-            uint64_t ccComputations = 0; // 连通分量查询总次数
- 
-            uint64_t ettV = 0, ettE = 0, ettVd = 0, ettEd = 0, ettEr = 0; // ETT 相关统计
-            uint64_t ettDeletedTreeEdges = 0; // DecUpdate累计删除的树边数
-            uint64_t ettCcTimes = 0; // 调用ETT次数
+            uint64_t bfsVertexSum = 0;
+            uint64_t bfsEdgeSum = 0;
+            uint64_t decCalls = 0;
+            uint64_t activeVertexSum = 0;
+            uint64_t deletedTreeEdgeSum = 0;
+            uint64_t deletedVertexSum = 0;
+            uint64_t replacementCheckSum = 0;
 
-            void reset() {
-                const uint64_t initialGraphEdges = graph_init_edges;
-                *this = {};
-                graph_init_edges = initialGraphEdges;
-            }
+            void reset() { *this = {}; }
         };
 
         bool collectCCExperimentStats = false;
-        size_t ccEttThreshold = 150;
         CCExperimentStats ccExperimentStats;
         std::mutex ccExperimentStatsMutex;
 
@@ -137,8 +131,9 @@ class DancingMatrix
         void coverInBlock(int c, Block& block, set<int>& covered_rows);
         void uncoverInBlock(int c, Block& block);
 
-        size_t encodeColState();
-        size_t hashBlockState(const set<int>& cols);
+        size_t encodeColState(vector<int>* exactCols = nullptr);
+        size_t hashBlockState(const set<int>& cols,
+                              vector<int>* exactCols = nullptr);
      
         ColumnHeader* selectCol();
         ColumnHeader* selectColumnHeuristic(const set<int>& cols);
@@ -183,10 +178,9 @@ class DancingMatrix
         struct BFSScanMetrics {
             uint64_t vertices = 0;
             uint64_t graphEdges = 0;
-            uint64_t edgeScans = 0;
         };
-        vector<Block> getComponentsByBFS(const set<int>& target_cols,
-                                         BFSScanMetrics* metrics = nullptr);
+        vector<Block> getComponentsByBFS(
+            const set<int>& target_cols, BFSScanMetrics* metrics = nullptr);
         vector<Block> getComponentsByETT(const set<int>& target_cols);
 
         void turnOnGraphSync() {
@@ -253,12 +247,8 @@ class DancingMatrix
 
             SubGraph* subgraph  = nullptr;
             int nextTreeId = 0;
-            int no_split_count = 0;
             int decompose_depth = 0;
-            bool bfs_fallback = false;
-            bool bfs_probe_done = false;
-            bool dynamic_ett_disabled = false;
-            bool decomposition_disabled = false;
+            DecompositionPolicy decompositionPolicy;
             bool initialized = false;
             
             ThreadLocalState() = default;
