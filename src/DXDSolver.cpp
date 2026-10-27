@@ -386,6 +386,14 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         return {DNNFResult(1), T};
     }
 
+    if (!dxz_mode) {
+        for (int col : block.cols) {
+            if (getColSize(col) <= 0) {
+                return {DNNFResult(0), F};
+            }
+        }
+    }
+
     vector<int> stateCols;
     size_t stateHash = dxz_mode
         ? (encodeColState(&stateCols) ^ size_t{0xd6e8feb86659fd93ULL})

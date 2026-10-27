@@ -1,3 +1,0 @@
-dataset,instance,input,DXD_status,Dyn_status,DXD_V,DXD_E,DXD_BFS_time_s,Dyn_dec_calls,Dyn_deleted_tree_edges,Dyn_deleted_vertices,Dyn_avg_vertices,Dyn_avg_replacement_checks,Dyn_dec_time_s,Dyn_inc_time_s,error
-exact_cover_benchmarks,bell-06,data/batch_2/exact_cover_benchmarks/bell-06.ec,success,success,360,597,4.7e-05,2,87,48,47.0,19.5,0.000579,0.000873,
-exact_cover_benchmarks,doublefact-09,data/batch_2/exact_cover_benchmarks/doublefact-09.ec,success,success,1362,1884,0.000128,4,79,30,32.5,12.25,0.000211,0.001067,

@@ -91,8 +91,16 @@ ETT 查询仍会计入输出；查询完成后立即停止 ETT 更新，并禁�
 
 ## 7. 最终实验脚本
 
-`run_cc_dynamics_experiment.py` 会在同一实例上依次运行单线程 DXD 和 DynDXD，
-并把最终指标合并到一行。脚本同时生成 `cc_metrics_zh.csv`，用于说明所有输出
-字段的中文含义和单位。
+`run_cc_dynamics_experiment.py` 每次只运行一种指定算法：
+
+```bash
+python3 bin/run_cc_dynamics_experiment.py --algorithm dxd
+python3 bin/run_cc_dynamics_experiment.py --algorithm ddxd
+```
+
+每个测试集子目录由一个工作线程处理，但子目录中的求解器进程固定使用 `-t 1`。
+子线程先写各自的临时 CSV；主线程全部完成后读取临时结果，计算各子目录和总体
+成功率，再删除临时 CSV，仅保留一份带时间戳的总 CSV。总 CSV 的字段名直接包含
+中文指标释义。
 
 统计模式只允许单线程运行；所有 CPU 时间均按进程 CPU 时间累计。

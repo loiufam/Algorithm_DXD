@@ -1,3 +1,0 @@
-dataset,instance,input,DXD_status,Dyn_status,DXD_V,DXD_E,DXD_BFS_time_s,Dyn_dec_calls,Dyn_deleted_tree_edges,Dyn_deleted_vertices,Dyn_avg_vertices,Dyn_avg_replacement_checks,Dyn_dec_time_s,Dyn_inc_time_s,error
-dominoes_set,dominoes_8x8,data/batch_2/dominoes_set/dominoes_8x8.txt,success,success,119663,145846,0.011206,4,17,8,109.0,2.25,8.3e-05,0.000336,
-dominoes_set,tetrominoes_4x5,data/batch_2/dominoes_set/tetrominoes_4x5.txt,success,success,8860,24080,0.001288,4,254,96,130.5,39.5,0.004964,0.102236,

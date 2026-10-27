@@ -1,3 +1,0 @@
-dataset,instance,input,DXD_status,Dyn_status,DXD_V,DXD_E,DXD_BFS_time_s,Dyn_dec_calls,Dyn_deleted_tree_edges,Dyn_deleted_vertices,Dyn_avg_vertices,Dyn_avg_replacement_checks,Dyn_dec_time_s,Dyn_inc_time_s,error
-graphs_set,Chinanet,data/batch_2/graphs_set/Chinanet.txt,success,success,1824,2949,0.000255,2,58,35,46.0,11.0,0.000348,0.002249,
-graphs_set,Iris,data/batch_2/graphs_set/Iris.txt,success,success,6621,8740,0.000843,2,54,14,43.5,20.0,0.000172,0.000142,

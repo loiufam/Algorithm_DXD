@@ -1,8 +1,0 @@
-dominoes_8x8
-tetrominoes_4x5
-doublefact-09
-bell-06
-Chinanet
-Iris
-sppnw41
-sppnw23
