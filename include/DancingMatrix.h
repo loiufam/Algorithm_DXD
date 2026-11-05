@@ -54,6 +54,20 @@ struct ColumnInfo {
     }
 };
 
+struct BlockMutationMetrics {
+    bool enabled = false;
+    double coverSeconds = 0.0;
+    double uncoverSeconds = 0.0;
+    double coverSetSeconds = 0.0;
+    double uncoverSetSeconds = 0.0;
+    double removedRowsClearSeconds = 0.0;
+    uint64_t coverCalls = 0;
+    uint64_t uncoverCalls = 0;
+    uint64_t coverSetOps = 0;
+    uint64_t uncoverSetOps = 0;
+    uint64_t removedRowsClearCalls = 0;
+};
+
 class IncrementalConnectedGraph;
 
 class DancingMatrix 
@@ -128,8 +142,10 @@ class DancingMatrix
         void printBlocks( vector<Block>& blocks) const;
         void cover( int c );  
         void uncover( int c ); 
-        void coverInBlock(int c, Block& block, set<int>& covered_rows);
-        void uncoverInBlock(int c, Block& block);
+        void coverInBlock(int c, Block& block, set<int>& covered_rows,
+                          BlockMutationMetrics* metrics = nullptr);
+        void uncoverInBlock(int c, Block& block,
+                            BlockMutationMetrics* metrics = nullptr);
 
         size_t encodeColState(vector<int>* exactCols = nullptr);
         size_t hashBlockState(const set<int>& cols,

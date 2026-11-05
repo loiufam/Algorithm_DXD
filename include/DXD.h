@@ -4,6 +4,7 @@
 #include "../include/DancingMatrix.h"
 #include "../include/DXDTime.h"
 #include <atomic>
+#include <chrono>
 #include <ctime>
 
 const int TIME_LIMIT_SECONDS = 1500; 
@@ -50,6 +51,15 @@ struct DNNFNode {
     DNNFNode(int l, shared_ptr<DNNFNode> r, uint64_t c)
         : id(id_counter.fetch_add(1, std::memory_order_relaxed)),
           type(NodeType::Decision), label(l), right(r), count(c) {}
+
+    // Search tasks reserve ID ranges and assign node IDs without touching the
+    // global atomic counter for every node.
+    DNNFNode(size_t assignedId, NodeType t, int l)
+        : id(assignedId), type(t), label(l) {}
+
+    DNNFNode(size_t assignedId, NodeType t,
+             shared_ptr<DNNFNode> l, shared_ptr<DNNFNode> r)
+        : id(assignedId), type(t), left(l), right(r) {}
  
     // Convenience: is this a terminal node?
     bool isTerminal() const { return type == NodeType::Terminal; }
@@ -358,12 +368,118 @@ class DanceDNNF : DancingMatrix {
             }
         };
 
-        bool getCachedResult(const CacheKey& key, DNNFResult& count,
-                             shared_ptr<DNNFNode>& node) const {
-            std::shared_lock<std::shared_mutex> readLock(cacheMutex);
-            auto it = cache.find(key);
-            if (it == cache.end()) return false;
+        struct SearchState {
+            static constexpr size_t NODE_ID_BLOCK_SIZE = size_t{1} << 20;
 
+            bool collectStats = false;
+            uint64_t cacheReads = 0;
+            uint64_t cacheHits = 0;
+            uint64_t cacheWrites = 0;
+            uint64_t nodeLookups = 0;
+            uint64_t nodeLookupHits = 0;
+            uint64_t nodeInserts = 0;
+            uint64_t nodesAllocated = 0;
+            double cacheReadSeconds = 0.0;
+            double cacheWriteSeconds = 0.0;
+            double nodeLookupSeconds = 0.0;
+            double nodeInsertSeconds = 0.0;
+            double lockWaitSeconds = 0.0;
+            BlockMutationMetrics mutation;
+
+            size_t nextNodeId = 0;
+            size_t nodeIdLimit = 0;
+            unordered_map<CacheKey, CacheEntry, CacheKeyHash> cache;
+            unordered_map<DecisionNodeKey, std::weak_ptr<DNNFNode>,
+                          DecisionNodeKeyHash> nodeTable;
+
+            void reset(bool enableStats) {
+                collectStats = enableStats;
+                cacheReads = 0;
+                cacheHits = 0;
+                cacheWrites = 0;
+                nodeLookups = 0;
+                nodeLookupHits = 0;
+                nodeInserts = 0;
+                nodesAllocated = 0;
+                cacheReadSeconds = 0.0;
+                cacheWriteSeconds = 0.0;
+                nodeLookupSeconds = 0.0;
+                nodeInsertSeconds = 0.0;
+                lockWaitSeconds = 0.0;
+                mutation = BlockMutationMetrics{};
+                mutation.enabled = enableStats;
+                nextNodeId = 0;
+                nodeIdLimit = 0;
+                cache.clear();
+                nodeTable.clear();
+            }
+
+            size_t allocateNodeId() {
+                if (nextNodeId == nodeIdLimit) {
+                    nextNodeId = DNNFNode::id_counter.fetch_add(
+                        NODE_ID_BLOCK_SIZE, std::memory_order_relaxed);
+                    nodeIdLimit = nextNodeId + NODE_ID_BLOCK_SIZE;
+                }
+                ++nodesAllocated;
+                return nextNodeId++;
+            }
+        };
+
+        struct ThreadRunStats {
+            int taskIndex = -1;
+            int ompThread = -1;
+            size_t rows = 0;
+            size_t cols = 0;
+            double solveSeconds = 0.0;
+            uint64_t cacheReads = 0;
+            uint64_t cacheHits = 0;
+            uint64_t cacheWrites = 0;
+            uint64_t nodeLookups = 0;
+            uint64_t nodeLookupHits = 0;
+            uint64_t nodeInserts = 0;
+            uint64_t nodesAllocated = 0;
+            double cacheReadSeconds = 0.0;
+            double cacheWriteSeconds = 0.0;
+            double nodeLookupSeconds = 0.0;
+            double nodeInsertSeconds = 0.0;
+            double lockWaitSeconds = 0.0;
+            double coverSeconds = 0.0;
+            double uncoverSeconds = 0.0;
+            double coverSetSeconds = 0.0;
+            double uncoverSetSeconds = 0.0;
+            double removedRowsClearSeconds = 0.0;
+            uint64_t coverCalls = 0;
+            uint64_t uncoverCalls = 0;
+            uint64_t coverSetOps = 0;
+            uint64_t uncoverSetOps = 0;
+            uint64_t removedRowsClearCalls = 0;
+        };
+
+        static double elapsedSeconds(
+            const std::chrono::steady_clock::time_point& start) {
+            return std::chrono::duration_cast<std::chrono::duration<double>>(
+                       std::chrono::steady_clock::now() - start)
+                .count();
+        }
+
+        SearchState& currentSearchState() {
+            return activeSearchState ? *activeSearchState : mainSearchState;
+        }
+
+        bool getCachedResult(const CacheKey& key, DNNFResult& count,
+                             shared_ptr<DNNFNode>& node) {
+            SearchState& state = currentSearchState();
+            const auto start = state.collectStats
+                                   ? std::chrono::steady_clock::now()
+                                   : std::chrono::steady_clock::time_point{};
+            auto it = state.cache.find(key);
+            if (state.collectStats) {
+                state.cacheReadSeconds += elapsedSeconds(start);
+                ++state.cacheReads;
+            }
+            if (it == state.cache.end()) return false;
+
+            if (state.collectStats) ++state.cacheHits;
             count = it->second.count;
             node = it->second.node;
             return true;
@@ -371,8 +487,15 @@ class DanceDNNF : DancingMatrix {
 
         void setCachedResult(const CacheKey& key, const DNNFResult& count,
                              const shared_ptr<DNNFNode>& node) {
-            std::unique_lock<std::shared_mutex> writeLock(cacheMutex);
-            cache.emplace(key, CacheEntry{count, node});
+            SearchState& state = currentSearchState();
+            const auto start = state.collectStats
+                                   ? std::chrono::steady_clock::now()
+                                   : std::chrono::steady_clock::time_point{};
+            state.cache.emplace(key, CacheEntry{count, node});
+            if (state.collectStats) {
+                state.cacheWriteSeconds += elapsedSeconds(start);
+                ++state.cacheWrites;
+            }
         }
 
         // ThreadPool& pool;
@@ -399,14 +522,9 @@ class DanceDNNF : DancingMatrix {
         // DNNF缓存
         std::unordered_set<size_t> records; // 用于记录无法分解的矩阵状态
 
-        mutable std::shared_mutex cacheMutex;
         mutable std::shared_mutex recordMutex; // 记录互斥锁
-        unordered_map<CacheKey, CacheEntry, CacheKeyHash> cache;
-
-        // DNNF Nodes table
-        mutable std::shared_mutex tableMutex;
-        unordered_map<DecisionNodeKey, std::weak_ptr<DNNFNode>,
-                      DecisionNodeKeyHash> node_table;
+        SearchState mainSearchState;
+        inline static thread_local SearchState* activeSearchState = nullptr;
 
         ThreadPool& getThreadPool(int poolSize) {
             return ThreadPoolManager::get_instance(poolSize);

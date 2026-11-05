@@ -41,35 +41,43 @@ shared_ptr<DNNFNode> DanceDNNF::buildDecisionNode(int r, shared_ptr<DNNFNode> lo
     }
 
     DecisionNodeKey key{r, lo->id, hi->id};
-
-    {
-        std::shared_lock<std::shared_mutex> readLock(tableMutex);
-        auto it = node_table.find(key);
-        if (it != node_table.end()) {
-            if (auto cached = it->second.lock()) {
-                return cached;
-            }
-        }
+    SearchState& state = currentSearchState();
+    const auto lookupStart = state.collectStats
+                                 ? std::chrono::steady_clock::now()
+                                 : std::chrono::steady_clock::time_point{};
+    auto it = state.nodeTable.find(key);
+    if (state.collectStats) {
+        state.nodeLookupSeconds += elapsedSeconds(lookupStart);
+        ++state.nodeLookups;
     }
-
-    std::unique_lock<std::shared_mutex> writeLock(tableMutex);
-    auto it = node_table.find(key);
-    if (it != node_table.end()) {
+    if (it != state.nodeTable.end()) {
         if (auto cached = it->second.lock()) {
+            if (state.collectStats) ++state.nodeLookupHits;
             return cached;
         }
-        node_table.erase(it);
+        state.nodeTable.erase(it);
     }
 
-    auto decision_node = make_shared<DNNFNode>(NodeType::Decision, lo, hi);
+    auto decision_node = make_shared<DNNFNode>(
+        state.allocateNodeId(), NodeType::Decision, lo, hi);
     decision_node->label = r;
-    node_table[key] = decision_node;
+
+    const auto insertStart = state.collectStats
+                                 ? std::chrono::steady_clock::now()
+                                 : std::chrono::steady_clock::time_point{};
+    state.nodeTable[key] = decision_node;
+    if (state.collectStats) {
+        state.nodeInsertSeconds += elapsedSeconds(insertStart);
+        ++state.nodeInserts;
+    }
 
     return decision_node;
 }
 
 shared_ptr<DNNFNode> DanceDNNF::buildDecomposableNode(vector<shared_ptr<DNNFNode>>& subDNNFs) {
-    auto decompose_node = make_shared<DNNFNode>(NodeType::Decomposed, -3);
+    SearchState& state = currentSearchState();
+    auto decompose_node = make_shared<DNNFNode>(
+        state.allocateNodeId(), NodeType::Decomposed, -3);
     decompose_node->children = subDNNFs;
     return decompose_node;
 }
@@ -95,12 +103,28 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(
                                   return policy.phase == CCProbePhase::Ett;
                               });
     const DecompositionPolicy outerPolicy = decompositionPolicy;
+    auto searchIndependentBlock =
+        [&](Block& childBlock)
+        -> std::pair<DNNFResult, shared_ptr<DNNFNode>> {
+        SearchState* previousState = activeSearchState;
+        SearchState childState;
+        childState.collectStats = false;
+        activeSearchState = &childState;
+        try {
+            auto result = DXD(childBlock, parent_depth + 1);
+            activeSearchState = previousState;
+            return result;
+        } catch (...) {
+            activeSearchState = previousState;
+            throw;
+        }
+    };
 
     if (!needsComponentTrees || getComponents().empty()) {
         try {
             for (size_t i = 0; i < blocks.size(); ++i) {
                 decompositionPolicy = policies[i];
-                auto [result, node] = DXD(blocks[i], parent_depth + 1);
+                auto [result, node] = searchIndependentBlock(blocks[i]);
                 if (result.isZero()) {
                     decompositionPolicy = outerPolicy;
                     return {DNNFResult(0), F};
@@ -183,7 +207,7 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::serialSearch(
 
         std::pair<DNNFResult, shared_ptr<DNNFNode>> childResult;
         try {
-            childResult = DXD(blocks[i], parent_depth + 1);
+            childResult = searchIndependentBlock(blocks[i]);
         } catch (...) {
             decompositionPolicy = outerPolicy;
             throw;
@@ -265,6 +289,9 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(
 
     std::vector<DNNFResult> results(n);
     std::vector<shared_ptr<DNNFNode>>  nodes(n, nullptr);
+    std::vector<ThreadRunStats> taskStats;
+    std::mutex taskStatsMutex;
+    if (debug) taskStats.reserve(n);
 
     #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < n; i++) {
@@ -278,6 +305,14 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(
         if (manageThreadState) {
             outerTls = std::move(tlsState);
         }
+
+        SearchState* previousState = activeSearchState;
+        SearchState taskState;
+        taskState.collectStats = debug;
+        taskState.mutation.enabled = debug;
+        activeSearchState = &taskState;
+        const auto taskStart = std::chrono::steady_clock::now();
+        const int ompThread = omp_get_thread_num();
 
         try {
             // === 初始化线程局部状态 ===
@@ -344,12 +379,151 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(
             cleanupThreadLocalState();
             tlsState = std::move(outerTls);
         }
+
+        const double taskSeconds = elapsedSeconds(taskStart);
+        if (debug) {
+            ThreadRunStats stats;
+            stats.taskIndex = i;
+            stats.ompThread = ompThread;
+            stats.rows = blocks[i].rows.size();
+            stats.cols = blocks[i].cols.size();
+            stats.solveSeconds = taskSeconds;
+            stats.cacheReads = taskState.cacheReads;
+            stats.cacheHits = taskState.cacheHits;
+            stats.cacheWrites = taskState.cacheWrites;
+            stats.nodeLookups = taskState.nodeLookups;
+            stats.nodeLookupHits = taskState.nodeLookupHits;
+            stats.nodeInserts = taskState.nodeInserts;
+            stats.nodesAllocated = taskState.nodesAllocated;
+            stats.cacheReadSeconds = taskState.cacheReadSeconds;
+            stats.cacheWriteSeconds = taskState.cacheWriteSeconds;
+            stats.nodeLookupSeconds = taskState.nodeLookupSeconds;
+            stats.nodeInsertSeconds = taskState.nodeInsertSeconds;
+            stats.lockWaitSeconds = taskState.lockWaitSeconds;
+            stats.coverSeconds = taskState.mutation.coverSeconds;
+            stats.uncoverSeconds = taskState.mutation.uncoverSeconds;
+            stats.coverSetSeconds = taskState.mutation.coverSetSeconds;
+            stats.uncoverSetSeconds = taskState.mutation.uncoverSetSeconds;
+            stats.removedRowsClearSeconds =
+                taskState.mutation.removedRowsClearSeconds;
+            stats.coverCalls = taskState.mutation.coverCalls;
+            stats.uncoverCalls = taskState.mutation.uncoverCalls;
+            stats.coverSetOps = taskState.mutation.coverSetOps;
+            stats.uncoverSetOps = taskState.mutation.uncoverSetOps;
+            stats.removedRowsClearCalls =
+                taskState.mutation.removedRowsClearCalls;
+
+            std::lock_guard<std::mutex> statsLock(taskStatsMutex);
+            taskStats.push_back(stats);
+        }
+        activeSearchState = previousState;
     }
 
     if (manageTrees) {
         comps.resize(n);
         for (int i = 0; i < n; ++i)
             comps[i] = std::move(returned[i]);
+    }
+
+    if (debug && !taskStats.empty()) {
+        std::sort(taskStats.begin(), taskStats.end(),
+                  [](const ThreadRunStats& left, const ThreadRunStats& right) {
+                      return left.taskIndex < right.taskIndex;
+                  });
+
+        for (const ThreadRunStats& stats : taskStats) {
+            const double hitRate =
+                stats.cacheReads == 0
+                    ? 0.0
+                    : static_cast<double>(stats.cacheHits) / stats.cacheReads;
+            logger.logLine(
+                "[thread-task] task=" + std::to_string(stats.taskIndex) +
+                " omp_thread=" + std::to_string(stats.ompThread) +
+                " rows=" + std::to_string(stats.rows) +
+                " cols=" + std::to_string(stats.cols) +
+                " area=" + std::to_string(stats.rows * stats.cols) +
+                " solve_sec=" + std::to_string(stats.solveSeconds) +
+                " cache_reads=" + std::to_string(stats.cacheReads) +
+                " cache_hits=" + std::to_string(stats.cacheHits) +
+                " cache_hit_rate=" + std::to_string(hitRate) +
+                " cache_writes=" + std::to_string(stats.cacheWrites) +
+                " nodes_allocated=" + std::to_string(stats.nodesAllocated) +
+                " cache_read_sec=" + std::to_string(stats.cacheReadSeconds) +
+                " cache_write_sec=" + std::to_string(stats.cacheWriteSeconds) +
+                " node_lookup_sec=" + std::to_string(stats.nodeLookupSeconds) +
+                " node_insert_sec=" + std::to_string(stats.nodeInsertSeconds) +
+                " cover_sec=" + std::to_string(stats.coverSeconds) +
+                " uncover_sec=" + std::to_string(stats.uncoverSeconds) +
+                " cover_set_sec=" + std::to_string(stats.coverSetSeconds) +
+                " uncover_set_sec=" + std::to_string(stats.uncoverSetSeconds) +
+                " removed_rows_clear_sec=" +
+                std::to_string(stats.removedRowsClearSeconds) +
+                " cover_calls=" + std::to_string(stats.coverCalls) +
+                " uncover_calls=" + std::to_string(stats.uncoverCalls) +
+                " cover_set_ops=" + std::to_string(stats.coverSetOps) +
+                " uncover_set_ops=" + std::to_string(stats.uncoverSetOps) +
+                " removed_rows_clear_calls=" +
+                std::to_string(stats.removedRowsClearCalls) +
+                " lock_wait_sec=" + std::to_string(stats.lockWaitSeconds));
+        }
+
+        std::map<int, ThreadRunStats> perThread;
+        for (const ThreadRunStats& stats : taskStats) {
+            ThreadRunStats& aggregate = perThread[stats.ompThread];
+            aggregate.ompThread = stats.ompThread;
+            aggregate.rows += stats.rows;
+            aggregate.cols += stats.cols;
+            aggregate.solveSeconds += stats.solveSeconds;
+            aggregate.cacheReads += stats.cacheReads;
+            aggregate.cacheHits += stats.cacheHits;
+            aggregate.cacheWrites += stats.cacheWrites;
+            aggregate.nodeLookups += stats.nodeLookups;
+            aggregate.nodeLookupHits += stats.nodeLookupHits;
+            aggregate.nodeInserts += stats.nodeInserts;
+            aggregate.nodesAllocated += stats.nodesAllocated;
+            aggregate.cacheReadSeconds += stats.cacheReadSeconds;
+            aggregate.cacheWriteSeconds += stats.cacheWriteSeconds;
+            aggregate.nodeLookupSeconds += stats.nodeLookupSeconds;
+            aggregate.nodeInsertSeconds += stats.nodeInsertSeconds;
+            aggregate.lockWaitSeconds += stats.lockWaitSeconds;
+            aggregate.coverSeconds += stats.coverSeconds;
+            aggregate.uncoverSeconds += stats.uncoverSeconds;
+            aggregate.coverSetSeconds += stats.coverSetSeconds;
+            aggregate.uncoverSetSeconds += stats.uncoverSetSeconds;
+            aggregate.removedRowsClearSeconds +=
+                stats.removedRowsClearSeconds;
+            aggregate.coverCalls += stats.coverCalls;
+            aggregate.uncoverCalls += stats.uncoverCalls;
+            aggregate.coverSetOps += stats.coverSetOps;
+            aggregate.uncoverSetOps += stats.uncoverSetOps;
+            aggregate.removedRowsClearCalls +=
+                stats.removedRowsClearCalls;
+        }
+        for (const auto& [threadId, stats] : perThread) {
+            const double hitRate =
+                stats.cacheReads == 0
+                    ? 0.0
+                    : static_cast<double>(stats.cacheHits) / stats.cacheReads;
+            logger.logLine(
+                "[thread-summary] omp_thread=" + std::to_string(threadId) +
+                " solve_sec=" + std::to_string(stats.solveSeconds) +
+                " cache_hit_rate=" + std::to_string(hitRate) +
+                " cache_read_sec=" + std::to_string(stats.cacheReadSeconds) +
+                " cache_write_sec=" + std::to_string(stats.cacheWriteSeconds) +
+                " node_lookup_sec=" + std::to_string(stats.nodeLookupSeconds) +
+                " node_insert_sec=" + std::to_string(stats.nodeInsertSeconds) +
+                " cover_sec=" + std::to_string(stats.coverSeconds) +
+                " uncover_sec=" + std::to_string(stats.uncoverSeconds) +
+                " cover_set_sec=" + std::to_string(stats.coverSetSeconds) +
+                " uncover_set_sec=" + std::to_string(stats.uncoverSetSeconds) +
+                " removed_rows_clear_sec=" +
+                std::to_string(stats.removedRowsClearSeconds) +
+                " cover_set_ops=" + std::to_string(stats.coverSetOps) +
+                " uncover_set_ops=" + std::to_string(stats.uncoverSetOps) +
+                " removed_rows_clear_calls=" +
+                std::to_string(stats.removedRowsClearCalls) +
+                " lock_wait_sec=" + std::to_string(stats.lockWaitSeconds));
+        }
     }
 
     if (has_timeout.load()) {
@@ -386,14 +560,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         return {DNNFResult(1), T};
     }
 
-    if (!dxz_mode) {
-        for (int col : block.cols) {
-            if (getColSize(col) <= 0) {
-                return {DNNFResult(0), F};
-            }
-        }
-    }
-
     vector<int> stateCols;
     size_t stateHash = dxz_mode
         ? (encodeColState(&stateCols) ^ size_t{0xd6e8feb86659fd93ULL})
@@ -404,6 +570,15 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     shared_ptr<DNNFNode> cachedNode;
     if (getCachedResult(state, cachedCount, cachedNode)) {
         return {cachedCount, cachedNode};
+    }
+
+    ColumnHeader* choose = nullptr;
+    if (!dxz_mode) {
+        choose = selectOptimalColumn(block.cols);
+        if (!choose || choose->size <= 0) {
+            setCachedResult(state, DNNFResult(0), F);
+            return {DNNFResult(0), F};
+        }
     }
 
     // 是否分解查询
@@ -513,9 +688,9 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
 
     }
 
-    ColumnHeader* choose = dxz_mode ? selectCol() : selectOptimalColumn(block.cols);
-    // std::cout << "Chosen column: " << choose->col << " (size: " << choose->size << ")\n";
-
+    if (dxz_mode) {
+        choose = selectCol();
+    }
     if(choose->size <= 0) {
         if (isCCETTCallBudgetExhausted()) stopCCForETTCallBudget();
         setCachedResult(state, DNNFResult(0), F);
@@ -525,11 +700,57 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     DNNFResult totalResult(0);
     shared_ptr<DNNFNode> x = F;
 
+    BlockMutationMetrics& mutation = currentSearchState().mutation;
+    const bool lightweightBlockSearch =
+        !dxz_mode && !dxd_mode &&
+        currentDecompositionPolicy().phase == CCProbePhase::Disabled;
     auto coverCurrentBlock = [&](int col, set<int>& removedRows) {
-        coverInBlock(col, block, removedRows);
+        if (!lightweightBlockSearch) {
+            coverInBlock(col, block, removedRows, &mutation);
+            return;
+        }
+
+        const auto coverStart =
+            mutation.enabled ? std::chrono::steady_clock::now()
+                             : std::chrono::steady_clock::time_point{};
+        cover(col);
+        if (mutation.enabled) {
+            mutation.coverSeconds += elapsedSeconds(coverStart);
+            ++mutation.coverCalls;
+        }
+
+        const auto setStart =
+            mutation.enabled ? std::chrono::steady_clock::now()
+                             : std::chrono::steady_clock::time_point{};
+        block.cols.erase(col);
+        if (mutation.enabled) {
+            mutation.coverSetSeconds += elapsedSeconds(setStart);
+            ++mutation.coverSetOps;
+        }
     };
     auto uncoverCurrentBlock = [&](int col) {
-        uncoverInBlock(col, block);
+        if (!lightweightBlockSearch) {
+            uncoverInBlock(col, block, &mutation);
+            return;
+        }
+
+        const auto uncoverStart =
+            mutation.enabled ? std::chrono::steady_clock::now()
+                             : std::chrono::steady_clock::time_point{};
+        uncover(col);
+        if (mutation.enabled) {
+            mutation.uncoverSeconds += elapsedSeconds(uncoverStart);
+            ++mutation.uncoverCalls;
+        }
+
+        const auto setStart =
+            mutation.enabled ? std::chrono::steady_clock::now()
+                             : std::chrono::steady_clock::time_point{};
+        block.cols.insert(col);
+        if (mutation.enabled) {
+            mutation.uncoverSetSeconds += elapsedSeconds(setStart);
+            ++mutation.uncoverSetOps;
+        }
     };
     const bool collectUpdateTiming =
         collectCCTime || collectCCExperimentStats;
@@ -595,7 +816,14 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         while(curC != choose) {
         
         Node* curR = curC->right;
-        deleted_rows_.clear();
+        if (mutation.enabled) {
+            const auto clearStart = std::chrono::steady_clock::now();
+            deleted_rows_.clear();
+            mutation.removedRowsClearSeconds += elapsedSeconds(clearStart);
+            ++mutation.removedRowsClearCalls;
+        } else {
+            deleted_rows_.clear();
+        }
 
         while (curR != curC) {
             if (dxz_mode) {
@@ -751,14 +979,8 @@ void DanceDNNF::startDXD() {
     if (collectCCExperimentStats) ccExperimentStats.reset();
     resetAdaptiveDecompositionState();
 
-    {
-        std::unique_lock<std::shared_mutex> cacheLock(cacheMutex);
-        cache.clear();
-    }
-    {
-        std::unique_lock<std::shared_mutex> tableLock(tableMutex);
-        node_table.clear();
-    }
+    activeSearchState = nullptr;
+    mainSearchState.reset(debug);
     if(!dxz_mode) {
         dxd_mode = true; // 启用DXD模式
     }
@@ -838,14 +1060,8 @@ void DanceDNNF::startMultiThreadDXD() {
     if (collectCCExperimentStats) ccExperimentStats.reset();
     resetAdaptiveDecompositionState();
 
-    {
-        std::unique_lock<std::shared_mutex> cacheLock(cacheMutex);
-        cache.clear();
-    }
-    {
-        std::unique_lock<std::shared_mutex> tableLock(tableMutex);
-        node_table.clear();
-    }
+    activeSearchState = nullptr;
+    mainSearchState.reset(debug);
 
     try {
 

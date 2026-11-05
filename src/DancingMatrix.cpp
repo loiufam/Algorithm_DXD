@@ -1,6 +1,18 @@
 #include "../include/DancingMatrix.h"
 #include "DynamicGraph.cpp"
+#include <chrono>
 thread_local std::unique_ptr<DancingMatrix::ThreadLocalState> DancingMatrix::tlsState = nullptr;
+
+namespace {
+
+double elapsedSeconds(
+    const std::chrono::steady_clock::time_point& start) {
+    return std::chrono::duration_cast<std::chrono::duration<double>>(
+               std::chrono::steady_clock::now() - start)
+        .count();
+}
+
+}  // namespace
 
 //构造函数
 DancingMatrix::DancingMatrix( int rows, int cols, int** matrix, bool verbose )  
@@ -1083,13 +1095,25 @@ void DancingMatrix::uncover( int c )
     // colsSet.insert(c);
 }
 
-void DancingMatrix::coverInBlock(int c, Block& block, set<int>& removed_rows){
+void DancingMatrix::coverInBlock(int c, Block& block, set<int>& removed_rows,
+                                 BlockMutationMetrics* metrics){
+    const bool collect = metrics && metrics->enabled;
+    const auto coverStart = collect
+                                ? std::chrono::steady_clock::now()
+                                : std::chrono::steady_clock::time_point{};
 
     ColumnHeader* col = &ColIndex[c];  
     col->right->left = col->left;  
     col->left->right = col->right;  
     
+    const auto colSetStart = collect
+                                 ? std::chrono::steady_clock::now()
+                                 : std::chrono::steady_clock::time_point{};
     block.cols.erase(c); // 从块中移除列
+    if (collect) {
+        metrics->coverSetSeconds += elapsedSeconds(colSetStart);
+        ++metrics->coverSetOps;
+    }
 
     Node* curR, *curC;  
     curC = col->down;  
@@ -1097,12 +1121,19 @@ void DancingMatrix::coverInBlock(int c, Block& block, set<int>& removed_rows){
     while( curC != col )  
     {    
         int row_id = curC->row;
+        const auto rowSetStart = collect
+                                     ? std::chrono::steady_clock::now()
+                                     : std::chrono::steady_clock::time_point{};
         removed_rows.insert(row_id);
 
         // if (useIG) {
         //     incrementalGraph->deactivateRow(row_id);
         // }
         block.rows.erase(row_id); // 从块中移除行
+        if (collect) {
+            metrics->coverSetSeconds += elapsedSeconds(rowSetStart);
+            metrics->coverSetOps += 2;
+        }
 
         curR = curC->right;  
         while( curR != curC )  
@@ -1114,10 +1145,19 @@ void DancingMatrix::coverInBlock(int c, Block& block, set<int>& removed_rows){
         }  
 
         curC = curC->down;  
-    } 
+    }
+    if (collect) {
+        metrics->coverSeconds += elapsedSeconds(coverStart);
+        ++metrics->coverCalls;
+    }
 }
 
-void DancingMatrix::uncoverInBlock(int c, Block& block){ 
+void DancingMatrix::uncoverInBlock(int c, Block& block,
+                                   BlockMutationMetrics* metrics){
+    const bool collect = metrics && metrics->enabled;
+    const auto uncoverStart = collect
+                                  ? std::chrono::steady_clock::now()
+                                  : std::chrono::steady_clock::time_point{};
     ColumnHeader* col = &ColIndex[c];  
     Node* curC = col->up; 
 
@@ -1134,7 +1174,14 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
             curR = curR->left;  
         }  
 
+        const auto rowSetStart = collect
+                                     ? std::chrono::steady_clock::now()
+                                     : std::chrono::steady_clock::time_point{};
         block.rows.insert(row_id); // 将行添加到块中
+        if (collect) {
+            metrics->uncoverSetSeconds += elapsedSeconds(rowSetStart);
+            ++metrics->uncoverSetOps;
+        }
 
         // if (useIG) {
         //     incrementalGraph->reactivateRow(row_id); 
@@ -1145,7 +1192,16 @@ void DancingMatrix::uncoverInBlock(int c, Block& block){
 
     col->right->left = col;  
     col->left->right = col;  
+    const auto colSetStart = collect
+                                 ? std::chrono::steady_clock::now()
+                                 : std::chrono::steady_clock::time_point{};
     block.cols.insert(c);
+    if (collect) {
+        metrics->uncoverSetSeconds += elapsedSeconds(colSetStart);
+        metrics->uncoverSeconds += elapsedSeconds(uncoverStart);
+        ++metrics->uncoverSetOps;
+        ++metrics->uncoverCalls;
+    }
 }
 
 ColumnHeader* DancingMatrix::selectColumnHeuristic(const set<int>& cols) {
