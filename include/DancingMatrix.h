@@ -10,8 +10,8 @@ using row_id = int;
 
 const unsigned int MAX_ROW = 300000;
 const int TARGET_THRESHOLD = 5;
-const int HEAP_THRESHOLD = 50;  // 列数超过50时使用堆排序
-const int MAX_TRIES = 200;      // 820
+const int HEAP_THRESHOLD = 50;
+const int MAX_TRIES = 200;
 const int MAX_CONCURRENT_THREADS = 16;
 
 struct Node  
@@ -42,13 +42,11 @@ struct RowNode : public Node
 
 };
 
-// 列信息结构体，用于堆排序
 struct ColumnInfo {
     int colId;
     int size;
     ColumnHeader* header;
     
-    // 小根堆比较器：size小的优先
     bool operator>(const ColumnInfo& other) const {
         return size > other.size;
     }
@@ -68,29 +66,40 @@ struct BlockMutationMetrics {
     uint64_t removedRowsClearCalls = 0;
 };
 
-class IncrementalConnectedGraph;
-
 class DancingMatrix 
 {  
-    public:  
+    public:
         int ROWS, COLS; 
         int EXIST_ROWS;
+        std::uint64_t ONE_COUNT = 0;
         
-        std::uint64_t count = 0;  // 统计精确覆盖解
-        std::uint64_t ONE_COUNT = 0; // 统计矩阵中1的个数
-        
+        std::uint64_t count = 0;
         double searchTimeSeconds = 0.0;
         double countTimeSeconds = 0.0;
-        bool useETT;
-        bool useIG; // 使用增量图
+        AlgorithmMode algorithmMode;
         std::vector<std::vector<int>> solutions; 
-        set<int> rowsSet;  // 舞蹈链行id
-        set<int> colsSet;  // 原始矩阵列
+        set<int> rowsSet;
+        set<int> colsSet;
         unordered_set<int> active_rows;
         Block InitBlock;
 
-        bool dxz_mode = false;
-        bool dxd_mode = false;
+        bool isDXZMode() const {
+            return algorithmMode == AlgorithmMode::DXZ;
+        }
+        bool isDXDMode() const {
+            return algorithmMode == AlgorithmMode::DXD;
+        }
+        bool isDynDXD() const {
+            return algorithmMode == AlgorithmMode::DYNDXD;
+        }
+        bool isHybridDXD() const {
+            return algorithmMode == AlgorithmMode::HYBRID_DXD;
+        }
+        bool usesDynamicConnectivity() const {
+            return algorithmMode == AlgorithmMode::DYNDXD ||
+                   algorithmMode == AlgorithmMode::HYBRID_DXD ||
+                   algorithmMode == AlgorithmMode::MDLX_DYNAMIC;
+        }
 
         struct CCExperimentStats {
             uint64_t bfsVertexSum = 0;
@@ -108,31 +117,23 @@ class DancingMatrix
         CCExperimentStats ccExperimentStats;
         std::mutex ccExperimentStatsMutex;
 
-        // 列状态
         size_t getColumnState() const;
         Signature getColumnSignature() const;
         
         
-        //接收矩阵其及维度  
-        DancingMatrix( int rows, int cols, int** matrix, bool verbose = false);  
-        DancingMatrix( const string& file_path, bool use_ig = false, bool use_ett = false);
+        DancingMatrix(int rows, int cols, int** matrix, bool verbose = false,
+                      AlgorithmMode mode = AlgorithmMode::DXD);
+        DancingMatrix(const string& file_path,
+                      AlgorithmMode mode = AlgorithmMode::DXZ);
 
-        // 禁用拷贝和赋值
         DancingMatrix(const DancingMatrix&) = delete;
         DancingMatrix& operator=(const DancingMatrix&) = delete;
 
         DancingMatrix(DancingMatrix&&) = delete;
         DancingMatrix& operator=(DancingMatrix&&) = delete;
-        //释放内存  
         ~DancingMatrix();  
 
-        // 行 -> 包含该行的列集合
         unordered_map<int, set<int>> row_to_cols;
-
-        // 追踪每行当前被cover的列（用于判断是否完全被删除）
-        unordered_map<int, set<int>> row_covered_cols;
-
-        // 关键数据结构：列 -> 激活行集合的反向索引
         unordered_map<int, vector<int>> col_to_rows;
         
         void build_mapping_from_cols(const unordered_set<int>& blockCols, unordered_map<int, set<int>>& rowToCols, unordered_map<int, set<int>>& colToRows);
@@ -140,12 +141,12 @@ class DancingMatrix
 
         void printMatrix() const; 
         void printBlocks( vector<Block>& blocks) const;
-        void cover( int c );  
-        void uncover( int c ); 
+        void cover( int c );
+        void uncover( int c );
+
         void coverInBlock(int c, Block& block, set<int>& covered_rows,
-                          BlockMutationMetrics* metrics = nullptr);
-        void uncoverInBlock(int c, Block& block,
-                            BlockMutationMetrics* metrics = nullptr);
+                          bool maintainRows);
+        void uncoverInBlock(int c, Block& block, bool maintainRows);
 
         size_t encodeColState(vector<int>* exactCols = nullptr);
         size_t hashBlockState(const set<int>& cols,
@@ -161,23 +162,19 @@ class DancingMatrix
         // ColumnHeader* fastSelect();
 
         inline ColumnHeader* getColumnHeader(int c) const {
-            // std::shared_lock lock(mutex_);
             ColumnHeader* col = &ColIndex[c];
             return col;
         }
 
         inline int getColSize(int c) const {
-            // std::shared_lock lock(mutex_);
             return ColIndex[c].size;
         }
 
         inline void decColSize(int c) {
-            // std::unique_lock lock(mutex_);
             ColIndex[c].size--;
         }
 
         inline void incColSize(int c) {
-            // std::unique_lock lock(mutex_);
             ColIndex[c].size++;
         }
 
@@ -216,6 +213,20 @@ class DancingMatrix
 
         void initialize();
         void buildGraphFromMatrix();
+        void prepareDynamicCCForBlock(const Block& block);
+        void releaseDynamicCCStorage();
+        void prepareThreadLocalDynamicCCForBlock(
+            const Block& block, bool explicitProjectedEdges = false);
+        void releaseThreadLocalDynamicCCStorage();
+        std::vector<std::unique_ptr<splaytree::EulerTourTree>>
+        cloneThreadLocalDynamicCCForest() const;
+        void restoreThreadLocalDynamicCCSnapshot(
+            const Block& block,
+            const std::vector<std::unique_ptr<
+                splaytree::EulerTourTree>>& snapshot);
+        bool usesImplicitProjectedGraph() const {
+            return graph && graph->usesImplicitNeighbors();
+        }
         
         // 动态更新接口
         void DecUpdateCC(const std::set<int>& deletedVertices);
@@ -238,40 +249,50 @@ class DancingMatrix
         std::unique_ptr<RowNode[]> RowIndex;
         std::vector<std::unique_ptr<Node>> dataNodes;
 
-        std::unique_ptr<IncrementalConnectedGraph> incrementalGraph;
+        std::shared_ptr<ETTree> etTree;
+        std::unordered_set<int> dynamicBlockRows_;
+        mutable std::shared_mutex mutex_;
+        mutable std::shared_mutex graph_sync_mutex;
 
-        std::shared_ptr<ETTree> etTree;  // 欧拉回路树
-        mutable std::shared_mutex mutex_;  // 读写锁
+        bool enableGraphSync = true;
 
-        mutable std::shared_mutex graph_sync_mutex; // 图同步锁
-
-        bool enableGraphSync = true; // 是否启用图同步   
+        vector<int> implicitProjectedNeighborsInRows(
+            int row, const unordered_set<int>& candidateRows,
+            const Graph* graph) const;
         
         
     public:
-        // build undirected graph from matrix
         std::unique_ptr<Graph> graph;
-        // 连通分量管理
         std::vector<std::unique_ptr<splaytree::EulerTourTree>> components;
         splaytree::EulerTourTree* findEulerTourTree(int v);
         int nextTreeId = 0;
 
+        struct TreeGraphContext {
+            std::unique_ptr<Graph> graph;
+            unordered_set<int> blockRows;
+        };
+
         // === 线程局部数据结构 ===
         struct ThreadLocalState {
             std::vector<std::unique_ptr<splaytree::EulerTourTree>> components;
-            // std::unique_ptr<Graph> graph;
+            // The worker and its escaped ETT trees share ownership of this
+            // context, so replacement-edge providers never point at a freed
+            // worker graph. subgraph/activeSubgraph are routes into it.
+            std::shared_ptr<TreeGraphContext> graphContext;
 
             SubGraph* subgraph  = nullptr;
+            SubGraph* activeSubgraph = nullptr;
             int nextTreeId = 0;
             int decompose_depth = 0;
             DecompositionPolicy decompositionPolicy;
+            std::set<int> ettEligibleRows;
             bool initialized = false;
             
             ThreadLocalState() = default;
             
             ~ThreadLocalState() {
                 components.clear();
-                // graph.reset();
+                graphContext.reset();
             }
         };
         
@@ -295,18 +316,24 @@ class DancingMatrix
             return isThreadLocal() ? tlsState->components : components;
         }
 
-        // 获取当前线程的 graph
-        // Graph* getGraph() {
-        //     if (isThreadLocal()) {
-        //         return tlsState->graph.get();
-        //     }
-        //     return graph.get();
-        // }
-
         SubGraph* activeSubgraph_ = nullptr;
 
+        SubGraph*& currentSubgraphRoute() {
+            return isThreadLocal() ? tlsState->activeSubgraph
+                                   : activeSubgraph_;
+        }
+
+        Graph* currentGraph() {
+            if (isThreadLocal()) {
+                return tlsState->graphContext
+                           ? tlsState->graphContext->graph.get()
+                           : nullptr;
+            }
+            return graph.get();
+        }
+
         SubGraph* getGraph() {
-            if (isThreadLocal()) return tlsState->subgraph;
+            if (isThreadLocal()) return tlsState->activeSubgraph;
 
             if (activeSubgraph_) return activeSubgraph_;
             
@@ -314,8 +341,9 @@ class DancingMatrix
             for (auto& comp : components) {
                 if (!comp || comp->isEmpty()) continue;
                 int v = comp->getAnyVertex();
-                if (v >= 0) {
-                    SubGraph* sg = graph->subgraphOf(v);
+                Graph* current = currentGraph();
+                if (v >= 0 && current) {
+                    SubGraph* sg = current->subgraphOf(v);
                     if (sg) return sg;
                 }
             }
@@ -327,8 +355,20 @@ class DancingMatrix
             return isThreadLocal() ? tlsState->nextTreeId : nextTreeId;
         }
 
+        void bindTreeReplacementProvider(
+            splaytree::EulerTourTree* tree,
+            const std::shared_ptr<TreeGraphContext>& context);
+
+        void bindGlobalTreeReplacementProvider(
+            splaytree::EulerTourTree* tree);
+
+        void rebindTreeReplacementProvider(
+            splaytree::EulerTourTree* tree, ThreadLocalState* targetState);
+
         // 从图构建生成森林
         void buildSpanningForest();
+        void buildSpanningForestForRows(const std::set<int>& rows);
+        std::vector<int> implicitProjectedNeighbors(int row) const;
         void buildStatsSpanningForest();
 
         std::vector<std::unordered_set<int>> statsForest;

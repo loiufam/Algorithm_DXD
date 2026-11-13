@@ -47,6 +47,7 @@ set(COMMON_SOURCES
     src/DancingMatrix.cpp
     src/DXZSolver.cpp
     src/DXDSolver.cpp
+    src/HybridDXD.cpp
     # DynamicGraph.cpp 通过 #include 在 DancingMatrix.cpp 中引入，故不再单独参与编译
     # src/TreapETT.cpp
     src/DXDTime.cpp

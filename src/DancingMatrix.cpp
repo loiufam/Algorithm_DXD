@@ -15,8 +15,10 @@ double elapsedSeconds(
 }  // namespace
 
 //构造函数
-DancingMatrix::DancingMatrix( int rows, int cols, int** matrix, bool verbose )  
-    : ROWS(rows), COLS(cols), enableGraphSync(verbose) {
+DancingMatrix::DancingMatrix(int rows, int cols, int** matrix, bool verbose,
+                             AlgorithmMode mode)
+    : ROWS(rows), COLS(cols), algorithmMode(mode),
+      enableGraphSync(verbose) {
     EXIST_ROWS = rows;  
     ColIndex = std::make_unique<ColumnHeader[]>(cols + 1);  
     RowIndex = std::make_unique<RowNode[]>(rows);  
@@ -61,8 +63,8 @@ DancingMatrix::DancingMatrix( int rows, int cols, int** matrix, bool verbose )
 }
 
 // 从文件构造舞蹈链矩阵
-DancingMatrix::DancingMatrix( const string& file_path, bool useIg , bool useETT  ) 
-    : useIG(useIg), useETT(useETT)
+DancingMatrix::DancingMatrix(const string& file_path, AlgorithmMode mode)
+    : algorithmMode(mode)
 {
     ifstream file(file_path);
     if (!file.is_open()) {
@@ -95,7 +97,7 @@ DancingMatrix::DancingMatrix( const string& file_path, bool useIg , bool useETT 
 
     if (ROWS > MAX_ROW) {
         cerr << "矩阵行数过大，无法处理: " << ROWS << " 行." << endl;
-        throw runtime_error("time out");
+        throw runtime_error("matrix exceeds MAX_ROW");
     }
 
     cout << "rows: " << rows << endl;
@@ -185,18 +187,13 @@ DancingMatrix::DancingMatrix( const string& file_path, bool useIg , bool useETT 
 
     InitBlock = Block(rowsSet, colsSet);
 
-    if(useETT) {
+    if (algorithmMode == AlgorithmMode::MDLX_DYNAMIC) {
         graph = make_unique<Graph>(ROWS);
         buildGraphFromMatrix();
         buildSpanningForest();
         
         cout << "Statistics graph initialization complete." << endl;
     }
-
-    // if (useIg) {
-    //     incrementalGraph = make_unique<IncrementalConnectedGraph>(rows);
-    //     incrementalGraph->initialize(*this);
-    // }
 
     file.close();
 }
@@ -242,9 +239,13 @@ void DancingMatrix::initThreadLocalState(const Block& block, std::unique_ptr<spl
     
     // 清空旧数据
     tlsState->components.clear();
+    tlsState->graphContext.reset();
     tlsState->subgraph  = nullptr; 
+    tlsState->activeSubgraph = nullptr;
     tlsState->nextTreeId = 0;
     tlsState->decompositionPolicy = DecompositionPolicy{};
+    tlsState->ettEligibleRows.clear();
+    tlsState->ettEligibleRows.insert(block.rows.begin(), block.rows.end());
 
     if (!tree) {
         // Descendants that no longer maintain ETT only need thread-local
@@ -255,13 +256,64 @@ void DancingMatrix::initThreadLocalState(const Block& block, std::unique_ptr<spl
     
     int anyV = tree->getAnyVertex();
 
+    auto context = std::make_shared<TreeGraphContext>();
+    context->blockRows.insert(tree->vertices.begin(), tree->vertices.end());
+    context->graph = std::make_unique<Graph>(ROWS);
+    TreeGraphContext* rawContext = context.get();
+    context->graph->setNeighborProvider(
+        [this, rawContext](int row) {
+            return implicitProjectedNeighborsInRows(
+                row, rawContext->blockRows, rawContext->graph.get());
+        });
+    for (int row : tlsState->ettEligibleRows) {
+        if (!block.rows.count(row)) {
+            context->graph->deleteVertex(row);
+        }
+    }
+    tlsState->graphContext = context;
+    if (anyV >= 0) {
+        context->graph->registerComponent(0, context->blockRows);
+        tlsState->subgraph = context->graph->subgraphOf(anyV);
+        tlsState->activeSubgraph = tlsState->subgraph;
+    }
+    bindTreeReplacementProvider(tree.get(), context);
     tlsState->components.push_back(std::move(tree));
     
-    if (anyV >= 0) {
-        tlsState->subgraph = graph->subgraphOf(anyV);
-    }
-    
     tlsState->initialized = true;
+}
+
+void DancingMatrix::bindTreeReplacementProvider(
+    splaytree::EulerTourTree* tree,
+    const std::shared_ptr<TreeGraphContext>& context) {
+    if (!tree || !context || !context->graph) return;
+
+    tree->setReplacementNeighborProvider(
+        [this, context](int row, std::unordered_set<int>& out) {
+            std::vector<int> neighbors = implicitProjectedNeighborsInRows(
+                row, context->blockRows, context->graph.get());
+            out.insert(neighbors.begin(), neighbors.end());
+        });
+}
+
+void DancingMatrix::bindGlobalTreeReplacementProvider(
+    splaytree::EulerTourTree* tree) {
+    if (!tree) return;
+
+    tree->setReplacementNeighborProvider(
+        [this](int row, std::unordered_set<int>& out) {
+            std::vector<int> neighbors = implicitProjectedNeighbors(row);
+            out.insert(neighbors.begin(), neighbors.end());
+        });
+}
+
+void DancingMatrix::rebindTreeReplacementProvider(
+    splaytree::EulerTourTree* tree, ThreadLocalState* targetState) {
+    if (!tree) return;
+    if (targetState && targetState->graphContext) {
+        bindTreeReplacementProvider(tree, targetState->graphContext);
+    } else {
+        bindGlobalTreeReplacementProvider(tree);
+    }
 }
 
 void DancingMatrix::cleanupThreadLocalState() {
@@ -299,6 +351,352 @@ void DancingMatrix::buildGraphFromMatrix() {
     }
 
     // graph->printGraph();
+}
+
+std::vector<int> DancingMatrix::implicitProjectedNeighbors(int row) const {
+    return implicitProjectedNeighborsInRows(
+        row, dynamicBlockRows_, graph.get());
+}
+
+std::vector<int> DancingMatrix::implicitProjectedNeighborsInRows(
+    int row, const std::unordered_set<int>& candidateRows,
+    const Graph* graph) const {
+    std::vector<int> neighbors;
+    if (!graph || !graph->hasVertex(row) || !candidateRows.count(row)) {
+        return neighbors;
+    }
+
+    std::unordered_set<int> uniqueNeighbors;
+    auto rowIt = row_to_cols.find(row);
+    if (rowIt == row_to_cols.end()) return neighbors;
+
+    for (int col : rowIt->second) {
+        auto colIt = col_to_rows.find(col);
+        if (colIt == col_to_rows.end()) continue;
+        for (int other : colIt->second) {
+            if (other == row || !candidateRows.count(other) ||
+                !graph->hasVertex(other)) {
+                continue;
+            }
+            uniqueNeighbors.insert(other);
+        }
+    }
+
+    neighbors.assign(uniqueNeighbors.begin(), uniqueNeighbors.end());
+    return neighbors;
+}
+
+void DancingMatrix::prepareDynamicCCForBlock(const Block& block) {
+    releaseDynamicCCStorage();
+    if (block.rows.empty() || block.cols.empty()) return;
+
+    dynamicBlockRows_.insert(block.rows.begin(), block.rows.end());
+    graph = std::make_unique<Graph>(ROWS);
+    graph->setNeighborProvider(
+        [this](int row) { return implicitProjectedNeighbors(row); });
+    buildSpanningForestForRows(block.rows);
+}
+
+void DancingMatrix::releaseDynamicCCStorage() {
+    components.clear();
+    graph.reset();
+    dynamicBlockRows_.clear();
+    activeSubgraph_ = nullptr;
+    nextTreeId = 0;
+}
+
+void DancingMatrix::releaseThreadLocalDynamicCCStorage() {
+    if (!tlsState) return;
+    tlsState->components.clear();
+    tlsState->graphContext.reset();
+    tlsState->subgraph = nullptr;
+    tlsState->activeSubgraph = nullptr;
+    tlsState->nextTreeId = 0;
+    tlsState->initialized = true;
+}
+
+std::vector<std::unique_ptr<splaytree::EulerTourTree>>
+DancingMatrix::cloneThreadLocalDynamicCCForest() const {
+    std::vector<std::unique_ptr<splaytree::EulerTourTree>> snapshot;
+    if (!tlsState) return snapshot;
+    snapshot.reserve(tlsState->components.size());
+    for (const auto& tree : tlsState->components) {
+        if (tree) snapshot.push_back(tree->clone());
+    }
+    return snapshot;
+}
+
+void DancingMatrix::restoreThreadLocalDynamicCCSnapshot(
+    const Block& block,
+    const std::vector<std::unique_ptr<
+        splaytree::EulerTourTree>>& snapshot) {
+    if (!tlsState) {
+        tlsState = std::make_unique<ThreadLocalState>();
+    }
+    releaseThreadLocalDynamicCCStorage();
+    if (block.rows.empty() || block.cols.empty()) return;
+
+    auto context = std::make_shared<TreeGraphContext>();
+    context->blockRows.insert(block.rows.begin(), block.rows.end());
+    context->blockRows.insert(tlsState->ettEligibleRows.begin(),
+                              tlsState->ettEligibleRows.end());
+    context->graph = std::make_unique<Graph>(ROWS);
+
+    for (int row : context->blockRows) {
+        const auto rowIt = row_to_cols.find(row);
+        if (rowIt == row_to_cols.end()) continue;
+        for (int col : rowIt->second) {
+            const auto colIt = col_to_rows.find(col);
+            if (colIt == col_to_rows.end()) continue;
+            for (int other : colIt->second) {
+                if (row < other && context->blockRows.count(other)) {
+                    context->graph->addUniqueEdge(row, other);
+                }
+            }
+        }
+    }
+    for (int row : tlsState->ettEligibleRows) {
+        if (!block.rows.count(row)) {
+            context->graph->deleteVertex(row);
+        }
+    }
+    tlsState->graphContext = context;
+
+    tlsState->nextTreeId = 0;
+    for (const auto& source : snapshot) {
+        if (!source) continue;
+        auto tree = source->clone();
+        tree->setReplacementNeighborProvider({});
+        const int anyVertex = tree->getAnyVertex();
+        if (anyVertex >= 0) {
+            const auto vertices = tree->getVertices();
+            context->graph->registerComponent(
+                tlsState->nextTreeId, vertices);
+            if (!tlsState->subgraph) {
+                tlsState->subgraph =
+                    context->graph->subgraphOf(anyVertex);
+                tlsState->activeSubgraph = tlsState->subgraph;
+            }
+        }
+        tlsState->nextTreeId =
+            std::max(tlsState->nextTreeId,
+                     tree->getTreeId() + 1);
+        tlsState->components.push_back(std::move(tree));
+    }
+}
+
+void DancingMatrix::prepareThreadLocalDynamicCCForBlock(
+    const Block& block, bool explicitProjectedEdges) {
+    if (!tlsState) {
+        tlsState = std::make_unique<ThreadLocalState>();
+    }
+    releaseThreadLocalDynamicCCStorage();
+
+    if (block.rows.empty() || block.cols.empty()) return;
+
+    auto context = std::make_shared<TreeGraphContext>();
+    context->blockRows.insert(block.rows.begin(), block.rows.end());
+    context->blockRows.insert(tlsState->ettEligibleRows.begin(),
+                              tlsState->ettEligibleRows.end());
+    context->graph = std::make_unique<Graph>(ROWS);
+    TreeGraphContext* rawContext = context.get();
+    if (explicitProjectedEdges) {
+        for (int row : rawContext->blockRows) {
+            const auto rowIt = row_to_cols.find(row);
+            if (rowIt == row_to_cols.end()) continue;
+            for (int col : rowIt->second) {
+                const auto colIt = col_to_rows.find(col);
+                if (colIt == col_to_rows.end()) continue;
+                for (int other : colIt->second) {
+                    if (row < other &&
+                        rawContext->blockRows.count(other)) {
+                        context->graph->addUniqueEdge(row, other);
+                    }
+                }
+            }
+        }
+    } else {
+        context->graph->setNeighborProvider(
+            [this, rawContext](int row) {
+                return implicitProjectedNeighborsInRows(
+                    row, rawContext->blockRows, rawContext->graph.get());
+            });
+    }
+    for (int row : tlsState->ettEligibleRows) {
+        if (!block.rows.count(row)) {
+            context->graph->deleteVertex(row);
+        }
+    }
+    tlsState->graphContext = context;
+
+    std::unordered_set<int> visited;
+    std::queue<int> queue;
+    for (int start : block.rows) {
+        if (visited.count(start)) continue;
+
+        std::unordered_set<int> componentRows;
+        std::vector<splaytree::Edge> treeEdges;
+        visited.insert(start);
+        componentRows.insert(start);
+        queue.push(start);
+
+        while (!queue.empty()) {
+            const int u = queue.front();
+            queue.pop();
+            const vector<int> neighbors =
+                explicitProjectedEdges
+                    ? rawContext->graph->getNeighbors(u)
+                    : implicitProjectedNeighborsInRows(
+                          u, rawContext->blockRows,
+                          rawContext->graph.get());
+            for (int v : neighbors) {
+                if (!visited.insert(v).second) continue;
+                componentRows.insert(v);
+                treeEdges.emplace_back(u, v);
+                queue.push(v);
+            }
+        }
+
+        context->graph->registerComponent(tlsState->nextTreeId, componentRows);
+
+        std::unordered_map<int, std::unique_ptr<splaytree::EulerTourTree>>
+            vertexTrees;
+        std::unordered_map<int, int> representative;
+        for (int vertex : componentRows) {
+            auto tree = std::make_unique<splaytree::EulerTourTree>(
+                tlsState->nextTreeId++);
+            tree->addVertex(vertex);
+            representative[vertex] = vertex;
+            vertexTrees[vertex] = std::move(tree);
+        }
+
+        std::function<int(int)> findRepresentative = [&](int vertex) -> int {
+            int root = vertex;
+            while (representative[root] != root) root = representative[root];
+            while (representative[vertex] != vertex) {
+                const int next = representative[vertex];
+                representative[vertex] = root;
+                vertex = next;
+            }
+            return root;
+        };
+
+        for (const auto& edge : treeEdges) {
+            const int rootU = findRepresentative(edge.u);
+            const int rootV = findRepresentative(edge.v);
+            if (rootU == rootV) continue;
+            auto& treeU = vertexTrees[rootU];
+            auto& treeV = vertexTrees[rootV];
+            if (!treeU || !treeV) continue;
+            treeU->link(edge.u, edge.v, treeV.get());
+            representative[rootV] = rootU;
+            vertexTrees[rootV].reset();
+        }
+
+        for (auto& [vertex, tree] : vertexTrees) {
+            (void)vertex;
+            if (!tree) continue;
+            if (explicitProjectedEdges) {
+                std::unordered_set<splaytree::Edge, splaytree::EdgeHash>
+                    treeEdgeSet(treeEdges.begin(), treeEdges.end());
+                for (int u : componentRows) {
+                    for (int v : context->graph->getNeighbors(u)) {
+                        if (u < v &&
+                            !treeEdgeSet.count(splaytree::Edge(u, v))) {
+                            tree->addNonTreeEdge(splaytree::Edge(u, v));
+                        }
+                    }
+                }
+            } else {
+                bindTreeReplacementProvider(tree.get(), context);
+            }
+            tlsState->components.push_back(std::move(tree));
+            break;
+        }
+    }
+
+    if (!tlsState->components.empty()) {
+        const int anyVertex = tlsState->components.front()->getAnyVertex();
+        if (anyVertex >= 0) {
+            tlsState->subgraph =
+                context->graph->subgraphOf(anyVertex);
+            tlsState->activeSubgraph = tlsState->subgraph;
+        }
+    }
+}
+
+void DancingMatrix::buildSpanningForestForRows(const std::set<int>& rows) {
+    std::unordered_set<int> visited;
+    std::queue<int> queue;
+
+    for (int start : rows) {
+        if (visited.count(start)) continue;
+
+        std::unordered_set<int> componentRows;
+        std::vector<splaytree::Edge> treeEdges;
+        visited.insert(start);
+        componentRows.insert(start);
+        queue.push(start);
+
+        while (!queue.empty()) {
+            int u = queue.front();
+            queue.pop();
+            for (int v : implicitProjectedNeighbors(u)) {
+                if (!visited.insert(v).second) continue;
+                componentRows.insert(v);
+                treeEdges.emplace_back(u, v);
+                queue.push(v);
+            }
+        }
+
+        int componentId = nextTreeId;
+        graph->registerComponent(componentId, componentRows);
+
+        std::unordered_map<int, std::unique_ptr<splaytree::EulerTourTree>>
+            vertexTrees;
+        std::unordered_map<int, int> representative;
+        for (int vertex : componentRows) {
+            auto tree = std::make_unique<splaytree::EulerTourTree>(
+                getNextTreeId()++);
+            tree->addVertex(vertex);
+            vertexTrees[vertex] = std::move(tree);
+            representative[vertex] = vertex;
+        }
+
+        std::function<int(int)> findRepresentative = [&](int vertex) -> int {
+            int root = vertex;
+            while (representative[root] != root) root = representative[root];
+            while (representative[vertex] != vertex) {
+                int next = representative[vertex];
+                representative[vertex] = root;
+                vertex = next;
+            }
+            return root;
+        };
+
+        for (const auto& edge : treeEdges) {
+            int rootU = findRepresentative(edge.u);
+            int rootV = findRepresentative(edge.v);
+            if (rootU == rootV) continue;
+            auto& treeU = vertexTrees[rootU];
+            auto& treeV = vertexTrees[rootV];
+            if (!treeU || !treeV) continue;
+            treeU->link(edge.u, edge.v, treeV.get());
+            representative[rootV] = rootU;
+            vertexTrees[rootV].reset();
+        }
+
+        for (auto& [vertex, tree] : vertexTrees) {
+            if (!tree) continue;
+            tree->setReplacementNeighborProvider(
+                [this](int row, std::unordered_set<int>& out) {
+                    std::vector<int> neighbors = implicitProjectedNeighbors(row);
+                    out.insert(neighbors.begin(), neighbors.end());
+                });
+            components.push_back(std::move(tree));
+            break;
+        }
+    }
 }
 
 std::vector<splaytree::Edge> DancingMatrix::bfsSpanningTree(int start, std::unordered_set<int>& visited, std::unordered_set<int>& comp_vertices) {
@@ -432,12 +830,14 @@ splaytree::EulerTourTree* DancingMatrix::findEulerTourTree(int v) {
 bool DancingMatrix::processBoundaryVertex(int v, splaytree::EulerTourTree* tree, SubGraph* g){
     // 处理所有相邻边(包含非树边)
     std::vector<int> neighbors = g->neighbors(v);
+    const bool implicitEdges = g->usesImplicitEdges();
     
     // 边界顶点：删除所有非树边，无需寻找替代边
     // std::cout << "Removing boundary vertex " << v << "\n";
     int treeEdgeNeighbor = tree->getBoundaryVertexTreeNeighbor(v);
    
     if (treeEdgeNeighbor < 0) {
+        if (implicitEdges) g->deleteVertex(v);
         // 只需删除所有非树边（如果还有的话），然后移除顶点
         for (int u : neighbors) {
             splaytree::Edge e(v, u);
@@ -447,6 +847,8 @@ bool DancingMatrix::processBoundaryVertex(int v, splaytree::EulerTourTree* tree,
         tree->removeVertex(v);
         return false;
     }
+
+    if (implicitEdges) g->deleteVertex(v);
 
     // 删除非树边
     for (int u : neighbors) {
@@ -535,8 +937,10 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
         // 处理所有相邻边
         std::vector<int> neighbors = g->neighbors(v);
         int currentDegree = tree->getVertexDegree(v);
+        const bool implicitEdges = g->usesImplicitEdges();
 
         if (currentDegree == 0) {
+            if (implicitEdges) g->deleteVertex(v);
             // 已完全孤立，直接移除
             tree->removeVertex(v);
             continue;
@@ -571,14 +975,15 @@ void DancingMatrix::DecUpdateCC(const std::set<int>& deletedVertices) {
             g->deleteEdge(v, u);
         }
 
+        if (implicitEdges) g->deleteVertex(v);
+
         // 删除所有树边
         for (int u : treeNeighbors) {
-            if (!g->hasEdge(v, u)) continue;
-
             splaytree::EulerTourTree* currentTree = findEulerTourTree(v);
             if (!currentTree) {
                 break;
             }
+            if (!currentTree->isTreeEdge(v, u)) continue;
 
             splaytree::ReplacementSearchMetrics searchMetrics;
             auto newTree = currentTree->cutWithReplacement(
@@ -630,8 +1035,8 @@ void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
 
     auto& comps = getComponents();
     auto* g = getGraph();
-    if (!g && graph && !restoredVertices.empty()) {
-        g = graph->subgraphOf(*restoredVertices.begin());
+    if (!g && currentGraph() && !restoredVertices.empty()) {
+        g = currentGraph()->subgraphOf(*restoredVertices.begin());
     }
     if (!g) {
         return;
@@ -645,7 +1050,9 @@ void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
     }
 
     for (int v : restoredVertices) {
-        auto newTree = std::make_unique<splaytree::EulerTourTree>(nextTreeId++);
+        if (findEulerTourTree(v)) continue;
+        auto newTree = std::make_unique<splaytree::EulerTourTree>(
+            getNextTreeId()++);
         newTree->addVertex(v);
         comps.push_back(std::move(newTree));
     }
@@ -671,7 +1078,7 @@ void DancingMatrix::IncUpdateCC(const std::set<int>& restoredVertices) {
 
             if (treeU != treeV) {
                 treeU->link(u, v, treeV);
-            } else {
+            } else if (!treeU->usesImplicitNonTreeEdges()) {
                 treeU->addNonTreeEdge(splaytree::Edge(v, u));
             }
         }
@@ -1096,24 +1503,15 @@ void DancingMatrix::uncover( int c )
 }
 
 void DancingMatrix::coverInBlock(int c, Block& block, set<int>& removed_rows,
-                                 BlockMutationMetrics* metrics){
-    const bool collect = metrics && metrics->enabled;
-    const auto coverStart = collect
-                                ? std::chrono::steady_clock::now()
-                                : std::chrono::steady_clock::time_point{};
+                                 bool maintainRows) {
 
     ColumnHeader* col = &ColIndex[c];  
-    col->right->left = col->left;  
-    col->left->right = col->right;  
-    
-    const auto colSetStart = collect
-                                 ? std::chrono::steady_clock::now()
-                                 : std::chrono::steady_clock::time_point{};
-    block.cols.erase(c); // 从块中移除列
-    if (collect) {
-        metrics->coverSetSeconds += elapsedSeconds(colSetStart);
-        ++metrics->coverSetOps;
+    if (isDXZMode()) {
+        col->right->left = col->left;
+        col->left->right = col->right;
     }
+
+    block.cols.erase(c); // 从块中移除列
 
     Node* curR, *curC;  
     curC = col->down;  
@@ -1121,18 +1519,10 @@ void DancingMatrix::coverInBlock(int c, Block& block, set<int>& removed_rows,
     while( curC != col )  
     {    
         int row_id = curC->row;
-        const auto rowSetStart = collect
-                                     ? std::chrono::steady_clock::now()
-                                     : std::chrono::steady_clock::time_point{};
-        removed_rows.insert(row_id);
 
-        // if (useIG) {
-        //     incrementalGraph->deactivateRow(row_id);
-        // }
-        block.rows.erase(row_id); // 从块中移除行
-        if (collect) {
-            metrics->coverSetSeconds += elapsedSeconds(rowSetStart);
-            metrics->coverSetOps += 2;
+        if (maintainRows) {
+            block.rows.erase(row_id);
+            removed_rows.insert(row_id);
         }
 
         curR = curC->right;  
@@ -1146,23 +1536,14 @@ void DancingMatrix::coverInBlock(int c, Block& block, set<int>& removed_rows,
 
         curC = curC->down;  
     }
-    if (collect) {
-        metrics->coverSeconds += elapsedSeconds(coverStart);
-        ++metrics->coverCalls;
-    }
 }
 
-void DancingMatrix::uncoverInBlock(int c, Block& block,
-                                   BlockMutationMetrics* metrics){
-    const bool collect = metrics && metrics->enabled;
-    const auto uncoverStart = collect
-                                  ? std::chrono::steady_clock::now()
-                                  : std::chrono::steady_clock::time_point{};
-    ColumnHeader* col = &ColIndex[c];  
+void DancingMatrix::uncoverInBlock(int c, Block& block, bool maintainRows) {
+    ColumnHeader* col = &ColIndex[c];
     Node* curC = col->up; 
 
     while( curC != col )  
-    {  
+    {
         int row_id = curC->row;
  
         Node* curR = curC->left;  
@@ -1172,36 +1553,19 @@ void DancingMatrix::uncoverInBlock(int c, Block& block,
             curR->down->up = curR;  
             curR->up->down = curR;  
             curR = curR->left;  
-        }  
-
-        const auto rowSetStart = collect
-                                     ? std::chrono::steady_clock::now()
-                                     : std::chrono::steady_clock::time_point{};
-        block.rows.insert(row_id); // 将行添加到块中
-        if (collect) {
-            metrics->uncoverSetSeconds += elapsedSeconds(rowSetStart);
-            ++metrics->uncoverSetOps;
         }
 
-        // if (useIG) {
-        //     incrementalGraph->reactivateRow(row_id); 
-        // }
+        if (maintainRows) block.rows.insert(row_id);
 
         curC = curC->up;  
     }  
 
-    col->right->left = col;  
-    col->left->right = col;  
-    const auto colSetStart = collect
-                                 ? std::chrono::steady_clock::now()
-                                 : std::chrono::steady_clock::time_point{};
-    block.cols.insert(c);
-    if (collect) {
-        metrics->uncoverSetSeconds += elapsedSeconds(colSetStart);
-        metrics->uncoverSeconds += elapsedSeconds(uncoverStart);
-        ++metrics->uncoverSetOps;
-        ++metrics->uncoverCalls;
+    if (isDXZMode()) {
+        col->right->left = col;
+        col->left->right = col;
     }
+
+    block.cols.insert(c);
 }
 
 ColumnHeader* DancingMatrix::selectColumnHeuristic(const set<int>& cols) {

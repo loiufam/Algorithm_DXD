@@ -1,106 +1,99 @@
-# DynDXD 中 ETT、BFS 与 DXZ 的切换规则
+# DynDXD 分解策略与延迟 ETT 生命周期
 
-本文描述当前 `ddxd` 实现实际执行的状态机，而不是三种彼此独立的算法开关。
+本文描述当前 `ddxd` 的实际状态机。重点变化是：根层先用矩阵原生 BFS
+找到初始独立块，只为选中的一个 ETT 探测块建立动态图；完整行投影 clique
+不再物化。
 
-## 1. ETT 的建立和维护
+## 1. 启动与根层分块
 
-矩阵初始化时，行投影图先建立生成森林；每个连通分量对应一棵
-`EulerTourTree`。搜索覆盖列或选择行后，`DecUpdateCC` 删除失活行及其边；
-回溯时 `IncUpdateCC` 恢复同一批行及边。因此，某一递归帧一旦执行过删除，
-即使更深层随后切换到 BFS 或 DXZ，该帧仍必须执行配对的恢复。
+算法模式由枚举 `AlgorithmMode` 统一表达：`DXZ=0`、`DXD=1`、
+`DYNDXD=2`。`-a ddxd` 构造 `DYNDXD` 模式时跳过
+`buildGraphFromMatrix()`。因此启动阶段只读取矩阵和舞蹈链，不创建
+`Σ C(column_degree, 2)` 个投影边。MDLX 的静态和动态模式使用枚举中的
+后续值，不再通过独立的布尔 flag 区分。
 
-发生分块后：
+第一次 `DXD()` 调用在根层执行 `getComponentsByBFS()`：
 
-- 初始 ETT 查询得到多个分量时，只选择一个目标分量继续探测；其他分量仍正常
-  求解，但不再维护 ETT 或查询连通分量；
-- 如果原矩阵 `rows * cols` 大于 `bfs_area_threshold`，选择面积最小的分量；
-  否则选择面积最大的分量；
-- 目标分量跳过进入子搜索后的第一次查询，完成第一次 ETT 更新后再开始探测；
-- 单线程搜索暂存外层森林，每次只把当前分量的 ETT 和子图交给该子块；
-- 多线程搜索把 ETT 和目标策略一起分发给对应任务。
+1. BFS 直接在矩阵行列交叉链表上求连通块；
+2. 若得到多个块，按 `bfs_area_threshold` 只选一个块作为 ETT 探测目标；
+3. 仅对该目标块执行 `prepareDynamicCCForBlock()`；
+4. 其他初始块使用 `CCProbePhase::Disabled`，直接求解；
+5. 若根层只有一个块，则为该块建立 ETT，并继续后续动态探测。
 
-## 2. ETT 查询切换为 BFS
+## 2. 按需邻居与生成森林
 
-探测次数上限当前为 3。初始查询本身不计入次数。
+选中块只保存：
 
-初始多分块中的目标分量：
+- 每个矩阵行对应的图顶点状态；
+- 一棵或多棵 ETT 生成森林；
+- 该块的活跃行集合。
 
-- 最多执行三次 ETT 更新后的查询；
-- 任意一次出现多分块，当前分量和所有后继块立即停止 ETT 更新与 CC 查询；
-- 三次都没有分块时，同样停止 ETT 更新与 CC 查询，不进入 BFS。
+边的来源保留在原有 `col_to_rows` 和 `row_to_cols` 中。需要邻居时，
+`implicitProjectedNeighbors(row)` 扫描该行涉及的列，并返回同一选中块内
+仍然活跃的行。非树边不会复制到以下三个位置：
 
-初始单分块：
+- `Graph` 邻接表；
+- `EulerTourTree::nonTreeEdges`；
+- `EulerTourTree::nonTreeNeighbors`。
 
-- 先最多执行三次 ETT 更新后的查询；
-- 三次中出现多分块时，立即停止 ETT 更新和后续 CC 查询；
-- 三次均未分块时关闭 ETT，进入 BFS 探测；
-- BFS 最多执行三次；出现多分块或三次均未分块时停止后续 CC 查询。
+删除树边后，`EulerTourTree::findReplacementEdge()` 通过替换边提供器查询
+按需邻居；恢复行时也通过同一提供器重新发现可连接的边。
 
-已进入递归帧的 `DecUpdateCC` 仍会在回溯时执行配对的 `IncUpdateCC`，但是停止点
-之后的新递归帧不再支付 ETT 更新开销。
+## 3. 自适应策略
 
-## 3. 停止分解（不切换到 DXZ）
+`DecompositionPolicy` 仍包含 `Ett`、`Bfs`、`Disabled` 三个阶段：
 
-策略进入 `Disabled` 后，主线程或线程局部子块继续使用普通的块内 DXD 决策
-搜索，不再维护 ETT 或查询连通分量。已经发生的帧级动态更新仍会在回溯时完成
-对应的恢复。
+| 字段 | 含义 |
+| --- | --- |
+| `phase` | 当前查询阶段。 |
+| `ettFailureAction` | 当前子树 ETT 连续未分块后的动作。 |
+| `noSplitCount` | 当前阶段连续未分块次数。 |
+| `skipNextProbe` | 当前帧是否跳过一次查询。 |
+| `PROBE_LIMIT` | 自适应探测上限，当前为 3。 |
 
-不能在这里切换到 DXZ。DXZ 的 `selectCol()` 遍历全局舞蹈矩阵，而当前
-递归很可能只负责一个 `Block::cols`子块（包括单线程的初始多分块）。
-此时切换会把其他独立块再次纳入当前子树，之后又与那些块的结果相乘，
-导致解数和 DNNF 节点数被大幅放大。`-a dxz` 显式模式仍然使用 DXZ；
-只禁止 DynDXD 搜索中的这个自适应切换。
+ETT 预算和 BFS 预算是独立的：
 
-## 4. 两类典型实例
+| 参数 | 实际作用 |
+| --- | --- |
+| `--cc-ett-max-calls N` | 最多执行 N 次 ETT 查询；默认 3，0 表示无限。耗尽后切换到 BFS。 |
+| `--cc-bfs-max-calls M` | 最多执行 M 次 BFS 查询；默认 10，0 表示无限。耗尽后进入 `Disabled`。 |
+| `--bfs-area-threshold N` | 根层出现多个块时选择探测块。 |
 
-### 初始就是多个分块
+ETT 查询仍会计入 ETT 预算。预算耗尽时只停止 ETT，不会同时关闭 BFS。BFS
+预算规则同样独立；只有 BFS 也被关闭，或自适应策略判定不再探测时，才进入
+`Disabled`。
 
-第一次 ETT 查询直接得到多个块，不增加连续未分块计数。系统只选择面积最小或
-最大的一个分量作为探测目标，其余分量直接进入普通块内搜索。目标分量跳过首次
-查询，最多执行三次 ETT 更新后的查询，随后停止分解，不进入 BFS。
+## 4. 动态更新的配对
 
-### 始终只有一个分块
+一个递归帧只有在执行 `DecUpdateCC()` 后才需要执行配对的 `IncUpdateCC()`。
+若当前帧查询后切换到 BFS 或 `Disabled`，后续递归帧不再维护 ETT，但已经发生
+的帧级更新仍必须在回溯时恢复。
 
-初始查询不计入次数。连续三次 ETT 更新后的查询均无分块后关闭 ETT，进入 BFS；
-BFS 最多执行三次，出现分块或三次失败后停止 CC 查询，但不切换 DXZ。
+若某一层的所有子策略都已不是 `Ett`，进入串行或并行子搜索前会调用
+`releaseDynamicCCStorage()`，释放动态图、ETT 森林和选中块活跃集合，避免与
+DNNF 搜索图长期共存。
 
-## 5. 统计口径
+## 5. DNNF Size
 
-- `DXD Vertex Sum`、`DXD Edge Sum`：单线程 DXD 全过程所有 BFS 连通分量
-  查询累计遍历的图顶点数和图边数；
-- `DXD BFS CPU`：单线程 DXD 全过程 BFS 连通分量查询累计 CPU 时间；
-- `Dyn Dec Calls`：单线程 DynDXD 的 `DecUpdateCC` 调用次数；
-- `Dyn Deleted Tree Edges`、`Dyn Deleted Vertices`：减量更新期间累计删除的
-  ETT 树边数和活跃图顶点数；
-- `Dyn Avg Vertices`：每次减量更新前活跃图顶点数的平均值；
-- `Dyn Avg Replacement Checks`：每次减量更新实际扫描的候选替代边数平均值；
-- `Dyn Dec CPU`、`Dyn Inc CPU`：`DecUpdateCC` 和 `IncUpdateCC` 的累计
-  CPU 时间。
+DNNF 节点数在 `buildDecisionNode()` 和 `buildDecomposableNode()` 创建节点时
+在线累计，不再在搜索结束后 DFS 整张 DAG。
 
-CPU 统计只允许在单线程实验中开启。统计模式不再执行额外的验证 BFS。
+性能实验默认传入 `--skip-dnnf-size`，只输出解数、时间和块数。需要节点数时
+去掉该参数，求解器输出在线累计的 `DNNF Size`。
 
-## 6. 超时用例的全局 ETT 调用预算
+## 6. 退出语义
 
-`--cc-ett-max-calls N` 为整个实例设置全局 ETT CC 查询预算。第 N 次
-ETT 查询仍会计入输出；查询完成后立即停止 ETT 更新，并禁止所有当前及后继分量
-继续执行 ETT 或 BFS CC 查询。该预算与统计、计时模式相互独立，单线程和多线程
-搜索均受同一全局预算约束。
+求解器异常会打印 `DXD内部错误` 或 `DynDXD内部错误`，并由 `main()` 返回非零
+退出码。实验脚本把非零退出码记录为 `crashed`；外部进程 timeout 会被记录在
+日志中。这样 `bad_alloc`、输入错误和正常完成不会再被混为成功。
 
-默认值为 `3`；显式传入 `0` 表示不限制，完整保留新状态机规定的三次 ETT 探测
-和最多三次 BFS 探测。
+## 7. 源码索引
 
-## 7. 最终实验脚本
-
-`run_cc_dynamics_experiment.py` 每次只运行一种指定算法：
-
-```bash
-python3 bin/run_cc_dynamics_experiment.py --algorithm dxd
-python3 bin/run_cc_dynamics_experiment.py --algorithm ddxd
-```
-
-每个测试集子目录由一个工作线程处理，但子目录中的求解器进程固定使用 `-t 1`。
-子线程先写各自的临时 CSV；主线程全部完成后读取临时结果，计算各子目录和总体
-成功率，再删除临时 CSV，仅保留一份带时间戳的总 CSV。总 CSV 的字段名直接包含
-中文指标释义。
-
-统计模式只允许单线程运行；所有 CPU 时间均按进程 CPU 时间累计。
+| 位置 | 作用 |
+| --- | --- |
+| `src/main.cpp` | DynDXD 延迟 ETT 初始化、CLI 参数和异常退出。 |
+| `src/DXDSolver.cpp` | 根层 BFS、预算切换、选中块 ETT 和 DNNF 在线计数。 |
+| `src/DancingMatrix.cpp` | 按需投影邻居、选中块生成森林和 CC 存储释放。 |
+| `include/DynamicConnectivity.h` | 隐式邻居提供器。 |
+| `include/SplayTree.h`、`src/SplayTree.cpp` | 按需替换边查询。 |
+| `include/DXD.h` | ETT/BFS 预算和自适应策略。 |

@@ -10,9 +10,10 @@
 const int TIME_LIMIT_SECONDS = 1500; 
 using namespace std;
 
-enum class NodeType { OR, Decision, Decomposed, Variable, Terminal };  // 节点类型 AND node 分为Decision和Decomposed两种
-// 模式：ETT动态连通 vs BFS静态扫描
+enum class NodeType { OR, Decision, Decomposed, Variable, Terminal };
 enum class DecomMode { Dynamic, Static };
+
+class HybridDXD;
 
 class QuickStatsComplete final : public std::exception {
 public:
@@ -65,11 +66,16 @@ struct DNNFNode {
     bool isTerminal() const { return type == NodeType::Terminal; }
 };
 
-class DanceDNNF : DancingMatrix { 
+class DanceDNNF : protected DancingMatrix {
 
     public:
-        DanceDNNF(int rows, int cols, int** matrix, Logger& l, bool verbose = false, int pool_size = 8) 
-            : DancingMatrix(rows, cols, matrix, verbose), logger(l) {
+        friend class HybridDXD;
+
+        DanceDNNF(int rows, int cols, int** matrix, Logger& l,
+                  bool verbose = false, int pool_size = 8)
+            : DancingMatrix(rows, cols, matrix, verbose,
+                            AlgorithmMode::DXD),
+              logger(l) {
             
  
             timer.setTimeBound(TIME_LIMIT_SECONDS);
@@ -77,17 +83,18 @@ class DanceDNNF : DancingMatrix {
             std::cout<< "初始化DanceDNNF完成." << endl;
         }
 
-        DanceDNNF(const string& file_path, Logger& l, 
-                       const bool useIG = false, const bool useETT = false, int pool_size = 1, bool debug = false)
-            : DancingMatrix(file_path, useIG, useETT), 
-            logger(l), 
+        DanceDNNF(const string& file_path, Logger& l,
+                  AlgorithmMode mode, int pool_size = 1,
+                  bool debug = false)
+            : DancingMatrix(file_path, mode),
+            logger(l),
             max_threads(pool_size), 
-            debug(debug), 
+            debug(debug),
             num_of_DNNFNodes(0),
             max_depth(1) {
 
-            omp_set_num_threads(pool_size); // 设置并行线程数
-            omp_set_max_active_levels(2);   // 初始分块 + 最多一层嵌套分块
+            omp_set_num_threads(pool_size);
+            omp_set_max_active_levels(1);
             std::cout << "设置并行线程数为: " << pool_size << std::endl;
 
             if (pool_size > 1) isParallelSearch = true;
@@ -96,17 +103,17 @@ class DanceDNNF : DancingMatrix {
 
         ~DanceDNNF() = default;
 
-        CStopWatch timer;   // 计时器
+        CStopWatch timer;
 
-        const int MAX_P_COUNT = 1; // 最大并行搜索次数   
-        atomic<int> p_count{0}; // 记录当前并行的子进程数
-        int detect_record = 0; // 记录第几次检测
+        const int MAX_P_COUNT = 1;
+        atomic<int> p_count{0};
+        int detect_record = 0;
         std::atomic<size_t> MAX_B_COUNT{1};
 
         double searchTime = 0.0;
-        string solutionCount; // 记录解的数量
-        bool timeout = false; // 是否超时
-        bool isParallelSearch = false; // 是否并行搜索
+        string solutionCount;
+        bool timeout = false;
+        bool isParallelSearch = false;
         double decomposeTime = 0.0;
         // CC CPU timing categories.  Timing is collected only when
         // collectCCTime is enabled and is restricted to one thread.
@@ -115,8 +122,10 @@ class DanceDNNF : DancingMatrix {
         std::atomic<std::clock_t> ccIncrementCpuTicks{0};
         bool collectCCTime = false;
         bool debug = false;
+        bool skipDNNFSize = false;
+        std::atomic<size_t> createdDNNFNodes{0};
 
-        // 构建Decision-ZDNNF
+        // Decision-ZDNNF
         shared_ptr<DNNFNode> buildDecisionNode(int r, shared_ptr<DNNFNode> lo, shared_ptr<DNNFNode> hi);
 
         shared_ptr<DNNFNode> buildDecomposableNode(vector<shared_ptr<DNNFNode>>& subDNNFs);
@@ -137,10 +146,13 @@ class DanceDNNF : DancingMatrix {
         size_t bfs_area_threshold = 100000;
         size_t ccEttMaxCalls = 0;
         std::atomic<size_t> ccEttCallsUsed{0};
+        size_t ccBfsMaxCalls = 10;
+        std::atomic<size_t> ccBfsCallsUsed{0};
         size_t quickStatsUpdateLimit = 0;
+        bool pureDynDXD = false;
 
         bool isCCETTCallBudgetExhausted() const {
-            return ccEttMaxCalls > 0 &&
+            return !pureDynDXD && ccEttMaxCalls > 0 &&
                    ccEttCallsUsed.load(std::memory_order_relaxed) >= ccEttMaxCalls;
         }
 
@@ -162,6 +174,30 @@ class DanceDNNF : DancingMatrix {
             return false;
         }
 
+        bool isCCBFSCallBudgetExhausted() const {
+            return ccBfsMaxCalls > 0 &&
+                   ccBfsCallsUsed.load(std::memory_order_relaxed) >=
+                       ccBfsMaxCalls;
+        }
+
+        bool tryReserveBFSCall() {
+            if (ccBfsMaxCalls == 0) {
+                ccBfsCallsUsed.fetch_add(1, std::memory_order_relaxed);
+                return true;
+            }
+
+            size_t used = ccBfsCallsUsed.load(std::memory_order_relaxed);
+            while (used < ccBfsMaxCalls) {
+                if (ccBfsCallsUsed.compare_exchange_weak(
+                        used, used + 1,
+                        std::memory_order_relaxed,
+                        std::memory_order_relaxed)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         void updateMaxBlockCount(size_t count) {
             size_t current = MAX_B_COUNT.load(std::memory_order_relaxed);
             while (current < count &&
@@ -173,8 +209,20 @@ class DanceDNNF : DancingMatrix {
         }
 
         void stopCCForETTCallBudget() {
+            if (pureDynDXD) return;
+
+            currentDecompositionPolicy().phase =
+                isCCBFSCallBudgetExhausted()
+                    ? CCProbePhase::Disabled
+                    : CCProbePhase::Bfs;
+            currentDecompositionPolicy().noSplitCount = 0;
+            currentDecompositionPolicy().skipNextProbe = false;
+        }
+
+        void stopCCForBFSCallBudget() {
             currentDecompositionPolicy().phase = CCProbePhase::Disabled;
             currentDecompositionPolicy().noSplitCount = 0;
+            currentDecompositionPolicy().skipNextProbe = false;
         }
 
         DecompositionPolicy& currentDecompositionPolicy() {
@@ -188,18 +236,30 @@ class DanceDNNF : DancingMatrix {
         }
 
         bool shouldMaintainDynamicEtt() const {
-            return useETT && !dxd_mode &&
+            return algorithmMode == AlgorithmMode::DYNDXD &&
                    currentDecompositionPolicy().phase == CCProbePhase::Ett;
         }
 
         void resetAdaptiveDecompositionState() {
-            decompositionPolicy = DecompositionPolicy{
-                CCProbePhase::Ett, EttFailureAction::FallbackToBfs, 0, false};
+            decompositionPolicy = pureDynDXD
+                ? DecompositionPolicy{
+                      CCProbePhase::Ett, EttFailureAction::Disable, 0, false}
+                : DecompositionPolicy{
+                      CCProbePhase::Ett, EttFailureAction::FallbackToBfs, 0, false};
             ccEttCallsUsed.store(0, std::memory_order_relaxed);
+            ccBfsCallsUsed.store(0, std::memory_order_relaxed);
         }
 
-        static void updateDecompositionPolicy(DecompositionPolicy& policy,
-                                              size_t numBlocks) {
+        void updateDecompositionPolicy(DecompositionPolicy& policy,
+                                       size_t numBlocks) {
+            if (pureDynDXD) {
+                policy.phase = CCProbePhase::Ett;
+                policy.ettFailureAction = EttFailureAction::Disable;
+                policy.noSplitCount = 0;
+                policy.skipNextProbe = false;
+                return;
+            }
+
             if (numBlocks > 1) {
                 policy.phase = CCProbePhase::Disabled;
                 policy.noSplitCount = 0;
@@ -243,6 +303,22 @@ class DanceDNNF : DancingMatrix {
             ccEttMaxCalls = calls;
         }
 
+        void setCCBFSMaxCalls(size_t calls) {
+            ccBfsMaxCalls = calls;
+        }
+
+        void setPureDynDXD(bool pure) {
+            pureDynDXD = pure;
+            if (pureDynDXD) {
+                ccEttMaxCalls = 0;
+                ccBfsMaxCalls = 0;
+            }
+        }
+
+        void setSkipDNNFSize(bool skip) {
+            skipDNNFSize = skip;
+        }
+
         void setBFSAreaThreshold(size_t area) {
             bfs_area_threshold = area == 0 ? size_t{100000} : area;
         }
@@ -250,20 +326,19 @@ class DanceDNNF : DancingMatrix {
         void setTimeLimit(long seconds) { timer.setTimeBound(seconds); }
         void logCCExperimentStats(bool complete, bool quick = false);
 
-        // ── MDLX（统一接口，mode决定分块策略）
         DNNFResult parallelSearchMDLX(vector<Block>& blocks, DecomMode mode);
  
-        // MDLX_impl: 统一递归搜索，根据mode选择分块方式和图更新策略
         DNNFResult MDLX(vector<int>& sols, Block& block, DecomMode mode);
  
-        // start_MDLX: 统一入口，通过mode参数切换ETT/BFS
         void start_MDLX(DecomMode mode);
 
         /**
          * Counts unique nodes in the Decision-DNNF rooted at rootDNNF.
          * Terminal nodes (T, F) are excluded from the count.
          */
-        size_t countDNNFNodes() const;
+        size_t countDNNFNodes() const {
+            return createdDNNFNodes.load(std::memory_order_relaxed);
+        }
 
         size_t countZDDSize() const;
 
@@ -295,9 +370,12 @@ class DanceDNNF : DancingMatrix {
         }
 
         void runDXZ() {
+            if (!isDXZMode()) {
+                throw std::logic_error(
+                    "runDXZ requires AlgorithmMode::DXZ");
+            }
             turnOffGraphSync();
             controlOUTPUT = true;
-            dxz_mode = true;
             startDXD();
         }
 
@@ -341,6 +419,81 @@ class DanceDNNF : DancingMatrix {
             shared_ptr<DNNFNode> node;
         };
 
+        struct SharedCacheEntry {
+            CacheKey key;
+            CacheEntry value;
+        };
+
+        class LockFreeDNNCache {
+        public:
+            explicit LockFreeDNNCache(
+                size_t capacity = size_t{1} << 22)
+                : capacity_(nextPowerOfTwo(capacity)),
+                  mask_(capacity_ - 1),
+                  slots_(std::make_unique<
+                         std::atomic<SharedCacheEntry*>[]>(capacity_)) {
+                for (size_t i = 0; i < capacity_; ++i) {
+                    slots_[i].store(nullptr, std::memory_order_relaxed);
+                }
+            }
+
+            ~LockFreeDNNCache() {
+                for (size_t i = 0; i < capacity_; ++i) {
+                    delete slots_[i].load(std::memory_order_relaxed);
+                }
+            }
+
+            bool get(const CacheKey& key, CacheEntry& result) const {
+                size_t index = key.hash & mask_;
+                for (size_t probes = 0; probes < capacity_; ++probes) {
+                    SharedCacheEntry* entry =
+                        slots_[index].load(std::memory_order_acquire);
+                    if (!entry) return false;
+                    if (entry->key == key) {
+                        result = entry->value;
+                        return true;
+                    }
+                    index = (index + 1) & mask_;
+                }
+                return false;
+            }
+
+            void put(const CacheKey& key, const CacheEntry& value) {
+                size_t index = key.hash & mask_;
+                auto candidate =
+                    std::make_unique<SharedCacheEntry>(
+                        SharedCacheEntry{key, value});
+                for (size_t probes = 0; probes < capacity_; ++probes) {
+                    SharedCacheEntry* current =
+                        slots_[index].load(std::memory_order_acquire);
+                    if (!current) {
+                        SharedCacheEntry* raw = candidate.get();
+                        if (slots_[index].compare_exchange_strong(
+                                current, raw,
+                                std::memory_order_release,
+                                std::memory_order_acquire)) {
+                            candidate.release();
+                            return;
+                        }
+                        if (current && current->key == key) return;
+                    }
+                    if (current->key == key) return;
+                    index = (index + 1) & mask_;
+                }
+            }
+
+        private:
+            static size_t nextPowerOfTwo(size_t value) {
+                size_t result = 1;
+                while (result < value) result <<= 1;
+                return result;
+            }
+
+            size_t capacity_;
+            size_t mask_;
+            std::unique_ptr<std::atomic<SharedCacheEntry*>[]> slots_;
+        };
+
         struct DecisionNodeKey {
             int row;
             size_t loId;
@@ -381,9 +534,16 @@ class DanceDNNF : DancingMatrix {
             uint64_t nodesAllocated = 0;
             double cacheReadSeconds = 0.0;
             double cacheWriteSeconds = 0.0;
+            double stateHashSeconds = 0.0;
+            double chooseColumnSeconds = 0.0;
+            double decompositionProbeSeconds = 0.0;
             double nodeLookupSeconds = 0.0;
             double nodeInsertSeconds = 0.0;
             double lockWaitSeconds = 0.0;
+            uint64_t stateHashCalls = 0;
+            uint64_t chooseColumnCalls = 0;
+            uint64_t decompositionProbeCalls = 0;
+            uint64_t cacheKeyColumns = 0;
             BlockMutationMetrics mutation;
 
             size_t nextNodeId = 0;
@@ -403,9 +563,16 @@ class DanceDNNF : DancingMatrix {
                 nodesAllocated = 0;
                 cacheReadSeconds = 0.0;
                 cacheWriteSeconds = 0.0;
+                stateHashSeconds = 0.0;
+                chooseColumnSeconds = 0.0;
+                decompositionProbeSeconds = 0.0;
                 nodeLookupSeconds = 0.0;
                 nodeInsertSeconds = 0.0;
                 lockWaitSeconds = 0.0;
+                stateHashCalls = 0;
+                chooseColumnCalls = 0;
+                decompositionProbeCalls = 0;
+                cacheKeyColumns = 0;
                 mutation = BlockMutationMetrics{};
                 mutation.enabled = enableStats;
                 nextNodeId = 0;
@@ -422,6 +589,41 @@ class DanceDNNF : DancingMatrix {
                 }
                 ++nodesAllocated;
                 return nextNodeId++;
+            }
+
+            void mergeStatsFrom(const SearchState& other) {
+                cacheReads += other.cacheReads;
+                cacheHits += other.cacheHits;
+                cacheWrites += other.cacheWrites;
+                nodeLookups += other.nodeLookups;
+                nodeLookupHits += other.nodeLookupHits;
+                nodeInserts += other.nodeInserts;
+                nodesAllocated += other.nodesAllocated;
+                cacheReadSeconds += other.cacheReadSeconds;
+                cacheWriteSeconds += other.cacheWriteSeconds;
+                stateHashSeconds += other.stateHashSeconds;
+                chooseColumnSeconds += other.chooseColumnSeconds;
+                decompositionProbeSeconds += other.decompositionProbeSeconds;
+                nodeLookupSeconds += other.nodeLookupSeconds;
+                nodeInsertSeconds += other.nodeInsertSeconds;
+                lockWaitSeconds += other.lockWaitSeconds;
+                stateHashCalls += other.stateHashCalls;
+                chooseColumnCalls += other.chooseColumnCalls;
+                decompositionProbeCalls += other.decompositionProbeCalls;
+                cacheKeyColumns += other.cacheKeyColumns;
+
+                mutation.coverSeconds += other.mutation.coverSeconds;
+                mutation.uncoverSeconds += other.mutation.uncoverSeconds;
+                mutation.coverSetSeconds += other.mutation.coverSetSeconds;
+                mutation.uncoverSetSeconds += other.mutation.uncoverSetSeconds;
+                mutation.removedRowsClearSeconds +=
+                    other.mutation.removedRowsClearSeconds;
+                mutation.coverCalls += other.mutation.coverCalls;
+                mutation.uncoverCalls += other.mutation.uncoverCalls;
+                mutation.coverSetOps += other.mutation.coverSetOps;
+                mutation.uncoverSetOps += other.mutation.uncoverSetOps;
+                mutation.removedRowsClearCalls +=
+                    other.mutation.removedRowsClearCalls;
             }
         };
 
@@ -440,9 +642,16 @@ class DanceDNNF : DancingMatrix {
             uint64_t nodesAllocated = 0;
             double cacheReadSeconds = 0.0;
             double cacheWriteSeconds = 0.0;
+            double stateHashSeconds = 0.0;
+            double chooseColumnSeconds = 0.0;
+            double decompositionProbeSeconds = 0.0;
             double nodeLookupSeconds = 0.0;
             double nodeInsertSeconds = 0.0;
             double lockWaitSeconds = 0.0;
+            uint64_t stateHashCalls = 0;
+            uint64_t chooseColumnCalls = 0;
+            uint64_t decompositionProbeCalls = 0;
+            uint64_t cacheKeyColumns = 0;
             double coverSeconds = 0.0;
             double uncoverSeconds = 0.0;
             double coverSetSeconds = 0.0;
@@ -466,6 +675,9 @@ class DanceDNNF : DancingMatrix {
             return activeSearchState ? *activeSearchState : mainSearchState;
         }
 
+        void logSearchStateStats(const string& label,
+                                 const SearchState& state);
+
         bool getCachedResult(const CacheKey& key, DNNFResult& count,
                              shared_ptr<DNNFNode>& node) {
             SearchState& state = currentSearchState();
@@ -477,11 +689,21 @@ class DanceDNNF : DancingMatrix {
                 state.cacheReadSeconds += elapsedSeconds(start);
                 ++state.cacheReads;
             }
-            if (it == state.cache.end()) return false;
+            if (it != state.cache.end()) {
+                if (state.collectStats) ++state.cacheHits;
+                count = it->second.count;
+                node = it->second.node;
+                return true;
+            }
 
+            if (!sharedDNNCache) return false;
+            CacheEntry sharedEntry;
+            if (!sharedDNNCache->get(key, sharedEntry)) return false;
+            state.cache.emplace(
+                key, CacheEntry{sharedEntry.count, sharedEntry.node});
             if (state.collectStats) ++state.cacheHits;
-            count = it->second.count;
-            node = it->second.node;
+            count = sharedEntry.count;
+            node = sharedEntry.node;
             return true;
         }
 
@@ -492,9 +714,13 @@ class DanceDNNF : DancingMatrix {
                                    ? std::chrono::steady_clock::now()
                                    : std::chrono::steady_clock::time_point{};
             state.cache.emplace(key, CacheEntry{count, node});
+            if (sharedDNNCache) {
+                sharedDNNCache->put(key, CacheEntry{count, node});
+            }
             if (state.collectStats) {
                 state.cacheWriteSeconds += elapsedSeconds(start);
                 ++state.cacheWrites;
+                state.cacheKeyColumns += key.cols.size();
             }
         }
 
@@ -502,10 +728,7 @@ class DanceDNNF : DancingMatrix {
         Logger& logger;
         bool controlOUTPUT = false;
 
-        // 并行阈值控制
-        int max_threads = 0;               // 最大线程数（0 = 使用 hardware_concurrency）
-        double sync_off_ratio = 0.75;      // 超过此比例即关闭图同步
-
+        int max_threads = 0;
 
         int tried_numbers = 0; // 已尝试的次数
         std::mutex tried_numbers_mutex;
@@ -524,6 +747,7 @@ class DanceDNNF : DancingMatrix {
 
         mutable std::shared_mutex recordMutex; // 记录互斥锁
         SearchState mainSearchState;
+        std::shared_ptr<LockFreeDNNCache> sharedDNNCache;
         inline static thread_local SearchState* activeSearchState = nullptr;
 
         ThreadPool& getThreadPool(int poolSize) {

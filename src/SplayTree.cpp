@@ -11,6 +11,41 @@ EulerTourTree::~EulerTourTree() {
     deleteTree(root);
 }
 
+std::unique_ptr<EulerTourTree> EulerTourTree::clone() const {
+    auto copy = std::make_unique<EulerTourTree>(treeId);
+    copy->compId = compId;
+    copy->vertices = vertices;
+    copy->nonTreeEdges = nonTreeEdges;
+    copy->nonTreeNeighbors = nonTreeNeighbors;
+    copy->replacementNeighborProvider = replacementNeighborProvider;
+
+    std::unordered_map<Node*, Node*> nodeMap;
+    std::function<Node*(Node*, Node*)> cloneNode =
+        [&](Node* node, Node* parent) -> Node* {
+        if (!node) return nullptr;
+        Node* cloned = node->isEdge()
+            ? new Node(node->u, node->v)
+            : new Node(node->u);
+        cloned->parent = parent;
+        cloned->size = node->size;
+        nodeMap[node] = cloned;
+        cloned->left = cloneNode(node->left, cloned);
+        cloned->right = cloneNode(node->right, cloned);
+        return cloned;
+    };
+    copy->root = cloneNode(root, nullptr);
+
+    for (const auto& [from, toNodes] : edgeNodes) {
+        for (const auto& [to, node] : toNodes) {
+            auto it = nodeMap.find(node);
+            if (it != nodeMap.end()) {
+                copy->edgeNodes[from][to] = it->second;
+            }
+        }
+    }
+    return copy;
+}
+
 void EulerTourTree::deleteTree(Node* x) {
     if (!x) return;
     deleteTree(x->left);
@@ -378,6 +413,8 @@ std::pair<std::unique_ptr<EulerTourTree>, std::unique_ptr<EulerTourTree>> EulerT
     
     auto treeU = std::make_unique<EulerTourTree>(newTreeIdU);
     auto treeV = std::make_unique<EulerTourTree>(newTreeIdV);
+    treeU->replacementNeighborProvider = replacementNeighborProvider;
+    treeV->replacementNeighborProvider = replacementNeighborProvider;
 
     treeU->root = T_u;
     treeV->root = T_v;
@@ -537,11 +574,23 @@ Edge EulerTourTree::findReplacementEdge(Node* rootU, Node* rootV,
         if (node->isEdge()) smallerVertices.insert(node->v);
     }
 
-    if (metrics) metrics->nonTreeEdges = nonTreeEdges.size();
+    if (metrics) {
+        metrics->nonTreeEdges = replacementNeighborProvider
+                                    ? 0
+                                    : nonTreeEdges.size();
+    }
     for (int from : smallerVertices) {
-        auto adjacency = nonTreeNeighbors.find(from);
-        if (adjacency == nonTreeNeighbors.end()) continue;
-        for (int to : adjacency->second) {
+        std::unordered_set<int> lazyNeighbors;
+        const std::unordered_set<int>* candidates = nullptr;
+        if (replacementNeighborProvider) {
+            replacementNeighborProvider(from, lazyNeighbors);
+            candidates = &lazyNeighbors;
+        } else {
+            auto adjacency = nonTreeNeighbors.find(from);
+            if (adjacency == nonTreeNeighbors.end()) continue;
+            candidates = &adjacency->second;
+        }
+        for (int to : *candidates) {
 
             if (smallerVertices.count(to)) continue;
             if (metrics) ++metrics->scanSteps;
@@ -586,6 +635,7 @@ std::unique_ptr<EulerTourTree> EulerTourTree::cutWithReplacement(
         return nullptr; // 没有产生新分量
     } else {
         auto newTree = std::make_unique<EulerTourTree>(-1);
+        newTree->replacementNeighborProvider = replacementNeighborProvider;
 
         Node* T_small = (getSize(treeU) < getSize(treeV)) ? treeU : treeV;
         Node* T_large = (T_small == treeU) ? treeV : treeU;

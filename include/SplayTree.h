@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <memory>
 #include <algorithm>
+#include <functional>
 
 namespace splaytree {
 
@@ -68,6 +69,9 @@ struct ReplacementSearchMetrics {
 class EulerTourTree {
 
 public:
+    using ReplacementNeighborProvider =
+        std::function<void(int, std::unordered_set<int>&)>;
+
     Node* root;
     int treeId;
     int  compId   = -1;
@@ -125,7 +129,10 @@ public:
     EulerTourTree(const EulerTourTree& o)
     : treeId(o.treeId), compId(o.compId), root(o.root),
         vertices(o.vertices), nonTreeEdges(o.nonTreeEdges),
-        nonTreeNeighbors(o.nonTreeNeighbors), edgeNodes(o.edgeNodes) {}
+        nonTreeNeighbors(o.nonTreeNeighbors), edgeNodes(o.edgeNodes),
+        replacementNeighborProvider(o.replacementNeighborProvider) {}
+
+    std::unique_ptr<EulerTourTree> clone() const;
     
     // 基本操作
     int getTreeId() const { return treeId; }
@@ -183,6 +190,7 @@ public:
 
     // 非树边操作
     void addNonTreeEdge(const Edge& e) {
+        if (replacementNeighborProvider) return;
         if (nonTreeEdges.insert(e).second) {
             nonTreeNeighbors[e.u].insert(e.v);
             nonTreeNeighbors[e.v].insert(e.u);
@@ -200,6 +208,12 @@ public:
         eraseNeighbor(e.v, e.u);
     }
     bool hasNonTreeEdge(const Edge& e) const { return nonTreeEdges.count(e) > 0; }
+    void setReplacementNeighborProvider(ReplacementNeighborProvider provider) {
+        replacementNeighborProvider = std::move(provider);
+    }
+    bool usesImplicitNonTreeEdges() const {
+        return static_cast<bool>(replacementNeighborProvider);
+    }
     bool isTreeEdge(int u, int v) const {
         if (u > v) std::swap(u, v);
         return edgeNodes.count(u) && edgeNodes.at(u).count(v);
@@ -218,6 +232,9 @@ public:
     void printEulerTour() const;
     void testSplay(int v);
     int getVertexDegree(int v) const;
+
+private:
+    ReplacementNeighborProvider replacementNeighborProvider;
 };
 
 }

@@ -59,11 +59,11 @@ https://github.com/loiufam/Algorithm_DXD
 mkdir build && cd build
  
 # Debug build (assertions enabled, no optimisation)
-cmake -DCMAKE_BUILD_TYPE=Debug ..
- 
+cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+
 # Release build (recommended for benchmarking)
 cmake -DCMAKE_BUILD_TYPE=Release ..
- 
+
 make -j
 ```
  

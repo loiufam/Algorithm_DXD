@@ -26,11 +26,15 @@ public:
     bool        debug   = false;
     bool        enable_cc_stats = false;
     bool        enable_cc_time = false;
+    bool        skip_dnnf_size = false;
+    bool        pure_dyndxd = false;
     int         quick_stats_updates = 0;
     int         time_limit = 1500;
     // Default to 3 ETT queries; explicitly passing 0 keeps the budget unlimited.
     int         cc_ett_max_calls = 3;
+    int         cc_bfs_max_calls = 10;
     int         bfs_area_threshold = 0;
+    int         hybrid_ett_area_divisor = 10;
  
     // ── parse ────────────────────────────────────────────────────────────────
     // Returns true on success, false if --help was requested or an error
@@ -58,6 +62,14 @@ public:
                 enable_cc_time = true;
                 continue;
             }
+            if (tok == "--skip-dnnf-size") {
+                skip_dnnf_size = true;
+                continue;
+            }
+            if (tok == "--pure-dyndxd") {
+                pure_dyndxd = true;
+                continue;
+            }
  
             // ── value flags: consume the *next* token as the value ────────────
             if (tok == "-a" || tok == "--alg"     ||
@@ -65,8 +77,10 @@ public:
                 tok == "-t" || tok == "--threads" ||
                 tok == "--time-limit" ||
                 tok == "--cc-ett-max-calls" ||
+                tok == "--cc-bfs-max-calls" ||
                 tok == "--quick-stats" ||
                 tok == "--bfs-area-threshold" ||
+                tok == "--hybrid-ett-area-divisor" ||
                 tok == "-m" || tok == "--mode") {
  
                 if (i + 1 >= argc) {
@@ -107,6 +121,12 @@ public:
                         return false;
                     }
                 }
+                else if (tok == "--cc-bfs-max-calls") {
+                    try { cc_bfs_max_calls = std::stoi(val); } catch (...) {
+                        std::cerr << "[error] --cc-bfs-max-calls requires an integer.\n";
+                        return false;
+                    }
+                }
                 else if (tok == "--quick-stats") {
                     try { quick_stats_updates = std::stoi(val); } catch (...) {
                         std::cerr << "[error] --quick-stats requires an integer.\n";
@@ -116,6 +136,14 @@ public:
                 else if (tok == "--bfs-area-threshold") {
                     try { bfs_area_threshold = std::stoi(val); } catch (...) {
                         std::cerr << "[error] --bfs-area-threshold requires an integer.\n";
+                        return false;
+                    }
+                }
+                else if (tok == "--hybrid-ett-area-divisor") {
+                    try { hybrid_ett_area_divisor = std::stoi(val); }
+                    catch (...) {
+                        std::cerr << "[error] --hybrid-ett-area-divisor "
+                                     "requires an integer.\n";
                         return false;
                     }
                 }
@@ -152,6 +180,13 @@ public:
                         }
                         continue;
                     }
+                    if (key == "--cc-bfs-max-calls") {
+                        try { cc_bfs_max_calls = std::stoi(val); } catch (...) {
+                            std::cerr << "[error] --cc-bfs-max-calls value must be an integer.\n";
+                            return false;
+                        }
+                        continue;
+                    }
                     if (key == "--quick-stats") {
                         try { quick_stats_updates = std::stoi(val); } catch (...) {
                             std::cerr << "[error] --quick-stats value must be an integer.\n";
@@ -162,6 +197,17 @@ public:
                     if (key == "--bfs-area-threshold") {
                         try { bfs_area_threshold = std::stoi(val); } catch (...) {
                             std::cerr << "[error] --bfs-area-threshold value must be an integer.\n";
+                            return false;
+                        }
+                        continue;
+                    }
+                    if (key == "--hybrid-ett-area-divisor") {
+                        try {
+                            hybrid_ett_area_divisor = std::stoi(val);
+                        } catch (...) {
+                            std::cerr << "[error] "
+                                         "--hybrid-ett-area-divisor value "
+                                         "must be an integer.\n";
                             return false;
                         }
                         continue;
@@ -187,28 +233,36 @@ public:
             << "  -a, --alg     <name>   Algorithm to run (required)\n"
             << "                           dlx   – Dancing Links (count)\n"
             << "                           dxz   – DXZ (ZDD compilation)\n"
-            << "                           dxd   – DXD single-thread\n"
-            << "                           mdxd  – DXD multi-thread (ETT)\n"
+            << "                           dxd   – DXD\n"
+            << "                           ddxd  – DynDXD (deferred ETT)\n"
+            << "                           hybrid – HybridDXD (min ETT/max BFS probes)\n"
             << "                           mdlx  – Multi-thread DLX\n"
             << "  -i, --input   <path>   Path to the input test-case file (required)\n"
             << "  -t, --threads <n>      Number of threads (default: 8).\n"
             << "      --enable-cc-stats    Collect CC graph/decomposition statistics\n"
             << "                           (single-thread dxd or ddxd).\n"
             << "      --enable-cc-time     Measure CC operations only (single-thread DXD/DynDXD).\n"
-            << "      --cc-ett-max-calls <n>      Stop all CC work after n ETT queries.\n"
+            << "      --cc-ett-max-calls <n>      Limit ETT queries, then fall back to BFS.\n"
             << "                                  Default 3; 0 is unlimited.\n"
+            << "      --cc-bfs-max-calls <n>      Stop DynDXD BFS after n queries.\n"
+            << "                                  Default 10; 0 is unlimited.\n"
+            << "      --pure-dyndxd              Keep DynDXD in ETT after root BFS;\n"
+            << "                                  no BFS fallback and no ETT call limit.\n"
+            << "      --skip-dnnf-size           Do not print DNNF Size.\n"
             << "      --bfs-area-threshold <n>   Initial-split probe selector.\n"
             << "                                  Init area > n: probe smallest component;\n"
             << "                                  otherwise probe largest. Default 100000.\n"
+            << "      --hybrid-ett-area-divisor <n>\n"
+            << "                                  Start minimum-block ETT when residual\n"
+            << "                                  area is below M/n. Default 10.\n"
             << "      --time-limit <s>    Solver time limit in seconds (default: 1500).\n"
-            << "                         Effective only for mdxd / mdlx.\n"
-            << "                         Values > 8 are clamped to 8.\n"
+            << "                         Effective for dxd / ddxd / mdlx.\n"
             << "  -d, --debug            Enable debug output\n"
             << "  -h, --help             Print this message and exit\n\n"
             << "Examples:\n"
             << "  " << prog << " -a dxd  -i ../data/run_set/Aarnet.txt\n"
-            << "  " << prog << " -a mdxd -i ../data/run_set/Aarnet.txt -t 8\n"
-            << "  " << prog << " -a mdxd -i ../data/run_set/Aarnet.txt -t 1   # single-thread benchmark\n"
+            << "  " << prog << " -a ddxd -i ../data/run_set/Aarnet.txt -t 8\n"
+            << "  " << prog << " -a ddxd -i ../data/run_set/Aarnet.txt -t 1   # single-thread benchmark\n"
             << "  " << prog << " -a dxd  -i ../data/exact_cover_benchmark/hard.txt --debug\n\n";
     }
  
@@ -255,10 +309,12 @@ private:
  
         // Algorithm name validation
         static const std::unordered_set<std::string> valid_algs =
-            {"dlx", "dxz", "dxd", "ddxd", "mdlx"};
+            {"dlx", "dxz", "dxd", "ddxd", "hybrid",
+             "mdlx"};
         if (!valid_algs.count(alg)) {
             std::cerr << "[error] unknown algorithm '" << alg << "'.\n"
-                      << "        Valid choices: dlx  dxz  dxd  ddxd  mdlx\n";
+                      << "        Valid choices: dlx  dxz  dxd  ddxd  "
+                         "hybrid  mdlx\n";
             return false;
         }
         if (enable_cc_stats &&
@@ -274,12 +330,20 @@ private:
             std::cerr << "[error] --enable-cc-time and --enable-cc-stats are separate experiment modes.\n";
             return false;
         }
+        if (pure_dyndxd && alg != "ddxd") {
+            std::cerr << "[error] --pure-dyndxd requires --alg ddxd.\n";
+            return false;
+        }
         if (time_limit < 1) {
             std::cerr << "[error] --time-limit must be >= 1.\n";
             return false;
         }
         if (cc_ett_max_calls < 0) {
             std::cerr << "[error] --cc-ett-max-calls must be >= 0 (0 means unlimited).\n";
+            return false;
+        }
+        if (cc_bfs_max_calls < 0) {
+            std::cerr << "[error] --cc-bfs-max-calls must be >= 0 (0 means unlimited).\n";
             return false;
         }
         if (quick_stats_updates < 0) {

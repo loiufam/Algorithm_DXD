@@ -52,6 +52,7 @@ public:
     void deleteVertex(int v);
     void restoreVertex(int v);
     bool hasVertex  (int v)        const;
+    bool usesImplicitEdges() const;
 
     // neighbors：返回活跃边的邻居
     std::vector<int> neighbors(int v) const;
@@ -69,6 +70,8 @@ private:
 // Graph —— 主图（持有所有顶点和邻接表内存）
 class Graph {
 public:
+    using NeighborProvider = std::function<std::vector<int>(int)>;
+
     explicit Graph(int n) : vertices_(n), vertexComp_(n, -1) {}
 
     ~Graph() {
@@ -93,14 +96,29 @@ public:
         insertUniqueDir(u, v);
         insertUniqueDir(v, u);
     }
-    void deleteEdge (int u, int v) { markDir(u,v,true);  markDir(v,u,true);  }
-    void restoreEdge(int u, int v) { markDir(u,v,false); markDir(v,u,false); }
+    void setNeighborProvider(NeighborProvider provider) {
+        neighborProvider_ = std::move(provider);
+    }
+    bool usesImplicitNeighbors() const {
+        return static_cast<bool>(neighborProvider_);
+    }
+    void deleteEdge (int u, int v) {
+        if (neighborProvider_) return;
+        markDir(u,v,true);
+        markDir(v,u,true);
+    }
+    void restoreEdge(int u, int v) {
+        if (neighborProvider_) return;
+        markDir(u,v,false);
+        markDir(v,u,false);
+    }
     bool hasEdge    (int u, int v) const {
         AdjNode* n = findNode(u,v); return n && !n->deleted;
     }
 
     std::vector<int> neighbors(int v) const {
         chk(v);
+        if (neighborProvider_) return neighborProvider_(v);
         std::vector<int> res;
         for (AdjNode* c = vertices_[v].sentinel.next; c; c = c->next)
             if (!c->deleted && !vertices_[c->neighbor].deleted)
@@ -185,6 +203,7 @@ private:
     std::vector<Vertex>   vertices_;
     std::vector<int>      vertexComp_;
     std::unordered_map<int, std::unique_ptr<SubGraph>> subgraphs_;
+    NeighborProvider      neighborProvider_;
 
     void chk(int v) const { assert(v >= 0 && v < (int)vertices_.size()); }
 
@@ -216,6 +235,9 @@ inline bool SubGraph::hasEdge(int u, int v) const { return parent_->hasEdge(u, v
 inline void SubGraph::deleteVertex(int v) { parent_->deleteVertex(v); }
 inline void SubGraph::restoreVertex(int v) { parent_->restoreVertex(v); }
 inline bool SubGraph::hasVertex(int v) const { return parent_->hasVertex(v); }
+inline bool SubGraph::usesImplicitEdges() const {
+    return parent_->usesImplicitNeighbors();
+}
 
 inline std::vector<int> SubGraph::neighbors(int v) const {
     return parent_->getNeighbors(v);
@@ -243,6 +265,7 @@ inline void SubGraph::print() const {
 }
 
 inline std::vector<int> Graph::getNeighbors(int v) const {
+    if (neighborProvider_) return neighborProvider_(v);
     std::vector<int> res;
     for (AdjNode* c = vertices_[v].sentinel.next; c; c = c->next)
         if (!c->deleted && !vertices_[c->neighbor].deleted)
@@ -251,6 +274,7 @@ inline std::vector<int> Graph::getNeighbors(int v) const {
 }
 
 inline std::vector<int> Graph::getAllNeighbors(int v) const {
+    if (neighborProvider_) return neighborProvider_(v);
     std::vector<int> res;
     for (AdjNode* c = vertices_[v].sentinel.next; c; c = c->next)
         res.push_back(c->neighbor);

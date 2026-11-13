@@ -26,6 +26,33 @@
 using namespace std;
 namespace fs = std::filesystem;
 
+enum class AlgorithmMode : std::uint8_t {
+    DXZ = 0,
+    DXD = 1,
+    DYNDXD = 2,
+    DLX = 3,
+    MDLX_STATIC = 4,
+    MDLX_DYNAMIC = 5,
+    HYBRID_DXD = 6
+};
+
+static_assert(static_cast<std::uint8_t>(AlgorithmMode::DXZ) == 0);
+static_assert(static_cast<std::uint8_t>(AlgorithmMode::DXD) == 1);
+static_assert(static_cast<std::uint8_t>(AlgorithmMode::DYNDXD) == 2);
+
+inline const char* algorithmModeName(AlgorithmMode mode) {
+    switch (mode) {
+        case AlgorithmMode::DXZ: return "DXZ";
+        case AlgorithmMode::DXD: return "DXD";
+        case AlgorithmMode::DYNDXD: return "DynDXD";
+        case AlgorithmMode::DLX: return "DLX";
+        case AlgorithmMode::MDLX_STATIC: return "MDLX-static";
+        case AlgorithmMode::MDLX_DYNAMIC: return "MDLX-dynamic";
+        case AlgorithmMode::HYBRID_DXD: return "HybridDXD";
+    }
+    return "unknown";
+}
+
 
 // 签名用于Memo Cache
 struct Signature {
