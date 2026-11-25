@@ -35,6 +35,18 @@ public:
     int         cc_bfs_max_calls = 10;
     int         bfs_area_threshold = 0;
     int         hybrid_ett_area_divisor = 10;
+    bool        hybrid_ett_always = false;
+    bool        hybrid_adaptive = false;
+    bool        hybrid_runtime_policy = false;
+    bool        hybrid_max_seed = false;
+    std::string hybrid_engine = "runtime";
+    std::string hybrid_decision_log;
+    double      hybrid_stop_ratio = 0.8;
+    double      hybrid_tree_op_ratio = 1.0;
+    bool        hybrid_tree_op_ratio_set = false;
+    bool        dxd_threshold = false;
+    double      dxd_threshold_ratio = 0.5;
+    double      threshold_ratio = 0.5;
  
     // ── parse ────────────────────────────────────────────────────────────────
     // Returns true on success, false if --help was requested or an error
@@ -70,6 +82,26 @@ public:
                 pure_dyndxd = true;
                 continue;
             }
+            if (tok == "--hybrid-ett-always") {
+                hybrid_ett_always = true;
+                continue;
+            }
+            if (tok == "--hybrid-adaptive") {
+                hybrid_adaptive = true;
+                continue;
+            }
+            if (tok == "--hybrid-runtime-policy") {
+                hybrid_runtime_policy = true;
+                continue;
+            }
+            if (tok == "--hybrid-max-seed") {
+                hybrid_max_seed = true;
+                continue;
+            }
+            if (tok == "--dxd-threshold") {
+                dxd_threshold = true;
+                continue;
+            }
  
             // ── value flags: consume the *next* token as the value ────────────
             if (tok == "-a" || tok == "--alg"     ||
@@ -81,6 +113,12 @@ public:
                 tok == "--quick-stats" ||
                 tok == "--bfs-area-threshold" ||
                 tok == "--hybrid-ett-area-divisor" ||
+                tok == "--hybrid-stop-ratio" ||
+                tok == "--hybrid-tree-op-ratio" ||
+                tok == "--hybrid-decision-log" ||
+                tok == "--dxd-threshold-ratio" ||
+                tok == "--threshold-ratio" ||
+                tok == "--hybrid-engine" ||
                 tok == "-m" || tok == "--mode") {
  
                 if (i + 1 >= argc) {
@@ -147,6 +185,47 @@ public:
                         return false;
                     }
                 }
+                else if (tok == "--hybrid-stop-ratio") {
+                    try { hybrid_stop_ratio = std::stod(val); }
+                    catch (...) {
+                        std::cerr << "[error] --hybrid-stop-ratio "
+                                     "requires a number.\n";
+                        return false;
+                    }
+                }
+                else if (tok == "--hybrid-tree-op-ratio") {
+                    try { hybrid_tree_op_ratio = std::stod(val); }
+                    catch (...) {
+                        std::cerr << "[error] --hybrid-tree-op-ratio "
+                                     "requires a number.\n";
+                        return false;
+                    }
+                    hybrid_tree_op_ratio_set = true;
+                }
+                else if (tok == "--hybrid-decision-log") {
+                    hybrid_decision_log = val;
+                }
+                else if (tok == "--hybrid-engine") {
+                    hybrid_engine = val;
+                }
+                else if (tok == "--dxd-threshold-ratio") {
+                    try { dxd_threshold_ratio = std::stod(val); }
+                    catch (...) {
+                        std::cerr << "[error] --dxd-threshold-ratio "
+                                     "requires a number.\n";
+                        return false;
+                    }
+                    threshold_ratio = dxd_threshold_ratio;
+                }
+                else if (tok == "--threshold-ratio") {
+                    try { threshold_ratio = std::stod(val); }
+                    catch (...) {
+                        std::cerr << "[error] --threshold-ratio "
+                                     "requires a number.\n";
+                        return false;
+                    }
+                    dxd_threshold_ratio = threshold_ratio;
+                }
                 continue;
             }
  
@@ -212,6 +291,57 @@ public:
                         }
                         continue;
                     }
+                    if (key == "--hybrid-stop-ratio") {
+                        try {
+                            hybrid_stop_ratio = std::stod(val);
+                        } catch (...) {
+                            std::cerr << "[error] --hybrid-stop-ratio "
+                                         "requires a number.\n";
+                            return false;
+                        }
+                        continue;
+                    }
+                    if (key == "--hybrid-tree-op-ratio") {
+                        try {
+                            hybrid_tree_op_ratio = std::stod(val);
+                        } catch (...) {
+                            std::cerr << "[error] --hybrid-tree-op-ratio "
+                                         "requires a number.\n";
+                            return false;
+                        }
+                        hybrid_tree_op_ratio_set = true;
+                        continue;
+                    }
+                    if (key == "--hybrid-decision-log") {
+                        hybrid_decision_log = val;
+                        continue;
+                    }
+                    if (key == "--hybrid-engine") {
+                        hybrid_engine = val;
+                        continue;
+                    }
+                    if (key == "--dxd-threshold-ratio") {
+                        try {
+                            dxd_threshold_ratio = std::stod(val);
+                        } catch (...) {
+                            std::cerr << "[error] --dxd-threshold-ratio "
+                                         "requires a number.\n";
+                            return false;
+                        }
+                        threshold_ratio = dxd_threshold_ratio;
+                        continue;
+                    }
+                    if (key == "--threshold-ratio") {
+                        try {
+                            threshold_ratio = std::stod(val);
+                        } catch (...) {
+                            std::cerr << "[error] --threshold-ratio "
+                                         "requires a number.\n";
+                            return false;
+                        }
+                        dxd_threshold_ratio = threshold_ratio;
+                        continue;
+                    }
                 }
             }
  
@@ -235,12 +365,12 @@ public:
             << "                           dxz   – DXZ (ZDD compilation)\n"
             << "                           dxd   – DXD\n"
             << "                           ddxd  – DynDXD (deferred ETT)\n"
-            << "                           hybrid – HybridDXD (min ETT/max BFS probes)\n"
+            << "                           hybrid – HybridDXD (single BFS + min-block ETT)\n"
             << "                           mdlx  – Multi-thread DLX\n"
             << "  -i, --input   <path>   Path to the input test-case file (required)\n"
             << "  -t, --threads <n>      Number of threads (default: 8).\n"
             << "      --enable-cc-stats    Collect CC graph/decomposition statistics\n"
-            << "                           (single-thread dxd or ddxd).\n"
+            << "                           (dxd, ddxd, or hybrid).\n"
             << "      --enable-cc-time     Measure CC operations only (single-thread DXD/DynDXD).\n"
             << "      --cc-ett-max-calls <n>      Limit ETT queries, then fall back to BFS.\n"
             << "                                  Default 3; 0 is unlimited.\n"
@@ -249,12 +379,18 @@ public:
             << "      --pure-dyndxd              Keep DynDXD in ETT after root BFS;\n"
             << "                                  no BFS fallback and no ETT call limit.\n"
             << "      --skip-dnnf-size           Do not print DNNF Size.\n"
-            << "      --bfs-area-threshold <n>   Initial-split probe selector.\n"
-            << "                                  Init area > n: probe smallest component;\n"
-            << "                                  otherwise probe largest. Default 100000.\n"
-            << "      --hybrid-ett-area-divisor <n>\n"
-            << "                                  Start minimum-block ETT when residual\n"
-            << "                                  area is below M/n. Default 10.\n"
+            << "      --hybrid-runtime-policy     Use runtime V/E/ET/EN decisions.\n"
+            << "      --hybrid-engine <name>      Hybrid implementation: runtime | legacy.\n"
+            << "      --hybrid-max-seed           Deprecated; runtime Hybrid always uses the\n"
+            << "                                  smallest-area initial block as the Dyn seed.\n"
+            << "      --hybrid-decision-log <p>   Write per-decision Hybrid CSV.\n"
+            << "      --dxd-threshold             Enable relative BFS stop thresholds.\n"
+            << "                                  First multi-split fixes each child\n"
+            << "                                  threshold = child area * ratio.\n"
+            << "      --threshold-ratio <r>       Shared min-Dyn/max-BFS and\n"
+            << "                                  DXD-threshold area ratio.\n"
+            << "                                  Legacy max-block BFS stays at 0.5.\n"
+            << "                                  (default 0.5).\n"
             << "      --time-limit <s>    Solver time limit in seconds (default: 1500).\n"
             << "                         Effective for dxd / ddxd / mdlx.\n"
             << "  -d, --debug            Enable debug output\n"
@@ -318,8 +454,9 @@ private:
             return false;
         }
         if (enable_cc_stats &&
-            ((alg != "ddxd" && alg != "dxd") || threads != 1)) {
-            std::cerr << "[error] --enable-cc-stats requires --alg dxd/ddxd --threads 1.\n";
+            alg != "ddxd" && alg != "dxd" && alg != "hybrid") {
+            std::cerr << "[error] --enable-cc-stats requires "
+                         "--alg dxd/ddxd/hybrid.\n";
             return false;
         }
         if (enable_cc_time && ((alg != "ddxd" && alg != "dxd") || threads != 1)) {
@@ -363,7 +500,66 @@ private:
             std::cerr << "[error] --bfs-area-threshold must be >= 0 (0 means auto).\n";
             return false;
         }
- 
+        if ((hybrid_ett_always || hybrid_adaptive ||
+             hybrid_stop_ratio != 0.8 ||
+             hybrid_tree_op_ratio != 1.0) &&
+            alg != "hybrid") {
+            std::cerr << "[error] Hybrid policy options require --alg hybrid.\n";
+            return false;
+        }
+        if (hybrid_stop_ratio < 0.0 || hybrid_stop_ratio > 1.0) {
+            std::cerr << "[error] --hybrid-stop-ratio must be in [0,1].\n";
+            return false;
+        }
+        if (hybrid_tree_op_ratio < 0.0 ||
+            hybrid_tree_op_ratio > 1.0) {
+            std::cerr << "[error] --hybrid-tree-op-ratio must be in [0,1].\n";
+            return false;
+        }
+        if (hybrid_runtime_policy && alg != "hybrid") {
+            std::cerr << "[error] --hybrid-runtime-policy requires --alg hybrid.\n";
+            return false;
+        }
+        if (hybrid_max_seed && alg != "hybrid") {
+            std::cerr << "[error] --hybrid-max-seed requires --alg hybrid.\n";
+            return false;
+        }
+        if (hybrid_engine != "runtime" && hybrid_engine != "legacy") {
+            std::cerr << "[error] --hybrid-engine must be runtime or legacy.\n";
+            return false;
+        }
+        if (hybrid_engine != "runtime" && alg != "hybrid") {
+            std::cerr << "[error] --hybrid-engine requires --alg hybrid.\n";
+            return false;
+        }
+        if (dxd_threshold_ratio < 0.0 ||
+            dxd_threshold_ratio > 1.0) {
+            std::cerr << "[error] --dxd-threshold-ratio must be in [0,1].\n";
+            return false;
+        }
+        if (threshold_ratio < 0.0 || threshold_ratio > 1.0) {
+            std::cerr << "[error] --threshold-ratio must be in [0,1].\n";
+            return false;
+        }
+        if (dxd_threshold && alg != "dxd") {
+            std::cerr << "[error] --dxd-threshold requires --alg dxd.\n";
+            return false;
+        }
+        if (!hybrid_decision_log.empty() && alg != "hybrid") {
+            std::cerr << "[error] --hybrid-decision-log requires --alg hybrid.\n";
+            return false;
+        }
+        if (hybrid_ett_always && hybrid_adaptive) {
+            std::cerr << "[error] --hybrid-ett-always and "
+                         "--hybrid-adaptive are separate experiment modes.\n";
+            return false;
+        }
+        if (hybrid_adaptive && !hybrid_tree_op_ratio_set) {
+            std::cerr << "[error] --hybrid-adaptive requires "
+                         "--hybrid-tree-op-ratio from the first experiment.\n";
+            return false;
+        }
+
         return true;
     }
 };

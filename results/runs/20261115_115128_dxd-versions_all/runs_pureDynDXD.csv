@@ -1,0 +1,3177 @@
+run_id,suite,dataset,category,instance,input,solver,variant,threads,repeat,status,time_s,wall_time_s,solutions,solutions_match,max_blocks,dnnf_size,rows,cols,exit_code,error,started_at,stdout_tail
+20261115_115128,dxd-versions,old,dominoes,dominoes_10x10,data/benchmarks/dominoes_set/dominoes_10x10.txt,DynDXD,pureDynDXD,1,1,success,1.039266,1.044643,258584046368,,2,,180,100,0,,2026-11-15T11:51:28,"Instance: dominoes_10x10
+启用DynDXD算法求解: dominoes_10x10
+rows: 180
+cols: 100
+设置并行线程数为: 1
+Time: 1.039266 s
+Solutions: 258584046368
+Max Blocks: 2
+CC ETT Calls: 9831
+CC BFS Calls: 1
+DynDXD算法求解结束: dominoes_10x10
+"
+20261115_115128,dxd-versions,old,dominoes,dominoes_10x12,data/benchmarks/dominoes_set/dominoes_10x12.txt,DynDXD,pureDynDXD,1,1,success,1.798572,1.805140,6.574e+13,,2,,218,120,0,,2026-11-15T11:51:29,"Instance: dominoes_10x12
+启用DynDXD算法求解: dominoes_10x12
+rows: 218
+cols: 120
+设置并行线程数为: 1
+Time: 1.798572 s
+Solutions (scientific): 6.574e+13
+Max Blocks: 2
+CC ETT Calls: 12620
+CC BFS Calls: 1
+DynDXD算法求解结束: dominoes_10x12
+"
+20261115_115128,dxd-versions,old,dominoes,dominoes_12x12,data/benchmarks/dominoes_set/dominoes_12x12.txt,DynDXD,pureDynDXD,1,1,success,10.553505,10.579885,5.306e+16,,2,,264,144,0,,2026-11-15T11:51:31,"Instance: dominoes_12x12
+启用DynDXD算法求解: dominoes_12x12
+rows: 264
+cols: 144
+设置并行线程数为: 1
+Time: 10.553505 s
+Solutions (scientific): 5.306e+16
+Max Blocks: 2
+CC ETT Calls: 54408
+CC BFS Calls: 1
+DynDXD算法求解结束: dominoes_12x12
+"
+20261115_115128,dxd-versions,old,dominoes,dominoes_8x10,data/benchmarks/dominoes_set/dominoes_8x10.txt,DynDXD,pureDynDXD,1,1,success,0.196396,0.199285,1031151241,,2,,142,80,0,,2026-11-15T11:51:41,"Instance: dominoes_8x10
+启用DynDXD算法求解: dominoes_8x10
+rows: 142
+cols: 80
+设置并行线程数为: 1
+Time: 0.196396 s
+Solutions: 1031151241
+Max Blocks: 2
+CC ETT Calls: 2268
+CC BFS Calls: 1
+DynDXD算法求解结束: dominoes_8x10
+"
+20261115_115128,dxd-versions,old,dominoes,dominoes_8x8,data/benchmarks/dominoes_set/dominoes_8x8.txt,DynDXD,pureDynDXD,1,1,success,0.104202,0.106654,12988816,,2,,112,64,0,,2026-11-15T11:51:42,"Instance: dominoes_8x8
+启用DynDXD算法求解: dominoes_8x8
+rows: 112
+cols: 64
+设置并行线程数为: 1
+Time: 0.104202 s
+Solutions: 12988816
+Max Blocks: 2
+CC ETT Calls: 1655
+CC BFS Calls: 1
+DynDXD算法求解结束: dominoes_8x8
+"
+20261115_115128,dxd-versions,old,dominoes,tetrominoes_4x5,data/benchmarks/dominoes_set/tetrominoes_4x5.txt,DynDXD,pureDynDXD,1,1,success,2.217067,2.220213,454,,1,,161,20,0,,2026-11-15T11:51:42,"Instance: tetrominoes_4x5
+启用DynDXD算法求解: tetrominoes_4x5
+rows: 161
+cols: 20
+设置并行线程数为: 1
+Time: 2.217067 s
+Solutions: 454
+Max Blocks: 1
+CC ETT Calls: 217
+CC BFS Calls: 1
+DynDXD算法求解结束: tetrominoes_4x5
+"
+20261115_115128,dxd-versions,old,dominoes,tetrominoes_4x7,data/benchmarks/dominoes_set/tetrominoes_4x7.txt,DynDXD,pureDynDXD,1,1,success,21.802114,21.806487,9157,,1,,257,28,0,,2026-11-15T11:51:44,"Instance: tetrominoes_4x7
+启用DynDXD算法求解: tetrominoes_4x7
+rows: 257
+cols: 28
+设置并行线程数为: 1
+Time: 21.802114 s
+Solutions: 9157
+Max Blocks: 1
+CC ETT Calls: 482
+CC BFS Calls: 1
+DynDXD算法求解结束: tetrominoes_4x7
+"
+20261115_115128,dxd-versions,old,dominoes,tetrominoes_6x6,data/benchmarks/dominoes_set/tetrominoes_6x6.txt,DynDXD,pureDynDXD,1,1,success,616.650527,616.668606,178939,,2,,381,36,0,,2026-11-15T11:52:06,"Instance: tetrominoes_6x6
+启用DynDXD算法求解: tetrominoes_6x6
+rows: 381
+cols: 36
+设置并行线程数为: 1
+Time: 616.650527 s
+Solutions: 178939
+Max Blocks: 2
+CC ETT Calls: 11848
+CC BFS Calls: 1
+DynDXD算法求解结束: tetrominoes_6x6
+"
+20261115_115128,dxd-versions,old,dominoes,tetrominoes_6x8,data/benchmarks/dominoes_set/tetrominoes_6x8.txt,DynDXD,pureDynDXD,1,1,timeout,1503.494388,1503.528181,,,,,553,48,0,exit=0; tail=Time: 1503.494388 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: tetrominoes_6x8,2026-11-15T12:02:22,"Instance: tetrominoes_6x8
+启用DynDXD算法求解: tetrominoes_6x8
+rows: 553
+cols: 48
+设置并行线程数为: 1
+Time: 1503.494388 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: tetrominoes_6x8
+"
+20261115_115128,dxd-versions,old,dominoes,tetrominoes_8x8,data/benchmarks/dominoes_set/tetrominoes_8x8.txt,DynDXD,pureDynDXD,1,1,timeout,1509.639267,1509.675621,,,,,801,64,0,exit=0; tail=Time: 1509.639267 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: tetrominoes_8x8,2026-11-15T12:27:26,"Instance: tetrominoes_8x8
+启用DynDXD算法求解: tetrominoes_8x8
+rows: 801
+cols: 64
+设置并行线程数为: 1
+Time: 1509.639267 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: tetrominoes_8x8
+"
+20261115_115128,dxd-versions,old,exact_cover,bell-06,data/benchmarks/exact_cover_set/bell-06.ec,DynDXD,pureDynDXD,1,1,success,0.021606,0.023801,203,,1,,63,6,0,,2026-11-15T12:52:36,"Instance: bell-06
+启用DynDXD算法求解: bell-06
+rows: 63
+cols: 6
+设置并行线程数为: 1
+Time: 0.021606 s
+Solutions: 203
+Max Blocks: 1
+CC ETT Calls: 31
+CC BFS Calls: 1
+DynDXD算法求解结束: bell-06
+"
+20261115_115128,dxd-versions,old,exact_cover,bell-07,data/benchmarks/exact_cover_set/bell-07.ec,DynDXD,pureDynDXD,1,1,success,0.245254,0.247956,877,,1,,127,7,0,,2026-11-15T12:52:36,"Instance: bell-07
+启用DynDXD算法求解: bell-07
+rows: 127
+cols: 7
+设置并行线程数为: 1
+Time: 0.245254 s
+Solutions: 877
+Max Blocks: 1
+CC ETT Calls: 63
+CC BFS Calls: 1
+DynDXD算法求解结束: bell-07
+"
+20261115_115128,dxd-versions,old,exact_cover,bell-08,data/benchmarks/exact_cover_set/bell-08.ec,DynDXD,pureDynDXD,1,1,success,3.374736,3.378631,4140,,1,,255,8,0,,2026-11-15T12:52:36,"Instance: bell-08
+启用DynDXD算法求解: bell-08
+rows: 255
+cols: 8
+设置并行线程数为: 1
+Time: 3.374736 s
+Solutions: 4140
+Max Blocks: 1
+CC ETT Calls: 127
+CC BFS Calls: 1
+DynDXD算法求解结束: bell-08
+"
+20261115_115128,dxd-versions,old,exact_cover,bell-09,data/benchmarks/exact_cover_set/bell-09.ec,DynDXD,pureDynDXD,1,1,success,51.806253,51.825704,21147,,1,,511,9,0,,2026-11-15T12:52:39,"Instance: bell-09
+启用DynDXD算法求解: bell-09
+rows: 511
+cols: 9
+设置并行线程数为: 1
+Time: 51.806253 s
+Solutions: 21147
+Max Blocks: 1
+CC ETT Calls: 255
+CC BFS Calls: 1
+DynDXD算法求解结束: bell-09
+"
+20261115_115128,dxd-versions,old,exact_cover,bell-10,data/benchmarks/exact_cover_set/bell-10.ec,DynDXD,pureDynDXD,1,1,success,652.427920,652.535188,115975,,1,,1023,10,0,,2026-11-15T12:53:31,"Instance: bell-10
+启用DynDXD算法求解: bell-10
+rows: 1023
+cols: 10
+设置并行线程数为: 1
+Time: 652.427920 s
+Solutions: 115975
+Max Blocks: 1
+CC ETT Calls: 511
+CC BFS Calls: 1
+DynDXD算法求解结束: bell-10
+"
+20261115_115128,dxd-versions,old,exact_cover,bell-11,data/benchmarks/exact_cover_set/bell-11.ec,DynDXD,pureDynDXD,1,1,timeout,1508.975960,1509.450366,,,,,2047,11,0,exit=0; tail=Time: 1508.975960 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: bell-11,2026-11-15T13:04:24,"Instance: bell-11
+启用DynDXD算法求解: bell-11
+rows: 2047
+cols: 11
+设置并行线程数为: 1
+Time: 1508.975960 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: bell-11
+"
+20261115_115128,dxd-versions,old,exact_cover,bell-12,data/benchmarks/exact_cover_set/bell-12.ec,DynDXD,pureDynDXD,1,1,timeout,1507.485281,1509.811039,,,,,4095,12,0,exit=0; tail=Time: 1507.485281 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: bell-12,2026-11-15T13:29:33,"Instance: bell-12
+启用DynDXD算法求解: bell-12
+rows: 4095
+cols: 12
+设置并行线程数为: 1
+Time: 1507.485281 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: bell-12
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-09,data/benchmarks/exact_cover_set/doublefact-09.ec,DynDXD,pureDynDXD,1,1,success,0.016432,0.018595,945,,1,,45,10,0,,2026-11-15T13:54:43,"Instance: doublefact-09
+启用DynDXD算法求解: doublefact-09
+rows: 45
+cols: 10
+设置并行线程数为: 1
+Time: 0.016432 s
+Solutions: 945
+Max Blocks: 1
+CC ETT Calls: 87
+CC BFS Calls: 1
+DynDXD算法求解结束: doublefact-09
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-11,data/benchmarks/exact_cover_set/doublefact-11.ec,DynDXD,pureDynDXD,1,1,success,0.100397,0.102627,10395,,1,,66,12,0,,2026-11-15T13:54:43,"Instance: doublefact-11
+启用DynDXD算法求解: doublefact-11
+rows: 66
+cols: 12
+设置并行线程数为: 1
+Time: 0.100397 s
+Solutions: 10395
+Max Blocks: 1
+CC ETT Calls: 231
+CC BFS Calls: 1
+DynDXD算法求解结束: doublefact-11
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-13,data/benchmarks/exact_cover_set/doublefact-13.ec,DynDXD,pureDynDXD,1,1,success,0.554959,0.557578,135135,,1,,91,14,0,,2026-11-15T13:54:43,"Instance: doublefact-13
+启用DynDXD算法求解: doublefact-13
+rows: 91
+cols: 14
+设置并行线程数为: 1
+Time: 0.554959 s
+Solutions: 135135
+Max Blocks: 1
+CC ETT Calls: 608
+CC BFS Calls: 1
+DynDXD算法求解结束: doublefact-13
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-15,data/benchmarks/exact_cover_set/doublefact-15.ec,DynDXD,pureDynDXD,1,1,success,2.863017,2.866738,2027025,,1,,120,16,0,,2026-11-15T13:54:44,"Instance: doublefact-15
+启用DynDXD算法求解: doublefact-15
+rows: 120
+cols: 16
+设置并行线程数为: 1
+Time: 2.863017 s
+Solutions: 2027025
+Max Blocks: 1
+CC ETT Calls: 1595
+CC BFS Calls: 1
+DynDXD算法求解结束: doublefact-15
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-17,data/benchmarks/exact_cover_set/doublefact-17.ec,DynDXD,pureDynDXD,1,1,success,13.475227,13.481262,34459425,,1,,153,18,0,,2026-11-15T13:54:46,"Instance: doublefact-17
+启用DynDXD算法求解: doublefact-17
+rows: 153
+cols: 18
+设置并行线程数为: 1
+Time: 13.475227 s
+Solutions: 34459425
+Max Blocks: 1
+CC ETT Calls: 4179
+CC BFS Calls: 1
+DynDXD算法求解结束: doublefact-17
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-19,data/benchmarks/exact_cover_set/doublefact-19.ec,DynDXD,pureDynDXD,1,1,success,60.645957,60.677083,654729075,,1,,190,20,0,,2026-11-15T13:55:00,"Instance: doublefact-19
+启用DynDXD算法求解: doublefact-19
+rows: 190
+cols: 20
+设置并行线程数为: 1
+Time: 60.645957 s
+Solutions: 654729075
+Max Blocks: 1
+CC ETT Calls: 10944
+CC BFS Calls: 1
+DynDXD算法求解结束: doublefact-19
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-21,data/benchmarks/exact_cover_set/doublefact-21.ec,DynDXD,pureDynDXD,1,1,success,285.051417,285.154545,13749310575,,1,,231,22,0,,2026-11-15T13:56:01,"Instance: doublefact-21
+启用DynDXD算法求解: doublefact-21
+rows: 231
+cols: 22
+设置并行线程数为: 1
+Time: 285.051417 s
+Solutions: 13749310575
+Max Blocks: 1
+CC ETT Calls: 28655
+CC BFS Calls: 1
+DynDXD算法求解结束: doublefact-21
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-23,data/benchmarks/exact_cover_set/doublefact-23.ec,DynDXD,pureDynDXD,1,1,success,1332.493731,1332.795628,316234143225,,1,,276,24,0,,2026-11-15T14:00:46,"Instance: doublefact-23
+启用DynDXD算法求解: doublefact-23
+rows: 276
+cols: 24
+设置并行线程数为: 1
+Time: 1332.493731 s
+Solutions: 316234143225
+Max Blocks: 1
+CC ETT Calls: 75023
+CC BFS Calls: 1
+DynDXD算法求解结束: doublefact-23
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-25,data/benchmarks/exact_cover_set/doublefact-25.ec,DynDXD,pureDynDXD,1,1,timeout,1500.361080,1500.715559,,,,,325,26,0,exit=0; tail=Time: 1500.361080 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: doublefact-25,2026-11-15T14:22:59,"Instance: doublefact-25
+启用DynDXD算法求解: doublefact-25
+rows: 325
+cols: 26
+设置并行线程数为: 1
+Time: 1500.361080 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: doublefact-25
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-27,data/benchmarks/exact_cover_set/doublefact-27.ec,DynDXD,pureDynDXD,1,1,timeout,1500.593146,1500.962439,,,,,378,28,0,exit=0; tail=Time: 1500.593146 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: doublefact-27,2026-11-15T14:47:59,"Instance: doublefact-27
+启用DynDXD算法求解: doublefact-27
+rows: 378
+cols: 28
+设置并行线程数为: 1
+Time: 1500.593146 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: doublefact-27
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-29,data/benchmarks/exact_cover_set/doublefact-29.ec,DynDXD,pureDynDXD,1,1,timeout,1501.310475,1501.732288,,,,,435,30,0,exit=0; tail=Time: 1501.310475 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: doublefact-29,2026-11-15T15:13:00,"Instance: doublefact-29
+启用DynDXD算法求解: doublefact-29
+rows: 435
+cols: 30
+设置并行线程数为: 1
+Time: 1501.310475 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: doublefact-29
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0003,data/benchmarks/exact_cover_set/kts15-ptpt-0003.ec,DynDXD,pureDynDXD,1,1,success,36.453267,36.458936,8,,5,,390,132,0,,2026-11-15T15:38:02,"Instance: kts15-ptpt-0003
+启用DynDXD算法求解: kts15-ptpt-0003
+rows: 390
+cols: 132
+设置并行线程数为: 1
+Time: 36.453267 s
+Solutions: 8
+Max Blocks: 5
+CC ETT Calls: 995
+CC BFS Calls: 1
+DynDXD算法求解结束: kts15-ptpt-0003
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0004,data/benchmarks/exact_cover_set/kts15-ptpt-0004.ec,DynDXD,pureDynDXD,1,1,error,,0.747415,,,,,392,132,-11,exit=-11; tail=rows: 392 cols: 132 设置并行线程数为: 1,2026-11-15T15:38:38,"Instance: kts15-ptpt-0004
+启用DynDXD算法求解: kts15-ptpt-0004
+rows: 392
+cols: 132
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0006,data/benchmarks/exact_cover_set/kts15-ptpt-0006.ec,DynDXD,pureDynDXD,1,1,success,47.934502,47.939879,8,,6,,388,132,0,,2026-11-15T15:38:39,"Instance: kts15-ptpt-0006
+启用DynDXD算法求解: kts15-ptpt-0006
+rows: 388
+cols: 132
+设置并行线程数为: 1
+Time: 47.934502 s
+Solutions: 8
+Max Blocks: 6
+CC ETT Calls: 1367
+CC BFS Calls: 1
+DynDXD算法求解结束: kts15-ptpt-0006
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0007,data/benchmarks/exact_cover_set/kts15-ptpt-0007.ec,DynDXD,pureDynDXD,1,1,error,,0.914921,,,,,390,132,-11,exit=-11; tail=rows: 390 cols: 132 设置并行线程数为: 1,2026-11-15T15:39:27,"Instance: kts15-ptpt-0007
+启用DynDXD算法求解: kts15-ptpt-0007
+rows: 390
+cols: 132
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0009,data/benchmarks/exact_cover_set/kts15-ptpt-0009.ec,DynDXD,pureDynDXD,1,1,error,,0.408962,,,,,389,132,-11,exit=-11; tail=rows: 389 cols: 132 设置并行线程数为: 1,2026-11-15T15:39:28,"Instance: kts15-ptpt-0009
+启用DynDXD算法求解: kts15-ptpt-0009
+rows: 389
+cols: 132
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0011,data/benchmarks/exact_cover_set/kts15-ptpt-0011.ec,DynDXD,pureDynDXD,1,1,error,,0.311486,,,,,390,132,-11,exit=-11; tail=rows: 390 cols: 132 设置并行线程数为: 1,2026-11-15T15:39:28,"Instance: kts15-ptpt-0011
+启用DynDXD算法求解: kts15-ptpt-0011
+rows: 390
+cols: 132
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0012,data/benchmarks/exact_cover_set/kts15-ptpt-0012.ec,DynDXD,pureDynDXD,1,1,timeout,,1530.100469,,,,,390,132,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-15T15:39:29,"Instance: kts15-ptpt-0012
+启用DynDXD算法求解: kts15-ptpt-0012
+rows: 390
+cols: 132
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0013,data/benchmarks/exact_cover_set/kts15-ptpt-0013.ec,DynDXD,pureDynDXD,1,1,success,59.631594,59.637069,24,,7,,388,132,0,,2026-11-15T16:04:59,"Instance: kts15-ptpt-0013
+启用DynDXD算法求解: kts15-ptpt-0013
+rows: 388
+cols: 132
+设置并行线程数为: 1
+Time: 59.631594 s
+Solutions: 24
+Max Blocks: 7
+CC ETT Calls: 2177
+CC BFS Calls: 1
+DynDXD算法求解结束: kts15-ptpt-0013
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0014,data/benchmarks/exact_cover_set/kts15-ptpt-0014.ec,DynDXD,pureDynDXD,1,1,timeout,,1530.008607,,,,,388,132,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-15T16:05:58,"Instance: kts15-ptpt-0014
+启用DynDXD算法求解: kts15-ptpt-0014
+rows: 388
+cols: 132
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0015,data/benchmarks/exact_cover_set/kts15-ptpt-0015.ec,DynDXD,pureDynDXD,1,1,success,58.917080,58.922583,14,,6,,390,132,0,,2026-11-15T16:31:28,"Instance: kts15-ptpt-0015
+启用DynDXD算法求解: kts15-ptpt-0015
+rows: 390
+cols: 132
+设置并行线程数为: 1
+Time: 58.917080 s
+Solutions: 14
+Max Blocks: 6
+CC ETT Calls: 1941
+CC BFS Calls: 1
+DynDXD算法求解结束: kts15-ptpt-0015
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0016,data/benchmarks/exact_cover_set/kts15-ptpt-0016.ec,DynDXD,pureDynDXD,1,1,error,,0.787559,,,,,391,132,-11,exit=-11; tail=rows: 391 cols: 132 设置并行线程数为: 1,2026-11-15T16:32:27,"Instance: kts15-ptpt-0016
+启用DynDXD算法求解: kts15-ptpt-0016
+rows: 391
+cols: 132
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0017,data/benchmarks/exact_cover_set/kts15-ptpt-0017.ec,DynDXD,pureDynDXD,1,1,timeout,,1530.100921,,,,,388,132,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-15T16:32:28,"Instance: kts15-ptpt-0017
+启用DynDXD算法求解: kts15-ptpt-0017
+rows: 388
+cols: 132
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0018,data/benchmarks/exact_cover_set/kts15-ptpt-0018.ec,DynDXD,pureDynDXD,1,1,success,54.381743,54.387522,8,,5,,394,132,0,,2026-11-15T16:57:58,"Instance: kts15-ptpt-0018
+启用DynDXD算法求解: kts15-ptpt-0018
+rows: 394
+cols: 132
+设置并行线程数为: 1
+Time: 54.381743 s
+Solutions: 8
+Max Blocks: 5
+CC ETT Calls: 1546
+CC BFS Calls: 1
+DynDXD算法求解结束: kts15-ptpt-0018
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0020,data/benchmarks/exact_cover_set/kts15-ptpt-0020.ec,DynDXD,pureDynDXD,1,1,error,,0.162663,,,,,391,132,-11,exit=-11; tail=rows: 391 cols: 132 设置并行线程数为: 1,2026-11-15T16:58:53,"Instance: kts15-ptpt-0020
+启用DynDXD算法求解: kts15-ptpt-0020
+rows: 391
+cols: 132
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0021,data/benchmarks/exact_cover_set/kts15-ptpt-0021.ec,DynDXD,pureDynDXD,1,1,success,62.675353,62.681230,72,,7,,388,132,0,,2026-11-15T16:58:53,"Instance: kts15-ptpt-0021
+启用DynDXD算法求解: kts15-ptpt-0021
+rows: 388
+cols: 132
+设置并行线程数为: 1
+Time: 62.675353 s
+Solutions: 72
+Max Blocks: 7
+CC ETT Calls: 3042
+CC BFS Calls: 1
+DynDXD算法求解结束: kts15-ptpt-0021
+"
+20261115_115128,dxd-versions,old,exact_cover,kts21-ptpt-0021,data/benchmarks/exact_cover_set/kts21-ptpt-0021.ec,DynDXD,pureDynDXD,1,1,error,,16.946793,,,,,3330,306,-11,exit=-11; tail=rows: 3330 cols: 306 设置并行线程数为: 1,2026-11-15T16:59:56,"Instance: kts21-ptpt-0021
+启用DynDXD算法求解: kts21-ptpt-0021
+rows: 3330
+cols: 306
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,kts21-ptpt-0036,data/benchmarks/exact_cover_set/kts21-ptpt-0036.ec,DynDXD,pureDynDXD,1,1,error,,1.319528,,,,,3328,306,-11,exit=-11; tail=rows: 3328 cols: 306 设置并行线程数为: 1,2026-11-15T17:00:12,"Instance: kts21-ptpt-0036
+启用DynDXD算法求解: kts21-ptpt-0036
+rows: 3328
+cols: 306
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,kts21-ptpt-0063,data/benchmarks/exact_cover_set/kts21-ptpt-0063.ec,DynDXD,pureDynDXD,1,1,error,,1.231519,,,,,3327,306,-11,exit=-11; tail=rows: 3327 cols: 306 设置并行线程数为: 1,2026-11-15T17:00:14,"Instance: kts21-ptpt-0063
+启用DynDXD算法求解: kts21-ptpt-0063
+rows: 3327
+cols: 306
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,kts21-ptpt-0074,data/benchmarks/exact_cover_set/kts21-ptpt-0074.ec,DynDXD,pureDynDXD,1,1,error,,1.186291,,,,,3327,306,-7,exit=-7; tail=rows: 3327 cols: 306 设置并行线程数为: 1,2026-11-15T17:00:15,"Instance: kts21-ptpt-0074
+启用DynDXD算法求解: kts21-ptpt-0074
+rows: 3327
+cols: 306
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,kts21-ptpt-0080,data/benchmarks/exact_cover_set/kts21-ptpt-0080.ec,DynDXD,pureDynDXD,1,1,error,,7.446408,,,,,3329,306,-11,exit=-11; tail=rows: 3329 cols: 306 设置并行线程数为: 1,2026-11-15T17:00:16,"Instance: kts21-ptpt-0080
+启用DynDXD算法求解: kts21-ptpt-0080
+rows: 3329
+cols: 306
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,kts21-ptpt-0082,data/benchmarks/exact_cover_set/kts21-ptpt-0082.ec,DynDXD,pureDynDXD,1,1,timeout,,1530.104871,,,,,3329,306,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-15T17:00:24,"Instance: kts21-ptpt-0082
+启用DynDXD算法求解: kts21-ptpt-0082
+rows: 3329
+cols: 306
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,old,exact_cover,kts21-ptpt-0088,data/benchmarks/exact_cover_set/kts21-ptpt-0088.ec,DynDXD,pureDynDXD,1,1,timeout,,1530.065074,,,,,3330,306,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-15T17:25:54,"Instance: kts21-ptpt-0088
+启用DynDXD算法求解: kts21-ptpt-0088
+rows: 3330
+cols: 306
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,old,exact_cover,kts21-ptpt-0091,data/benchmarks/exact_cover_set/kts21-ptpt-0091.ec,DynDXD,pureDynDXD,1,1,error,,6.215427,,,,,3329,306,-11,exit=-11; tail=rows: 3329 cols: 306 设置并行线程数为: 1,2026-11-15T17:51:24,"Instance: kts21-ptpt-0091
+启用DynDXD算法求解: kts21-ptpt-0091
+rows: 3329
+cols: 306
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,latin6-blk-00001,data/benchmarks/exact_cover_set/latin6-blk-00001.ec,DynDXD,pureDynDXD,1,1,success,0.012000,0.014163,48,,3,,60,60,0,,2026-11-15T17:51:30,"Instance: latin6-blk-00001
+启用DynDXD算法求解: latin6-blk-00001
+rows: 60
+cols: 60
+设置并行线程数为: 1
+Time: 0.012000 s
+Solutions: 48
+Max Blocks: 3
+CC ETT Calls: 663
+CC BFS Calls: 1
+DynDXD算法求解结束: latin6-blk-00001
+"
+20261115_115128,dxd-versions,old,exact_cover,latin6-blk-00002,data/benchmarks/exact_cover_set/latin6-blk-00002.ec,DynDXD,pureDynDXD,1,1,success,0.013727,0.015867,56,,3,,62,60,0,,2026-11-15T17:51:30,"Instance: latin6-blk-00002
+启用DynDXD算法求解: latin6-blk-00002
+rows: 62
+cols: 60
+设置并行线程数为: 1
+Time: 0.013727 s
+Solutions: 56
+Max Blocks: 3
+CC ETT Calls: 694
+CC BFS Calls: 1
+DynDXD算法求解结束: latin6-blk-00002
+"
+20261115_115128,dxd-versions,old,exact_cover,latin6-blk-00003,data/benchmarks/exact_cover_set/latin6-blk-00003.ec,DynDXD,pureDynDXD,1,1,success,0.017298,0.019483,80,,4,,64,60,0,,2026-11-15T17:51:30,"Instance: latin6-blk-00003
+启用DynDXD算法求解: latin6-blk-00003
+rows: 64
+cols: 60
+设置并行线程数为: 1
+Time: 0.017298 s
+Solutions: 80
+Max Blocks: 4
+CC ETT Calls: 946
+CC BFS Calls: 1
+DynDXD算法求解结束: latin6-blk-00003
+"
+20261115_115128,dxd-versions,old,exact_cover,latin6-blk-00004,data/benchmarks/exact_cover_set/latin6-blk-00004.ec,DynDXD,pureDynDXD,1,1,success,0.014774,0.016959,72,,4,,63,60,0,,2026-11-15T17:51:30,"Instance: latin6-blk-00004
+启用DynDXD算法求解: latin6-blk-00004
+rows: 63
+cols: 60
+设置并行线程数为: 1
+Time: 0.014774 s
+Solutions: 72
+Max Blocks: 4
+CC ETT Calls: 786
+CC BFS Calls: 1
+DynDXD算法求解结束: latin6-blk-00004
+"
+20261115_115128,dxd-versions,old,exact_cover,latin6-blk-00005,data/benchmarks/exact_cover_set/latin6-blk-00005.ec,DynDXD,pureDynDXD,1,1,success,0.017540,0.019679,80,,3,,65,60,0,,2026-11-15T17:51:30,"Instance: latin6-blk-00005
+启用DynDXD算法求解: latin6-blk-00005
+rows: 65
+cols: 60
+设置并行线程数为: 1
+Time: 0.017540 s
+Solutions: 80
+Max Blocks: 3
+CC ETT Calls: 951
+CC BFS Calls: 1
+DynDXD算法求解结束: latin6-blk-00005
+"
+20261115_115128,dxd-versions,old,exact_cover,latin6-blk-00006,data/benchmarks/exact_cover_set/latin6-blk-00006.ec,DynDXD,pureDynDXD,1,1,success,0.016594,0.018797,88,,3,,64,60,0,,2026-11-15T17:51:30,"Instance: latin6-blk-00006
+启用DynDXD算法求解: latin6-blk-00006
+rows: 64
+cols: 60
+设置并行线程数为: 1
+Time: 0.016594 s
+Solutions: 88
+Max Blocks: 3
+CC ETT Calls: 864
+CC BFS Calls: 1
+DynDXD算法求解结束: latin6-blk-00006
+"
+20261115_115128,dxd-versions,old,exact_cover,latin6-blk-00007,data/benchmarks/exact_cover_set/latin6-blk-00007.ec,DynDXD,pureDynDXD,1,1,success,0.017131,0.019333,80,,3,,65,60,0,,2026-11-15T17:51:30,"Instance: latin6-blk-00007
+启用DynDXD算法求解: latin6-blk-00007
+rows: 65
+cols: 60
+设置并行线程数为: 1
+Time: 0.017131 s
+Solutions: 80
+Max Blocks: 3
+CC ETT Calls: 899
+CC BFS Calls: 1
+DynDXD算法求解结束: latin6-blk-00007
+"
+20261115_115128,dxd-versions,old,exact_cover,latin7-blk-00001,data/benchmarks/exact_cover_set/latin7-blk-00001.ec,DynDXD,pureDynDXD,1,1,success,2.819641,2.848875,10752,,5,,120,90,0,,2026-11-15T17:51:30,"Instance: latin7-blk-00001
+启用DynDXD算法求解: latin7-blk-00001
+rows: 120
+cols: 90
+设置并行线程数为: 1
+Time: 2.819641 s
+Solutions: 10752
+Max Blocks: 5
+CC ETT Calls: 119463
+CC BFS Calls: 1
+DynDXD算法求解结束: latin7-blk-00001
+"
+20261115_115128,dxd-versions,old,exact_cover,latin7-blk-00002,data/benchmarks/exact_cover_set/latin7-blk-00002.ec,DynDXD,pureDynDXD,1,1,success,3.532348,3.597363,14976,,6,,122,90,0,,2026-11-15T17:51:33,"Instance: latin7-blk-00002
+启用DynDXD算法求解: latin7-blk-00002
+rows: 122
+cols: 90
+设置并行线程数为: 1
+Time: 3.532348 s
+Solutions: 14976
+Max Blocks: 6
+CC ETT Calls: 153376
+CC BFS Calls: 1
+DynDXD算法求解结束: latin7-blk-00002
+"
+20261115_115128,dxd-versions,old,exact_cover,latin7-blk-00003,data/benchmarks/exact_cover_set/latin7-blk-00003.ec,DynDXD,pureDynDXD,1,1,success,3.864933,3.936937,17280,,5,,123,90,0,,2026-11-15T17:51:37,"Instance: latin7-blk-00003
+启用DynDXD算法求解: latin7-blk-00003
+rows: 123
+cols: 90
+设置并行线程数为: 1
+Time: 3.864933 s
+Solutions: 17280
+Max Blocks: 5
+CC ETT Calls: 167743
+CC BFS Calls: 1
+DynDXD算法求解结束: latin7-blk-00003
+"
+20261115_115128,dxd-versions,old,exact_cover,latin7-blk-00004,data/benchmarks/exact_cover_set/latin7-blk-00004.ec,DynDXD,pureDynDXD,1,1,success,4.371195,4.451898,19840,,5,,124,90,0,,2026-11-15T17:51:41,"Instance: latin7-blk-00004
+启用DynDXD算法求解: latin7-blk-00004
+rows: 124
+cols: 90
+设置并行线程数为: 1
+Time: 4.371195 s
+Solutions: 19840
+Max Blocks: 5
+CC ETT Calls: 188121
+CC BFS Calls: 1
+DynDXD算法求解结束: latin7-blk-00004
+"
+20261115_115128,dxd-versions,old,exact_cover,latin7-blk-00005,data/benchmarks/exact_cover_set/latin7-blk-00005.ec,DynDXD,pureDynDXD,1,1,success,4.325178,4.402792,20480,,5,,124,90,0,,2026-11-15T17:51:45,"Instance: latin7-blk-00005
+启用DynDXD算法求解: latin7-blk-00005
+rows: 124
+cols: 90
+设置并行线程数为: 1
+Time: 4.325178 s
+Solutions: 20480
+Max Blocks: 5
+CC ETT Calls: 196575
+CC BFS Calls: 1
+DynDXD算法求解结束: latin7-blk-00005
+"
+20261115_115128,dxd-versions,old,exact_cover,latin7-blk-00006,data/benchmarks/exact_cover_set/latin7-blk-00006.ec,DynDXD,pureDynDXD,1,1,error,,0.078923,,,,,126,90,-11,exit=-11; tail=rows: 126 cols: 90 设置并行线程数为: 1,2026-11-15T17:51:49,"Instance: latin7-blk-00006
+启用DynDXD算法求解: latin7-blk-00006
+rows: 126
+cols: 90
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,latin7-blk-00007,data/benchmarks/exact_cover_set/latin7-blk-00007.ec,DynDXD,pureDynDXD,1,1,success,4.607291,4.693729,23616,,5,,125,90,0,,2026-11-15T17:51:49,"Instance: latin7-blk-00007
+启用DynDXD算法求解: latin7-blk-00007
+rows: 125
+cols: 90
+设置并行线程数为: 1
+Time: 4.607291 s
+Solutions: 23616
+Max Blocks: 5
+CC ETT Calls: 202243
+CC BFS Calls: 1
+DynDXD算法求解结束: latin7-blk-00007
+"
+20261115_115128,dxd-versions,old,exact_cover,latin7-blk-00008,data/benchmarks/exact_cover_set/latin7-blk-00008.ec,DynDXD,pureDynDXD,1,1,success,5.082036,5.176459,27072,,5,,126,90,0,,2026-11-15T17:51:54,"Instance: latin7-blk-00008
+启用DynDXD算法求解: latin7-blk-00008
+rows: 126
+cols: 90
+设置并行线程数为: 1
+Time: 5.082036 s
+Solutions: 27072
+Max Blocks: 5
+CC ETT Calls: 230678
+CC BFS Calls: 1
+DynDXD算法求解结束: latin7-blk-00008
+"
+20261115_115128,dxd-versions,old,exact_cover,latin7-blk-00009,data/benchmarks/exact_cover_set/latin7-blk-00009.ec,DynDXD,pureDynDXD,1,1,success,5.041386,5.133699,27776,,5,,126,90,0,,2026-11-15T17:51:59,"Instance: latin7-blk-00009
+启用DynDXD算法求解: latin7-blk-00009
+rows: 126
+cols: 90
+设置并行线程数为: 1
+Time: 5.041386 s
+Solutions: 27776
+Max Blocks: 5
+CC ETT Calls: 222162
+CC BFS Calls: 1
+DynDXD算法求解结束: latin7-blk-00009
+"
+20261115_115128,dxd-versions,old,exact_cover,latin8-blk-00009,data/benchmarks/exact_cover_set/latin8-blk-00009.ec,DynDXD,pureDynDXD,1,1,error,,1440.356805,,,,,215,126,-6,exit=-6; tail=cols: 126 设置并行线程数为: 1 malloc_consolidate(): unaligned fastbin chunk detected,2026-11-15T17:52:04,"Instance: latin8-blk-00009
+启用DynDXD算法求解: latin8-blk-00009
+rows: 215
+cols: 126
+设置并行线程数为: 1
+malloc_consolidate(): unaligned fastbin chunk detected
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00001,data/benchmarks/exact_cover_set/sts15-blk-00001.ec,DynDXD,pureDynDXD,1,1,success,0.045641,0.048098,576,,2,,64,48,0,,2026-11-15T18:16:05,"Instance: sts15-blk-00001
+启用DynDXD算法求解: sts15-blk-00001
+rows: 64
+cols: 48
+设置并行线程数为: 1
+Time: 0.045641 s
+Solutions: 576
+Max Blocks: 2
+CC ETT Calls: 2314
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00001
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00002,data/benchmarks/exact_cover_set/sts15-blk-00002.ec,DynDXD,pureDynDXD,1,1,success,0.036250,0.038485,288,,2,,72,48,0,,2026-11-15T18:16:05,"Instance: sts15-blk-00002
+启用DynDXD算法求解: sts15-blk-00002
+rows: 72
+cols: 48
+设置并行线程数为: 1
+Time: 0.036250 s
+Solutions: 288
+Max Blocks: 2
+CC ETT Calls: 1217
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00002
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00003,data/benchmarks/exact_cover_set/sts15-blk-00003.ec,DynDXD,pureDynDXD,1,1,success,0.030868,0.033200,144,,2,,72,48,0,,2026-11-15T18:16:05,"Instance: sts15-blk-00003
+启用DynDXD算法求解: sts15-blk-00003
+rows: 72
+cols: 48
+设置并行线程数为: 1
+Time: 0.030868 s
+Solutions: 144
+Max Blocks: 2
+CC ETT Calls: 856
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00003
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00004,data/benchmarks/exact_cover_set/sts15-blk-00004.ec,DynDXD,pureDynDXD,1,1,success,0.031206,0.033478,144,,2,,72,48,0,,2026-11-15T18:16:05,"Instance: sts15-blk-00004
+启用DynDXD算法求解: sts15-blk-00004
+rows: 72
+cols: 48
+设置并行线程数为: 1
+Time: 0.031206 s
+Solutions: 144
+Max Blocks: 2
+CC ETT Calls: 856
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00004
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00006,data/benchmarks/exact_cover_set/sts15-blk-00006.ec,DynDXD,pureDynDXD,1,1,success,0.025501,0.027735,40,,3,,76,48,0,,2026-11-15T18:16:05,"Instance: sts15-blk-00006
+启用DynDXD算法求解: sts15-blk-00006
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.025501 s
+Solutions: 40
+Max Blocks: 3
+CC ETT Calls: 370
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00006
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00007,data/benchmarks/exact_cover_set/sts15-blk-00007.ec,DynDXD,pureDynDXD,1,1,success,0.024623,0.026865,8,,2,,76,48,0,,2026-11-15T18:16:05,"Instance: sts15-blk-00007
+启用DynDXD算法求解: sts15-blk-00007
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.024623 s
+Solutions: 8
+Max Blocks: 2
+CC ETT Calls: 206
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00007
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00008,data/benchmarks/exact_cover_set/sts15-blk-00008.ec,DynDXD,pureDynDXD,1,1,success,0.026276,0.028492,40,,3,,76,48,0,,2026-11-15T18:16:05,"Instance: sts15-blk-00008
+启用DynDXD算法求解: sts15-blk-00008
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.026276 s
+Solutions: 40
+Max Blocks: 3
+CC ETT Calls: 369
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00008
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00009,data/benchmarks/exact_cover_set/sts15-blk-00009.ec,DynDXD,pureDynDXD,1,1,success,0.024053,0.026322,8,,2,,76,48,0,,2026-11-15T18:16:05,"Instance: sts15-blk-00009
+启用DynDXD算法求解: sts15-blk-00009
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.024053 s
+Solutions: 8
+Max Blocks: 2
+CC ETT Calls: 208
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00009
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00010,data/benchmarks/exact_cover_set/sts15-blk-00010.ec,DynDXD,pureDynDXD,1,1,success,0.037933,0.040179,64,,3,,76,48,0,,2026-11-15T18:16:05,"Instance: sts15-blk-00010
+启用DynDXD算法求解: sts15-blk-00010
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.037933 s
+Solutions: 64
+Max Blocks: 3
+CC ETT Calls: 565
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00010
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00011,data/benchmarks/exact_cover_set/sts15-blk-00011.ec,DynDXD,pureDynDXD,1,1,success,0.021671,0.023922,8,,3,,76,48,0,,2026-11-15T18:16:05,"Instance: sts15-blk-00011
+启用DynDXD算法求解: sts15-blk-00011
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.021671 s
+Solutions: 8
+Max Blocks: 3
+CC ETT Calls: 183
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00011
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00012,data/benchmarks/exact_cover_set/sts15-blk-00012.ec,DynDXD,pureDynDXD,1,1,success,0.024945,0.027162,16,,2,,76,48,0,,2026-11-15T18:16:05,"Instance: sts15-blk-00012
+启用DynDXD算法求解: sts15-blk-00012
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.024945 s
+Solutions: 16
+Max Blocks: 2
+CC ETT Calls: 234
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00012
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00013,data/benchmarks/exact_cover_set/sts15-blk-00013.ec,DynDXD,pureDynDXD,1,1,success,0.021882,0.024122,8,,3,,76,48,0,,2026-11-15T18:16:05,"Instance: sts15-blk-00013
+启用DynDXD算法求解: sts15-blk-00013
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.021882 s
+Solutions: 8
+Max Blocks: 3
+CC ETT Calls: 187
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00013
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00017,data/benchmarks/exact_cover_set/sts15-blk-00017.ec,DynDXD,pureDynDXD,1,1,success,0.023139,0.025378,16,,2,,76,48,0,,2026-11-15T18:16:05,"Instance: sts15-blk-00017
+启用DynDXD算法求解: sts15-blk-00017
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.023139 s
+Solutions: 16
+Max Blocks: 2
+CC ETT Calls: 214
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00017
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00018,data/benchmarks/exact_cover_set/sts15-blk-00018.ec,DynDXD,pureDynDXD,1,1,success,0.021355,0.023507,8,,2,,76,48,0,,2026-11-15T18:16:05,"Instance: sts15-blk-00018
+启用DynDXD算法求解: sts15-blk-00018
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.021355 s
+Solutions: 8
+Max Blocks: 2
+CC ETT Calls: 187
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00018
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00019,data/benchmarks/exact_cover_set/sts15-blk-00019.ec,DynDXD,pureDynDXD,1,1,success,0.026501,0.028686,32,,3,,76,48,0,,2026-11-15T18:16:05,"Instance: sts15-blk-00019
+启用DynDXD算法求解: sts15-blk-00019
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.026501 s
+Solutions: 32
+Max Blocks: 3
+CC ETT Calls: 330
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00019
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00020,data/benchmarks/exact_cover_set/sts15-blk-00020.ec,DynDXD,pureDynDXD,1,1,success,0.029330,0.031503,28,,2,,75,48,0,,2026-11-15T18:16:05,"Instance: sts15-blk-00020
+启用DynDXD算法求解: sts15-blk-00020
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.029330 s
+Solutions: 28
+Max Blocks: 2
+CC ETT Calls: 388
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00020
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00021,data/benchmarks/exact_cover_set/sts15-blk-00021.ec,DynDXD,pureDynDXD,1,1,success,0.037758,0.039995,40,,3,,76,48,0,,2026-11-15T18:16:05,"Instance: sts15-blk-00021
+启用DynDXD算法求解: sts15-blk-00021
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.037758 s
+Solutions: 40
+Max Blocks: 3
+CC ETT Calls: 526
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00021
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00022,data/benchmarks/exact_cover_set/sts15-blk-00022.ec,DynDXD,pureDynDXD,1,1,error,,0.082703,,,,,74,48,-11,exit=-11; tail=rows: 74 cols: 48 设置并行线程数为: 1,2026-11-15T18:16:05,"Instance: sts15-blk-00022
+启用DynDXD算法求解: sts15-blk-00022
+rows: 74
+cols: 48
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00023,data/benchmarks/exact_cover_set/sts15-blk-00023.ec,DynDXD,pureDynDXD,1,1,success,0.031795,0.034048,20,,2,,74,48,0,,2026-11-15T18:16:05,"Instance: sts15-blk-00023
+启用DynDXD算法求解: sts15-blk-00023
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.031795 s
+Solutions: 20
+Max Blocks: 2
+CC ETT Calls: 362
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00023
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00024,data/benchmarks/exact_cover_set/sts15-blk-00024.ec,DynDXD,pureDynDXD,1,1,success,0.021115,0.023329,16,,3,,74,48,0,,2026-11-15T18:16:05,"Instance: sts15-blk-00024
+启用DynDXD算法求解: sts15-blk-00024
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.021115 s
+Solutions: 16
+Max Blocks: 3
+CC ETT Calls: 288
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00024
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00025,data/benchmarks/exact_cover_set/sts15-blk-00025.ec,DynDXD,pureDynDXD,1,1,success,0.030829,0.033022,20,,3,,76,48,0,,2026-11-15T18:16:06,"Instance: sts15-blk-00025
+启用DynDXD算法求解: sts15-blk-00025
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.030829 s
+Solutions: 20
+Max Blocks: 3
+CC ETT Calls: 351
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00025
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00026,data/benchmarks/exact_cover_set/sts15-blk-00026.ec,DynDXD,pureDynDXD,1,1,success,0.036293,0.038622,40,,3,,76,48,0,,2026-11-15T18:16:06,"Instance: sts15-blk-00026
+启用DynDXD算法求解: sts15-blk-00026
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.036293 s
+Solutions: 40
+Max Blocks: 3
+CC ETT Calls: 523
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00026
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00027,data/benchmarks/exact_cover_set/sts15-blk-00027.ec,DynDXD,pureDynDXD,1,1,success,0.035045,0.037158,40,,3,,76,48,0,,2026-11-15T18:16:06,"Instance: sts15-blk-00027
+启用DynDXD算法求解: sts15-blk-00027
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.035045 s
+Solutions: 40
+Max Blocks: 3
+CC ETT Calls: 440
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00027
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00028,data/benchmarks/exact_cover_set/sts15-blk-00028.ec,DynDXD,pureDynDXD,1,1,success,0.029204,0.031487,24,,2,,72,48,0,,2026-11-15T18:16:06,"Instance: sts15-blk-00028
+启用DynDXD算法求解: sts15-blk-00028
+rows: 72
+cols: 48
+设置并行线程数为: 1
+Time: 0.029204 s
+Solutions: 24
+Max Blocks: 2
+CC ETT Calls: 392
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00028
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00029,data/benchmarks/exact_cover_set/sts15-blk-00029.ec,DynDXD,pureDynDXD,1,1,success,0.031408,0.033690,16,,3,,74,48,0,,2026-11-15T18:16:06,"Instance: sts15-blk-00029
+启用DynDXD算法求解: sts15-blk-00029
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.031408 s
+Solutions: 16
+Max Blocks: 3
+CC ETT Calls: 355
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00029
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00030,data/benchmarks/exact_cover_set/sts15-blk-00030.ec,DynDXD,pureDynDXD,1,1,timeout,,1530.100709,,,,,74,48,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-15T18:16:06,"Instance: sts15-blk-00030
+启用DynDXD算法求解: sts15-blk-00030
+rows: 74
+cols: 48
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00031,data/benchmarks/exact_cover_set/sts15-blk-00031.ec,DynDXD,pureDynDXD,1,1,error,,0.080951,,,,,74,48,-6,exit=-6; tail=cols: 48 设置并行线程数为: 1 malloc(): unaligned tcache chunk detected,2026-11-15T18:41:36,"Instance: sts15-blk-00031
+启用DynDXD算法求解: sts15-blk-00031
+rows: 74
+cols: 48
+设置并行线程数为: 1
+malloc(): unaligned tcache chunk detected
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00032,data/benchmarks/exact_cover_set/sts15-blk-00032.ec,DynDXD,pureDynDXD,1,1,error,,0.082648,,,,,74,48,-11,exit=-11; tail=rows: 74 cols: 48 设置并行线程数为: 1,2026-11-15T18:41:36,"Instance: sts15-blk-00032
+启用DynDXD算法求解: sts15-blk-00032
+rows: 74
+cols: 48
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00033,data/benchmarks/exact_cover_set/sts15-blk-00033.ec,DynDXD,pureDynDXD,1,1,success,0.024118,0.026276,48,,3,,74,48,0,,2026-11-15T18:41:36,"Instance: sts15-blk-00033
+启用DynDXD算法求解: sts15-blk-00033
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.024118 s
+Solutions: 48
+Max Blocks: 3
+CC ETT Calls: 382
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00033
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00034,data/benchmarks/exact_cover_set/sts15-blk-00034.ec,DynDXD,pureDynDXD,1,1,success,0.026075,0.028324,24,,4,,74,48,0,,2026-11-15T18:41:36,"Instance: sts15-blk-00034
+启用DynDXD算法求解: sts15-blk-00034
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.026075 s
+Solutions: 24
+Max Blocks: 4
+CC ETT Calls: 393
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00034
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00035,data/benchmarks/exact_cover_set/sts15-blk-00035.ec,DynDXD,pureDynDXD,1,1,success,0.029629,0.031847,48,,4,,71,48,0,,2026-11-15T18:41:36,"Instance: sts15-blk-00035
+启用DynDXD算法求解: sts15-blk-00035
+rows: 71
+cols: 48
+设置并行线程数为: 1
+Time: 0.029629 s
+Solutions: 48
+Max Blocks: 4
+CC ETT Calls: 594
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00035
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00036,data/benchmarks/exact_cover_set/sts15-blk-00036.ec,DynDXD,pureDynDXD,1,1,success,0.025197,0.027368,16,,2,,75,48,0,,2026-11-15T18:41:36,"Instance: sts15-blk-00036
+启用DynDXD算法求解: sts15-blk-00036
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.025197 s
+Solutions: 16
+Max Blocks: 2
+CC ETT Calls: 285
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00036
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00037,data/benchmarks/exact_cover_set/sts15-blk-00037.ec,DynDXD,pureDynDXD,1,1,success,0.024217,0.026417,8,,2,,76,48,0,,2026-11-15T18:41:36,"Instance: sts15-blk-00037
+启用DynDXD算法求解: sts15-blk-00037
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.024217 s
+Solutions: 8
+Max Blocks: 2
+CC ETT Calls: 224
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00037
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00038,data/benchmarks/exact_cover_set/sts15-blk-00038.ec,DynDXD,pureDynDXD,1,1,success,0.021128,0.023271,8,,2,,76,48,0,,2026-11-15T18:41:36,"Instance: sts15-blk-00038
+启用DynDXD算法求解: sts15-blk-00038
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.021128 s
+Solutions: 8
+Max Blocks: 2
+CC ETT Calls: 180
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00038
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00039,data/benchmarks/exact_cover_set/sts15-blk-00039.ec,DynDXD,pureDynDXD,1,1,success,0.029179,0.031366,24,,4,,76,48,0,,2026-11-15T18:41:36,"Instance: sts15-blk-00039
+启用DynDXD算法求解: sts15-blk-00039
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.029179 s
+Solutions: 24
+Max Blocks: 4
+CC ETT Calls: 350
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00039
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00040,data/benchmarks/exact_cover_set/sts15-blk-00040.ec,DynDXD,pureDynDXD,1,1,success,0.030946,0.033175,32,,3,,76,48,0,,2026-11-15T18:41:36,"Instance: sts15-blk-00040
+启用DynDXD算法求解: sts15-blk-00040
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.030946 s
+Solutions: 32
+Max Blocks: 3
+CC ETT Calls: 377
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00040
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00042,data/benchmarks/exact_cover_set/sts15-blk-00042.ec,DynDXD,pureDynDXD,1,1,success,0.031863,0.033998,24,,4,,75,48,0,,2026-11-15T18:41:36,"Instance: sts15-blk-00042
+启用DynDXD算法求解: sts15-blk-00042
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.031863 s
+Solutions: 24
+Max Blocks: 4
+CC ETT Calls: 411
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00042
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00043,data/benchmarks/exact_cover_set/sts15-blk-00043.ec,DynDXD,pureDynDXD,1,1,success,0.029888,0.032103,24,,4,,74,48,0,,2026-11-15T18:41:36,"Instance: sts15-blk-00043
+启用DynDXD算法求解: sts15-blk-00043
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.029888 s
+Solutions: 24
+Max Blocks: 4
+CC ETT Calls: 358
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00043
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00044,data/benchmarks/exact_cover_set/sts15-blk-00044.ec,DynDXD,pureDynDXD,1,1,success,0.029736,0.031989,24,,3,,76,48,0,,2026-11-15T18:41:36,"Instance: sts15-blk-00044
+启用DynDXD算法求解: sts15-blk-00044
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.029736 s
+Solutions: 24
+Max Blocks: 3
+CC ETT Calls: 358
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00044
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00045,data/benchmarks/exact_cover_set/sts15-blk-00045.ec,DynDXD,pureDynDXD,1,1,success,0.031826,0.034114,20,,3,,76,48,0,,2026-11-15T18:41:36,"Instance: sts15-blk-00045
+启用DynDXD算法求解: sts15-blk-00045
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.031826 s
+Solutions: 20
+Max Blocks: 3
+CC ETT Calls: 364
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00045
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00046,data/benchmarks/exact_cover_set/sts15-blk-00046.ec,DynDXD,pureDynDXD,1,1,success,0.030550,0.032778,24,,3,,76,48,0,,2026-11-15T18:41:36,"Instance: sts15-blk-00046
+启用DynDXD算法求解: sts15-blk-00046
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.030550 s
+Solutions: 24
+Max Blocks: 3
+CC ETT Calls: 292
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00046
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00047,data/benchmarks/exact_cover_set/sts15-blk-00047.ec,DynDXD,pureDynDXD,1,1,success,0.024160,0.026374,20,,2,,75,48,0,,2026-11-15T18:41:36,"Instance: sts15-blk-00047
+启用DynDXD算法求解: sts15-blk-00047
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.024160 s
+Solutions: 20
+Max Blocks: 2
+CC ETT Calls: 295
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00047
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00048,data/benchmarks/exact_cover_set/sts15-blk-00048.ec,DynDXD,pureDynDXD,1,1,success,0.027185,0.029488,28,,2,,75,48,0,,2026-11-15T18:41:36,"Instance: sts15-blk-00048
+启用DynDXD算法求解: sts15-blk-00048
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.027185 s
+Solutions: 28
+Max Blocks: 2
+CC ETT Calls: 360
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00048
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00050,data/benchmarks/exact_cover_set/sts15-blk-00050.ec,DynDXD,pureDynDXD,1,1,success,0.023945,0.026195,16,,3,,75,48,0,,2026-11-15T18:41:36,"Instance: sts15-blk-00050
+启用DynDXD算法求解: sts15-blk-00050
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.023945 s
+Solutions: 16
+Max Blocks: 3
+CC ETT Calls: 283
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00050
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00053,data/benchmarks/exact_cover_set/sts15-blk-00053.ec,DynDXD,pureDynDXD,1,1,success,0.038559,0.040836,48,,3,,76,48,0,,2026-11-15T18:41:36,"Instance: sts15-blk-00053
+启用DynDXD算法求解: sts15-blk-00053
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.038559 s
+Solutions: 48
+Max Blocks: 3
+CC ETT Calls: 559
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00053
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00054,data/benchmarks/exact_cover_set/sts15-blk-00054.ec,DynDXD,pureDynDXD,1,1,success,0.032554,0.034732,20,,3,,76,48,0,,2026-11-15T18:41:36,"Instance: sts15-blk-00054
+启用DynDXD算法求解: sts15-blk-00054
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.032554 s
+Solutions: 20
+Max Blocks: 3
+CC ETT Calls: 362
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00054
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00055,data/benchmarks/exact_cover_set/sts15-blk-00055.ec,DynDXD,pureDynDXD,1,1,success,0.029956,0.032188,28,,4,,75,48,0,,2026-11-15T18:41:36,"Instance: sts15-blk-00055
+启用DynDXD算法求解: sts15-blk-00055
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.029956 s
+Solutions: 28
+Max Blocks: 4
+CC ETT Calls: 383
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00055
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00056,data/benchmarks/exact_cover_set/sts15-blk-00056.ec,DynDXD,pureDynDXD,1,1,success,0.030640,0.032895,20,,2,,75,48,0,,2026-11-15T18:41:37,"Instance: sts15-blk-00056
+启用DynDXD算法求解: sts15-blk-00056
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.030640 s
+Solutions: 20
+Max Blocks: 2
+CC ETT Calls: 326
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00056
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00057,data/benchmarks/exact_cover_set/sts15-blk-00057.ec,DynDXD,pureDynDXD,1,1,error,,0.078225,,,,,74,48,-11,exit=-11; tail=rows: 74 cols: 48 设置并行线程数为: 1,2026-11-15T18:41:37,"Instance: sts15-blk-00057
+启用DynDXD算法求解: sts15-blk-00057
+rows: 74
+cols: 48
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00058,data/benchmarks/exact_cover_set/sts15-blk-00058.ec,DynDXD,pureDynDXD,1,1,success,0.025295,0.027552,16,,3,,76,48,0,,2026-11-15T18:41:37,"Instance: sts15-blk-00058
+启用DynDXD算法求解: sts15-blk-00058
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.025295 s
+Solutions: 16
+Max Blocks: 3
+CC ETT Calls: 244
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00058
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00059,data/benchmarks/exact_cover_set/sts15-blk-00059.ec,DynDXD,pureDynDXD,1,1,success,0.028161,0.030341,36,,3,,73,48,0,,2026-11-15T18:41:37,"Instance: sts15-blk-00059
+启用DynDXD算法求解: sts15-blk-00059
+rows: 73
+cols: 48
+设置并行线程数为: 1
+Time: 0.028161 s
+Solutions: 36
+Max Blocks: 3
+CC ETT Calls: 434
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00059
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00060,data/benchmarks/exact_cover_set/sts15-blk-00060.ec,DynDXD,pureDynDXD,1,1,success,0.019706,0.021981,16,,2,,73,48,0,,2026-11-15T18:41:37,"Instance: sts15-blk-00060
+启用DynDXD算法求解: sts15-blk-00060
+rows: 73
+cols: 48
+设置并行线程数为: 1
+Time: 0.019706 s
+Solutions: 16
+Max Blocks: 2
+CC ETT Calls: 276
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00060
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00061,data/benchmarks/exact_cover_set/sts15-blk-00061.ec,DynDXD,pureDynDXD,1,1,success,0.017174,0.019407,24,,3,,74,48,0,,2026-11-15T18:41:37,"Instance: sts15-blk-00061
+启用DynDXD算法求解: sts15-blk-00061
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.017174 s
+Solutions: 24
+Max Blocks: 3
+CC ETT Calls: 280
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00061
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00062,data/benchmarks/exact_cover_set/sts15-blk-00062.ec,DynDXD,pureDynDXD,1,1,success,0.028706,0.030873,24,,4,,74,48,0,,2026-11-15T18:41:37,"Instance: sts15-blk-00062
+启用DynDXD算法求解: sts15-blk-00062
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.028706 s
+Solutions: 24
+Max Blocks: 4
+CC ETT Calls: 332
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00062
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00063,data/benchmarks/exact_cover_set/sts15-blk-00063.ec,DynDXD,pureDynDXD,1,1,success,0.046443,0.048756,192,,2,,68,48,0,,2026-11-15T18:41:37,"Instance: sts15-blk-00063
+启用DynDXD算法求解: sts15-blk-00063
+rows: 68
+cols: 48
+设置并行线程数为: 1
+Time: 0.046443 s
+Solutions: 192
+Max Blocks: 2
+CC ETT Calls: 1324
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00063
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00064,data/benchmarks/exact_cover_set/sts15-blk-00064.ec,DynDXD,pureDynDXD,1,1,success,0.049895,0.052101,144,,4,,70,48,0,,2026-11-15T18:41:37,"Instance: sts15-blk-00064
+启用DynDXD算法求解: sts15-blk-00064
+rows: 70
+cols: 48
+设置并行线程数为: 1
+Time: 0.049895 s
+Solutions: 144
+Max Blocks: 4
+CC ETT Calls: 1270
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00064
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00065,data/benchmarks/exact_cover_set/sts15-blk-00065.ec,DynDXD,pureDynDXD,1,1,success,0.036459,0.038685,96,,2,,71,48,0,,2026-11-15T18:41:37,"Instance: sts15-blk-00065
+启用DynDXD算法求解: sts15-blk-00065
+rows: 71
+cols: 48
+设置并行线程数为: 1
+Time: 0.036459 s
+Solutions: 96
+Max Blocks: 2
+CC ETT Calls: 952
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00065
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00066,data/benchmarks/exact_cover_set/sts15-blk-00066.ec,DynDXD,pureDynDXD,1,1,success,0.044069,0.046265,288,,2,,72,48,0,,2026-11-15T18:41:37,"Instance: sts15-blk-00066
+启用DynDXD算法求解: sts15-blk-00066
+rows: 72
+cols: 48
+设置并行线程数为: 1
+Time: 0.044069 s
+Solutions: 288
+Max Blocks: 2
+CC ETT Calls: 888
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00066
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00067,data/benchmarks/exact_cover_set/sts15-blk-00067.ec,DynDXD,pureDynDXD,1,1,error,,0.078339,,,,,72,48,-11,exit=-11; tail=rows: 72 cols: 48 设置并行线程数为: 1,2026-11-15T18:41:37,"Instance: sts15-blk-00067
+启用DynDXD算法求解: sts15-blk-00067
+rows: 72
+cols: 48
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00068,data/benchmarks/exact_cover_set/sts15-blk-00068.ec,DynDXD,pureDynDXD,1,1,success,0.030591,0.032752,28,,3,,74,48,0,,2026-11-15T18:41:37,"Instance: sts15-blk-00068
+启用DynDXD算法求解: sts15-blk-00068
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.030591 s
+Solutions: 28
+Max Blocks: 3
+CC ETT Calls: 418
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00068
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00069,data/benchmarks/exact_cover_set/sts15-blk-00069.ec,DynDXD,pureDynDXD,1,1,success,0.031941,0.034115,16,,3,,74,48,0,,2026-11-15T18:41:37,"Instance: sts15-blk-00069
+启用DynDXD算法求解: sts15-blk-00069
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.031941 s
+Solutions: 16
+Max Blocks: 3
+CC ETT Calls: 358
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00069
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00070,data/benchmarks/exact_cover_set/sts15-blk-00070.ec,DynDXD,pureDynDXD,1,1,error,,0.078439,,,,,73,48,-6,exit=-6; tail=cols: 48 设置并行线程数为: 1 malloc(): unaligned fastbin chunk detected 2,2026-11-15T18:41:37,"Instance: sts15-blk-00070
+启用DynDXD算法求解: sts15-blk-00070
+rows: 73
+cols: 48
+设置并行线程数为: 1
+malloc(): unaligned fastbin chunk detected 2
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00071,data/benchmarks/exact_cover_set/sts15-blk-00071.ec,DynDXD,pureDynDXD,1,1,success,0.026724,0.028890,20,,2,,75,48,0,,2026-11-15T18:41:37,"Instance: sts15-blk-00071
+启用DynDXD算法求解: sts15-blk-00071
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.026724 s
+Solutions: 20
+Max Blocks: 2
+CC ETT Calls: 330
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00071
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00072,data/benchmarks/exact_cover_set/sts15-blk-00072.ec,DynDXD,pureDynDXD,1,1,success,0.024624,0.026888,16,,2,,75,48,0,,2026-11-15T18:41:37,"Instance: sts15-blk-00072
+启用DynDXD算法求解: sts15-blk-00072
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.024624 s
+Solutions: 16
+Max Blocks: 2
+CC ETT Calls: 293
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00072
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00073,data/benchmarks/exact_cover_set/sts15-blk-00073.ec,DynDXD,pureDynDXD,1,1,success,0.030725,0.033034,20,,3,,74,48,0,,2026-11-15T18:41:37,"Instance: sts15-blk-00073
+启用DynDXD算法求解: sts15-blk-00073
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.030725 s
+Solutions: 20
+Max Blocks: 3
+CC ETT Calls: 383
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00073
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00074,data/benchmarks/exact_cover_set/sts15-blk-00074.ec,DynDXD,pureDynDXD,1,1,success,0.031319,0.033549,16,,3,,75,48,0,,2026-11-15T18:41:37,"Instance: sts15-blk-00074
+启用DynDXD算法求解: sts15-blk-00074
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.031319 s
+Solutions: 16
+Max Blocks: 3
+CC ETT Calls: 361
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00074
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00075,data/benchmarks/exact_cover_set/sts15-blk-00075.ec,DynDXD,pureDynDXD,1,1,success,0.027644,0.029898,20,,2,,75,48,0,,2026-11-15T18:41:37,"Instance: sts15-blk-00075
+启用DynDXD算法求解: sts15-blk-00075
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.027644 s
+Solutions: 20
+Max Blocks: 2
+CC ETT Calls: 325
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00075
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00076,data/benchmarks/exact_cover_set/sts15-blk-00076.ec,DynDXD,pureDynDXD,1,1,success,0.024521,0.026665,16,,3,,75,48,0,,2026-11-15T18:41:37,"Instance: sts15-blk-00076
+启用DynDXD算法求解: sts15-blk-00076
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.024521 s
+Solutions: 16
+Max Blocks: 3
+CC ETT Calls: 296
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00076
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00077,data/benchmarks/exact_cover_set/sts15-blk-00077.ec,DynDXD,pureDynDXD,1,1,success,0.027679,0.029835,20,,2,,74,48,0,,2026-11-15T18:41:37,"Instance: sts15-blk-00077
+启用DynDXD算法求解: sts15-blk-00077
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.027679 s
+Solutions: 20
+Max Blocks: 2
+CC ETT Calls: 354
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00077
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00078,data/benchmarks/exact_cover_set/sts15-blk-00078.ec,DynDXD,pureDynDXD,1,1,success,0.026655,0.028841,20,,2,,73,48,0,,2026-11-15T18:41:37,"Instance: sts15-blk-00078
+启用DynDXD算法求解: sts15-blk-00078
+rows: 73
+cols: 48
+设置并行线程数为: 1
+Time: 0.026655 s
+Solutions: 20
+Max Blocks: 2
+CC ETT Calls: 344
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00078
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00079,data/benchmarks/exact_cover_set/sts15-blk-00079.ec,DynDXD,pureDynDXD,1,1,error,,0.108496,,,,,75,48,-11,exit=-11; tail=rows: 75 cols: 48 设置并行线程数为: 1,2026-11-15T18:41:37,"Instance: sts15-blk-00079
+启用DynDXD算法求解: sts15-blk-00079
+rows: 75
+cols: 48
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00080,data/benchmarks/exact_cover_set/sts15-blk-00080.ec,DynDXD,pureDynDXD,1,1,success,0.030847,0.033050,16,,3,,74,48,0,,2026-11-15T18:41:38,"Instance: sts15-blk-00080
+启用DynDXD算法求解: sts15-blk-00080
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.030847 s
+Solutions: 16
+Max Blocks: 3
+CC ETT Calls: 359
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00080
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00081,data/benchmarks/exact_cover_set/sts15-blk-00081.ec,DynDXD,pureDynDXD,1,1,success,0.031476,0.033604,20,,3,,74,48,0,,2026-11-15T18:41:38,"Instance: sts15-blk-00081
+启用DynDXD算法求解: sts15-blk-00081
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.031476 s
+Solutions: 20
+Max Blocks: 3
+CC ETT Calls: 399
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00081
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00082,data/benchmarks/exact_cover_set/sts15-blk-00082.ec,DynDXD,pureDynDXD,1,1,error,,0.077534,,,,,74,48,-11,exit=-11; tail=rows: 74 cols: 48 设置并行线程数为: 1,2026-11-15T18:41:38,"Instance: sts15-blk-00082
+启用DynDXD算法求解: sts15-blk-00082
+rows: 74
+cols: 48
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00084,data/benchmarks/exact_cover_set/sts15-blk-00084.ec,DynDXD,pureDynDXD,1,1,error,,0.082018,,,,,74,48,-11,exit=-11; tail=rows: 74 cols: 48 设置并行线程数为: 1,2026-11-15T18:41:38,"Instance: sts15-blk-00084
+启用DynDXD算法求解: sts15-blk-00084
+rows: 74
+cols: 48
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00085,data/benchmarks/exact_cover_set/sts15-blk-00085.ec,DynDXD,pureDynDXD,1,1,success,0.023391,0.025534,32,,3,,74,48,0,,2026-11-15T18:41:38,"Instance: sts15-blk-00085
+启用DynDXD算法求解: sts15-blk-00085
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.023391 s
+Solutions: 32
+Max Blocks: 3
+CC ETT Calls: 381
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00085
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00086,data/benchmarks/exact_cover_set/sts15-blk-00086.ec,DynDXD,pureDynDXD,1,1,success,0.029010,0.031220,8,,2,,73,48,0,,2026-11-15T18:41:38,"Instance: sts15-blk-00086
+启用DynDXD算法求解: sts15-blk-00086
+rows: 73
+cols: 48
+设置并行线程数为: 1
+Time: 0.029010 s
+Solutions: 8
+Max Blocks: 2
+CC ETT Calls: 285
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00086
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00087,data/benchmarks/exact_cover_set/sts15-blk-00087.ec,DynDXD,pureDynDXD,1,1,success,0.024510,0.026732,48,,3,,74,48,0,,2026-11-15T18:41:38,"Instance: sts15-blk-00087
+启用DynDXD算法求解: sts15-blk-00087
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.024510 s
+Solutions: 48
+Max Blocks: 3
+CC ETT Calls: 385
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00087
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00088,data/benchmarks/exact_cover_set/sts15-blk-00088.ec,DynDXD,pureDynDXD,1,1,success,0.024742,0.027022,16,,3,,73,48,0,,2026-11-15T18:41:38,"Instance: sts15-blk-00088
+启用DynDXD算法求解: sts15-blk-00088
+rows: 73
+cols: 48
+设置并行线程数为: 1
+Time: 0.024742 s
+Solutions: 16
+Max Blocks: 3
+CC ETT Calls: 326
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00088
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00089,data/benchmarks/exact_cover_set/sts15-blk-00089.ec,DynDXD,pureDynDXD,1,1,success,0.031344,0.033586,20,,3,,75,48,0,,2026-11-15T18:41:38,"Instance: sts15-blk-00089
+启用DynDXD算法求解: sts15-blk-00089
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.031344 s
+Solutions: 20
+Max Blocks: 3
+CC ETT Calls: 373
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00089
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00090,data/benchmarks/exact_cover_set/sts15-blk-00090.ec,DynDXD,pureDynDXD,1,1,success,0.024008,0.026208,48,,3,,74,48,0,,2026-11-15T18:41:38,"Instance: sts15-blk-00090
+启用DynDXD算法求解: sts15-blk-00090
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.024008 s
+Solutions: 48
+Max Blocks: 3
+CC ETT Calls: 382
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00090
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00091,data/benchmarks/exact_cover_set/sts15-blk-00091.ec,DynDXD,pureDynDXD,1,1,error,,0.077677,,,,,72,48,-11,exit=-11; tail=rows: 72 cols: 48 设置并行线程数为: 1,2026-11-15T18:41:38,"Instance: sts15-blk-00091
+启用DynDXD算法求解: sts15-blk-00091
+rows: 72
+cols: 48
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00092,data/benchmarks/exact_cover_set/sts15-blk-00092.ec,DynDXD,pureDynDXD,1,1,error,,0.078273,,,,,74,48,-11,exit=-11; tail=rows: 74 cols: 48 设置并行线程数为: 1,2026-11-15T18:41:38,"Instance: sts15-blk-00092
+启用DynDXD算法求解: sts15-blk-00092
+rows: 74
+cols: 48
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00093,data/benchmarks/exact_cover_set/sts15-blk-00093.ec,DynDXD,pureDynDXD,1,1,timeout,,1530.100960,,,,,70,48,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-15T18:41:38,"Instance: sts15-blk-00093
+启用DynDXD算法求解: sts15-blk-00093
+rows: 70
+cols: 48
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00094,data/benchmarks/exact_cover_set/sts15-blk-00094.ec,DynDXD,pureDynDXD,1,1,success,0.026289,0.028488,8,,4,,76,48,0,,2026-11-15T19:07:08,"Instance: sts15-blk-00094
+启用DynDXD算法求解: sts15-blk-00094
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.026289 s
+Solutions: 8
+Max Blocks: 4
+CC ETT Calls: 248
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00094
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00095,data/benchmarks/exact_cover_set/sts15-blk-00095.ec,DynDXD,pureDynDXD,1,1,success,0.020225,0.022507,16,,2,,75,48,0,,2026-11-15T19:07:08,"Instance: sts15-blk-00095
+启用DynDXD算法求解: sts15-blk-00095
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.020225 s
+Solutions: 16
+Max Blocks: 2
+CC ETT Calls: 220
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00095
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00096,data/benchmarks/exact_cover_set/sts15-blk-00096.ec,DynDXD,pureDynDXD,1,1,success,0.021066,0.023329,24,,2,,75,48,0,,2026-11-15T19:07:08,"Instance: sts15-blk-00096
+启用DynDXD算法求解: sts15-blk-00096
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.021066 s
+Solutions: 24
+Max Blocks: 2
+CC ETT Calls: 233
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00096
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00097,data/benchmarks/exact_cover_set/sts15-blk-00097.ec,DynDXD,pureDynDXD,1,1,success,0.024715,0.026959,12,,2,,74,48,0,,2026-11-15T19:07:08,"Instance: sts15-blk-00097
+启用DynDXD算法求解: sts15-blk-00097
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.024715 s
+Solutions: 12
+Max Blocks: 2
+CC ETT Calls: 257
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00097
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00098,data/benchmarks/exact_cover_set/sts15-blk-00098.ec,DynDXD,pureDynDXD,1,1,success,0.019487,0.021729,24,,2,,76,48,0,,2026-11-15T19:07:08,"Instance: sts15-blk-00098
+启用DynDXD算法求解: sts15-blk-00098
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.019487 s
+Solutions: 24
+Max Blocks: 2
+CC ETT Calls: 190
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00098
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00099,data/benchmarks/exact_cover_set/sts15-blk-00099.ec,DynDXD,pureDynDXD,1,1,success,0.023043,0.025273,20,,2,,76,48,0,,2026-11-15T19:07:08,"Instance: sts15-blk-00099
+启用DynDXD算法求解: sts15-blk-00099
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.023043 s
+Solutions: 20
+Max Blocks: 2
+CC ETT Calls: 247
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00099
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00100,data/benchmarks/exact_cover_set/sts15-blk-00100.ec,DynDXD,pureDynDXD,1,1,error,,0.077133,,,,,75,48,-11,exit=-11; tail=rows: 75 cols: 48 设置并行线程数为: 1,2026-11-15T19:07:08,"Instance: sts15-blk-00100
+启用DynDXD算法求解: sts15-blk-00100
+rows: 75
+cols: 48
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00101,data/benchmarks/exact_cover_set/sts15-blk-00101.ec,DynDXD,pureDynDXD,1,1,success,0.018154,0.020390,20,,2,,76,48,0,,2026-11-15T19:07:08,"Instance: sts15-blk-00101
+启用DynDXD算法求解: sts15-blk-00101
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.018154 s
+Solutions: 20
+Max Blocks: 2
+CC ETT Calls: 222
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00101
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00102,data/benchmarks/exact_cover_set/sts15-blk-00102.ec,DynDXD,pureDynDXD,1,1,success,0.028881,0.031159,24,,3,,75,48,0,,2026-11-15T19:07:08,"Instance: sts15-blk-00102
+启用DynDXD算法求解: sts15-blk-00102
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.028881 s
+Solutions: 24
+Max Blocks: 3
+CC ETT Calls: 376
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00102
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00103,data/benchmarks/exact_cover_set/sts15-blk-00103.ec,DynDXD,pureDynDXD,1,1,success,0.022932,0.025216,8,,2,,76,48,0,,2026-11-15T19:07:08,"Instance: sts15-blk-00103
+启用DynDXD算法求解: sts15-blk-00103
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.022932 s
+Solutions: 8
+Max Blocks: 2
+CC ETT Calls: 193
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00103
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00104,data/benchmarks/exact_cover_set/sts15-blk-00104.ec,DynDXD,pureDynDXD,1,1,success,0.028927,0.031122,20,,3,,75,48,0,,2026-11-15T19:07:08,"Instance: sts15-blk-00104
+启用DynDXD算法求解: sts15-blk-00104
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.028927 s
+Solutions: 20
+Max Blocks: 3
+CC ETT Calls: 333
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00104
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00105,data/benchmarks/exact_cover_set/sts15-blk-00105.ec,DynDXD,pureDynDXD,1,1,success,0.031708,0.033949,24,,3,,75,48,0,,2026-11-15T19:07:09,"Instance: sts15-blk-00105
+启用DynDXD算法求解: sts15-blk-00105
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.031708 s
+Solutions: 24
+Max Blocks: 3
+CC ETT Calls: 400
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00105
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00106,data/benchmarks/exact_cover_set/sts15-blk-00106.ec,DynDXD,pureDynDXD,1,1,error,,0.085322,,,,,75,48,-11,exit=-11; tail=rows: 75 cols: 48 设置并行线程数为: 1,2026-11-15T19:07:09,"Instance: sts15-blk-00106
+启用DynDXD算法求解: sts15-blk-00106
+rows: 75
+cols: 48
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00107,data/benchmarks/exact_cover_set/sts15-blk-00107.ec,DynDXD,pureDynDXD,1,1,error,,0.076696,,,,,75,48,-11,exit=-11; tail=rows: 75 cols: 48 设置并行线程数为: 1,2026-11-15T19:07:09,"Instance: sts15-blk-00107
+启用DynDXD算法求解: sts15-blk-00107
+rows: 75
+cols: 48
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00108,data/benchmarks/exact_cover_set/sts15-blk-00108.ec,DynDXD,pureDynDXD,1,1,error,,0.079499,,,,,76,48,-11,exit=-11; tail=rows: 76 cols: 48 设置并行线程数为: 1,2026-11-15T19:07:09,"Instance: sts15-blk-00108
+启用DynDXD算法求解: sts15-blk-00108
+rows: 76
+cols: 48
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00109,data/benchmarks/exact_cover_set/sts15-blk-00109.ec,DynDXD,pureDynDXD,1,1,success,0.027517,0.029686,32,,4,,76,48,0,,2026-11-15T19:07:09,"Instance: sts15-blk-00109
+启用DynDXD算法求解: sts15-blk-00109
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.027517 s
+Solutions: 32
+Max Blocks: 4
+CC ETT Calls: 396
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00109
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00110,data/benchmarks/exact_cover_set/sts15-blk-00110.ec,DynDXD,pureDynDXD,1,1,error,,0.079424,,,,,76,48,-11,exit=-11; tail=rows: 76 cols: 48 设置并行线程数为: 1,2026-11-15T19:07:09,"Instance: sts15-blk-00110
+启用DynDXD算法求解: sts15-blk-00110
+rows: 76
+cols: 48
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00111,data/benchmarks/exact_cover_set/sts15-blk-00111.ec,DynDXD,pureDynDXD,1,1,timeout,,1530.100292,,,,,76,48,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-15T19:07:09,"Instance: sts15-blk-00111
+启用DynDXD算法求解: sts15-blk-00111
+rows: 76
+cols: 48
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00112,data/benchmarks/exact_cover_set/sts15-blk-00112.ec,DynDXD,pureDynDXD,1,1,error,,0.079825,,,,,76,48,-11,exit=-11; tail=rows: 76 cols: 48 设置并行线程数为: 1,2026-11-15T19:32:39,"Instance: sts15-blk-00112
+启用DynDXD算法求解: sts15-blk-00112
+rows: 76
+cols: 48
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00115,data/benchmarks/exact_cover_set/sts15-blk-00115.ec,DynDXD,pureDynDXD,1,1,success,0.026362,0.028593,24,,2,,74,48,0,,2026-11-15T19:32:39,"Instance: sts15-blk-00115
+启用DynDXD算法求解: sts15-blk-00115
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.026362 s
+Solutions: 24
+Max Blocks: 2
+CC ETT Calls: 353
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00115
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00116,data/benchmarks/exact_cover_set/sts15-blk-00116.ec,DynDXD,pureDynDXD,1,1,success,0.030945,0.033120,16,,3,,75,48,0,,2026-11-15T19:32:39,"Instance: sts15-blk-00116
+启用DynDXD算法求解: sts15-blk-00116
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.030945 s
+Solutions: 16
+Max Blocks: 3
+CC ETT Calls: 335
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00116
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00119,data/benchmarks/exact_cover_set/sts15-blk-00119.ec,DynDXD,pureDynDXD,1,1,timeout,,1530.100655,,,,,76,48,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-15T19:32:39,"Instance: sts15-blk-00119
+启用DynDXD算法求解: sts15-blk-00119
+rows: 76
+cols: 48
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00120,data/benchmarks/exact_cover_set/sts15-blk-00120.ec,DynDXD,pureDynDXD,1,1,success,0.033548,0.035822,24,,3,,76,48,0,,2026-11-15T19:58:09,"Instance: sts15-blk-00120
+启用DynDXD算法求解: sts15-blk-00120
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.033548 s
+Solutions: 24
+Max Blocks: 3
+CC ETT Calls: 397
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00120
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00121,data/benchmarks/exact_cover_set/sts15-blk-00121.ec,DynDXD,pureDynDXD,1,1,success,0.022128,0.024413,20,,3,,75,48,0,,2026-11-15T19:58:09,"Instance: sts15-blk-00121
+启用DynDXD算法求解: sts15-blk-00121
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.022128 s
+Solutions: 20
+Max Blocks: 3
+CC ETT Calls: 285
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00121
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00125,data/benchmarks/exact_cover_set/sts15-blk-00125.ec,DynDXD,pureDynDXD,1,1,success,0.020454,0.022749,16,,3,,76,48,0,,2026-11-15T19:58:09,"Instance: sts15-blk-00125
+启用DynDXD算法求解: sts15-blk-00125
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.020454 s
+Solutions: 16
+Max Blocks: 3
+CC ETT Calls: 235
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00125
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00126,data/benchmarks/exact_cover_set/sts15-blk-00126.ec,DynDXD,pureDynDXD,1,1,success,0.026558,0.028902,24,,3,,74,48,0,,2026-11-15T19:58:09,"Instance: sts15-blk-00126
+启用DynDXD算法求解: sts15-blk-00126
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.026558 s
+Solutions: 24
+Max Blocks: 3
+CC ETT Calls: 341
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00126
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00128,data/benchmarks/exact_cover_set/sts15-blk-00128.ec,DynDXD,pureDynDXD,1,1,success,0.027752,0.030015,24,,3,,76,48,0,,2026-11-15T19:58:09,"Instance: sts15-blk-00128
+启用DynDXD算法求解: sts15-blk-00128
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.027752 s
+Solutions: 24
+Max Blocks: 3
+CC ETT Calls: 363
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00128
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00129,data/benchmarks/exact_cover_set/sts15-blk-00129.ec,DynDXD,pureDynDXD,1,1,error,,0.080237,,,,,76,48,-11,exit=-11; tail=rows: 76 cols: 48 设置并行线程数为: 1,2026-11-15T19:58:09,"Instance: sts15-blk-00129
+启用DynDXD算法求解: sts15-blk-00129
+rows: 76
+cols: 48
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00130,data/benchmarks/exact_cover_set/sts15-blk-00130.ec,DynDXD,pureDynDXD,1,1,error,,0.078018,,,,,76,48,-11,exit=-11; tail=rows: 76 cols: 48 设置并行线程数为: 1,2026-11-15T19:58:09,"Instance: sts15-blk-00130
+启用DynDXD算法求解: sts15-blk-00130
+rows: 76
+cols: 48
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00131,data/benchmarks/exact_cover_set/sts15-blk-00131.ec,DynDXD,pureDynDXD,1,1,success,0.029264,0.031491,24,,3,,75,48,0,,2026-11-15T19:58:10,"Instance: sts15-blk-00131
+启用DynDXD算法求解: sts15-blk-00131
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.029264 s
+Solutions: 24
+Max Blocks: 3
+CC ETT Calls: 362
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00131
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00132,data/benchmarks/exact_cover_set/sts15-blk-00132.ec,DynDXD,pureDynDXD,1,1,success,0.034122,0.036316,28,,3,,76,48,0,,2026-11-15T19:58:10,"Instance: sts15-blk-00132
+启用DynDXD算法求解: sts15-blk-00132
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.034122 s
+Solutions: 28
+Max Blocks: 3
+CC ETT Calls: 428
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00132
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00133,data/benchmarks/exact_cover_set/sts15-blk-00133.ec,DynDXD,pureDynDXD,1,1,success,0.028471,0.030772,20,,3,,76,48,0,,2026-11-15T19:58:10,"Instance: sts15-blk-00133
+启用DynDXD算法求解: sts15-blk-00133
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.028471 s
+Solutions: 20
+Max Blocks: 3
+CC ETT Calls: 327
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00133
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00134,data/benchmarks/exact_cover_set/sts15-blk-00134.ec,DynDXD,pureDynDXD,1,1,success,0.033236,0.035420,28,,3,,76,48,0,,2026-11-15T19:58:10,"Instance: sts15-blk-00134
+启用DynDXD算法求解: sts15-blk-00134
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.033236 s
+Solutions: 28
+Max Blocks: 3
+CC ETT Calls: 432
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00134
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00135,data/benchmarks/exact_cover_set/sts15-blk-00135.ec,DynDXD,pureDynDXD,1,1,success,0.029580,0.031848,28,,4,,73,48,0,,2026-11-15T19:58:10,"Instance: sts15-blk-00135
+启用DynDXD算法求解: sts15-blk-00135
+rows: 73
+cols: 48
+设置并行线程数为: 1
+Time: 0.029580 s
+Solutions: 28
+Max Blocks: 4
+CC ETT Calls: 418
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00135
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00136,data/benchmarks/exact_cover_set/sts15-blk-00136.ec,DynDXD,pureDynDXD,1,1,success,0.024817,0.027190,16,,3,,74,48,0,,2026-11-15T19:58:10,"Instance: sts15-blk-00136
+启用DynDXD算法求解: sts15-blk-00136
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.024817 s
+Solutions: 16
+Max Blocks: 3
+CC ETT Calls: 272
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00136
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00137,data/benchmarks/exact_cover_set/sts15-blk-00137.ec,DynDXD,pureDynDXD,1,1,success,0.030028,0.032301,16,,2,,74,48,0,,2026-11-15T19:58:10,"Instance: sts15-blk-00137
+启用DynDXD算法求解: sts15-blk-00137
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.030028 s
+Solutions: 16
+Max Blocks: 2
+CC ETT Calls: 341
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00137
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00138,data/benchmarks/exact_cover_set/sts15-blk-00138.ec,DynDXD,pureDynDXD,1,1,timeout,,1530.080018,,,,,74,48,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-15T19:58:10,"Instance: sts15-blk-00138
+启用DynDXD算法求解: sts15-blk-00138
+rows: 74
+cols: 48
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00140,data/benchmarks/exact_cover_set/sts15-blk-00140.ec,DynDXD,pureDynDXD,1,1,success,0.035587,0.037846,48,,3,,76,48,0,,2026-11-15T20:23:40,"Instance: sts15-blk-00140
+启用DynDXD算法求解: sts15-blk-00140
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.035587 s
+Solutions: 48
+Max Blocks: 3
+CC ETT Calls: 559
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00140
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00141,data/benchmarks/exact_cover_set/sts15-blk-00141.ec,DynDXD,pureDynDXD,1,1,success,0.032135,0.034403,20,,2,,75,48,0,,2026-11-15T20:23:40,"Instance: sts15-blk-00141
+启用DynDXD算法求解: sts15-blk-00141
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.032135 s
+Solutions: 20
+Max Blocks: 2
+CC ETT Calls: 377
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00141
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00142,data/benchmarks/exact_cover_set/sts15-blk-00142.ec,DynDXD,pureDynDXD,1,1,success,0.029775,0.031973,20,,3,,74,48,0,,2026-11-15T20:23:40,"Instance: sts15-blk-00142
+启用DynDXD算法求解: sts15-blk-00142
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.029775 s
+Solutions: 20
+Max Blocks: 3
+CC ETT Calls: 354
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00142
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00143,data/benchmarks/exact_cover_set/sts15-blk-00143.ec,DynDXD,pureDynDXD,1,1,success,0.035604,0.037858,16,,3,,76,48,0,,2026-11-15T20:23:40,"Instance: sts15-blk-00143
+启用DynDXD算法求解: sts15-blk-00143
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.035604 s
+Solutions: 16
+Max Blocks: 3
+CC ETT Calls: 385
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00143
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00144,data/benchmarks/exact_cover_set/sts15-blk-00144.ec,DynDXD,pureDynDXD,1,1,success,0.034374,0.036659,16,,3,,76,48,0,,2026-11-15T20:23:40,"Instance: sts15-blk-00144
+启用DynDXD算法求解: sts15-blk-00144
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.034374 s
+Solutions: 16
+Max Blocks: 3
+CC ETT Calls: 363
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00144
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00145,data/benchmarks/exact_cover_set/sts15-blk-00145.ec,DynDXD,pureDynDXD,1,1,error,,0.078808,,,,,74,48,-11,exit=-11; tail=rows: 74 cols: 48 设置并行线程数为: 1,2026-11-15T20:23:40,"Instance: sts15-blk-00145
+启用DynDXD算法求解: sts15-blk-00145
+rows: 74
+cols: 48
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00146,data/benchmarks/exact_cover_set/sts15-blk-00146.ec,DynDXD,pureDynDXD,1,1,success,0.028054,0.030223,28,,3,,75,48,0,,2026-11-15T20:23:40,"Instance: sts15-blk-00146
+启用DynDXD算法求解: sts15-blk-00146
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.028054 s
+Solutions: 28
+Max Blocks: 3
+CC ETT Calls: 367
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00146
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00147,data/benchmarks/exact_cover_set/sts15-blk-00147.ec,DynDXD,pureDynDXD,1,1,error,,0.077957,,,,,74,48,-11,exit=-11; tail=rows: 74 cols: 48 设置并行线程数为: 1,2026-11-15T20:23:40,"Instance: sts15-blk-00147
+启用DynDXD算法求解: sts15-blk-00147
+rows: 74
+cols: 48
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00148,data/benchmarks/exact_cover_set/sts15-blk-00148.ec,DynDXD,pureDynDXD,1,1,success,0.029615,0.031809,28,,3,,74,48,0,,2026-11-15T20:23:40,"Instance: sts15-blk-00148
+启用DynDXD算法求解: sts15-blk-00148
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.029615 s
+Solutions: 28
+Max Blocks: 3
+CC ETT Calls: 395
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00148
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00149,data/benchmarks/exact_cover_set/sts15-blk-00149.ec,DynDXD,pureDynDXD,1,1,success,0.030698,0.032862,24,,3,,76,48,0,,2026-11-15T20:23:40,"Instance: sts15-blk-00149
+启用DynDXD算法求解: sts15-blk-00149
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.030698 s
+Solutions: 24
+Max Blocks: 3
+CC ETT Calls: 366
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00149
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00150,data/benchmarks/exact_cover_set/sts15-blk-00150.ec,DynDXD,pureDynDXD,1,1,success,0.031222,0.033516,16,,4,,73,48,0,,2026-11-15T20:23:40,"Instance: sts15-blk-00150
+启用DynDXD算法求解: sts15-blk-00150
+rows: 73
+cols: 48
+设置并行线程数为: 1
+Time: 0.031222 s
+Solutions: 16
+Max Blocks: 4
+CC ETT Calls: 335
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00150
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00151,data/benchmarks/exact_cover_set/sts15-blk-00151.ec,DynDXD,pureDynDXD,1,1,success,0.028039,0.030219,28,,3,,75,48,0,,2026-11-15T20:23:40,"Instance: sts15-blk-00151
+启用DynDXD算法求解: sts15-blk-00151
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.028039 s
+Solutions: 28
+Max Blocks: 3
+CC ETT Calls: 357
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00151
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00152,data/benchmarks/exact_cover_set/sts15-blk-00152.ec,DynDXD,pureDynDXD,1,1,success,0.031300,0.033466,24,,3,,75,48,0,,2026-11-15T20:23:40,"Instance: sts15-blk-00152
+启用DynDXD算法求解: sts15-blk-00152
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.031300 s
+Solutions: 24
+Max Blocks: 3
+CC ETT Calls: 383
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00152
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00153,data/benchmarks/exact_cover_set/sts15-blk-00153.ec,DynDXD,pureDynDXD,1,1,success,0.034133,0.036392,64,,3,,72,48,0,,2026-11-15T20:23:40,"Instance: sts15-blk-00153
+启用DynDXD算法求解: sts15-blk-00153
+rows: 72
+cols: 48
+设置并行线程数为: 1
+Time: 0.034133 s
+Solutions: 64
+Max Blocks: 3
+CC ETT Calls: 692
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00153
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00154,data/benchmarks/exact_cover_set/sts15-blk-00154.ec,DynDXD,pureDynDXD,1,1,success,0.033237,0.035401,40,,4,,72,48,0,,2026-11-15T20:23:40,"Instance: sts15-blk-00154
+启用DynDXD算法求解: sts15-blk-00154
+rows: 72
+cols: 48
+设置并行线程数为: 1
+Time: 0.033237 s
+Solutions: 40
+Max Blocks: 4
+CC ETT Calls: 556
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00154
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00155,data/benchmarks/exact_cover_set/sts15-blk-00155.ec,DynDXD,pureDynDXD,1,1,success,0.032417,0.034628,40,,3,,76,48,0,,2026-11-15T20:23:40,"Instance: sts15-blk-00155
+启用DynDXD算法求解: sts15-blk-00155
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.032417 s
+Solutions: 40
+Max Blocks: 3
+CC ETT Calls: 404
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00155
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00156,data/benchmarks/exact_cover_set/sts15-blk-00156.ec,DynDXD,pureDynDXD,1,1,success,0.026016,0.028202,8,,3,,76,48,0,,2026-11-15T20:23:40,"Instance: sts15-blk-00156
+启用DynDXD算法求解: sts15-blk-00156
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.026016 s
+Solutions: 8
+Max Blocks: 3
+CC ETT Calls: 213
+CC BFS Calls: 1
+DynDXD算法求解结束: sts15-blk-00156
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00157,data/benchmarks/exact_cover_set/sts15-blk-00157.ec,DynDXD,pureDynDXD,1,1,error,,0.079680,,,,,76,48,-6,exit=-6; tail=cols: 48 设置并行线程数为: 1 malloc(): unaligned tcache chunk detected,2026-11-15T20:23:41,"Instance: sts15-blk-00157
+启用DynDXD算法求解: sts15-blk-00157
+rows: 76
+cols: 48
+设置并行线程数为: 1
+malloc(): unaligned tcache chunk detected
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00009,data/benchmarks/exact_cover_set/sts19-blk-00009.ec,DynDXD,pureDynDXD,1,1,error,,0.086776,,,,,262,96,-11,exit=-11; tail=rows: 262 cols: 96 设置并行线程数为: 1,2026-11-15T20:23:41,"Instance: sts19-blk-00009
+启用DynDXD算法求解: sts19-blk-00009
+rows: 262
+cols: 96
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00033,data/benchmarks/exact_cover_set/sts19-blk-00033.ec,DynDXD,pureDynDXD,1,1,error,,0.095312,,,,,264,96,-11,exit=-11; tail=rows: 264 cols: 96 设置并行线程数为: 1,2026-11-15T20:23:41,"Instance: sts19-blk-00033
+启用DynDXD算法求解: sts19-blk-00033
+rows: 264
+cols: 96
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00043,data/benchmarks/exact_cover_set/sts19-blk-00043.ec,DynDXD,pureDynDXD,1,1,timeout,1500.210609,1505.594978,,,,,270,96,0,exit=0; tail=Time: 1500.210609 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: sts19-blk-00043,2026-11-15T20:23:41,"Instance: sts19-blk-00043
+启用DynDXD算法求解: sts19-blk-00043
+rows: 270
+cols: 96
+设置并行线程数为: 1
+Time: 1500.210609 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: sts19-blk-00043
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00044,data/benchmarks/exact_cover_set/sts19-blk-00044.ec,DynDXD,pureDynDXD,1,1,timeout,1500.188384,1506.270172,,,,,264,96,0,exit=0; tail=Time: 1500.188384 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: sts19-blk-00044,2026-11-15T20:48:46,"Instance: sts19-blk-00044
+启用DynDXD算法求解: sts19-blk-00044
+rows: 264
+cols: 96
+设置并行线程数为: 1
+Time: 1500.188384 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: sts19-blk-00044
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00058,data/benchmarks/exact_cover_set/sts19-blk-00058.ec,DynDXD,pureDynDXD,1,1,timeout,1500.203898,1505.945478,,,,,268,96,0,exit=0; tail=Time: 1500.203898 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: sts19-blk-00058,2026-11-15T21:13:53,"Instance: sts19-blk-00058
+启用DynDXD算法求解: sts19-blk-00058
+rows: 268
+cols: 96
+设置并行线程数为: 1
+Time: 1500.203898 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: sts19-blk-00058
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00060,data/benchmarks/exact_cover_set/sts19-blk-00060.ec,DynDXD,pureDynDXD,1,1,timeout,1500.198106,1506.276343,,,,,268,96,0,exit=0; tail=Time: 1500.198106 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: sts19-blk-00060,2026-11-15T21:38:59,"Instance: sts19-blk-00060
+启用DynDXD算法求解: sts19-blk-00060
+rows: 268
+cols: 96
+设置并行线程数为: 1
+Time: 1500.198106 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: sts19-blk-00060
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00070,data/benchmarks/exact_cover_set/sts19-blk-00070.ec,DynDXD,pureDynDXD,1,1,timeout,1500.201201,1505.964618,,,,,270,96,0,exit=0; tail=Time: 1500.201201 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: sts19-blk-00070,2026-11-15T22:04:05,"Instance: sts19-blk-00070
+启用DynDXD算法求解: sts19-blk-00070
+rows: 270
+cols: 96
+设置并行线程数为: 1
+Time: 1500.201201 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: sts19-blk-00070
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00075,data/benchmarks/exact_cover_set/sts19-blk-00075.ec,DynDXD,pureDynDXD,1,1,timeout,,1530.101093,,,,,272,96,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-15T22:29:11,"Instance: sts19-blk-00075
+启用DynDXD算法求解: sts19-blk-00075
+rows: 272
+cols: 96
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00076,data/benchmarks/exact_cover_set/sts19-blk-00076.ec,DynDXD,pureDynDXD,1,1,timeout,1500.226626,1503.583907,,,,,272,96,0,exit=0; tail=Time: 1500.226626 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: sts19-blk-00076,2026-11-15T22:54:41,"Instance: sts19-blk-00076
+启用DynDXD算法求解: sts19-blk-00076
+rows: 272
+cols: 96
+设置并行线程数为: 1
+Time: 1500.226626 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: sts19-blk-00076
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00077,data/benchmarks/exact_cover_set/sts19-blk-00077.ec,DynDXD,pureDynDXD,1,1,timeout,1500.210692,1503.312656,,,,,272,96,0,exit=0; tail=Time: 1500.210692 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: sts19-blk-00077,2026-11-15T23:19:45,"Instance: sts19-blk-00077
+启用DynDXD算法求解: sts19-blk-00077
+rows: 272
+cols: 96
+设置并行线程数为: 1
+Time: 1500.210692 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: sts19-blk-00077
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00078,data/benchmarks/exact_cover_set/sts19-blk-00078.ec,DynDXD,pureDynDXD,1,1,error,,0.086929,,,,,272,96,-11,exit=-11; tail=rows: 272 cols: 96 设置并行线程数为: 1,2026-11-15T23:44:48,"Instance: sts19-blk-00078
+启用DynDXD算法求解: sts19-blk-00078
+rows: 272
+cols: 96
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00108,data/benchmarks/exact_cover_set/sts19-blk-00108.ec,DynDXD,pureDynDXD,1,1,timeout,,1530.100605,,,,,272,96,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-15T23:44:48,"Instance: sts19-blk-00108
+启用DynDXD算法求解: sts19-blk-00108
+rows: 272
+cols: 96
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00120,data/benchmarks/exact_cover_set/sts19-blk-00120.ec,DynDXD,pureDynDXD,1,1,timeout,1500.171450,1504.012806,,,,,272,96,0,exit=0; tail=Time: 1500.171450 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: sts19-blk-00120,2026-11-16T00:10:18,"Instance: sts19-blk-00120
+启用DynDXD算法求解: sts19-blk-00120
+rows: 272
+cols: 96
+设置并行线程数为: 1
+Time: 1500.171450 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: sts19-blk-00120
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00140,data/benchmarks/exact_cover_set/sts19-blk-00140.ec,DynDXD,pureDynDXD,1,1,error,,0.095103,,,,,272,96,-11,exit=-11; tail=rows: 272 cols: 96 设置并行线程数为: 1,2026-11-16T00:35:22,"Instance: sts19-blk-00140
+启用DynDXD算法求解: sts19-blk-00140
+rows: 272
+cols: 96
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00150,data/benchmarks/exact_cover_set/sts19-blk-00150.ec,DynDXD,pureDynDXD,1,1,error,,0.092804,,,,,272,96,-11,exit=-11; tail=rows: 272 cols: 96 设置并行线程数为: 1,2026-11-16T00:35:22,"Instance: sts19-blk-00150
+启用DynDXD算法求解: sts19-blk-00150
+rows: 272
+cols: 96
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00162,data/benchmarks/exact_cover_set/sts19-blk-00162.ec,DynDXD,pureDynDXD,1,1,timeout,1500.174372,1504.898647,,,,,272,96,0,exit=0; tail=Time: 1500.174372 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: sts19-blk-00162,2026-11-16T00:35:22,"Instance: sts19-blk-00162
+启用DynDXD算法求解: sts19-blk-00162
+rows: 272
+cols: 96
+设置并行线程数为: 1
+Time: 1500.174372 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: sts19-blk-00162
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00165,data/benchmarks/exact_cover_set/sts19-blk-00165.ec,DynDXD,pureDynDXD,1,1,timeout,1500.171736,1504.264957,,,,,272,96,0,exit=0; tail=Time: 1500.171736 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: sts19-blk-00165,2026-11-16T01:00:27,"Instance: sts19-blk-00165
+启用DynDXD算法求解: sts19-blk-00165
+rows: 272
+cols: 96
+设置并行线程数为: 1
+Time: 1500.171736 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: sts19-blk-00165
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00184,data/benchmarks/exact_cover_set/sts19-blk-00184.ec,DynDXD,pureDynDXD,1,1,error,,0.086125,,,,,264,96,-11,exit=-11; tail=rows: 264 cols: 96 设置并行线程数为: 1,2026-11-16T01:25:31,"Instance: sts19-blk-00184
+启用DynDXD算法求解: sts19-blk-00184
+rows: 264
+cols: 96
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00190,data/benchmarks/exact_cover_set/sts19-blk-00190.ec,DynDXD,pureDynDXD,1,1,timeout,1500.168620,1505.179784,,,,,268,96,0,exit=0; tail=Time: 1500.168620 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: sts19-blk-00190,2026-11-16T01:25:31,"Instance: sts19-blk-00190
+启用DynDXD算法求解: sts19-blk-00190
+rows: 268
+cols: 96
+设置并行线程数为: 1
+Time: 1500.168620 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: sts19-blk-00190
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00199,data/benchmarks/exact_cover_set/sts19-blk-00199.ec,DynDXD,pureDynDXD,1,1,timeout,1500.152442,1505.700469,,,,,268,96,0,exit=0; tail=Time: 1500.152442 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: sts19-blk-00199,2026-11-16T01:50:37,"Instance: sts19-blk-00199
+启用DynDXD算法求解: sts19-blk-00199
+rows: 268
+cols: 96
+设置并行线程数为: 1
+Time: 1500.152442 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: sts19-blk-00199
+"
+20261115_115128,dxd-versions,new,rome3,grafo10028.96,data/benchmarks/rome3_matrices/matrices/grafo10028.96.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.130610,,,,,194268,852,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T02:15:42,"Instance: grafo10028.96
+启用DynDXD算法求解: grafo10028.96
+rows: 194268
+cols: 852
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10050.97,data/benchmarks/rome3_matrices/matrices/grafo10050.97.txt,DynDXD,pureDynDXD,1,1,timeout,1506.512163,1509.042315,,,,,179230,785,0,exit=0; tail=Time: 1506.512163 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: grafo10050.97,2026-11-16T02:41:12,"Instance: grafo10050.97
+启用DynDXD算法求解: grafo10050.97
+rows: 179230
+cols: 785
+设置并行线程数为: 1
+Time: 1506.512163 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: grafo10050.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10061.99,data/benchmarks/rome3_matrices/matrices/grafo10061.99.txt,DynDXD,pureDynDXD,1,1,timeout,1513.266456,1516.737009,,,,,188650,805,0,exit=0; tail=Time: 1513.266456 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: grafo10061.99,2026-11-16T03:06:22,"Instance: grafo10061.99
+启用DynDXD算法求解: grafo10061.99
+rows: 188650
+cols: 805
+设置并行线程数为: 1
+Time: 1513.266456 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: grafo10061.99
+"
+20261115_115128,dxd-versions,new,rome3,grafo10091.96,data/benchmarks/rome3_matrices/matrices/grafo10091.96.txt,DynDXD,pureDynDXD,1,1,timeout,1508.902641,1511.321537,,,,,185145,790,0,exit=0; tail=Time: 1508.902641 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: grafo10091.96,2026-11-16T03:31:38,"Instance: grafo10091.96
+启用DynDXD算法求解: grafo10091.96
+rows: 185145
+cols: 790
+设置并行线程数为: 1
+Time: 1508.902641 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: grafo10091.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10092.97,data/benchmarks/rome3_matrices/matrices/grafo10092.97.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.131004,,,,,171575,770,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T03:56:50,"Instance: grafo10092.97
+启用DynDXD算法求解: grafo10092.97
+rows: 171575
+cols: 770
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10095.93,data/benchmarks/rome3_matrices/matrices/grafo10095.93.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.125220,,,,,188100,882,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T04:22:20,"Instance: grafo10095.93
+启用DynDXD算法求解: grafo10095.93
+rows: 188100
+cols: 882
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10098.95,data/benchmarks/rome3_matrices/matrices/grafo10098.95.txt,DynDXD,pureDynDXD,1,1,timeout,1510.785470,1513.189561,,,,,196782,894,0,exit=0; tail=Time: 1510.785470 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: grafo10098.95,2026-11-16T04:47:50,"Instance: grafo10098.95
+启用DynDXD算法求解: grafo10098.95
+rows: 196782
+cols: 894
+设置并行线程数为: 1
+Time: 1510.785470 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: grafo10098.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10101.92,data/benchmarks/rome3_matrices/matrices/grafo10101.92.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.128797,,,,,190218,888,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T05:13:03,"Instance: grafo10101.92
+启用DynDXD算法求解: grafo10101.92
+rows: 190218
+cols: 888
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10102.97,data/benchmarks/rome3_matrices/matrices/grafo10102.97.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.126127,,,,,182410,795,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T05:38:33,"Instance: grafo10102.97
+启用DynDXD算法求解: grafo10102.97
+rows: 182410
+cols: 795
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10103.98,data/benchmarks/rome3_matrices/matrices/grafo10103.98.txt,DynDXD,pureDynDXD,1,1,timeout,1504.958346,1506.684826,,,,,162180,750,0,exit=0; tail=Time: 1504.958346 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: grafo10103.98,2026-11-16T06:04:03,"Instance: grafo10103.98
+启用DynDXD算法求解: grafo10103.98
+rows: 162180
+cols: 750
+设置并行线程数为: 1
+Time: 1504.958346 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: grafo10103.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10104.96,data/benchmarks/rome3_matrices/matrices/grafo10104.96.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.122318,,,,,161585,750,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T06:29:10,"Instance: grafo10104.96
+启用DynDXD算法求解: grafo10104.96
+rows: 161585
+cols: 750
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10106.100,data/benchmarks/rome3_matrices/matrices/grafo10106.100.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.149519,,,,,187770,805,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T06:54:40,"Instance: grafo10106.100
+启用DynDXD算法求解: grafo10106.100
+rows: 187770
+cols: 805
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10107.93,data/benchmarks/rome3_matrices/matrices/grafo10107.93.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.126566,,,,,165340,755,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T07:20:10,"Instance: grafo10107.93
+启用DynDXD算法求解: grafo10107.93
+rows: 165340
+cols: 755
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10111.96,data/benchmarks/rome3_matrices/matrices/grafo10111.96.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.128658,,,,,166835,750,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T07:45:40,"Instance: grafo10111.96
+启用DynDXD算法求解: grafo10111.96
+rows: 166835
+cols: 750
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10117.98,data/benchmarks/rome3_matrices/matrices/grafo10117.98.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.125144,,,,,163690,755,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T08:11:11,"Instance: grafo10117.98
+启用DynDXD算法求解: grafo10117.98
+rows: 163690
+cols: 755
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10120.96,data/benchmarks/rome3_matrices/matrices/grafo10120.96.txt,DynDXD,pureDynDXD,1,1,timeout,1510.660641,1513.070609,,,,,168040,760,0,exit=0; tail=Time: 1510.660641 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: grafo10120.96,2026-11-16T08:36:41,"Instance: grafo10120.96
+启用DynDXD算法求解: grafo10120.96
+rows: 168040
+cols: 760
+设置并行线程数为: 1
+Time: 1510.660641 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: grafo10120.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10121.95,data/benchmarks/rome3_matrices/matrices/grafo10121.95.txt,DynDXD,pureDynDXD,1,1,timeout,1506.345349,1508.749739,,,,,185910,795,0,exit=0; tail=Time: 1506.345349 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: grafo10121.95,2026-11-16T09:01:54,"Instance: grafo10121.95
+启用DynDXD算法求解: grafo10121.95
+rows: 185910
+cols: 795
+设置并行线程数为: 1
+Time: 1506.345349 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: grafo10121.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10128.98,data/benchmarks/rome3_matrices/matrices/grafo10128.98.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.121115,,,,,186075,800,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T09:27:02,"Instance: grafo10128.98
+启用DynDXD算法求解: grafo10128.98
+rows: 186075
+cols: 800
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10132.97,data/benchmarks/rome3_matrices/matrices/grafo10132.97.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.129752,,,,,167505,760,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T09:52:33,"Instance: grafo10132.97
+启用DynDXD算法求解: grafo10132.97
+rows: 167505
+cols: 760
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10144.98,data/benchmarks/rome3_matrices/matrices/grafo10144.98.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.121688,,,,,169965,765,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T10:18:03,"Instance: grafo10144.98
+启用DynDXD算法求解: grafo10144.98
+rows: 169965
+cols: 765
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10145.94,data/benchmarks/rome3_matrices/matrices/grafo10145.94.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.124959,,,,,178540,785,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T10:43:33,"Instance: grafo10145.94
+启用DynDXD算法求解: grafo10145.94
+rows: 178540
+cols: 785
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10148.97,data/benchmarks/rome3_matrices/matrices/grafo10148.97.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.122050,,,,,169835,765,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T11:09:03,"Instance: grafo10148.97
+启用DynDXD算法求解: grafo10148.97
+rows: 169835
+cols: 765
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10149.95,data/benchmarks/rome3_matrices/matrices/grafo10149.95.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.080182,,,,,184488,870,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T11:34:33,"Instance: grafo10149.95
+启用DynDXD算法求解: grafo10149.95
+rows: 184488
+cols: 870
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10150.95,data/benchmarks/rome3_matrices/matrices/grafo10150.95.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.130310,,,,,162895,750,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T12:00:03,"Instance: grafo10150.95
+启用DynDXD算法求解: grafo10150.95
+rows: 162895
+cols: 750
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10166.98,data/benchmarks/rome3_matrices/matrices/grafo10166.98.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.030302,,,,,184728,864,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T12:25:33,"Instance: grafo10166.98
+启用DynDXD算法求解: grafo10166.98
+rows: 184728
+cols: 864
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10167.96,data/benchmarks/rome3_matrices/matrices/grafo10167.96.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.124347,,,,,189110,805,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T12:51:03,"Instance: grafo10167.96
+启用DynDXD算法求解: grafo10167.96
+rows: 189110
+cols: 805
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10172.99,data/benchmarks/rome3_matrices/matrices/grafo10172.99.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.129466,,,,,205308,870,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T13:16:33,"Instance: grafo10172.99
+启用DynDXD算法求解: grafo10172.99
+rows: 205308
+cols: 870
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10174.95,data/benchmarks/rome3_matrices/matrices/grafo10174.95.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.122121,,,,,165790,760,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T13:42:04,"Instance: grafo10174.95
+启用DynDXD算法求解: grafo10174.95
+rows: 165790
+cols: 760
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10180.98,data/benchmarks/rome3_matrices/matrices/grafo10180.98.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.124388,,,,,179810,790,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T14:07:34,"Instance: grafo10180.98
+启用DynDXD算法求解: grafo10180.98
+rows: 179810
+cols: 790
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10183.100,data/benchmarks/rome3_matrices/matrices/grafo10183.100.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.123925,,,,,193950,815,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T14:33:04,"Instance: grafo10183.100
+启用DynDXD算法求解: grafo10183.100
+rows: 193950
+cols: 815
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10194.97,data/benchmarks/rome3_matrices/matrices/grafo10194.97.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.176112,,,,,163720,755,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T14:58:34,"Instance: grafo10194.97
+启用DynDXD算法求解: grafo10194.97
+rows: 163720
+cols: 755
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10197.96,data/benchmarks/rome3_matrices/matrices/grafo10197.96.txt,DynDXD,pureDynDXD,1,1,timeout,1506.915025,1509.947393,,,,,193482,882,0,exit=0; tail=Time: 1506.915025 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: grafo10197.96,2026-11-16T15:24:04,"Instance: grafo10197.96
+启用DynDXD算法求解: grafo10197.96
+rows: 193482
+cols: 882
+设置并行线程数为: 1
+Time: 1506.915025 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: grafo10197.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10206.97,data/benchmarks/rome3_matrices/matrices/grafo10206.97.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.134479,,,,,183945,800,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T15:49:14,"Instance: grafo10206.97
+启用DynDXD算法求解: grafo10206.97
+rows: 183945
+cols: 800
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10208.98,data/benchmarks/rome3_matrices/matrices/grafo10208.98.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.142370,,,,,176110,785,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T16:14:44,"Instance: grafo10208.98
+启用DynDXD算法求解: grafo10208.98
+rows: 176110
+cols: 785
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10213.99,data/benchmarks/rome3_matrices/matrices/grafo10213.99.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.138968,,,,,166975,755,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T16:40:14,"Instance: grafo10213.99
+启用DynDXD算法求解: grafo10213.99
+rows: 166975
+cols: 755
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10217.99,data/benchmarks/rome3_matrices/matrices/grafo10217.99.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.130540,,,,,185925,800,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T17:05:44,"Instance: grafo10217.99
+启用DynDXD算法求解: grafo10217.99
+rows: 185925
+cols: 800
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10224.95,data/benchmarks/rome3_matrices/matrices/grafo10224.95.txt,DynDXD,pureDynDXD,1,1,timeout,1521.588289,1525.530950,,,,,186985,795,0,exit=0; tail=Time: 1521.588289 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: grafo10224.95,2026-11-16T17:31:15,"Instance: grafo10224.95
+启用DynDXD算法求解: grafo10224.95
+rows: 186985
+cols: 795
+设置并行线程数为: 1
+Time: 1521.588289 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: grafo10224.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10225.99,data/benchmarks/rome3_matrices/matrices/grafo10225.99.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.140817,,,,,178000,775,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T17:56:40,"Instance: grafo10225.99
+启用DynDXD算法求解: grafo10225.99
+rows: 178000
+cols: 775
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10227.96,data/benchmarks/rome3_matrices/matrices/grafo10227.96.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.167441,,,,,170575,765,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T18:22:10,"Instance: grafo10227.96
+启用DynDXD算法求解: grafo10227.96
+rows: 170575
+cols: 765
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10228.95,data/benchmarks/rome3_matrices/matrices/grafo10228.95.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.125592,,,,,180790,790,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T18:47:40,"Instance: grafo10228.95
+启用DynDXD算法求解: grafo10228.95
+rows: 180790
+cols: 790
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10240.97,data/benchmarks/rome3_matrices/matrices/grafo10240.97.txt,DynDXD,pureDynDXD,1,1,timeout,1511.842469,1514.180100,,,,,170148,840,0,exit=0; tail=Time: 1511.842469 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: grafo10240.97,2026-11-16T19:13:11,"Instance: grafo10240.97
+启用DynDXD算法求解: grafo10240.97
+rows: 170148
+cols: 840
+设置并行线程数为: 1
+Time: 1511.842469 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: grafo10240.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10243.95,data/benchmarks/rome3_matrices/matrices/grafo10243.95.txt,DynDXD,pureDynDXD,1,1,timeout,1510.042537,1511.886536,,,,,192816,882,0,exit=0; tail=Time: 1510.042537 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: grafo10243.95,2026-11-16T19:38:25,"Instance: grafo10243.95
+启用DynDXD算法求解: grafo10243.95
+rows: 192816
+cols: 882
+设置并行线程数为: 1
+Time: 1510.042537 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: grafo10243.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10246.96,data/benchmarks/rome3_matrices/matrices/grafo10246.96.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.127831,,,,,195966,894,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T20:03:37,"Instance: grafo10246.96
+启用DynDXD算法求解: grafo10246.96
+rows: 195966
+cols: 894
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10248.100,data/benchmarks/rome3_matrices/matrices/grafo10248.100.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.091823,,,,,210180,855,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T20:29:07,"Instance: grafo10248.100
+启用DynDXD算法求解: grafo10248.100
+rows: 210180
+cols: 855
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10249.94,data/benchmarks/rome3_matrices/matrices/grafo10249.94.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.139402,,,,,189978,882,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T20:54:37,"Instance: grafo10249.94
+启用DynDXD算法求解: grafo10249.94
+rows: 189978
+cols: 882
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10252.96,data/benchmarks/rome3_matrices/matrices/grafo10252.96.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.154721,,,,,194690,820,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T21:20:07,"Instance: grafo10252.96
+启用DynDXD算法求解: grafo10252.96
+rows: 194690
+cols: 820
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10257.100,data/benchmarks/rome3_matrices/matrices/grafo10257.100.txt,DynDXD,pureDynDXD,1,1,timeout,1512.071847,1515.706684,,,,,168610,755,0,exit=0; tail=Time: 1512.071847 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: grafo10257.100,2026-11-16T21:45:37,"Instance: grafo10257.100
+启用DynDXD算法求解: grafo10257.100
+rows: 168610
+cols: 755
+设置并行线程数为: 1
+Time: 1512.071847 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: grafo10257.100
+"
+20261115_115128,dxd-versions,new,rome3,grafo10258.96,data/benchmarks/rome3_matrices/matrices/grafo10258.96.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.130473,,,,,196572,894,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T22:10:53,"Instance: grafo10258.96
+启用DynDXD算法求解: grafo10258.96
+rows: 196572
+cols: 894
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10268.97,data/benchmarks/rome3_matrices/matrices/grafo10268.97.txt,DynDXD,pureDynDXD,1,1,timeout,1520.739399,1522.621024,,,,,189240,894,0,exit=0; tail=Time: 1520.739399 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: grafo10268.97,2026-11-16T22:36:23,"Instance: grafo10268.97
+启用DynDXD算法求解: grafo10268.97
+rows: 189240
+cols: 894
+设置并行线程数为: 1
+Time: 1520.739399 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: grafo10268.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10271.100,data/benchmarks/rome3_matrices/matrices/grafo10271.100.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.146884,,,,,184045,795,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T23:01:46,"Instance: grafo10271.100
+启用DynDXD算法求解: grafo10271.100
+rows: 184045
+cols: 795
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10274.99,data/benchmarks/rome3_matrices/matrices/grafo10274.99.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.137155,,,,,182985,790,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T23:27:16,"Instance: grafo10274.99
+启用DynDXD算法求解: grafo10274.99
+rows: 182985
+cols: 790
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10287.92,data/benchmarks/rome3_matrices/matrices/grafo10287.92.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.147711,,,,,177570,858,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-16T23:52:46,"Instance: grafo10287.92
+启用DynDXD算法求解: grafo10287.92
+rows: 177570
+cols: 858
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10294.100,data/benchmarks/rome3_matrices/matrices/grafo10294.100.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.142465,,,,,199405,830,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T00:18:16,"Instance: grafo10294.100
+启用DynDXD算法求解: grafo10294.100
+rows: 199405
+cols: 830
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10295.95,data/benchmarks/rome3_matrices/matrices/grafo10295.95.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.137731,,,,,183495,790,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T00:43:46,"Instance: grafo10295.95
+启用DynDXD算法求解: grafo10295.95
+rows: 183495
+cols: 790
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10308.96,data/benchmarks/rome3_matrices/matrices/grafo10308.96.txt,DynDXD,pureDynDXD,1,1,timeout,1525.760430,1527.797584,,,,,165595,760,0,exit=0; tail=Time: 1525.760430 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: grafo10308.96,2026-11-17T01:09:16,"Instance: grafo10308.96
+启用DynDXD算法求解: grafo10308.96
+rows: 165595
+cols: 760
+设置并行线程数为: 1
+Time: 1525.760430 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: grafo10308.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10311.91,data/benchmarks/rome3_matrices/matrices/grafo10311.91.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.138070,,,,,180761,952,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T01:34:44,"Instance: grafo10311.91
+启用DynDXD算法求解: grafo10311.91
+rows: 180761
+cols: 952
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10316.100,data/benchmarks/rome3_matrices/matrices/grafo10316.100.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.128237,,,,,192125,815,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T02:00:14,"Instance: grafo10316.100
+启用DynDXD算法求解: grafo10316.100
+rows: 192125
+cols: 815
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10321.97,data/benchmarks/rome3_matrices/matrices/grafo10321.97.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.140458,,,,,164630,750,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T02:25:44,"Instance: grafo10321.97
+启用DynDXD算法求解: grafo10321.97
+rows: 164630
+cols: 750
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10322.97,data/benchmarks/rome3_matrices/matrices/grafo10322.97.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.128533,,,,,180035,790,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T02:51:15,"Instance: grafo10322.97
+启用DynDXD算法求解: grafo10322.97
+rows: 180035
+cols: 790
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10323.97,data/benchmarks/rome3_matrices/matrices/grafo10323.97.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.126289,,,,,188886,882,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T03:16:45,"Instance: grafo10323.97
+启用DynDXD算法求解: grafo10323.97
+rows: 188886
+cols: 882
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10329.97,data/benchmarks/rome3_matrices/matrices/grafo10329.97.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.150239,,,,,167230,760,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T03:42:15,"Instance: grafo10329.97
+启用DynDXD算法求解: grafo10329.97
+rows: 167230
+cols: 760
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10331.100,data/benchmarks/rome3_matrices/matrices/grafo10331.100.txt,DynDXD,pureDynDXD,1,1,timeout,1504.904162,1507.018706,,,,,169270,760,0,exit=0; tail=Time: 1504.904162 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: grafo10331.100,2026-11-17T04:07:45,"Instance: grafo10331.100
+启用DynDXD算法求解: grafo10331.100
+rows: 169270
+cols: 760
+设置并行线程数为: 1
+Time: 1504.904162 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: grafo10331.100
+"
+20261115_115128,dxd-versions,new,rome3,grafo10348.99,data/benchmarks/rome3_matrices/matrices/grafo10348.99.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.024917,,,,,189230,810,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T04:32:52,"Instance: grafo10348.99
+启用DynDXD算法求解: grafo10348.99
+rows: 189230
+cols: 810
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10349.94,data/benchmarks/rome3_matrices/matrices/grafo10349.94.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.125259,,,,,186800,800,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T04:58:22,"Instance: grafo10349.94
+启用DynDXD算法求解: grafo10349.94
+rows: 186800
+cols: 800
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10358.95,data/benchmarks/rome3_matrices/matrices/grafo10358.95.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.124926,,,,,189618,882,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T05:23:52,"Instance: grafo10358.95
+启用DynDXD算法求解: grafo10358.95
+rows: 189618
+cols: 882
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10360.93,data/benchmarks/rome3_matrices/matrices/grafo10360.93.txt,DynDXD,pureDynDXD,1,1,timeout,1522.847797,1524.523360,,,,,188754,870,0,exit=0; tail=Time: 1522.847797 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: grafo10360.93,2026-11-17T05:49:22,"Instance: grafo10360.93
+启用DynDXD算法求解: grafo10360.93
+rows: 188754
+cols: 870
+设置并行线程数为: 1
+Time: 1522.847797 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: grafo10360.93
+"
+20261115_115128,dxd-versions,new,rome3,grafo10361.97,data/benchmarks/rome3_matrices/matrices/grafo10361.97.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.133035,,,,,182334,870,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T06:14:47,"Instance: grafo10361.97
+启用DynDXD算法求解: grafo10361.97
+rows: 182334
+cols: 870
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10363.98,data/benchmarks/rome3_matrices/matrices/grafo10363.98.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.127891,,,,,174535,780,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T06:40:17,"Instance: grafo10363.98
+启用DynDXD算法求解: grafo10363.98
+rows: 174535
+cols: 780
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10366.99,data/benchmarks/rome3_matrices/matrices/grafo10366.99.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.130460,,,,,167780,755,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T07:05:47,"Instance: grafo10366.99
+启用DynDXD算法求解: grafo10366.99
+rows: 167780
+cols: 755
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10379.95,data/benchmarks/rome3_matrices/matrices/grafo10379.95.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.153359,,,,,166455,760,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T07:31:17,"Instance: grafo10379.95
+启用DynDXD算法求解: grafo10379.95
+rows: 166455
+cols: 760
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10380.98,data/benchmarks/rome3_matrices/matrices/grafo10380.98.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.133776,,,,,191622,846,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T07:56:47,"Instance: grafo10380.98
+启用DynDXD算法求解: grafo10380.98
+rows: 191622
+cols: 846
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10386.99,data/benchmarks/rome3_matrices/matrices/grafo10386.99.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.140413,,,,,175495,775,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T08:22:17,"Instance: grafo10386.99
+启用DynDXD算法求解: grafo10386.99
+rows: 175495
+cols: 775
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10390.95,data/benchmarks/rome3_matrices/matrices/grafo10390.95.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.128949,,,,,182982,876,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T08:47:48,"Instance: grafo10390.95
+启用DynDXD算法求解: grafo10390.95
+rows: 182982
+cols: 876
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10411.98,data/benchmarks/rome3_matrices/matrices/grafo10411.98.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.132567,,,,,174950,780,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T09:13:18,"Instance: grafo10411.98
+启用DynDXD算法求解: grafo10411.98
+rows: 174950
+cols: 780
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10413.93,data/benchmarks/rome3_matrices/matrices/grafo10413.93.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.154187,,,,,164715,750,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T09:38:48,"Instance: grafo10413.93
+启用DynDXD算法求解: grafo10413.93
+rows: 164715
+cols: 750
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10414.98,data/benchmarks/rome3_matrices/matrices/grafo10414.98.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.143655,,,,,171975,770,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T10:04:18,"Instance: grafo10414.98
+启用DynDXD算法求解: grafo10414.98
+rows: 171975
+cols: 770
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10422.97,data/benchmarks/rome3_matrices/matrices/grafo10422.97.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.126931,,,,,172740,834,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T10:29:48,"Instance: grafo10422.97
+启用DynDXD算法求解: grafo10422.97
+rows: 172740
+cols: 834
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10427.95,data/benchmarks/rome3_matrices/matrices/grafo10427.95.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.135059,,,,,163850,755,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T10:55:18,"Instance: grafo10427.95
+启用DynDXD算法求解: grafo10427.95
+rows: 163850
+cols: 755
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10429.100,data/benchmarks/rome3_matrices/matrices/grafo10429.100.txt,DynDXD,pureDynDXD,1,1,timeout,1512.227846,1515.044797,,,,,178540,785,0,exit=0; tail=Time: 1512.227846 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: grafo10429.100,2026-11-17T11:20:48,"Instance: grafo10429.100
+启用DynDXD算法求解: grafo10429.100
+rows: 178540
+cols: 785
+设置并行线程数为: 1
+Time: 1512.227846 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: grafo10429.100
+"
+20261115_115128,dxd-versions,new,rome3,grafo10431.95,data/benchmarks/rome3_matrices/matrices/grafo10431.95.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.138378,,,,,162600,750,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T11:46:03,"Instance: grafo10431.95
+启用DynDXD算法求解: grafo10431.95
+rows: 162600
+cols: 750
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10433.97,data/benchmarks/rome3_matrices/matrices/grafo10433.97.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.143007,,,,,189654,888,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T12:11:34,"Instance: grafo10433.97
+启用DynDXD算法求解: grafo10433.97
+rows: 189654
+cols: 888
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10437.97,data/benchmarks/rome3_matrices/matrices/grafo10437.97.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.115032,,,,,174565,775,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T12:37:04,"Instance: grafo10437.97
+启用DynDXD算法求解: grafo10437.97
+rows: 174565
+cols: 775
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10440.93,data/benchmarks/rome3_matrices/matrices/grafo10440.93.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.190391,,,,,184812,876,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T13:02:34,"Instance: grafo10440.93
+启用DynDXD算法求解: grafo10440.93
+rows: 184812
+cols: 876
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10448.98,data/benchmarks/rome3_matrices/matrices/grafo10448.98.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.156518,,,,,176405,780,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T13:28:04,"Instance: grafo10448.98
+启用DynDXD算法求解: grafo10448.98
+rows: 176405
+cols: 780
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10451.95,data/benchmarks/rome3_matrices/matrices/grafo10451.95.txt,DynDXD,pureDynDXD,1,1,timeout,1526.743234,1528.422206,,,,,165225,750,0,exit=0; tail=Time: 1526.743234 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: grafo10451.95,2026-11-17T13:53:34,"Instance: grafo10451.95
+启用DynDXD算法求解: grafo10451.95
+rows: 165225
+cols: 750
+设置并行线程数为: 1
+Time: 1526.743234 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: grafo10451.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10464.96,data/benchmarks/rome3_matrices/matrices/grafo10464.96.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.140123,,,,,178345,785,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T14:19:03,"Instance: grafo10464.96
+启用DynDXD算法求解: grafo10464.96
+rows: 178345
+cols: 785
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10481.95,data/benchmarks/rome3_matrices/matrices/grafo10481.95.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.127684,,,,,170270,765,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T14:44:33,"Instance: grafo10481.95
+启用DynDXD算法求解: grafo10481.95
+rows: 170270
+cols: 765
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10490.99,data/benchmarks/rome3_matrices/matrices/grafo10490.99.txt,DynDXD,pureDynDXD,1,1,timeout,1504.701674,1506.762906,,,,,188670,810,0,exit=0; tail=Time: 1504.701674 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: grafo10490.99,2026-11-17T15:10:03,"Instance: grafo10490.99
+启用DynDXD算法求解: grafo10490.99
+rows: 188670
+cols: 810
+设置并行线程数为: 1
+Time: 1504.701674 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: grafo10490.99
+"
+20261115_115128,dxd-versions,new,rome3,grafo10495.97,data/benchmarks/rome3_matrices/matrices/grafo10495.97.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.138850,,,,,165665,750,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T15:35:10,"Instance: grafo10495.97
+启用DynDXD算法求解: grafo10495.97
+rows: 165665
+cols: 750
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10503.100,data/benchmarks/rome3_matrices/matrices/grafo10503.100.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.138024,,,,,198120,830,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T16:00:40,"Instance: grafo10503.100
+启用DynDXD算法求解: grafo10503.100
+rows: 198120
+cols: 830
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10506.98,data/benchmarks/rome3_matrices/matrices/grafo10506.98.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.144892,,,,,183245,800,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T16:26:10,"Instance: grafo10506.98
+启用DynDXD算法求解: grafo10506.98
+rows: 183245
+cols: 800
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10507.93,data/benchmarks/rome3_matrices/matrices/grafo10507.93.txt,DynDXD,pureDynDXD,1,1,timeout,1509.961029,1512.819836,,,,,160014,768,0,exit=0; tail=Time: 1509.961029 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: grafo10507.93,2026-11-17T16:51:40,"Instance: grafo10507.93
+启用DynDXD算法求解: grafo10507.93
+rows: 160014
+cols: 768
+设置并行线程数为: 1
+Time: 1509.961029 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: grafo10507.93
+"
+20261115_115128,dxd-versions,new,rome3,grafo10517.93,data/benchmarks/rome3_matrices/matrices/grafo10517.93.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.141063,,,,,195648,894,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T17:16:53,"Instance: grafo10517.93
+启用DynDXD算法求解: grafo10517.93
+rows: 195648
+cols: 894
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10518.94,data/benchmarks/rome3_matrices/matrices/grafo10518.94.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.123873,,,,,191706,894,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T17:42:23,"Instance: grafo10518.94
+启用DynDXD算法求解: grafo10518.94
+rows: 191706
+cols: 894
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10520.99,data/benchmarks/rome3_matrices/matrices/grafo10520.99.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.142444,,,,,200045,835,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T18:07:53,"Instance: grafo10520.99
+启用DynDXD算法求解: grafo10520.99
+rows: 200045
+cols: 835
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10524.97,data/benchmarks/rome3_matrices/matrices/grafo10524.97.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.130046,,,,,196910,825,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T18:33:23,"Instance: grafo10524.97
+启用DynDXD算法求解: grafo10524.97
+rows: 196910
+cols: 825
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"
+20261115_115128,dxd-versions,new,rome3,grafo10526.97,data/benchmarks/rome3_matrices/matrices/grafo10526.97.txt,DynDXD,pureDynDXD,1,1,timeout,1521.272265,1522.954875,,,,,189552,882,0,exit=0; tail=Time: 1521.272265 s DynDXD搜索超时: Time bound broken DynDXD算法求解结束: grafo10526.97,2026-11-17T18:58:53,"Instance: grafo10526.97
+启用DynDXD算法求解: grafo10526.97
+rows: 189552
+cols: 882
+设置并行线程数为: 1
+Time: 1521.272265 s
+DynDXD搜索超时: Time bound broken
+DynDXD算法求解结束: grafo10526.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10528.98,data/benchmarks/rome3_matrices/matrices/grafo10528.98.txt,DynDXD,pureDynDXD,1,1,timeout,,1530.144490,,,,,167500,750,,exit=None; tail=设置并行线程数为: 1  [experiment] process timeout after 1530s,2026-11-17T19:24:16,"Instance: grafo10528.98
+启用DynDXD算法求解: grafo10528.98
+rows: 167500
+cols: 750
+设置并行线程数为: 1
+
+[experiment] process timeout after 1530s
+"

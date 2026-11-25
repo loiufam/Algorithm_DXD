@@ -1,0 +1,1142 @@
+run_id,suite,dataset,category,instance,input,solver,variant,threads,repeat,status,time_s,wall_time_s,solutions,solutions_match,max_blocks,dnnf_size,rows,cols,exit_code,error,started_at,stdout_tail
+20261114_234603,exact,new,rome3,grafo10028.96,data/benchmarks/rome3_matrices/matrices/grafo10028.96.txt,DLX,DLX,,1,timeout,,1500.493486,,,,,194268,852,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10028.96,2026-11-14T23:46:03,"启用DLX算法求解: grafo10028.96
+rows: 194268
+cols: 852
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10028.96
+"
+20261114_234603,exact,new,rome3,grafo10050.97,data/benchmarks/rome3_matrices/matrices/grafo10050.97.txt,DLX,DLX,,1,timeout,,1500.434375,,,,,179230,785,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10050.97,2026-11-15T00:11:04,"启用DLX算法求解: grafo10050.97
+rows: 179230
+cols: 785
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10050.97
+"
+20261114_234603,exact,new,rome3,grafo10061.99,data/benchmarks/rome3_matrices/matrices/grafo10061.99.txt,DLX,DLX,,1,timeout,,1500.472948,,,,,188650,805,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10061.99,2026-11-15T00:36:04,"启用DLX算法求解: grafo10061.99
+rows: 188650
+cols: 805
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10061.99
+"
+20261114_234603,exact,new,rome3,grafo10091.96,data/benchmarks/rome3_matrices/matrices/grafo10091.96.txt,DLX,DLX,,1,timeout,,1500.471296,,,,,185145,790,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10091.96,2026-11-15T01:01:04,"启用DLX算法求解: grafo10091.96
+rows: 185145
+cols: 790
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10091.96
+"
+20261114_234603,exact,new,rome3,grafo10092.97,data/benchmarks/rome3_matrices/matrices/grafo10092.97.txt,DLX,DLX,,1,timeout,,1500.411983,,,,,171575,770,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10092.97,2026-11-15T01:26:05,"启用DLX算法求解: grafo10092.97
+rows: 171575
+cols: 770
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10092.97
+"
+20261114_234603,exact,new,rome3,grafo10095.93,data/benchmarks/rome3_matrices/matrices/grafo10095.93.txt,DLX,DLX,,1,timeout,,1500.466806,,,,,188100,882,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10095.93,2026-11-15T01:51:05,"启用DLX算法求解: grafo10095.93
+rows: 188100
+cols: 882
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10095.93
+"
+20261114_234603,exact,new,rome3,grafo10098.95,data/benchmarks/rome3_matrices/matrices/grafo10098.95.txt,DLX,DLX,,1,timeout,,1500.479321,,,,,196782,894,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10098.95,2026-11-15T02:16:06,"启用DLX算法求解: grafo10098.95
+rows: 196782
+cols: 894
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10098.95
+"
+20261114_234603,exact,new,rome3,grafo10101.92,data/benchmarks/rome3_matrices/matrices/grafo10101.92.txt,DLX,DLX,,1,timeout,,1500.461674,,,,,190218,888,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10101.92,2026-11-15T02:41:06,"启用DLX算法求解: grafo10101.92
+rows: 190218
+cols: 888
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10101.92
+"
+20261114_234603,exact,new,rome3,grafo10102.97,data/benchmarks/rome3_matrices/matrices/grafo10102.97.txt,DLX,DLX,,1,timeout,,1500.447534,,,,,182410,795,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10102.97,2026-11-15T03:06:07,"启用DLX算法求解: grafo10102.97
+rows: 182410
+cols: 795
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10102.97
+"
+20261114_234603,exact,new,rome3,grafo10103.98,data/benchmarks/rome3_matrices/matrices/grafo10103.98.txt,DLX,DLX,,1,timeout,,1500.372980,,,,,162180,750,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10103.98,2026-11-15T03:31:07,"启用DLX算法求解: grafo10103.98
+rows: 162180
+cols: 750
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10103.98
+"
+20261114_234603,exact,new,rome3,grafo10104.96,data/benchmarks/rome3_matrices/matrices/grafo10104.96.txt,DLX,DLX,,1,timeout,,1500.378776,,,,,161585,750,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10104.96,2026-11-15T03:56:08,"启用DLX算法求解: grafo10104.96
+rows: 161585
+cols: 750
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10104.96
+"
+20261114_234603,exact,new,rome3,grafo10106.100,data/benchmarks/rome3_matrices/matrices/grafo10106.100.txt,DLX,DLX,,1,timeout,,1500.459486,,,,,187770,805,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10106.100,2026-11-15T04:21:08,"启用DLX算法求解: grafo10106.100
+rows: 187770
+cols: 805
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10106.100
+"
+20261114_234603,exact,new,rome3,grafo10107.93,data/benchmarks/rome3_matrices/matrices/grafo10107.93.txt,DLX,DLX,,1,timeout,,1500.396020,,,,,165340,755,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10107.93,2026-11-15T04:46:08,"启用DLX算法求解: grafo10107.93
+rows: 165340
+cols: 755
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10107.93
+"
+20261114_234603,exact,new,rome3,grafo10111.96,data/benchmarks/rome3_matrices/matrices/grafo10111.96.txt,DLX,DLX,,1,timeout,,1500.396914,,,,,166835,750,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10111.96,2026-11-15T05:11:09,"启用DLX算法求解: grafo10111.96
+rows: 166835
+cols: 750
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10111.96
+"
+20261114_234603,exact,new,rome3,grafo10117.98,data/benchmarks/rome3_matrices/matrices/grafo10117.98.txt,DLX,DLX,,1,timeout,,1500.386676,,,,,163690,755,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10117.98,2026-11-15T05:36:09,"启用DLX算法求解: grafo10117.98
+rows: 163690
+cols: 755
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10117.98
+"
+20261114_234603,exact,new,rome3,grafo10120.96,data/benchmarks/rome3_matrices/matrices/grafo10120.96.txt,DLX,DLX,,1,timeout,,1500.395318,,,,,168040,760,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10120.96,2026-11-15T06:01:10,"启用DLX算法求解: grafo10120.96
+rows: 168040
+cols: 760
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10120.96
+"
+20261114_234603,exact,new,rome3,grafo10121.95,data/benchmarks/rome3_matrices/matrices/grafo10121.95.txt,DLX,DLX,,1,timeout,,1500.445384,,,,,185910,795,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10121.95,2026-11-15T06:26:10,"启用DLX算法求解: grafo10121.95
+rows: 185910
+cols: 795
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10121.95
+"
+20261114_234603,exact,new,rome3,grafo10128.98,data/benchmarks/rome3_matrices/matrices/grafo10128.98.txt,DLX,DLX,,1,timeout,,1500.460472,,,,,186075,800,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10128.98,2026-11-15T06:51:10,"启用DLX算法求解: grafo10128.98
+rows: 186075
+cols: 800
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10128.98
+"
+20261114_234603,exact,new,rome3,grafo10132.97,data/benchmarks/rome3_matrices/matrices/grafo10132.97.txt,DLX,DLX,,1,timeout,,1500.400711,,,,,167505,760,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10132.97,2026-11-15T07:16:11,"启用DLX算法求解: grafo10132.97
+rows: 167505
+cols: 760
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10132.97
+"
+20261114_234603,exact,new,rome3,grafo10144.98,data/benchmarks/rome3_matrices/matrices/grafo10144.98.txt,DLX,DLX,,1,timeout,,1500.396096,,,,,169965,765,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10144.98,2026-11-15T07:41:11,"启用DLX算法求解: grafo10144.98
+rows: 169965
+cols: 765
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10144.98
+"
+20261114_234603,exact,new,rome3,grafo10145.94,data/benchmarks/rome3_matrices/matrices/grafo10145.94.txt,DLX,DLX,,1,timeout,,1500.431755,,,,,178540,785,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10145.94,2026-11-15T08:06:12,"启用DLX算法求解: grafo10145.94
+rows: 178540
+cols: 785
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10145.94
+"
+20261114_234603,exact,new,rome3,grafo10148.97,data/benchmarks/rome3_matrices/matrices/grafo10148.97.txt,DLX,DLX,,1,timeout,,1500.404938,,,,,169835,765,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10148.97,2026-11-15T08:31:12,"启用DLX算法求解: grafo10148.97
+rows: 169835
+cols: 765
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10148.97
+"
+20261114_234603,exact,new,rome3,grafo10149.95,data/benchmarks/rome3_matrices/matrices/grafo10149.95.txt,DLX,DLX,,1,timeout,,1500.444934,,,,,184488,870,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10149.95,2026-11-15T08:56:13,"启用DLX算法求解: grafo10149.95
+rows: 184488
+cols: 870
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10149.95
+"
+20261114_234603,exact,new,rome3,grafo10150.95,data/benchmarks/rome3_matrices/matrices/grafo10150.95.txt,DLX,DLX,,1,timeout,,1500.379012,,,,,162895,750,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10150.95,2026-11-15T09:21:13,"启用DLX算法求解: grafo10150.95
+rows: 162895
+cols: 750
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10150.95
+"
+20261114_234603,exact,new,rome3,grafo10166.98,data/benchmarks/rome3_matrices/matrices/grafo10166.98.txt,DLX,DLX,,1,timeout,,1500.444600,,,,,184728,864,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10166.98,2026-11-15T09:46:13,"启用DLX算法求解: grafo10166.98
+rows: 184728
+cols: 864
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10166.98
+"
+20261114_234603,exact,new,rome3,grafo10167.96,data/benchmarks/rome3_matrices/matrices/grafo10167.96.txt,DLX,DLX,,1,timeout,,1500.460000,,,,,189110,805,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10167.96,2026-11-15T10:11:14,"启用DLX算法求解: grafo10167.96
+rows: 189110
+cols: 805
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10167.96
+"
+20261114_234603,exact,new,rome3,grafo10172.99,data/benchmarks/rome3_matrices/matrices/grafo10172.99.txt,DLX,DLX,,1,timeout,,1500.506674,,,,,205308,870,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10172.99,2026-11-15T10:36:14,"启用DLX算法求解: grafo10172.99
+rows: 205308
+cols: 870
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10172.99
+"
+20261114_234603,exact,new,rome3,grafo10174.95,data/benchmarks/rome3_matrices/matrices/grafo10174.95.txt,DLX,DLX,,1,timeout,,1500.405162,,,,,165790,760,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10174.95,2026-11-15T11:01:15,"启用DLX算法求解: grafo10174.95
+rows: 165790
+cols: 760
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10174.95
+"
+20261114_234603,exact,new,rome3,grafo10180.98,data/benchmarks/rome3_matrices/matrices/grafo10180.98.txt,DLX,DLX,,1,timeout,,1500.438818,,,,,179810,790,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10180.98,2026-11-15T11:26:15,"启用DLX算法求解: grafo10180.98
+rows: 179810
+cols: 790
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10180.98
+"
+20261114_234603,exact,new,rome3,grafo10183.100,data/benchmarks/rome3_matrices/matrices/grafo10183.100.txt,DLX,DLX,,1,timeout,,1500.502646,,,,,193950,815,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10183.100,2026-11-15T11:51:16,"启用DLX算法求解: grafo10183.100
+rows: 193950
+cols: 815
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10183.100
+"
+20261114_234603,exact,new,rome3,grafo10194.97,data/benchmarks/rome3_matrices/matrices/grafo10194.97.txt,DLX,DLX,,1,timeout,,1500.424617,,,,,163720,755,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10194.97,2026-11-15T12:16:16,"启用DLX算法求解: grafo10194.97
+rows: 163720
+cols: 755
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10194.97
+"
+20261114_234603,exact,new,rome3,grafo10197.96,data/benchmarks/rome3_matrices/matrices/grafo10197.96.txt,DLX,DLX,,1,timeout,,1500.505207,,,,,193482,882,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10197.96,2026-11-15T12:41:17,"启用DLX算法求解: grafo10197.96
+rows: 193482
+cols: 882
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10197.96
+"
+20261114_234603,exact,new,rome3,grafo10206.97,data/benchmarks/rome3_matrices/matrices/grafo10206.97.txt,DLX,DLX,,1,timeout,,1500.484459,,,,,183945,800,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10206.97,2026-11-15T13:06:17,"启用DLX算法求解: grafo10206.97
+rows: 183945
+cols: 800
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10206.97
+"
+20261114_234603,exact,new,rome3,grafo10208.98,data/benchmarks/rome3_matrices/matrices/grafo10208.98.txt,DLX,DLX,,1,timeout,,1500.461055,,,,,176110,785,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10208.98,2026-11-15T13:31:18,"启用DLX算法求解: grafo10208.98
+rows: 176110
+cols: 785
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10208.98
+"
+20261114_234603,exact,new,rome3,grafo10213.99,data/benchmarks/rome3_matrices/matrices/grafo10213.99.txt,DLX,DLX,,1,timeout,,1500.450551,,,,,166975,755,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10213.99,2026-11-15T13:56:18,"启用DLX算法求解: grafo10213.99
+rows: 166975
+cols: 755
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10213.99
+"
+20261114_234603,exact,new,rome3,grafo10217.99,data/benchmarks/rome3_matrices/matrices/grafo10217.99.txt,DLX,DLX,,1,timeout,,1500.500307,,,,,185925,800,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10217.99,2026-11-15T14:21:18,"启用DLX算法求解: grafo10217.99
+rows: 185925
+cols: 800
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10217.99
+"
+20261114_234603,exact,new,rome3,grafo10224.95,data/benchmarks/rome3_matrices/matrices/grafo10224.95.txt,DLX,DLX,,1,timeout,,1500.501731,,,,,186985,795,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10224.95,2026-11-15T14:46:19,"启用DLX算法求解: grafo10224.95
+rows: 186985
+cols: 795
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10224.95
+"
+20261114_234603,exact,new,rome3,grafo10225.99,data/benchmarks/rome3_matrices/matrices/grafo10225.99.txt,DLX,DLX,,1,timeout,,1500.479116,,,,,178000,775,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10225.99,2026-11-15T15:11:19,"启用DLX算法求解: grafo10225.99
+rows: 178000
+cols: 775
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10225.99
+"
+20261114_234603,exact,new,rome3,grafo10227.96,data/benchmarks/rome3_matrices/matrices/grafo10227.96.txt,DLX,DLX,,1,timeout,,1500.463328,,,,,170575,765,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10227.96,2026-11-15T15:36:20,"启用DLX算法求解: grafo10227.96
+rows: 170575
+cols: 765
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10227.96
+"
+20261114_234603,exact,new,rome3,grafo10228.95,data/benchmarks/rome3_matrices/matrices/grafo10228.95.txt,DLX,DLX,,1,timeout,,1500.476192,,,,,180790,790,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10228.95,2026-11-15T16:01:20,"启用DLX算法求解: grafo10228.95
+rows: 180790
+cols: 790
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10228.95
+"
+20261114_234603,exact,new,rome3,grafo10240.97,data/benchmarks/rome3_matrices/matrices/grafo10240.97.txt,DLX,DLX,,1,timeout,,1500.444378,,,,,170148,840,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10240.97,2026-11-15T16:26:21,"启用DLX算法求解: grafo10240.97
+rows: 170148
+cols: 840
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10240.97
+"
+20261114_234603,exact,new,rome3,grafo10243.95,data/benchmarks/rome3_matrices/matrices/grafo10243.95.txt,DLX,DLX,,1,timeout,,1500.524952,,,,,192816,882,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10243.95,2026-11-15T16:51:21,"启用DLX算法求解: grafo10243.95
+rows: 192816
+cols: 882
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10243.95
+"
+20261114_234603,exact,new,rome3,grafo10246.96,data/benchmarks/rome3_matrices/matrices/grafo10246.96.txt,DLX,DLX,,1,timeout,,1500.519013,,,,,195966,894,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10246.96,2026-11-15T17:16:22,"启用DLX算法求解: grafo10246.96
+rows: 195966
+cols: 894
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10246.96
+"
+20261114_234603,exact,new,rome3,grafo10248.100,data/benchmarks/rome3_matrices/matrices/grafo10248.100.txt,DLX,DLX,,1,timeout,,1500.584163,,,,,210180,855,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10248.100,2026-11-15T17:41:22,"启用DLX算法求解: grafo10248.100
+rows: 210180
+cols: 855
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10248.100
+"
+20261114_234603,exact,new,rome3,grafo10249.94,data/benchmarks/rome3_matrices/matrices/grafo10249.94.txt,DLX,DLX,,1,timeout,,1500.498430,,,,,189978,882,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10249.94,2026-11-15T18:06:23,"启用DLX算法求解: grafo10249.94
+rows: 189978
+cols: 882
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10249.94
+"
+20261114_234603,exact,new,rome3,grafo10252.96,data/benchmarks/rome3_matrices/matrices/grafo10252.96.txt,DLX,DLX,,1,timeout,,1500.538532,,,,,194690,820,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10252.96,2026-11-15T18:31:23,"启用DLX算法求解: grafo10252.96
+rows: 194690
+cols: 820
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10252.96
+"
+20261114_234603,exact,new,rome3,grafo10257.100,data/benchmarks/rome3_matrices/matrices/grafo10257.100.txt,DLX,DLX,,1,timeout,,1500.447058,,,,,168610,755,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10257.100,2026-11-15T18:56:24,"启用DLX算法求解: grafo10257.100
+rows: 168610
+cols: 755
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10257.100
+"
+20261114_234603,exact,new,rome3,grafo10258.96,data/benchmarks/rome3_matrices/matrices/grafo10258.96.txt,DLX,DLX,,1,timeout,,1500.530025,,,,,196572,894,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10258.96,2026-11-15T19:21:24,"启用DLX算法求解: grafo10258.96
+rows: 196572
+cols: 894
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10258.96
+"
+20261114_234603,exact,new,rome3,grafo10268.97,data/benchmarks/rome3_matrices/matrices/grafo10268.97.txt,DLX,DLX,,1,timeout,,1500.492243,,,,,189240,894,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10268.97,2026-11-15T19:46:25,"启用DLX算法求解: grafo10268.97
+rows: 189240
+cols: 894
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10268.97
+"
+20261114_234603,exact,new,rome3,grafo10271.100,data/benchmarks/rome3_matrices/matrices/grafo10271.100.txt,DLX,DLX,,1,timeout,,1500.486986,,,,,184045,795,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10271.100,2026-11-15T20:11:25,"启用DLX算法求解: grafo10271.100
+rows: 184045
+cols: 795
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10271.100
+"
+20261114_234603,exact,new,rome3,grafo10274.99,data/benchmarks/rome3_matrices/matrices/grafo10274.99.txt,DLX,DLX,,1,timeout,,1500.483061,,,,,182985,790,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10274.99,2026-11-15T20:36:26,"启用DLX算法求解: grafo10274.99
+rows: 182985
+cols: 790
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10274.99
+"
+20261114_234603,exact,new,rome3,grafo10287.92,data/benchmarks/rome3_matrices/matrices/grafo10287.92.txt,DLX,DLX,,1,timeout,,1500.483342,,,,,177570,858,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10287.92,2026-11-15T21:01:26,"启用DLX算法求解: grafo10287.92
+rows: 177570
+cols: 858
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10287.92
+"
+20261114_234603,exact,new,rome3,grafo10294.100,data/benchmarks/rome3_matrices/matrices/grafo10294.100.txt,DLX,DLX,,1,timeout,,1500.533162,,,,,199405,830,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10294.100,2026-11-15T21:26:27,"启用DLX算法求解: grafo10294.100
+rows: 199405
+cols: 830
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10294.100
+"
+20261114_234603,exact,new,rome3,grafo10295.95,data/benchmarks/rome3_matrices/matrices/grafo10295.95.txt,DLX,DLX,,1,timeout,,1500.491594,,,,,183495,790,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10295.95,2026-11-15T21:51:27,"启用DLX算法求解: grafo10295.95
+rows: 183495
+cols: 790
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10295.95
+"
+20261114_234603,exact,new,rome3,grafo10308.96,data/benchmarks/rome3_matrices/matrices/grafo10308.96.txt,DLX,DLX,,1,timeout,,1500.433446,,,,,165595,760,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10308.96,2026-11-15T22:16:28,"启用DLX算法求解: grafo10308.96
+rows: 165595
+cols: 760
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10308.96
+"
+20261114_234603,exact,new,rome3,grafo10311.91,data/benchmarks/rome3_matrices/matrices/grafo10311.91.txt,DLX,DLX,,1,timeout,,1500.472206,,,,,180761,952,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10311.91,2026-11-15T22:41:28,"启用DLX算法求解: grafo10311.91
+rows: 180761
+cols: 952
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10311.91
+"
+20261114_234603,exact,new,rome3,grafo10316.100,data/benchmarks/rome3_matrices/matrices/grafo10316.100.txt,DLX,DLX,,1,timeout,,1500.520573,,,,,192125,815,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10316.100,2026-11-15T23:06:29,"启用DLX算法求解: grafo10316.100
+rows: 192125
+cols: 815
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10316.100
+"
+20261114_234603,exact,new,rome3,grafo10321.97,data/benchmarks/rome3_matrices/matrices/grafo10321.97.txt,DLX,DLX,,1,timeout,,1500.429623,,,,,164630,750,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10321.97,2026-11-15T23:31:29,"启用DLX算法求解: grafo10321.97
+rows: 164630
+cols: 750
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10321.97
+"
+20261114_234603,exact,new,rome3,grafo10322.97,data/benchmarks/rome3_matrices/matrices/grafo10322.97.txt,DLX,DLX,,1,timeout,,1500.481701,,,,,180035,790,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10322.97,2026-11-15T23:56:30,"启用DLX算法求解: grafo10322.97
+rows: 180035
+cols: 790
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10322.97
+"
+20261114_234603,exact,new,rome3,grafo10323.97,data/benchmarks/rome3_matrices/matrices/grafo10323.97.txt,DLX,DLX,,1,timeout,,1500.495486,,,,,188886,882,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10323.97,2026-11-16T00:21:30,"启用DLX算法求解: grafo10323.97
+rows: 188886
+cols: 882
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10323.97
+"
+20261114_234603,exact,new,rome3,grafo10329.97,data/benchmarks/rome3_matrices/matrices/grafo10329.97.txt,DLX,DLX,,1,timeout,,1500.430428,,,,,167230,760,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10329.97,2026-11-16T00:46:31,"启用DLX算法求解: grafo10329.97
+rows: 167230
+cols: 760
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10329.97
+"
+20261114_234603,exact,new,rome3,grafo10331.100,data/benchmarks/rome3_matrices/matrices/grafo10331.100.txt,DLX,DLX,,1,timeout,,1500.431321,,,,,169270,760,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10331.100,2026-11-16T01:11:31,"启用DLX算法求解: grafo10331.100
+rows: 169270
+cols: 760
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10331.100
+"
+20261114_234603,exact,new,rome3,grafo10348.99,data/benchmarks/rome3_matrices/matrices/grafo10348.99.txt,DLX,DLX,,1,timeout,,1500.498372,,,,,189230,810,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10348.99,2026-11-16T01:36:32,"启用DLX算法求解: grafo10348.99
+rows: 189230
+cols: 810
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10348.99
+"
+20261114_234603,exact,new,rome3,grafo10349.94,data/benchmarks/rome3_matrices/matrices/grafo10349.94.txt,DLX,DLX,,1,timeout,,1500.492153,,,,,186800,800,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10349.94,2026-11-16T02:01:32,"启用DLX算法求解: grafo10349.94
+rows: 186800
+cols: 800
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10349.94
+"
+20261114_234603,exact,new,rome3,grafo10358.95,data/benchmarks/rome3_matrices/matrices/grafo10358.95.txt,DLX,DLX,,1,timeout,,1500.492638,,,,,189618,882,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10358.95,2026-11-16T02:26:33,"启用DLX算法求解: grafo10358.95
+rows: 189618
+cols: 882
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10358.95
+"
+20261114_234603,exact,new,rome3,grafo10360.93,data/benchmarks/rome3_matrices/matrices/grafo10360.93.txt,DLX,DLX,,1,timeout,,1500.494335,,,,,188754,870,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10360.93,2026-11-16T02:51:33,"启用DLX算法求解: grafo10360.93
+rows: 188754
+cols: 870
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10360.93
+"
+20261114_234603,exact,new,rome3,grafo10361.97,data/benchmarks/rome3_matrices/matrices/grafo10361.97.txt,DLX,DLX,,1,timeout,,1500.475212,,,,,182334,870,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10361.97,2026-11-16T03:16:34,"启用DLX算法求解: grafo10361.97
+rows: 182334
+cols: 870
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10361.97
+"
+20261114_234603,exact,new,rome3,grafo10363.98,data/benchmarks/rome3_matrices/matrices/grafo10363.98.txt,DLX,DLX,,1,timeout,,1500.450107,,,,,174535,780,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10363.98,2026-11-16T03:41:34,"启用DLX算法求解: grafo10363.98
+rows: 174535
+cols: 780
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10363.98
+"
+20261114_234603,exact,new,rome3,grafo10366.99,data/benchmarks/rome3_matrices/matrices/grafo10366.99.txt,DLX,DLX,,1,timeout,,1500.421362,,,,,167780,755,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10366.99,2026-11-16T04:06:35,"启用DLX算法求解: grafo10366.99
+rows: 167780
+cols: 755
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10366.99
+"
+20261114_234603,exact,new,rome3,grafo10379.95,data/benchmarks/rome3_matrices/matrices/grafo10379.95.txt,DLX,DLX,,1,timeout,,1500.423580,,,,,166455,760,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10379.95,2026-11-16T04:31:35,"启用DLX算法求解: grafo10379.95
+rows: 166455
+cols: 760
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10379.95
+"
+20261114_234603,exact,new,rome3,grafo10380.98,data/benchmarks/rome3_matrices/matrices/grafo10380.98.txt,DLX,DLX,,1,timeout,,1500.494368,,,,,191622,846,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10380.98,2026-11-16T04:56:35,"启用DLX算法求解: grafo10380.98
+rows: 191622
+cols: 846
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10380.98
+"
+20261114_234603,exact,new,rome3,grafo10386.99,data/benchmarks/rome3_matrices/matrices/grafo10386.99.txt,DLX,DLX,,1,timeout,,1500.451187,,,,,175495,775,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10386.99,2026-11-16T05:21:36,"启用DLX算法求解: grafo10386.99
+rows: 175495
+cols: 775
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10386.99
+"
+20261114_234603,exact,new,rome3,grafo10390.95,data/benchmarks/rome3_matrices/matrices/grafo10390.95.txt,DLX,DLX,,1,timeout,,1500.471654,,,,,182982,876,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10390.95,2026-11-16T05:46:36,"启用DLX算法求解: grafo10390.95
+rows: 182982
+cols: 876
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10390.95
+"
+20261114_234603,exact,new,rome3,grafo10411.98,data/benchmarks/rome3_matrices/matrices/grafo10411.98.txt,DLX,DLX,,1,timeout,,1500.463361,,,,,174950,780,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10411.98,2026-11-16T06:11:37,"启用DLX算法求解: grafo10411.98
+rows: 174950
+cols: 780
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10411.98
+"
+20261114_234603,exact,new,rome3,grafo10413.93,data/benchmarks/rome3_matrices/matrices/grafo10413.93.txt,DLX,DLX,,1,timeout,,1500.417270,,,,,164715,750,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10413.93,2026-11-16T06:36:37,"启用DLX算法求解: grafo10413.93
+rows: 164715
+cols: 750
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10413.93
+"
+20261114_234603,exact,new,rome3,grafo10414.98,data/benchmarks/rome3_matrices/matrices/grafo10414.98.txt,DLX,DLX,,1,timeout,,1500.446262,,,,,171975,770,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10414.98,2026-11-16T07:01:38,"启用DLX算法求解: grafo10414.98
+rows: 171975
+cols: 770
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10414.98
+"
+20261114_234603,exact,new,rome3,grafo10422.97,data/benchmarks/rome3_matrices/matrices/grafo10422.97.txt,DLX,DLX,,1,timeout,,1500.450752,,,,,172740,834,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10422.97,2026-11-16T07:26:38,"启用DLX算法求解: grafo10422.97
+rows: 172740
+cols: 834
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10422.97
+"
+20261114_234603,exact,new,rome3,grafo10427.95,data/benchmarks/rome3_matrices/matrices/grafo10427.95.txt,DLX,DLX,,1,timeout,,1500.414865,,,,,163850,755,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10427.95,2026-11-16T07:51:39,"启用DLX算法求解: grafo10427.95
+rows: 163850
+cols: 755
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10427.95
+"
+20261114_234603,exact,new,rome3,grafo10429.100,data/benchmarks/rome3_matrices/matrices/grafo10429.100.txt,DLX,DLX,,1,timeout,,1500.474089,,,,,178540,785,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10429.100,2026-11-16T08:16:39,"启用DLX算法求解: grafo10429.100
+rows: 178540
+cols: 785
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10429.100
+"
+20261114_234603,exact,new,rome3,grafo10431.95,data/benchmarks/rome3_matrices/matrices/grafo10431.95.txt,DLX,DLX,,1,timeout,,1500.410635,,,,,162600,750,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10431.95,2026-11-16T08:41:39,"启用DLX算法求解: grafo10431.95
+rows: 162600
+cols: 750
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10431.95
+"
+20261114_234603,exact,new,rome3,grafo10433.97,data/benchmarks/rome3_matrices/matrices/grafo10433.97.txt,DLX,DLX,,1,timeout,,1500.490466,,,,,189654,888,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10433.97,2026-11-16T09:06:40,"启用DLX算法求解: grafo10433.97
+rows: 189654
+cols: 888
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10433.97
+"
+20261114_234603,exact,new,rome3,grafo10437.97,data/benchmarks/rome3_matrices/matrices/grafo10437.97.txt,DLX,DLX,,1,timeout,,1500.450344,,,,,174565,775,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10437.97,2026-11-16T09:31:40,"启用DLX算法求解: grafo10437.97
+rows: 174565
+cols: 775
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10437.97
+"
+20261114_234603,exact,new,rome3,grafo10440.93,data/benchmarks/rome3_matrices/matrices/grafo10440.93.txt,DLX,DLX,,1,timeout,,1500.467634,,,,,184812,876,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10440.93,2026-11-16T09:56:41,"启用DLX算法求解: grafo10440.93
+rows: 184812
+cols: 876
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10440.93
+"
+20261114_234603,exact,new,rome3,grafo10448.98,data/benchmarks/rome3_matrices/matrices/grafo10448.98.txt,DLX,DLX,,1,timeout,,1500.445359,,,,,176405,780,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10448.98,2026-11-16T10:21:41,"启用DLX算法求解: grafo10448.98
+rows: 176405
+cols: 780
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10448.98
+"
+20261114_234603,exact,new,rome3,grafo10451.95,data/benchmarks/rome3_matrices/matrices/grafo10451.95.txt,DLX,DLX,,1,timeout,,1500.416661,,,,,165225,750,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10451.95,2026-11-16T10:46:42,"启用DLX算法求解: grafo10451.95
+rows: 165225
+cols: 750
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10451.95
+"
+20261114_234603,exact,new,rome3,grafo10464.96,data/benchmarks/rome3_matrices/matrices/grafo10464.96.txt,DLX,DLX,,1,timeout,,1500.459744,,,,,178345,785,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10464.96,2026-11-16T11:11:42,"启用DLX算法求解: grafo10464.96
+rows: 178345
+cols: 785
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10464.96
+"
+20261114_234603,exact,new,rome3,grafo10481.95,data/benchmarks/rome3_matrices/matrices/grafo10481.95.txt,DLX,DLX,,1,timeout,,1500.426059,,,,,170270,765,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10481.95,2026-11-16T11:36:43,"启用DLX算法求解: grafo10481.95
+rows: 170270
+cols: 765
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10481.95
+"
+20261114_234603,exact,new,rome3,grafo10490.99,data/benchmarks/rome3_matrices/matrices/grafo10490.99.txt,DLX,DLX,,1,timeout,,1500.502141,,,,,188670,810,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10490.99,2026-11-16T12:01:43,"启用DLX算法求解: grafo10490.99
+rows: 188670
+cols: 810
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10490.99
+"
+20261114_234603,exact,new,rome3,grafo10495.97,data/benchmarks/rome3_matrices/matrices/grafo10495.97.txt,DLX,DLX,,1,timeout,,1500.409239,,,,,165665,750,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10495.97,2026-11-16T12:26:44,"启用DLX算法求解: grafo10495.97
+rows: 165665
+cols: 750
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10495.97
+"
+20261114_234603,exact,new,rome3,grafo10503.100,data/benchmarks/rome3_matrices/matrices/grafo10503.100.txt,DLX,DLX,,1,timeout,,1500.528882,,,,,198120,830,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10503.100,2026-11-16T12:51:44,"启用DLX算法求解: grafo10503.100
+rows: 198120
+cols: 830
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10503.100
+"
+20261114_234603,exact,new,rome3,grafo10506.98,data/benchmarks/rome3_matrices/matrices/grafo10506.98.txt,DLX,DLX,,1,timeout,,1500.480065,,,,,183245,800,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10506.98,2026-11-16T13:16:44,"启用DLX算法求解: grafo10506.98
+rows: 183245
+cols: 800
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10506.98
+"
+20261114_234603,exact,new,rome3,grafo10507.93,data/benchmarks/rome3_matrices/matrices/grafo10507.93.txt,DLX,DLX,,1,timeout,,1500.403448,,,,,160014,768,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10507.93,2026-11-16T13:41:45,"启用DLX算法求解: grafo10507.93
+rows: 160014
+cols: 768
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10507.93
+"
+20261114_234603,exact,new,rome3,grafo10517.93,data/benchmarks/rome3_matrices/matrices/grafo10517.93.txt,DLX,DLX,,1,timeout,,1500.495575,,,,,195648,894,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10517.93,2026-11-16T14:06:45,"启用DLX算法求解: grafo10517.93
+rows: 195648
+cols: 894
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10517.93
+"
+20261114_234603,exact,new,rome3,grafo10518.94,data/benchmarks/rome3_matrices/matrices/grafo10518.94.txt,DLX,DLX,,1,timeout,,1500.488166,,,,,191706,894,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10518.94,2026-11-16T14:31:46,"启用DLX算法求解: grafo10518.94
+rows: 191706
+cols: 894
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10518.94
+"
+20261114_234603,exact,new,rome3,grafo10520.99,data/benchmarks/rome3_matrices/matrices/grafo10520.99.txt,DLX,DLX,,1,timeout,,1500.529912,,,,,200045,835,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10520.99,2026-11-16T14:56:46,"启用DLX算法求解: grafo10520.99
+rows: 200045
+cols: 835
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10520.99
+"
+20261114_234603,exact,new,rome3,grafo10524.97,data/benchmarks/rome3_matrices/matrices/grafo10524.97.txt,DLX,DLX,,1,timeout,,1500.595197,,,,,196910,825,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10524.97,2026-11-16T15:21:47,"启用DLX算法求解: grafo10524.97
+rows: 196910
+cols: 825
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10524.97
+"
+20261114_234603,exact,new,rome3,grafo10526.97,data/benchmarks/rome3_matrices/matrices/grafo10526.97.txt,DLX,DLX,,1,timeout,,1500.584165,,,,,189552,882,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10526.97,2026-11-16T15:46:47,"启用DLX算法求解: grafo10526.97
+rows: 189552
+cols: 882
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10526.97
+"
+20261114_234603,exact,new,rome3,grafo10528.98,data/benchmarks/rome3_matrices/matrices/grafo10528.98.txt,DLX,DLX,,1,timeout,,1500.895186,,,,,167500,750,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10528.98,2026-11-16T16:11:48,"启用DLX算法求解: grafo10528.98
+rows: 167500
+cols: 750
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10528.98
+"
+20261114_234603,exact,new,rome3,grafo10529.98,data/benchmarks/rome3_matrices/matrices/grafo10529.98.txt,DLX,DLX,,1,timeout,,1500.701551,,,,,172155,765,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10529.98,2026-11-16T16:36:49,"启用DLX算法求解: grafo10529.98
+rows: 172155
+cols: 765
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10529.98
+"
+20261114_234603,exact,new,rome3,grafo10542.100,data/benchmarks/rome3_matrices/matrices/grafo10542.100.txt,DLX,DLX,,1,timeout,,1500.895103,,,,,185690,800,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10542.100,2026-11-16T17:01:50,"启用DLX算法求解: grafo10542.100
+rows: 185690
+cols: 800
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10542.100
+"
+20261114_234603,exact,new,rome3,grafo10557.98,data/benchmarks/rome3_matrices/matrices/grafo10557.98.txt,DLX,DLX,,1,timeout,,1500.604414,,,,,189786,888,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10557.98,2026-11-16T17:26:51,"启用DLX算法求解: grafo10557.98
+rows: 189786
+cols: 888
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10557.98
+"
+20261114_234603,exact,new,rome3,grafo10558.97,data/benchmarks/rome3_matrices/matrices/grafo10558.97.txt,DLX,DLX,,1,timeout,,1500.925644,,,,,186438,876,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10558.97,2026-11-16T17:51:51,"启用DLX算法求解: grafo10558.97
+rows: 186438
+cols: 876
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10558.97
+"
+20261114_234603,exact,new,rome3,grafo10559.98,data/benchmarks/rome3_matrices/matrices/grafo10559.98.txt,DLX,DLX,,1,timeout,,1500.814158,,,,,165290,760,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10559.98,2026-11-16T18:16:52,"启用DLX算法求解: grafo10559.98
+rows: 165290
+cols: 760
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10559.98
+"
+20261114_234603,exact,new,rome3,grafo10561.97,data/benchmarks/rome3_matrices/matrices/grafo10561.97.txt,DLX,DLX,,1,timeout,,1500.545639,,,,,181134,870,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10561.97,2026-11-16T18:41:53,"启用DLX算法求解: grafo10561.97
+rows: 181134
+cols: 870
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10561.97
+"
+20261114_234603,exact,new,rome3,grafo10571.93,data/benchmarks/rome3_matrices/matrices/grafo10571.93.txt,DLX,DLX,,1,timeout,,1500.504052,,,,,177380,785,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10571.93,2026-11-16T19:06:53,"启用DLX算法求解: grafo10571.93
+rows: 177380
+cols: 785
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10571.93
+"
+20261114_234603,exact,new,rome3,grafo10573.93,data/benchmarks/rome3_matrices/matrices/grafo10573.93.txt,DLX,DLX,,1,timeout,,1500.442749,,,,,173766,840,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10573.93,2026-11-16T19:31:54,"启用DLX算法求解: grafo10573.93
+rows: 173766
+cols: 840
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10573.93
+"
+20261114_234603,exact,new,rome3,grafo10580.98,data/benchmarks/rome3_matrices/matrices/grafo10580.98.txt,DLX,DLX,,1,timeout,,1500.422756,,,,,167040,755,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10580.98,2026-11-16T19:56:54,"启用DLX算法求解: grafo10580.98
+rows: 167040
+cols: 755
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10580.98
+"
+20261114_234603,exact,new,rome3,grafo10594.94,data/benchmarks/rome3_matrices/matrices/grafo10594.94.txt,DLX,DLX,,1,timeout,,1500.434820,,,,,166730,755,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10594.94,2026-11-16T20:21:55,"启用DLX算法求解: grafo10594.94
+rows: 166730
+cols: 755
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10594.94
+"
+20261114_234603,exact,new,rome3,grafo10607.94,data/benchmarks/rome3_matrices/matrices/grafo10607.94.txt,DLX,DLX,,1,timeout,,1500.444640,,,,,169995,755,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10607.94,2026-11-16T20:46:55,"启用DLX算法求解: grafo10607.94
+rows: 169995
+cols: 755
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10607.94
+"
+20261114_234603,exact,new,rome3,grafo10609.100,data/benchmarks/rome3_matrices/matrices/grafo10609.100.txt,DLX,DLX,,1,timeout,,1500.484955,,,,,187310,805,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10609.100,2026-11-16T21:11:56,"启用DLX算法求解: grafo10609.100
+rows: 187310
+cols: 805
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10609.100
+"
+20261114_234603,exact,new,rome3,grafo10610.95,data/benchmarks/rome3_matrices/matrices/grafo10610.95.txt,DLX,DLX,,1,timeout,,1500.480824,,,,,182562,876,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10610.95,2026-11-16T21:36:56,"启用DLX算法求解: grafo10610.95
+rows: 182562
+cols: 876
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10610.95
+"
+20261114_234603,exact,new,rome3,grafo10611.94,data/benchmarks/rome3_matrices/matrices/grafo10611.94.txt,DLX,DLX,,1,timeout,,1500.505535,,,,,188370,882,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10611.94,2026-11-16T22:01:57,"启用DLX算法求解: grafo10611.94
+rows: 188370
+cols: 882
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10611.94
+"
+20261114_234603,exact,new,rome3,grafo10613.96,data/benchmarks/rome3_matrices/matrices/grafo10613.96.txt,DLX,DLX,,1,timeout,,1500.465424,,,,,176010,780,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10613.96,2026-11-16T22:26:57,"启用DLX算法求解: grafo10613.96
+rows: 176010
+cols: 780
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10613.96
+"
+20261114_234603,exact,new,rome3,grafo10614.92,data/benchmarks/rome3_matrices/matrices/grafo10614.92.txt,DLX,DLX,,1,timeout,,1500.520959,,,,,181596,858,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10614.92,2026-11-16T22:51:58,"启用DLX算法求解: grafo10614.92
+rows: 181596
+cols: 858
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10614.92
+"
+20261114_234603,exact,new,rome3,grafo10627.96,data/benchmarks/rome3_matrices/matrices/grafo10627.96.txt,DLX,DLX,,1,timeout,,1500.478310,,,,,166430,750,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10627.96,2026-11-16T23:16:58,"启用DLX算法求解: grafo10627.96
+rows: 166430
+cols: 750
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10627.96
+"
+20261114_234603,exact,new,rome3,grafo10629.100,data/benchmarks/rome3_matrices/matrices/grafo10629.100.txt,DLX,DLX,,1,timeout,,1500.584008,,,,,213685,865,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10629.100,2026-11-16T23:41:59,"启用DLX算法求解: grafo10629.100
+rows: 213685
+cols: 865
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10629.100
+"
+20261114_234603,exact,new,rome3,grafo10631.98,data/benchmarks/rome3_matrices/matrices/grafo10631.98.txt,DLX,DLX,,1,timeout,,1500.471704,,,,,173610,770,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10631.98,2026-11-17T00:06:59,"启用DLX算法求解: grafo10631.98
+rows: 173610
+cols: 770
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10631.98
+"
+20261114_234603,exact,new,rome3,grafo10636.95,data/benchmarks/rome3_matrices/matrices/grafo10636.95.txt,DLX,DLX,,1,timeout,,1500.479597,,,,,175810,775,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10636.95,2026-11-17T00:32:00,"启用DLX算法求解: grafo10636.95
+rows: 175810
+cols: 775
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10636.95
+"
+20261114_234603,exact,new,rome3,grafo10641.99,data/benchmarks/rome3_matrices/matrices/grafo10641.99.txt,DLX,DLX,,1,timeout,,1500.526883,,,,,176115,780,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10641.99,2026-11-17T00:57:00,"启用DLX算法求解: grafo10641.99
+rows: 176115
+cols: 780
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10641.99
+"
+20261114_234603,exact,new,rome3,grafo10645.95,data/benchmarks/rome3_matrices/matrices/grafo10645.95.txt,DLX,DLX,,1,timeout,,1500.804632,,,,,169506,834,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10645.95,2026-11-17T01:22:01,"启用DLX算法求解: grafo10645.95
+rows: 169506
+cols: 834
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10645.95
+"
+20261114_234603,exact,new,rome3,grafo10647.98,data/benchmarks/rome3_matrices/matrices/grafo10647.98.txt,DLX,DLX,,1,timeout,,1500.544545,,,,,178675,785,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10647.98,2026-11-17T01:47:02,"启用DLX算法求解: grafo10647.98
+rows: 178675
+cols: 785
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10647.98
+"
+20261114_234603,exact,new,rome3,grafo10672.98,data/benchmarks/rome3_matrices/matrices/grafo10672.98.txt,DLX,DLX,,1,timeout,,1500.879280,,,,,189636,888,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10672.98,2026-11-17T02:12:02,"启用DLX算法求解: grafo10672.98
+rows: 189636
+cols: 888
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10672.98
+"
+20261114_234603,exact,new,rome3,grafo10673.93,data/benchmarks/rome3_matrices/matrices/grafo10673.93.txt,DLX,DLX,,1,timeout,,1500.480831,,,,,165395,755,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10673.93,2026-11-17T02:37:03,"启用DLX算法求解: grafo10673.93
+rows: 165395
+cols: 755
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10673.93
+"
+20261114_234603,exact,new,rome3,grafo10675.95,data/benchmarks/rome3_matrices/matrices/grafo10675.95.txt,DLX,DLX,,1,timeout,,1500.718153,,,,,164670,755,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10675.95,2026-11-17T03:02:03,"启用DLX算法求解: grafo10675.95
+rows: 164670
+cols: 755
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10675.95
+"
+20261114_234603,exact,new,rome3,grafo10679.100,data/benchmarks/rome3_matrices/matrices/grafo10679.100.txt,DLX,DLX,,1,timeout,,1500.500058,,,,,169635,765,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10679.100,2026-11-17T03:27:04,"启用DLX算法求解: grafo10679.100
+rows: 169635
+cols: 765
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10679.100
+"
+20261114_234603,exact,new,rome3,grafo10680.95,data/benchmarks/rome3_matrices/matrices/grafo10680.95.txt,DLX,DLX,,1,timeout,,1500.875042,,,,,184345,952,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10680.95,2026-11-17T03:52:05,"启用DLX算法求解: grafo10680.95
+rows: 184345
+cols: 952
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10680.95
+"
+20261114_234603,exact,new,rome3,grafo10687.96,data/benchmarks/rome3_matrices/matrices/grafo10687.96.txt,DLX,DLX,,1,timeout,,1500.525795,,,,,179286,858,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10687.96,2026-11-17T04:17:06,"启用DLX算法求解: grafo10687.96
+rows: 179286
+cols: 858
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10687.96
+"
+20261114_234603,exact,new,rome3,grafo10705.97,data/benchmarks/rome3_matrices/matrices/grafo10705.97.txt,DLX,DLX,,1,timeout,,1500.538579,,,,,186780,834,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10705.97,2026-11-17T04:42:06,"启用DLX算法求解: grafo10705.97
+rows: 186780
+cols: 834
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10705.97
+"
+20261114_234603,exact,new,rome3,grafo10709.98,data/benchmarks/rome3_matrices/matrices/grafo10709.98.txt,DLX,DLX,,1,timeout,,1500.922173,,,,,183095,790,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10709.98,2026-11-17T05:07:07,"启用DLX算法求解: grafo10709.98
+rows: 183095
+cols: 790
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10709.98
+"
+20261114_234603,exact,new,rome3,grafo10718.98,data/benchmarks/rome3_matrices/matrices/grafo10718.98.txt,DLX,DLX,,1,timeout,,1500.803943,,,,,192465,810,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10718.98,2026-11-17T05:32:08,"启用DLX算法求解: grafo10718.98
+rows: 192465
+cols: 810
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10718.98
+"
+20261114_234603,exact,new,rome3,grafo10719.96,data/benchmarks/rome3_matrices/matrices/grafo10719.96.txt,DLX,DLX,,1,timeout,,1500.574011,,,,,198828,894,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10719.96,2026-11-17T05:57:08,"启用DLX算法求解: grafo10719.96
+rows: 198828
+cols: 894
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10719.96
+"
+20261114_234603,exact,new,rome3,grafo10720.96,data/benchmarks/rome3_matrices/matrices/grafo10720.96.txt,DLX,DLX,,1,timeout,,1500.897855,,,,,188802,882,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10720.96,2026-11-17T06:22:09,"启用DLX算法求解: grafo10720.96
+rows: 188802
+cols: 882
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10720.96
+"
+20261114_234603,exact,new,rome3,grafo10725.99,data/benchmarks/rome3_matrices/matrices/grafo10725.99.txt,DLX,DLX,,1,timeout,,1500.741467,,,,,165635,760,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10725.99,2026-11-17T06:47:10,"启用DLX算法求解: grafo10725.99
+rows: 165635
+cols: 760
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10725.99
+"
+20261114_234603,exact,new,rome3,grafo10738.96,data/benchmarks/rome3_matrices/matrices/grafo10738.96.txt,DLX,DLX,,1,timeout,,1500.481769,,,,,175285,775,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10738.96,2026-11-17T07:12:11,"启用DLX算法求解: grafo10738.96
+rows: 175285
+cols: 775
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10738.96
+"
+20261114_234603,exact,new,rome3,grafo10741.92,data/benchmarks/rome3_matrices/matrices/grafo10741.92.txt,DLX,DLX,,1,timeout,,1500.519675,,,,,165815,750,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10741.92,2026-11-17T07:37:11,"启用DLX算法求解: grafo10741.92
+rows: 165815
+cols: 750
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10741.92
+"
+20261114_234603,exact,new,rome3,grafo10744.96,data/benchmarks/rome3_matrices/matrices/grafo10744.96.txt,DLX,DLX,,1,timeout,,1500.709803,,,,,164650,755,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10744.96,2026-11-17T08:02:12,"启用DLX算法求解: grafo10744.96
+rows: 164650
+cols: 755
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10744.96
+"
+20261114_234603,exact,new,rome3,grafo10757.96,data/benchmarks/rome3_matrices/matrices/grafo10757.96.txt,DLX,DLX,,1,timeout,,1500.448510,,,,,170760,765,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10757.96,2026-11-17T08:27:12,"启用DLX算法求解: grafo10757.96
+rows: 170760
+cols: 765
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10757.96
+"
+20261114_234603,exact,new,rome3,grafo10762.99,data/benchmarks/rome3_matrices/matrices/grafo10762.99.txt,DLX,DLX,,1,timeout,,1500.491305,,,,,164120,750,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10762.99,2026-11-17T08:52:13,"启用DLX算法求解: grafo10762.99
+rows: 164120
+cols: 750
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10762.99
+"
+20261114_234603,exact,new,rome3,grafo10764.96,data/benchmarks/rome3_matrices/matrices/grafo10764.96.txt,DLX,DLX,,1,timeout,,1500.756772,,,,,167185,765,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10764.96,2026-11-17T09:17:13,"启用DLX算法求解: grafo10764.96
+rows: 167185
+cols: 765
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10764.96
+"
+20261114_234603,exact,new,rome3,grafo10777.100,data/benchmarks/rome3_matrices/matrices/grafo10777.100.txt,DLX,DLX,,1,timeout,,1500.459726,,,,,165730,755,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10777.100,2026-11-17T09:42:14,"启用DLX算法求解: grafo10777.100
+rows: 165730
+cols: 755
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10777.100
+"
+20261114_234603,exact,new,rome3,grafo10786.100,data/benchmarks/rome3_matrices/matrices/grafo10786.100.txt,DLX,DLX,,1,timeout,,1500.525699,,,,,176720,780,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10786.100,2026-11-17T10:07:14,"启用DLX算法求解: grafo10786.100
+rows: 176720
+cols: 780
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10786.100
+"
+20261114_234603,exact,new,rome3,grafo10788.98,data/benchmarks/rome3_matrices/matrices/grafo10788.98.txt,DLX,DLX,,1,timeout,,1500.833393,,,,,190785,810,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10788.98,2026-11-17T10:32:15,"启用DLX算法求解: grafo10788.98
+rows: 190785
+cols: 810
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10788.98
+"
+20261114_234603,exact,new,rome3,grafo10793.95,data/benchmarks/rome3_matrices/matrices/grafo10793.95.txt,DLX,DLX,,1,timeout,,1500.552900,,,,,186396,876,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10793.95,2026-11-17T10:57:16,"启用DLX算法求解: grafo10793.95
+rows: 186396
+cols: 876
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10793.95
+"
+20261114_234603,exact,new,rome3,grafo10794.100,data/benchmarks/rome3_matrices/matrices/grafo10794.100.txt,DLX,DLX,,1,timeout,,1500.753500,,,,,182630,790,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10794.100,2026-11-17T11:22:16,"启用DLX算法求解: grafo10794.100
+rows: 182630
+cols: 790
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10794.100
+"
+20261114_234603,exact,new,rome3,grafo10803.99,data/benchmarks/rome3_matrices/matrices/grafo10803.99.txt,DLX,DLX,,1,timeout,,1500.527152,,,,,180200,785,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10803.99,2026-11-17T11:47:17,"启用DLX算法求解: grafo10803.99
+rows: 180200
+cols: 785
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10803.99
+"
+20261114_234603,exact,new,rome3,grafo10805.98,data/benchmarks/rome3_matrices/matrices/grafo10805.98.txt,DLX,DLX,,1,timeout,,1500.891984,,,,,179105,785,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10805.98,2026-11-17T12:12:18,"启用DLX算法求解: grafo10805.98
+rows: 179105
+cols: 785
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10805.98
+"
+20261114_234603,exact,new,rome3,grafo10809.99,data/benchmarks/rome3_matrices/matrices/grafo10809.99.txt,DLX,DLX,,1,timeout,,1500.755699,,,,,180500,790,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10809.99,2026-11-17T12:37:18,"启用DLX算法求解: grafo10809.99
+rows: 180500
+cols: 790
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10809.99
+"
+20261114_234603,exact,new,rome3,grafo10813.93,data/benchmarks/rome3_matrices/matrices/grafo10813.93.txt,DLX,DLX,,1,timeout,,1500.541196,,,,,186624,876,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10813.93,2026-11-17T13:02:19,"启用DLX算法求解: grafo10813.93
+rows: 186624
+cols: 876
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10813.93
+"
+20261114_234603,exact,new,rome3,grafo10815.97,data/benchmarks/rome3_matrices/matrices/grafo10815.97.txt,DLX,DLX,,1,timeout,,1500.820415,,,,,169390,765,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10815.97,2026-11-17T13:27:20,"启用DLX算法求解: grafo10815.97
+rows: 169390
+cols: 765
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10815.97
+"
+20261114_234603,exact,new,rome3,grafo10817.96,data/benchmarks/rome3_matrices/matrices/grafo10817.96.txt,DLX,DLX,,1,timeout,,1500.766770,,,,,188040,882,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10817.96,2026-11-17T13:52:21,"启用DLX算法求解: grafo10817.96
+rows: 188040
+cols: 882
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10817.96
+"
+20261114_234603,exact,new,rome3,grafo10822.97,data/benchmarks/rome3_matrices/matrices/grafo10822.97.txt,DLX,DLX,,1,timeout,,1500.492563,,,,,174700,775,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10822.97,2026-11-17T14:17:21,"启用DLX算法求解: grafo10822.97
+rows: 174700
+cols: 775
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10822.97
+"
+20261114_234603,exact,new,rome3,grafo10823.96,data/benchmarks/rome3_matrices/matrices/grafo10823.96.txt,DLX,DLX,,1,timeout,,1500.534712,,,,,181080,870,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10823.96,2026-11-17T14:42:22,"启用DLX算法求解: grafo10823.96
+rows: 181080
+cols: 870
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10823.96
+"
+20261114_234603,exact,new,rome3,grafo10828.97,data/benchmarks/rome3_matrices/matrices/grafo10828.97.txt,DLX,DLX,,1,timeout,,1500.502769,,,,,169895,765,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10828.97,2026-11-17T15:07:22,"启用DLX算法求解: grafo10828.97
+rows: 169895
+cols: 765
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10828.97
+"
+20261114_234603,exact,new,rome3,grafo10833.98,data/benchmarks/rome3_matrices/matrices/grafo10833.98.txt,DLX,DLX,,1,timeout,,1500.908657,,,,,190410,894,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10833.98,2026-11-17T15:32:23,"启用DLX算法求解: grafo10833.98
+rows: 190410
+cols: 894
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10833.98
+"
+20261114_234603,exact,new,rome3,grafo10837.95,data/benchmarks/rome3_matrices/matrices/grafo10837.95.txt,DLX,DLX,,1,timeout,,1500.571402,,,,,190458,888,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10837.95,2026-11-17T15:57:24,"启用DLX算法求解: grafo10837.95
+rows: 190458
+cols: 888
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10837.95
+"
+20261114_234603,exact,new,rome3,grafo10848.94,data/benchmarks/rome3_matrices/matrices/grafo10848.94.txt,DLX,DLX,,1,timeout,,1500.974134,,,,,195072,894,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10848.94,2026-11-17T16:22:24,"启用DLX算法求解: grafo10848.94
+rows: 195072
+cols: 894
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10848.94
+"
+20261114_234603,exact,new,rome3,grafo10851.95,data/benchmarks/rome3_matrices/matrices/grafo10851.95.txt,DLX,DLX,,1,timeout,,1500.523987,,,,,189282,876,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10851.95,2026-11-17T16:47:25,"启用DLX算法求解: grafo10851.95
+rows: 189282
+cols: 876
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10851.95
+"
+20261114_234603,exact,new,rome3,grafo10867.95,data/benchmarks/rome3_matrices/matrices/grafo10867.95.txt,DLX,DLX,,1,timeout,,1500.469218,,,,,160060,750,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10867.95,2026-11-17T17:12:26,"启用DLX算法求解: grafo10867.95
+rows: 160060
+cols: 750
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10867.95
+"
+20261114_234603,exact,new,rome3,grafo10869.96,data/benchmarks/rome3_matrices/matrices/grafo10869.96.txt,DLX,DLX,,1,timeout,,1500.547052,,,,,186840,876,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10869.96,2026-11-17T17:37:26,"启用DLX算法求解: grafo10869.96
+rows: 186840
+cols: 876
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10869.96
+"
+20261114_234603,exact,new,rome3,grafo10871.95,data/benchmarks/rome3_matrices/matrices/grafo10871.95.txt,DLX,DLX,,1,timeout,,1500.547347,,,,,184120,795,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10871.95,2026-11-17T18:02:27,"启用DLX算法求解: grafo10871.95
+rows: 184120
+cols: 795
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10871.95
+"
+20261114_234603,exact,new,rome3,grafo10873.97,data/benchmarks/rome3_matrices/matrices/grafo10873.97.txt,DLX,DLX,,1,timeout,,1500.691983,,,,,171935,765,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10873.97,2026-11-17T18:27:27,"启用DLX算法求解: grafo10873.97
+rows: 171935
+cols: 765
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10873.97
+"
+20261114_234603,exact,new,rome3,grafo10894.97,data/benchmarks/rome3_matrices/matrices/grafo10894.97.txt,DLX,DLX,,1,timeout,,1500.558501,,,,,191526,894,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10894.97,2026-11-17T18:52:28,"启用DLX算法求解: grafo10894.97
+rows: 191526
+cols: 894
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10894.97
+"
+20261114_234603,exact,new,rome3,grafo10895.98,data/benchmarks/rome3_matrices/matrices/grafo10895.98.txt,DLX,DLX,,1,timeout,,1500.969271,,,,,195095,825,0,exit=0; tail=DLX开始搜索... DLX搜索超时: Time OUT DLX算法求解结束: grafo10895.98,2026-11-17T19:17:29,"启用DLX算法求解: grafo10895.98
+rows: 195095
+cols: 825
+DLX开始搜索...
+DLX搜索超时: Time OUT
+DLX算法求解结束: grafo10895.98
+"

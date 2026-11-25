@@ -1,0 +1,4660 @@
+run_id,suite,dataset,category,instance,input,solver,variant,threads,repeat,status,time_s,wall_time_s,solutions,solutions_match,max_blocks,dnnf_size,rows,cols,exit_code,error,started_at,stdout_tail
+20261115_115128,dxd-versions,old,dominoes,dominoes_10x10,data/benchmarks/dominoes_set/dominoes_10x10.txt,HybridDXD,HybridDXD,1,1,success,0.016670,0.039540,258584046368,,1,,180,100,0,,2026-11-15T11:51:28,"Instance: dominoes_10x10
+启用HybridDXD算法求解: dominoes_10x10
+rows: 180
+cols: 100
+设置并行线程数为: 1
+Time: 0.016670 s
+Solutions: 258584046368
+Max Blocks: 1
+HybridDXD算法求解结束: dominoes_10x10
+"
+20261115_115128,dxd-versions,old,dominoes,dominoes_10x12,data/benchmarks/dominoes_set/dominoes_10x12.txt,HybridDXD,HybridDXD,1,1,success,0.023155,0.048167,6.574e+13,,1,,218,120,0,,2026-11-15T11:51:28,"Instance: dominoes_10x12
+启用HybridDXD算法求解: dominoes_10x12
+rows: 218
+cols: 120
+设置并行线程数为: 1
+Time: 0.023155 s
+Solutions (scientific): 6.574e+13
+Max Blocks: 1
+HybridDXD算法求解结束: dominoes_10x12
+"
+20261115_115128,dxd-versions,old,dominoes,dominoes_12x12,data/benchmarks/dominoes_set/dominoes_12x12.txt,HybridDXD,HybridDXD,1,1,success,0.122606,0.174038,5.306e+16,,1,,264,144,0,,2026-11-15T11:51:28,"Instance: dominoes_12x12
+启用HybridDXD算法求解: dominoes_12x12
+rows: 264
+cols: 144
+设置并行线程数为: 1
+Time: 0.122606 s
+Solutions (scientific): 5.306e+16
+Max Blocks: 1
+HybridDXD算法求解结束: dominoes_12x12
+"
+20261115_115128,dxd-versions,old,dominoes,dominoes_8x10,data/benchmarks/dominoes_set/dominoes_8x10.txt,HybridDXD,HybridDXD,1,1,success,0.003864,0.022650,1031151241,,1,,142,80,0,,2026-11-15T11:51:28,"Instance: dominoes_8x10
+启用HybridDXD算法求解: dominoes_8x10
+rows: 142
+cols: 80
+设置并行线程数为: 1
+Time: 0.003864 s
+Solutions: 1031151241
+Max Blocks: 1
+HybridDXD算法求解结束: dominoes_8x10
+"
+20261115_115128,dxd-versions,old,dominoes,dominoes_8x8,data/benchmarks/dominoes_set/dominoes_8x8.txt,HybridDXD,HybridDXD,1,1,success,0.002664,0.020638,12988816,,1,,112,64,0,,2026-11-15T11:51:28,"Instance: dominoes_8x8
+启用HybridDXD算法求解: dominoes_8x8
+rows: 112
+cols: 64
+设置并行线程数为: 1
+Time: 0.002664 s
+Solutions: 12988816
+Max Blocks: 1
+HybridDXD算法求解结束: dominoes_8x8
+"
+20261115_115128,dxd-versions,old,dominoes,tetrominoes_4x5,data/benchmarks/dominoes_set/tetrominoes_4x5.txt,HybridDXD,HybridDXD,1,1,success,0.000982,0.018988,454,,1,,161,20,0,,2026-11-15T11:51:28,"Instance: tetrominoes_4x5
+启用HybridDXD算法求解: tetrominoes_4x5
+rows: 161
+cols: 20
+设置并行线程数为: 1
+Time: 0.000982 s
+Solutions: 454
+Max Blocks: 1
+HybridDXD算法求解结束: tetrominoes_4x5
+"
+20261115_115128,dxd-versions,old,dominoes,tetrominoes_4x7,data/benchmarks/dominoes_set/tetrominoes_4x7.txt,HybridDXD,HybridDXD,1,1,success,0.002751,0.020553,9157,,1,,257,28,0,,2026-11-15T11:51:28,"Instance: tetrominoes_4x7
+启用HybridDXD算法求解: tetrominoes_4x7
+rows: 257
+cols: 28
+设置并行线程数为: 1
+Time: 0.002751 s
+Solutions: 9157
+Max Blocks: 1
+HybridDXD算法求解结束: tetrominoes_4x7
+"
+20261115_115128,dxd-versions,old,dominoes,tetrominoes_6x6,data/benchmarks/dominoes_set/tetrominoes_6x6.txt,HybridDXD,HybridDXD,1,1,success,0.061913,0.094264,178939,,1,,381,36,0,,2026-11-15T11:51:28,"Instance: tetrominoes_6x6
+启用HybridDXD算法求解: tetrominoes_6x6
+rows: 381
+cols: 36
+设置并行线程数为: 1
+Time: 0.061913 s
+Solutions: 178939
+Max Blocks: 1
+HybridDXD算法求解结束: tetrominoes_6x6
+"
+20261115_115128,dxd-versions,old,dominoes,tetrominoes_6x8,data/benchmarks/dominoes_set/tetrominoes_6x8.txt,HybridDXD,HybridDXD,1,1,success,0.652412,0.908140,22483347,,1,,553,48,0,,2026-11-15T11:51:28,"Instance: tetrominoes_6x8
+启用HybridDXD算法求解: tetrominoes_6x8
+rows: 553
+cols: 48
+设置并行线程数为: 1
+Time: 0.652412 s
+Solutions: 22483347
+Max Blocks: 1
+HybridDXD算法求解结束: tetrominoes_6x8
+"
+20261115_115128,dxd-versions,old,dominoes,tetrominoes_8x8,data/benchmarks/dominoes_set/tetrominoes_8x8.txt,HybridDXD,HybridDXD,1,1,timeout,1500.986612,1507.787861,,,,,801,64,0,exit=0; tail=Time: 1500.986612 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: tetrominoes_8x8,2026-11-15T11:51:29,"Instance: tetrominoes_8x8
+启用HybridDXD算法求解: tetrominoes_8x8
+rows: 801
+cols: 64
+设置并行线程数为: 1
+Time: 1500.986612 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: tetrominoes_8x8
+"
+20261115_115128,dxd-versions,old,exact_cover,bell-06,data/benchmarks/exact_cover_set/bell-06.ec,HybridDXD,HybridDXD,1,1,success,0.000195,0.019373,203,,1,,63,6,0,,2026-11-15T12:16:37,"Instance: bell-06
+启用HybridDXD算法求解: bell-06
+rows: 63
+cols: 6
+设置并行线程数为: 1
+Time: 0.000195 s
+Solutions: 203
+Max Blocks: 1
+HybridDXD算法求解结束: bell-06
+"
+20261115_115128,dxd-versions,old,exact_cover,bell-07,data/benchmarks/exact_cover_set/bell-07.ec,HybridDXD,HybridDXD,1,1,success,0.000505,0.019191,877,,1,,127,7,0,,2026-11-15T12:16:37,"Instance: bell-07
+启用HybridDXD算法求解: bell-07
+rows: 127
+cols: 7
+设置并行线程数为: 1
+Time: 0.000505 s
+Solutions: 877
+Max Blocks: 1
+HybridDXD算法求解结束: bell-07
+"
+20261115_115128,dxd-versions,old,exact_cover,bell-08,data/benchmarks/exact_cover_set/bell-08.ec,HybridDXD,HybridDXD,1,1,success,0.001595,0.020415,4140,,1,,255,8,0,,2026-11-15T12:16:37,"Instance: bell-08
+启用HybridDXD算法求解: bell-08
+rows: 255
+cols: 8
+设置并行线程数为: 1
+Time: 0.001595 s
+Solutions: 4140
+Max Blocks: 1
+HybridDXD算法求解结束: bell-08
+"
+20261115_115128,dxd-versions,old,exact_cover,bell-09,data/benchmarks/exact_cover_set/bell-09.ec,HybridDXD,HybridDXD,1,1,success,0.006570,0.025435,21147,,1,,511,9,0,,2026-11-15T12:16:37,"Instance: bell-09
+启用HybridDXD算法求解: bell-09
+rows: 511
+cols: 9
+设置并行线程数为: 1
+Time: 0.006570 s
+Solutions: 21147
+Max Blocks: 1
+HybridDXD算法求解结束: bell-09
+"
+20261115_115128,dxd-versions,old,exact_cover,bell-10,data/benchmarks/exact_cover_set/bell-10.ec,HybridDXD,HybridDXD,1,1,success,0.029564,0.050288,115975,,1,,1023,10,0,,2026-11-15T12:16:37,"Instance: bell-10
+启用HybridDXD算法求解: bell-10
+rows: 1023
+cols: 10
+设置并行线程数为: 1
+Time: 0.029564 s
+Solutions: 115975
+Max Blocks: 1
+HybridDXD算法求解结束: bell-10
+"
+20261115_115128,dxd-versions,old,exact_cover,bell-11,data/benchmarks/exact_cover_set/bell-11.ec,HybridDXD,HybridDXD,1,1,success,0.144562,0.168623,678570,,1,,2047,11,0,,2026-11-15T12:16:37,"Instance: bell-11
+启用HybridDXD算法求解: bell-11
+rows: 2047
+cols: 11
+设置并行线程数为: 1
+Time: 0.144562 s
+Solutions: 678570
+Max Blocks: 1
+HybridDXD算法求解结束: bell-11
+"
+20261115_115128,dxd-versions,old,exact_cover,bell-12,data/benchmarks/exact_cover_set/bell-12.ec,HybridDXD,HybridDXD,1,1,success,0.746799,0.783606,4213597,,1,,4095,12,0,,2026-11-15T12:16:37,"Instance: bell-12
+启用HybridDXD算法求解: bell-12
+rows: 4095
+cols: 12
+设置并行线程数为: 1
+Time: 0.746799 s
+Solutions: 4213597
+Max Blocks: 1
+HybridDXD算法求解结束: bell-12
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-09,data/benchmarks/exact_cover_set/doublefact-09.ec,HybridDXD,HybridDXD,1,1,success,0.000244,0.019445,945,,1,,45,10,0,,2026-11-15T12:16:38,"Instance: doublefact-09
+启用HybridDXD算法求解: doublefact-09
+rows: 45
+cols: 10
+设置并行线程数为: 1
+Time: 0.000244 s
+Solutions: 945
+Max Blocks: 1
+HybridDXD算法求解结束: doublefact-09
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-11,data/benchmarks/exact_cover_set/doublefact-11.ec,HybridDXD,HybridDXD,1,1,success,0.000691,0.019300,10395,,1,,66,12,0,,2026-11-15T12:16:38,"Instance: doublefact-11
+启用HybridDXD算法求解: doublefact-11
+rows: 66
+cols: 12
+设置并行线程数为: 1
+Time: 0.000691 s
+Solutions: 10395
+Max Blocks: 1
+HybridDXD算法求解结束: doublefact-11
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-13,data/benchmarks/exact_cover_set/doublefact-13.ec,HybridDXD,HybridDXD,1,1,success,0.002005,0.020518,135135,,1,,91,14,0,,2026-11-15T12:16:38,"Instance: doublefact-13
+启用HybridDXD算法求解: doublefact-13
+rows: 91
+cols: 14
+设置并行线程数为: 1
+Time: 0.002005 s
+Solutions: 135135
+Max Blocks: 1
+HybridDXD算法求解结束: doublefact-13
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-15,data/benchmarks/exact_cover_set/doublefact-15.ec,HybridDXD,HybridDXD,1,1,success,0.005878,0.025318,2027025,,1,,120,16,0,,2026-11-15T12:16:38,"Instance: doublefact-15
+启用HybridDXD算法求解: doublefact-15
+rows: 120
+cols: 16
+设置并行线程数为: 1
+Time: 0.005878 s
+Solutions: 2027025
+Max Blocks: 1
+HybridDXD算法求解结束: doublefact-15
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-17,data/benchmarks/exact_cover_set/doublefact-17.ec,HybridDXD,HybridDXD,1,1,success,0.017636,0.039075,34459425,,1,,153,18,0,,2026-11-15T12:16:38,"Instance: doublefact-17
+启用HybridDXD算法求解: doublefact-17
+rows: 153
+cols: 18
+设置并行线程数为: 1
+Time: 0.017636 s
+Solutions: 34459425
+Max Blocks: 1
+HybridDXD算法求解结束: doublefact-17
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-19,data/benchmarks/exact_cover_set/doublefact-19.ec,HybridDXD,HybridDXD,1,1,success,0.064822,0.104829,654729075,,1,,190,20,0,,2026-11-15T12:16:38,"Instance: doublefact-19
+启用HybridDXD算法求解: doublefact-19
+rows: 190
+cols: 20
+设置并行线程数为: 1
+Time: 0.064822 s
+Solutions: 654729075
+Max Blocks: 1
+HybridDXD算法求解结束: doublefact-19
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-21,data/benchmarks/exact_cover_set/doublefact-21.ec,HybridDXD,HybridDXD,1,1,success,0.211955,0.305992,13749310575,,1,,231,22,0,,2026-11-15T12:16:38,"Instance: doublefact-21
+启用HybridDXD算法求解: doublefact-21
+rows: 231
+cols: 22
+设置并行线程数为: 1
+Time: 0.211955 s
+Solutions: 13749310575
+Max Blocks: 1
+HybridDXD算法求解结束: doublefact-21
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-23,data/benchmarks/exact_cover_set/doublefact-23.ec,HybridDXD,HybridDXD,1,1,success,0.743937,1.048416,316234143225,,1,,276,24,0,,2026-11-15T12:16:39,"Instance: doublefact-23
+启用HybridDXD算法求解: doublefact-23
+rows: 276
+cols: 24
+设置并行线程数为: 1
+Time: 0.743937 s
+Solutions: 316234143225
+Max Blocks: 1
+HybridDXD算法求解结束: doublefact-23
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-25,data/benchmarks/exact_cover_set/doublefact-25.ec,HybridDXD,HybridDXD,1,1,success,2.177282,2.992707,7.905e+12,,1,,325,26,0,,2026-11-15T12:16:40,"Instance: doublefact-25
+启用HybridDXD算法求解: doublefact-25
+rows: 325
+cols: 26
+设置并行线程数为: 1
+Time: 2.177282 s
+Solutions (scientific): 7.905e+12
+Max Blocks: 1
+HybridDXD算法求解结束: doublefact-25
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-27,data/benchmarks/exact_cover_set/doublefact-27.ec,HybridDXD,HybridDXD,1,1,success,7.109671,9.536369,2.134e+14,,1,,378,28,0,,2026-11-15T12:16:43,"Instance: doublefact-27
+启用HybridDXD算法求解: doublefact-27
+rows: 378
+cols: 28
+设置并行线程数为: 1
+Time: 7.109671 s
+Solutions (scientific): 2.134e+14
+Max Blocks: 1
+HybridDXD算法求解结束: doublefact-27
+"
+20261115_115128,dxd-versions,old,exact_cover,doublefact-29,data/benchmarks/exact_cover_set/doublefact-29.ec,HybridDXD,HybridDXD,1,1,success,20.408309,27.606388,6.190e+15,,1,,435,30,0,,2026-11-15T12:16:52,"Instance: doublefact-29
+启用HybridDXD算法求解: doublefact-29
+rows: 435
+cols: 30
+设置并行线程数为: 1
+Time: 20.408309 s
+Solutions (scientific): 6.190e+15
+Max Blocks: 1
+HybridDXD算法求解结束: doublefact-29
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0003,data/benchmarks/exact_cover_set/kts15-ptpt-0003.ec,HybridDXD,HybridDXD,1,1,success,0.005888,0.024420,8,,1,,390,132,0,,2026-11-15T12:17:20,"Instance: kts15-ptpt-0003
+启用HybridDXD算法求解: kts15-ptpt-0003
+rows: 390
+cols: 132
+设置并行线程数为: 1
+Time: 0.005888 s
+Solutions: 8
+Max Blocks: 1
+HybridDXD算法求解结束: kts15-ptpt-0003
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0004,data/benchmarks/exact_cover_set/kts15-ptpt-0004.ec,HybridDXD,HybridDXD,1,1,success,0.008734,0.027192,1,,1,,392,132,0,,2026-11-15T12:17:20,"Instance: kts15-ptpt-0004
+启用HybridDXD算法求解: kts15-ptpt-0004
+rows: 392
+cols: 132
+设置并行线程数为: 1
+Time: 0.008734 s
+Solutions: 1
+Max Blocks: 1
+HybridDXD算法求解结束: kts15-ptpt-0004
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0006,data/benchmarks/exact_cover_set/kts15-ptpt-0006.ec,HybridDXD,HybridDXD,1,1,success,0.007379,0.025502,8,,1,,388,132,0,,2026-11-15T12:17:20,"Instance: kts15-ptpt-0006
+启用HybridDXD算法求解: kts15-ptpt-0006
+rows: 388
+cols: 132
+设置并行线程数为: 1
+Time: 0.007379 s
+Solutions: 8
+Max Blocks: 1
+HybridDXD算法求解结束: kts15-ptpt-0006
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0007,data/benchmarks/exact_cover_set/kts15-ptpt-0007.ec,HybridDXD,HybridDXD,1,1,success,0.007414,0.025669,12,,1,,390,132,0,,2026-11-15T12:17:20,"Instance: kts15-ptpt-0007
+启用HybridDXD算法求解: kts15-ptpt-0007
+rows: 390
+cols: 132
+设置并行线程数为: 1
+Time: 0.007414 s
+Solutions: 12
+Max Blocks: 1
+HybridDXD算法求解结束: kts15-ptpt-0007
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0009,data/benchmarks/exact_cover_set/kts15-ptpt-0009.ec,HybridDXD,HybridDXD,1,1,success,0.009036,0.027446,6,,1,,389,132,0,,2026-11-15T12:17:20,"Instance: kts15-ptpt-0009
+启用HybridDXD算法求解: kts15-ptpt-0009
+rows: 389
+cols: 132
+设置并行线程数为: 1
+Time: 0.009036 s
+Solutions: 6
+Max Blocks: 1
+HybridDXD算法求解结束: kts15-ptpt-0009
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0011,data/benchmarks/exact_cover_set/kts15-ptpt-0011.ec,HybridDXD,HybridDXD,1,1,success,0.009793,0.028780,4,,1,,390,132,0,,2026-11-15T12:17:20,"Instance: kts15-ptpt-0011
+启用HybridDXD算法求解: kts15-ptpt-0011
+rows: 390
+cols: 132
+设置并行线程数为: 1
+Time: 0.009793 s
+Solutions: 4
+Max Blocks: 1
+HybridDXD算法求解结束: kts15-ptpt-0011
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0012,data/benchmarks/exact_cover_set/kts15-ptpt-0012.ec,HybridDXD,HybridDXD,1,1,success,0.004749,0.023525,4,,2,,390,132,0,,2026-11-15T12:17:20,"Instance: kts15-ptpt-0012
+启用HybridDXD算法求解: kts15-ptpt-0012
+rows: 390
+cols: 132
+设置并行线程数为: 1
+Time: 0.004749 s
+Solutions: 4
+Max Blocks: 2
+HybridDXD算法求解结束: kts15-ptpt-0012
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0013,data/benchmarks/exact_cover_set/kts15-ptpt-0013.ec,HybridDXD,HybridDXD,1,1,success,0.011534,0.030051,24,,1,,388,132,0,,2026-11-15T12:17:20,"Instance: kts15-ptpt-0013
+启用HybridDXD算法求解: kts15-ptpt-0013
+rows: 388
+cols: 132
+设置并行线程数为: 1
+Time: 0.011534 s
+Solutions: 24
+Max Blocks: 1
+HybridDXD算法求解结束: kts15-ptpt-0013
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0014,data/benchmarks/exact_cover_set/kts15-ptpt-0014.ec,HybridDXD,HybridDXD,1,1,success,0.011312,0.029883,8,,1,,388,132,0,,2026-11-15T12:17:20,"Instance: kts15-ptpt-0014
+启用HybridDXD算法求解: kts15-ptpt-0014
+rows: 388
+cols: 132
+设置并行线程数为: 1
+Time: 0.011312 s
+Solutions: 8
+Max Blocks: 1
+HybridDXD算法求解结束: kts15-ptpt-0014
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0015,data/benchmarks/exact_cover_set/kts15-ptpt-0015.ec,HybridDXD,HybridDXD,1,1,success,0.010341,0.028801,14,,1,,390,132,0,,2026-11-15T12:17:20,"Instance: kts15-ptpt-0015
+启用HybridDXD算法求解: kts15-ptpt-0015
+rows: 390
+cols: 132
+设置并行线程数为: 1
+Time: 0.010341 s
+Solutions: 14
+Max Blocks: 1
+HybridDXD算法求解结束: kts15-ptpt-0015
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0016,data/benchmarks/exact_cover_set/kts15-ptpt-0016.ec,HybridDXD,HybridDXD,1,1,success,0.008586,0.026673,6,,1,,391,132,0,,2026-11-15T12:17:20,"Instance: kts15-ptpt-0016
+启用HybridDXD算法求解: kts15-ptpt-0016
+rows: 391
+cols: 132
+设置并行线程数为: 1
+Time: 0.008586 s
+Solutions: 6
+Max Blocks: 1
+HybridDXD算法求解结束: kts15-ptpt-0016
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0017,data/benchmarks/exact_cover_set/kts15-ptpt-0017.ec,HybridDXD,HybridDXD,1,1,success,0.007766,0.026177,24,,1,,388,132,0,,2026-11-15T12:17:20,"Instance: kts15-ptpt-0017
+启用HybridDXD算法求解: kts15-ptpt-0017
+rows: 388
+cols: 132
+设置并行线程数为: 1
+Time: 0.007766 s
+Solutions: 24
+Max Blocks: 1
+HybridDXD算法求解结束: kts15-ptpt-0017
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0018,data/benchmarks/exact_cover_set/kts15-ptpt-0018.ec,HybridDXD,HybridDXD,1,1,success,0.008526,0.026953,8,,1,,394,132,0,,2026-11-15T12:17:20,"Instance: kts15-ptpt-0018
+启用HybridDXD算法求解: kts15-ptpt-0018
+rows: 394
+cols: 132
+设置并行线程数为: 1
+Time: 0.008526 s
+Solutions: 8
+Max Blocks: 1
+HybridDXD算法求解结束: kts15-ptpt-0018
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0020,data/benchmarks/exact_cover_set/kts15-ptpt-0020.ec,HybridDXD,HybridDXD,1,1,success,0.012832,0.031506,8,,1,,391,132,0,,2026-11-15T12:17:20,"Instance: kts15-ptpt-0020
+启用HybridDXD算法求解: kts15-ptpt-0020
+rows: 391
+cols: 132
+设置并行线程数为: 1
+Time: 0.012832 s
+Solutions: 8
+Max Blocks: 1
+HybridDXD算法求解结束: kts15-ptpt-0020
+"
+20261115_115128,dxd-versions,old,exact_cover,kts15-ptpt-0021,data/benchmarks/exact_cover_set/kts15-ptpt-0021.ec,HybridDXD,HybridDXD,1,1,success,0.013389,0.032245,72,,1,,388,132,0,,2026-11-15T12:17:20,"Instance: kts15-ptpt-0021
+启用HybridDXD算法求解: kts15-ptpt-0021
+rows: 388
+cols: 132
+设置并行线程数为: 1
+Time: 0.013389 s
+Solutions: 72
+Max Blocks: 1
+HybridDXD算法求解结束: kts15-ptpt-0021
+"
+20261115_115128,dxd-versions,old,exact_cover,kts21-ptpt-0021,data/benchmarks/exact_cover_set/kts21-ptpt-0021.ec,HybridDXD,HybridDXD,1,1,timeout,1501.134632,1505.811586,,,,,3330,306,0,exit=0; tail=Time: 1501.134632 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: kts21-ptpt-0021,2026-11-15T12:17:20,"Instance: kts21-ptpt-0021
+启用HybridDXD算法求解: kts21-ptpt-0021
+rows: 3330
+cols: 306
+设置并行线程数为: 1
+Time: 1501.134632 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: kts21-ptpt-0021
+"
+20261115_115128,dxd-versions,old,exact_cover,kts21-ptpt-0036,data/benchmarks/exact_cover_set/kts21-ptpt-0036.ec,HybridDXD,HybridDXD,1,1,timeout,1501.227365,1505.628285,,,,,3328,306,0,exit=0; tail=Time: 1501.227365 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: kts21-ptpt-0036,2026-11-15T12:42:26,"Instance: kts21-ptpt-0036
+启用HybridDXD算法求解: kts21-ptpt-0036
+rows: 3328
+cols: 306
+设置并行线程数为: 1
+Time: 1501.227365 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: kts21-ptpt-0036
+"
+20261115_115128,dxd-versions,old,exact_cover,kts21-ptpt-0063,data/benchmarks/exact_cover_set/kts21-ptpt-0063.ec,HybridDXD,HybridDXD,1,1,timeout,1501.039284,1505.735232,,,,,3327,306,0,exit=0; tail=Time: 1501.039284 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: kts21-ptpt-0063,2026-11-15T13:07:32,"Instance: kts21-ptpt-0063
+启用HybridDXD算法求解: kts21-ptpt-0063
+rows: 3327
+cols: 306
+设置并行线程数为: 1
+Time: 1501.039284 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: kts21-ptpt-0063
+"
+20261115_115128,dxd-versions,old,exact_cover,kts21-ptpt-0074,data/benchmarks/exact_cover_set/kts21-ptpt-0074.ec,HybridDXD,HybridDXD,1,1,timeout,1501.634624,1506.516257,,,,,3327,306,0,exit=0; tail=Time: 1501.634624 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: kts21-ptpt-0074,2026-11-15T13:32:37,"Instance: kts21-ptpt-0074
+启用HybridDXD算法求解: kts21-ptpt-0074
+rows: 3327
+cols: 306
+设置并行线程数为: 1
+Time: 1501.634624 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: kts21-ptpt-0074
+"
+20261115_115128,dxd-versions,old,exact_cover,kts21-ptpt-0080,data/benchmarks/exact_cover_set/kts21-ptpt-0080.ec,HybridDXD,HybridDXD,1,1,timeout,1501.431141,1506.414567,,,,,3329,306,0,exit=0; tail=Time: 1501.431141 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: kts21-ptpt-0080,2026-11-15T13:57:44,"Instance: kts21-ptpt-0080
+启用HybridDXD算法求解: kts21-ptpt-0080
+rows: 3329
+cols: 306
+设置并行线程数为: 1
+Time: 1501.431141 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: kts21-ptpt-0080
+"
+20261115_115128,dxd-versions,old,exact_cover,kts21-ptpt-0082,data/benchmarks/exact_cover_set/kts21-ptpt-0082.ec,HybridDXD,HybridDXD,1,1,timeout,1501.549116,1506.387409,,,,,3329,306,0,exit=0; tail=Time: 1501.549116 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: kts21-ptpt-0082,2026-11-15T14:22:50,"Instance: kts21-ptpt-0082
+启用HybridDXD算法求解: kts21-ptpt-0082
+rows: 3329
+cols: 306
+设置并行线程数为: 1
+Time: 1501.549116 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: kts21-ptpt-0082
+"
+20261115_115128,dxd-versions,old,exact_cover,kts21-ptpt-0088,data/benchmarks/exact_cover_set/kts21-ptpt-0088.ec,HybridDXD,HybridDXD,1,1,timeout,1501.329838,1506.004177,,,,,3330,306,0,exit=0; tail=Time: 1501.329838 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: kts21-ptpt-0088,2026-11-15T14:47:57,"Instance: kts21-ptpt-0088
+启用HybridDXD算法求解: kts21-ptpt-0088
+rows: 3330
+cols: 306
+设置并行线程数为: 1
+Time: 1501.329838 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: kts21-ptpt-0088
+"
+20261115_115128,dxd-versions,old,exact_cover,kts21-ptpt-0091,data/benchmarks/exact_cover_set/kts21-ptpt-0091.ec,HybridDXD,HybridDXD,1,1,timeout,1501.416646,1506.513797,,,,,3329,306,0,exit=0; tail=Time: 1501.416646 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: kts21-ptpt-0091,2026-11-15T15:13:03,"Instance: kts21-ptpt-0091
+启用HybridDXD算法求解: kts21-ptpt-0091
+rows: 3329
+cols: 306
+设置并行线程数为: 1
+Time: 1501.416646 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: kts21-ptpt-0091
+"
+20261115_115128,dxd-versions,old,exact_cover,latin6-blk-00001,data/benchmarks/exact_cover_set/latin6-blk-00001.ec,HybridDXD,HybridDXD,1,1,success,0.000831,0.019431,47,,2,,60,60,0,,2026-11-15T15:38:09,"Instance: latin6-blk-00001
+启用HybridDXD算法求解: latin6-blk-00001
+rows: 60
+cols: 60
+设置并行线程数为: 1
+Time: 0.000831 s
+Solutions: 47
+Max Blocks: 2
+HybridDXD算法求解结束: latin6-blk-00001
+"
+20261115_115128,dxd-versions,old,exact_cover,latin6-blk-00002,data/benchmarks/exact_cover_set/latin6-blk-00002.ec,HybridDXD,HybridDXD,1,1,success,0.000905,0.018884,56,,2,,62,60,0,,2026-11-15T15:38:09,"Instance: latin6-blk-00002
+启用HybridDXD算法求解: latin6-blk-00002
+rows: 62
+cols: 60
+设置并行线程数为: 1
+Time: 0.000905 s
+Solutions: 56
+Max Blocks: 2
+HybridDXD算法求解结束: latin6-blk-00002
+"
+20261115_115128,dxd-versions,old,exact_cover,latin6-blk-00003,data/benchmarks/exact_cover_set/latin6-blk-00003.ec,HybridDXD,HybridDXD,1,1,success,0.001184,0.019411,80,,2,,64,60,0,,2026-11-15T15:38:09,"Instance: latin6-blk-00003
+启用HybridDXD算法求解: latin6-blk-00003
+rows: 64
+cols: 60
+设置并行线程数为: 1
+Time: 0.001184 s
+Solutions: 80
+Max Blocks: 2
+HybridDXD算法求解结束: latin6-blk-00003
+"
+20261115_115128,dxd-versions,old,exact_cover,latin6-blk-00004,data/benchmarks/exact_cover_set/latin6-blk-00004.ec,HybridDXD,HybridDXD,1,1,success,0.000999,0.019028,72,,2,,63,60,0,,2026-11-15T15:38:09,"Instance: latin6-blk-00004
+启用HybridDXD算法求解: latin6-blk-00004
+rows: 63
+cols: 60
+设置并行线程数为: 1
+Time: 0.000999 s
+Solutions: 72
+Max Blocks: 2
+HybridDXD算法求解结束: latin6-blk-00004
+"
+20261115_115128,dxd-versions,old,exact_cover,latin6-blk-00005,data/benchmarks/exact_cover_set/latin6-blk-00005.ec,HybridDXD,HybridDXD,1,1,success,0.001161,0.019391,80,,2,,65,60,0,,2026-11-15T15:38:09,"Instance: latin6-blk-00005
+启用HybridDXD算法求解: latin6-blk-00005
+rows: 65
+cols: 60
+设置并行线程数为: 1
+Time: 0.001161 s
+Solutions: 80
+Max Blocks: 2
+HybridDXD算法求解结束: latin6-blk-00005
+"
+20261115_115128,dxd-versions,old,exact_cover,latin6-blk-00006,data/benchmarks/exact_cover_set/latin6-blk-00006.ec,HybridDXD,HybridDXD,1,1,success,0.001098,0.019671,88,,3,,64,60,0,,2026-11-15T15:38:09,"Instance: latin6-blk-00006
+启用HybridDXD算法求解: latin6-blk-00006
+rows: 64
+cols: 60
+设置并行线程数为: 1
+Time: 0.001098 s
+Solutions: 88
+Max Blocks: 3
+HybridDXD算法求解结束: latin6-blk-00006
+"
+20261115_115128,dxd-versions,old,exact_cover,latin6-blk-00007,data/benchmarks/exact_cover_set/latin6-blk-00007.ec,HybridDXD,HybridDXD,1,1,success,0.001095,0.019205,80,,2,,65,60,0,,2026-11-15T15:38:09,"Instance: latin6-blk-00007
+启用HybridDXD算法求解: latin6-blk-00007
+rows: 65
+cols: 60
+设置并行线程数为: 1
+Time: 0.001095 s
+Solutions: 80
+Max Blocks: 2
+HybridDXD算法求解结束: latin6-blk-00007
+"
+20261115_115128,dxd-versions,old,exact_cover,latin7-blk-00001,data/benchmarks/exact_cover_set/latin7-blk-00001.ec,HybridDXD,HybridDXD,1,1,success,0.131492,0.188195,10752,,3,,120,90,0,,2026-11-15T15:38:09,"Instance: latin7-blk-00001
+启用HybridDXD算法求解: latin7-blk-00001
+rows: 120
+cols: 90
+设置并行线程数为: 1
+Time: 0.131492 s
+Solutions: 10752
+Max Blocks: 3
+HybridDXD算法求解结束: latin7-blk-00001
+"
+20261115_115128,dxd-versions,old,exact_cover,latin7-blk-00002,data/benchmarks/exact_cover_set/latin7-blk-00002.ec,HybridDXD,HybridDXD,1,1,success,0.158528,0.272842,14976,,2,,122,90,0,,2026-11-15T15:38:10,"Instance: latin7-blk-00002
+启用HybridDXD算法求解: latin7-blk-00002
+rows: 122
+cols: 90
+设置并行线程数为: 1
+Time: 0.158528 s
+Solutions: 14976
+Max Blocks: 2
+HybridDXD算法求解结束: latin7-blk-00002
+"
+20261115_115128,dxd-versions,old,exact_cover,latin7-blk-00003,data/benchmarks/exact_cover_set/latin7-blk-00003.ec,HybridDXD,HybridDXD,1,1,success,0.178879,0.304922,17280,,2,,123,90,0,,2026-11-15T15:38:10,"Instance: latin7-blk-00003
+启用HybridDXD算法求解: latin7-blk-00003
+rows: 123
+cols: 90
+设置并行线程数为: 1
+Time: 0.178879 s
+Solutions: 17280
+Max Blocks: 2
+HybridDXD算法求解结束: latin7-blk-00003
+"
+20261115_115128,dxd-versions,old,exact_cover,latin7-blk-00004,data/benchmarks/exact_cover_set/latin7-blk-00004.ec,HybridDXD,HybridDXD,1,1,success,0.199702,0.339174,19840,,2,,124,90,0,,2026-11-15T15:38:10,"Instance: latin7-blk-00004
+启用HybridDXD算法求解: latin7-blk-00004
+rows: 124
+cols: 90
+设置并行线程数为: 1
+Time: 0.199702 s
+Solutions: 19840
+Max Blocks: 2
+HybridDXD算法求解结束: latin7-blk-00004
+"
+20261115_115128,dxd-versions,old,exact_cover,latin7-blk-00005,data/benchmarks/exact_cover_set/latin7-blk-00005.ec,HybridDXD,HybridDXD,1,1,success,0.193324,0.328563,20480,,2,,124,90,0,,2026-11-15T15:38:11,"Instance: latin7-blk-00005
+启用HybridDXD算法求解: latin7-blk-00005
+rows: 124
+cols: 90
+设置并行线程数为: 1
+Time: 0.193324 s
+Solutions: 20480
+Max Blocks: 2
+HybridDXD算法求解结束: latin7-blk-00005
+"
+20261115_115128,dxd-versions,old,exact_cover,latin7-blk-00006,data/benchmarks/exact_cover_set/latin7-blk-00006.ec,HybridDXD,HybridDXD,1,1,success,0.237537,0.405230,29056,,1,,126,90,0,,2026-11-15T15:38:11,"Instance: latin7-blk-00006
+启用HybridDXD算法求解: latin7-blk-00006
+rows: 126
+cols: 90
+设置并行线程数为: 1
+Time: 0.237537 s
+Solutions: 29056
+Max Blocks: 1
+HybridDXD算法求解结束: latin7-blk-00006
+"
+20261115_115128,dxd-versions,old,exact_cover,latin7-blk-00007,data/benchmarks/exact_cover_set/latin7-blk-00007.ec,HybridDXD,HybridDXD,1,1,success,0.207374,0.352188,23616,,2,,125,90,0,,2026-11-15T15:38:11,"Instance: latin7-blk-00007
+启用HybridDXD算法求解: latin7-blk-00007
+rows: 125
+cols: 90
+设置并行线程数为: 1
+Time: 0.207374 s
+Solutions: 23616
+Max Blocks: 2
+HybridDXD算法求解结束: latin7-blk-00007
+"
+20261115_115128,dxd-versions,old,exact_cover,latin7-blk-00008,data/benchmarks/exact_cover_set/latin7-blk-00008.ec,HybridDXD,HybridDXD,1,1,success,0.226725,0.383346,27072,,2,,126,90,0,,2026-11-15T15:38:12,"Instance: latin7-blk-00008
+启用HybridDXD算法求解: latin7-blk-00008
+rows: 126
+cols: 90
+设置并行线程数为: 1
+Time: 0.226725 s
+Solutions: 27072
+Max Blocks: 2
+HybridDXD算法求解结束: latin7-blk-00008
+"
+20261115_115128,dxd-versions,old,exact_cover,latin7-blk-00009,data/benchmarks/exact_cover_set/latin7-blk-00009.ec,HybridDXD,HybridDXD,1,1,success,0.218978,0.371290,27776,,2,,126,90,0,,2026-11-15T15:38:12,"Instance: latin7-blk-00009
+启用HybridDXD算法求解: latin7-blk-00009
+rows: 126
+cols: 90
+设置并行线程数为: 1
+Time: 0.218978 s
+Solutions: 27776
+Max Blocks: 2
+HybridDXD算法求解结束: latin7-blk-00009
+"
+20261115_115128,dxd-versions,old,exact_cover,latin8-blk-00009,data/benchmarks/exact_cover_set/latin8-blk-00009.ec,HybridDXD,HybridDXD,1,1,timeout,1500.899947,1507.466438,,,,,215,126,0,exit=0; tail=Time: 1500.899947 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: latin8-blk-00009,2026-11-15T15:38:12,"Instance: latin8-blk-00009
+启用HybridDXD算法求解: latin8-blk-00009
+rows: 215
+cols: 126
+设置并行线程数为: 1
+Time: 1500.899947 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: latin8-blk-00009
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00001,data/benchmarks/exact_cover_set/sts15-blk-00001.ec,HybridDXD,HybridDXD,1,1,success,0.001995,0.020237,576,,2,,64,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00001
+启用HybridDXD算法求解: sts15-blk-00001
+rows: 64
+cols: 48
+设置并行线程数为: 1
+Time: 0.001995 s
+Solutions: 576
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00001
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00002,data/benchmarks/exact_cover_set/sts15-blk-00002.ec,HybridDXD,HybridDXD,1,1,success,0.001150,0.018977,288,,2,,72,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00002
+启用HybridDXD算法求解: sts15-blk-00002
+rows: 72
+cols: 48
+设置并行线程数为: 1
+Time: 0.001150 s
+Solutions: 288
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00002
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00003,data/benchmarks/exact_cover_set/sts15-blk-00003.ec,HybridDXD,HybridDXD,1,1,success,0.000907,0.019028,144,,2,,72,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00003
+启用HybridDXD算法求解: sts15-blk-00003
+rows: 72
+cols: 48
+设置并行线程数为: 1
+Time: 0.000907 s
+Solutions: 144
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00003
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00004,data/benchmarks/exact_cover_set/sts15-blk-00004.ec,HybridDXD,HybridDXD,1,1,success,0.000909,0.019094,144,,2,,72,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00004
+启用HybridDXD算法求解: sts15-blk-00004
+rows: 72
+cols: 48
+设置并行线程数为: 1
+Time: 0.000909 s
+Solutions: 144
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00004
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00006,data/benchmarks/exact_cover_set/sts15-blk-00006.ec,HybridDXD,HybridDXD,1,1,success,0.000660,0.018670,40,,2,,76,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00006
+启用HybridDXD算法求解: sts15-blk-00006
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000660 s
+Solutions: 40
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00006
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00007,data/benchmarks/exact_cover_set/sts15-blk-00007.ec,HybridDXD,HybridDXD,1,1,success,0.000456,0.018382,8,,2,,76,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00007
+启用HybridDXD算法求解: sts15-blk-00007
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000456 s
+Solutions: 8
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00007
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00008,data/benchmarks/exact_cover_set/sts15-blk-00008.ec,HybridDXD,HybridDXD,1,1,success,0.000652,0.018360,40,,2,,76,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00008
+启用HybridDXD算法求解: sts15-blk-00008
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000652 s
+Solutions: 40
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00008
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00009,data/benchmarks/exact_cover_set/sts15-blk-00009.ec,HybridDXD,HybridDXD,1,1,success,0.000480,0.018003,8,,2,,76,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00009
+启用HybridDXD算法求解: sts15-blk-00009
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000480 s
+Solutions: 8
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00009
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00010,data/benchmarks/exact_cover_set/sts15-blk-00010.ec,HybridDXD,HybridDXD,1,1,success,0.000914,0.018801,64,,2,,76,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00010
+启用HybridDXD算法求解: sts15-blk-00010
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000914 s
+Solutions: 64
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00010
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00011,data/benchmarks/exact_cover_set/sts15-blk-00011.ec,HybridDXD,HybridDXD,1,1,success,0.000447,0.018262,8,,3,,76,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00011
+启用HybridDXD算法求解: sts15-blk-00011
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000447 s
+Solutions: 8
+Max Blocks: 3
+HybridDXD算法求解结束: sts15-blk-00011
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00012,data/benchmarks/exact_cover_set/sts15-blk-00012.ec,HybridDXD,HybridDXD,1,1,success,0.000507,0.018529,16,,2,,76,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00012
+启用HybridDXD算法求解: sts15-blk-00012
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000507 s
+Solutions: 16
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00012
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00013,data/benchmarks/exact_cover_set/sts15-blk-00013.ec,HybridDXD,HybridDXD,1,1,success,0.000458,0.018213,8,,3,,76,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00013
+启用HybridDXD算法求解: sts15-blk-00013
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000458 s
+Solutions: 8
+Max Blocks: 3
+HybridDXD算法求解结束: sts15-blk-00013
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00017,data/benchmarks/exact_cover_set/sts15-blk-00017.ec,HybridDXD,HybridDXD,1,1,success,0.000449,0.018140,16,,2,,76,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00017
+启用HybridDXD算法求解: sts15-blk-00017
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000449 s
+Solutions: 16
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00017
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00018,data/benchmarks/exact_cover_set/sts15-blk-00018.ec,HybridDXD,HybridDXD,1,1,success,0.000523,0.018226,8,,2,,76,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00018
+启用HybridDXD算法求解: sts15-blk-00018
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000523 s
+Solutions: 8
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00018
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00019,data/benchmarks/exact_cover_set/sts15-blk-00019.ec,HybridDXD,HybridDXD,1,1,success,0.000604,0.018471,32,,1,,76,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00019
+启用HybridDXD算法求解: sts15-blk-00019
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000604 s
+Solutions: 32
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00019
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00020,data/benchmarks/exact_cover_set/sts15-blk-00020.ec,HybridDXD,HybridDXD,1,1,success,0.000732,0.018749,28,,2,,75,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00020
+启用HybridDXD算法求解: sts15-blk-00020
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000732 s
+Solutions: 28
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00020
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00021,data/benchmarks/exact_cover_set/sts15-blk-00021.ec,HybridDXD,HybridDXD,1,1,success,0.000843,0.018596,40,,3,,76,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00021
+启用HybridDXD算法求解: sts15-blk-00021
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000843 s
+Solutions: 40
+Max Blocks: 3
+HybridDXD算法求解结束: sts15-blk-00021
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00022,data/benchmarks/exact_cover_set/sts15-blk-00022.ec,HybridDXD,HybridDXD,1,1,success,0.000724,0.018447,24,,3,,74,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00022
+启用HybridDXD算法求解: sts15-blk-00022
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000724 s
+Solutions: 24
+Max Blocks: 3
+HybridDXD算法求解结束: sts15-blk-00022
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00023,data/benchmarks/exact_cover_set/sts15-blk-00023.ec,HybridDXD,HybridDXD,1,1,success,0.000689,0.019041,20,,1,,74,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00023
+启用HybridDXD算法求解: sts15-blk-00023
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000689 s
+Solutions: 20
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00023
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00024,data/benchmarks/exact_cover_set/sts15-blk-00024.ec,HybridDXD,HybridDXD,1,1,success,0.000512,0.018372,16,,1,,74,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00024
+启用HybridDXD算法求解: sts15-blk-00024
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000512 s
+Solutions: 16
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00024
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00025,data/benchmarks/exact_cover_set/sts15-blk-00025.ec,HybridDXD,HybridDXD,1,1,success,0.000708,0.018562,20,,2,,76,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00025
+启用HybridDXD算法求解: sts15-blk-00025
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000708 s
+Solutions: 20
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00025
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00026,data/benchmarks/exact_cover_set/sts15-blk-00026.ec,HybridDXD,HybridDXD,1,1,success,0.000853,0.018631,40,,2,,76,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00026
+启用HybridDXD算法求解: sts15-blk-00026
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000853 s
+Solutions: 40
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00026
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00027,data/benchmarks/exact_cover_set/sts15-blk-00027.ec,HybridDXD,HybridDXD,1,1,success,0.000816,0.018517,40,,1,,76,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00027
+启用HybridDXD算法求解: sts15-blk-00027
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000816 s
+Solutions: 40
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00027
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00028,data/benchmarks/exact_cover_set/sts15-blk-00028.ec,HybridDXD,HybridDXD,1,1,success,0.000635,0.017977,23,,2,,72,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00028
+启用HybridDXD算法求解: sts15-blk-00028
+rows: 72
+cols: 48
+设置并行线程数为: 1
+Time: 0.000635 s
+Solutions: 23
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00028
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00029,data/benchmarks/exact_cover_set/sts15-blk-00029.ec,HybridDXD,HybridDXD,1,1,success,0.000692,0.018374,16,,3,,74,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00029
+启用HybridDXD算法求解: sts15-blk-00029
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000692 s
+Solutions: 16
+Max Blocks: 3
+HybridDXD算法求解结束: sts15-blk-00029
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00030,data/benchmarks/exact_cover_set/sts15-blk-00030.ec,HybridDXD,HybridDXD,1,1,success,0.000727,0.018498,20,,2,,74,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00030
+启用HybridDXD算法求解: sts15-blk-00030
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000727 s
+Solutions: 20
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00030
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00031,data/benchmarks/exact_cover_set/sts15-blk-00031.ec,HybridDXD,HybridDXD,1,1,success,0.000738,0.018403,20,,2,,74,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00031
+启用HybridDXD算法求解: sts15-blk-00031
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000738 s
+Solutions: 20
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00031
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00032,data/benchmarks/exact_cover_set/sts15-blk-00032.ec,HybridDXD,HybridDXD,1,1,success,0.000692,0.018450,24,,2,,74,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00032
+启用HybridDXD算法求解: sts15-blk-00032
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000692 s
+Solutions: 24
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00032
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00033,data/benchmarks/exact_cover_set/sts15-blk-00033.ec,HybridDXD,HybridDXD,1,1,success,0.000574,0.018250,48,,1,,74,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00033
+启用HybridDXD算法求解: sts15-blk-00033
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000574 s
+Solutions: 48
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00033
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00034,data/benchmarks/exact_cover_set/sts15-blk-00034.ec,HybridDXD,HybridDXD,1,1,success,0.000670,0.018501,24,,2,,74,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00034
+启用HybridDXD算法求解: sts15-blk-00034
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000670 s
+Solutions: 24
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00034
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00035,data/benchmarks/exact_cover_set/sts15-blk-00035.ec,HybridDXD,HybridDXD,1,1,success,0.000826,0.018488,48,,2,,71,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00035
+启用HybridDXD算法求解: sts15-blk-00035
+rows: 71
+cols: 48
+设置并行线程数为: 1
+Time: 0.000826 s
+Solutions: 48
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00035
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00036,data/benchmarks/exact_cover_set/sts15-blk-00036.ec,HybridDXD,HybridDXD,1,1,success,0.000576,0.018283,16,,1,,75,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00036
+启用HybridDXD算法求解: sts15-blk-00036
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000576 s
+Solutions: 16
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00036
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00037,data/benchmarks/exact_cover_set/sts15-blk-00037.ec,HybridDXD,HybridDXD,1,1,success,0.000484,0.018252,8,,1,,76,48,0,,2026-11-15T16:03:20,"Instance: sts15-blk-00037
+启用HybridDXD算法求解: sts15-blk-00037
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000484 s
+Solutions: 8
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00037
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00038,data/benchmarks/exact_cover_set/sts15-blk-00038.ec,HybridDXD,HybridDXD,1,1,success,0.000485,0.018207,8,,2,,76,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00038
+启用HybridDXD算法求解: sts15-blk-00038
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000485 s
+Solutions: 8
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00038
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00039,data/benchmarks/exact_cover_set/sts15-blk-00039.ec,HybridDXD,HybridDXD,1,1,success,0.000678,0.018450,24,,2,,76,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00039
+启用HybridDXD算法求解: sts15-blk-00039
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000678 s
+Solutions: 24
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00039
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00040,data/benchmarks/exact_cover_set/sts15-blk-00040.ec,HybridDXD,HybridDXD,1,1,success,0.000720,0.018866,32,,2,,76,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00040
+启用HybridDXD算法求解: sts15-blk-00040
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000720 s
+Solutions: 32
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00040
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00042,data/benchmarks/exact_cover_set/sts15-blk-00042.ec,HybridDXD,HybridDXD,1,1,success,0.000713,0.018688,24,,2,,75,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00042
+启用HybridDXD算法求解: sts15-blk-00042
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000713 s
+Solutions: 24
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00042
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00043,data/benchmarks/exact_cover_set/sts15-blk-00043.ec,HybridDXD,HybridDXD,1,1,success,0.000623,0.018675,24,,1,,74,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00043
+启用HybridDXD算法求解: sts15-blk-00043
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000623 s
+Solutions: 24
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00043
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00044,data/benchmarks/exact_cover_set/sts15-blk-00044.ec,HybridDXD,HybridDXD,1,1,success,0.000667,0.018684,24,,2,,76,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00044
+启用HybridDXD算法求解: sts15-blk-00044
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000667 s
+Solutions: 24
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00044
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00045,data/benchmarks/exact_cover_set/sts15-blk-00045.ec,HybridDXD,HybridDXD,1,1,success,0.000704,0.018397,20,,2,,76,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00045
+启用HybridDXD算法求解: sts15-blk-00045
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000704 s
+Solutions: 20
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00045
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00046,data/benchmarks/exact_cover_set/sts15-blk-00046.ec,HybridDXD,HybridDXD,1,1,success,0.000572,0.018401,24,,2,,76,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00046
+启用HybridDXD算法求解: sts15-blk-00046
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000572 s
+Solutions: 24
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00046
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00047,data/benchmarks/exact_cover_set/sts15-blk-00047.ec,HybridDXD,HybridDXD,1,1,success,0.000557,0.018432,20,,1,,75,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00047
+启用HybridDXD算法求解: sts15-blk-00047
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000557 s
+Solutions: 20
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00047
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00048,data/benchmarks/exact_cover_set/sts15-blk-00048.ec,HybridDXD,HybridDXD,1,1,success,0.000666,0.018689,28,,2,,75,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00048
+启用HybridDXD算法求解: sts15-blk-00048
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000666 s
+Solutions: 28
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00048
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00050,data/benchmarks/exact_cover_set/sts15-blk-00050.ec,HybridDXD,HybridDXD,1,1,success,0.000577,0.018227,16,,2,,75,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00050
+启用HybridDXD算法求解: sts15-blk-00050
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000577 s
+Solutions: 16
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00050
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00053,data/benchmarks/exact_cover_set/sts15-blk-00053.ec,HybridDXD,HybridDXD,1,1,success,0.000829,0.018400,48,,1,,76,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00053
+启用HybridDXD算法求解: sts15-blk-00053
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000829 s
+Solutions: 48
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00053
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00054,data/benchmarks/exact_cover_set/sts15-blk-00054.ec,HybridDXD,HybridDXD,1,1,success,0.000720,0.018327,20,,2,,76,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00054
+启用HybridDXD算法求解: sts15-blk-00054
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000720 s
+Solutions: 20
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00054
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00055,data/benchmarks/exact_cover_set/sts15-blk-00055.ec,HybridDXD,HybridDXD,1,1,success,0.000678,0.018660,28,,1,,75,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00055
+启用HybridDXD算法求解: sts15-blk-00055
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000678 s
+Solutions: 28
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00055
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00056,data/benchmarks/exact_cover_set/sts15-blk-00056.ec,HybridDXD,HybridDXD,1,1,success,0.000597,0.018313,20,,1,,75,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00056
+启用HybridDXD算法求解: sts15-blk-00056
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000597 s
+Solutions: 20
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00056
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00057,data/benchmarks/exact_cover_set/sts15-blk-00057.ec,HybridDXD,HybridDXD,1,1,success,0.000718,0.018344,24,,2,,74,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00057
+启用HybridDXD算法求解: sts15-blk-00057
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000718 s
+Solutions: 24
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00057
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00058,data/benchmarks/exact_cover_set/sts15-blk-00058.ec,HybridDXD,HybridDXD,1,1,success,0.000490,0.018405,16,,1,,76,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00058
+启用HybridDXD算法求解: sts15-blk-00058
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000490 s
+Solutions: 16
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00058
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00059,data/benchmarks/exact_cover_set/sts15-blk-00059.ec,HybridDXD,HybridDXD,1,1,success,0.000728,0.018394,36,,2,,73,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00059
+启用HybridDXD算法求解: sts15-blk-00059
+rows: 73
+cols: 48
+设置并行线程数为: 1
+Time: 0.000728 s
+Solutions: 36
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00059
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00060,data/benchmarks/exact_cover_set/sts15-blk-00060.ec,HybridDXD,HybridDXD,1,1,success,0.000500,0.018201,16,,2,,73,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00060
+启用HybridDXD算法求解: sts15-blk-00060
+rows: 73
+cols: 48
+设置并行线程数为: 1
+Time: 0.000500 s
+Solutions: 16
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00060
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00061,data/benchmarks/exact_cover_set/sts15-blk-00061.ec,HybridDXD,HybridDXD,1,1,success,0.000526,0.018085,24,,3,,74,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00061
+启用HybridDXD算法求解: sts15-blk-00061
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000526 s
+Solutions: 24
+Max Blocks: 3
+HybridDXD算法求解结束: sts15-blk-00061
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00062,data/benchmarks/exact_cover_set/sts15-blk-00062.ec,HybridDXD,HybridDXD,1,1,success,0.000641,0.018204,24,,1,,74,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00062
+启用HybridDXD算法求解: sts15-blk-00062
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000641 s
+Solutions: 24
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00062
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00063,data/benchmarks/exact_cover_set/sts15-blk-00063.ec,HybridDXD,HybridDXD,1,1,success,0.001470,0.019217,191,,2,,68,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00063
+启用HybridDXD算法求解: sts15-blk-00063
+rows: 68
+cols: 48
+设置并行线程数为: 1
+Time: 0.001470 s
+Solutions: 191
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00063
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00064,data/benchmarks/exact_cover_set/sts15-blk-00064.ec,HybridDXD,HybridDXD,1,1,success,0.001620,0.019691,144,,2,,70,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00064
+启用HybridDXD算法求解: sts15-blk-00064
+rows: 70
+cols: 48
+设置并行线程数为: 1
+Time: 0.001620 s
+Solutions: 144
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00064
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00065,data/benchmarks/exact_cover_set/sts15-blk-00065.ec,HybridDXD,HybridDXD,1,1,success,0.001352,0.019404,96,,2,,71,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00065
+启用HybridDXD算法求解: sts15-blk-00065
+rows: 71
+cols: 48
+设置并行线程数为: 1
+Time: 0.001352 s
+Solutions: 96
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00065
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00066,data/benchmarks/exact_cover_set/sts15-blk-00066.ec,HybridDXD,HybridDXD,1,1,success,0.001111,0.018831,288,,2,,72,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00066
+启用HybridDXD算法求解: sts15-blk-00066
+rows: 72
+cols: 48
+设置并行线程数为: 1
+Time: 0.001111 s
+Solutions: 288
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00066
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00067,data/benchmarks/exact_cover_set/sts15-blk-00067.ec,HybridDXD,HybridDXD,1,1,success,0.000651,0.018648,24,,2,,72,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00067
+启用HybridDXD算法求解: sts15-blk-00067
+rows: 72
+cols: 48
+设置并行线程数为: 1
+Time: 0.000651 s
+Solutions: 24
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00067
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00068,data/benchmarks/exact_cover_set/sts15-blk-00068.ec,HybridDXD,HybridDXD,1,1,success,0.000718,0.018707,28,,1,,74,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00068
+启用HybridDXD算法求解: sts15-blk-00068
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000718 s
+Solutions: 28
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00068
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00069,data/benchmarks/exact_cover_set/sts15-blk-00069.ec,HybridDXD,HybridDXD,1,1,success,0.000646,0.018577,16,,2,,74,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00069
+启用HybridDXD算法求解: sts15-blk-00069
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000646 s
+Solutions: 16
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00069
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00070,data/benchmarks/exact_cover_set/sts15-blk-00070.ec,HybridDXD,HybridDXD,1,1,success,0.000692,0.018343,36,,2,,73,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00070
+启用HybridDXD算法求解: sts15-blk-00070
+rows: 73
+cols: 48
+设置并行线程数为: 1
+Time: 0.000692 s
+Solutions: 36
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00070
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00071,data/benchmarks/exact_cover_set/sts15-blk-00071.ec,HybridDXD,HybridDXD,1,1,success,0.000620,0.017937,20,,1,,75,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00071
+启用HybridDXD算法求解: sts15-blk-00071
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000620 s
+Solutions: 20
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00071
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00072,data/benchmarks/exact_cover_set/sts15-blk-00072.ec,HybridDXD,HybridDXD,1,1,success,0.000557,0.018163,16,,1,,75,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00072
+启用HybridDXD算法求解: sts15-blk-00072
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000557 s
+Solutions: 16
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00072
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00073,data/benchmarks/exact_cover_set/sts15-blk-00073.ec,HybridDXD,HybridDXD,1,1,success,0.000683,0.018255,20,,1,,74,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00073
+启用HybridDXD算法求解: sts15-blk-00073
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000683 s
+Solutions: 20
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00073
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00074,data/benchmarks/exact_cover_set/sts15-blk-00074.ec,HybridDXD,HybridDXD,1,1,success,0.000640,0.018645,16,,1,,75,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00074
+启用HybridDXD算法求解: sts15-blk-00074
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000640 s
+Solutions: 16
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00074
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00075,data/benchmarks/exact_cover_set/sts15-blk-00075.ec,HybridDXD,HybridDXD,1,1,success,0.000643,0.018250,20,,2,,75,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00075
+启用HybridDXD算法求解: sts15-blk-00075
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000643 s
+Solutions: 20
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00075
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00076,data/benchmarks/exact_cover_set/sts15-blk-00076.ec,HybridDXD,HybridDXD,1,1,success,0.000599,0.018302,16,,2,,75,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00076
+启用HybridDXD算法求解: sts15-blk-00076
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000599 s
+Solutions: 16
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00076
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00077,data/benchmarks/exact_cover_set/sts15-blk-00077.ec,HybridDXD,HybridDXD,1,1,success,0.000604,0.018568,19,,2,,74,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00077
+启用HybridDXD算法求解: sts15-blk-00077
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000604 s
+Solutions: 19
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00077
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00078,data/benchmarks/exact_cover_set/sts15-blk-00078.ec,HybridDXD,HybridDXD,1,1,success,0.000610,0.018308,19,,2,,73,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00078
+启用HybridDXD算法求解: sts15-blk-00078
+rows: 73
+cols: 48
+设置并行线程数为: 1
+Time: 0.000610 s
+Solutions: 19
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00078
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00079,data/benchmarks/exact_cover_set/sts15-blk-00079.ec,HybridDXD,HybridDXD,1,1,success,0.000724,0.018625,36,,2,,75,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00079
+启用HybridDXD算法求解: sts15-blk-00079
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000724 s
+Solutions: 36
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00079
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00080,data/benchmarks/exact_cover_set/sts15-blk-00080.ec,HybridDXD,HybridDXD,1,1,success,0.000711,0.018389,16,,2,,74,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00080
+启用HybridDXD算法求解: sts15-blk-00080
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000711 s
+Solutions: 16
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00080
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00081,data/benchmarks/exact_cover_set/sts15-blk-00081.ec,HybridDXD,HybridDXD,1,1,success,0.000746,0.018467,20,,2,,74,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00081
+启用HybridDXD算法求解: sts15-blk-00081
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000746 s
+Solutions: 20
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00081
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00082,data/benchmarks/exact_cover_set/sts15-blk-00082.ec,HybridDXD,HybridDXD,1,1,success,0.000711,0.018428,24,,2,,74,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00082
+启用HybridDXD算法求解: sts15-blk-00082
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000711 s
+Solutions: 24
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00082
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00084,data/benchmarks/exact_cover_set/sts15-blk-00084.ec,HybridDXD,HybridDXD,1,1,success,0.000727,0.018427,16,,2,,74,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00084
+启用HybridDXD算法求解: sts15-blk-00084
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000727 s
+Solutions: 16
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00084
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00085,data/benchmarks/exact_cover_set/sts15-blk-00085.ec,HybridDXD,HybridDXD,1,1,success,0.000610,0.018708,32,,2,,74,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00085
+启用HybridDXD算法求解: sts15-blk-00085
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000610 s
+Solutions: 32
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00085
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00086,data/benchmarks/exact_cover_set/sts15-blk-00086.ec,HybridDXD,HybridDXD,1,1,success,0.000580,0.018492,8,,1,,73,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00086
+启用HybridDXD算法求解: sts15-blk-00086
+rows: 73
+cols: 48
+设置并行线程数为: 1
+Time: 0.000580 s
+Solutions: 8
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00086
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00087,data/benchmarks/exact_cover_set/sts15-blk-00087.ec,HybridDXD,HybridDXD,1,1,success,0.000571,0.018616,48,,1,,74,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00087
+启用HybridDXD算法求解: sts15-blk-00087
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000571 s
+Solutions: 48
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00087
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00088,data/benchmarks/exact_cover_set/sts15-blk-00088.ec,HybridDXD,HybridDXD,1,1,success,0.000589,0.018402,16,,2,,73,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00088
+启用HybridDXD算法求解: sts15-blk-00088
+rows: 73
+cols: 48
+设置并行线程数为: 1
+Time: 0.000589 s
+Solutions: 16
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00088
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00089,data/benchmarks/exact_cover_set/sts15-blk-00089.ec,HybridDXD,HybridDXD,1,1,success,0.000688,0.018435,20,,2,,75,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00089
+启用HybridDXD算法求解: sts15-blk-00089
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000688 s
+Solutions: 20
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00089
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00090,data/benchmarks/exact_cover_set/sts15-blk-00090.ec,HybridDXD,HybridDXD,1,1,success,0.000584,0.018407,48,,1,,74,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00090
+启用HybridDXD算法求解: sts15-blk-00090
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000584 s
+Solutions: 48
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00090
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00091,data/benchmarks/exact_cover_set/sts15-blk-00091.ec,HybridDXD,HybridDXD,1,1,success,0.000691,0.018689,24,,2,,72,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00091
+启用HybridDXD算法求解: sts15-blk-00091
+rows: 72
+cols: 48
+设置并行线程数为: 1
+Time: 0.000691 s
+Solutions: 24
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00091
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00092,data/benchmarks/exact_cover_set/sts15-blk-00092.ec,HybridDXD,HybridDXD,1,1,success,0.000705,0.018535,24,,2,,74,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00092
+启用HybridDXD算法求解: sts15-blk-00092
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000705 s
+Solutions: 24
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00092
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00093,data/benchmarks/exact_cover_set/sts15-blk-00093.ec,HybridDXD,HybridDXD,1,1,success,0.000659,0.018655,32,,2,,70,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00093
+启用HybridDXD算法求解: sts15-blk-00093
+rows: 70
+cols: 48
+设置并行线程数为: 1
+Time: 0.000659 s
+Solutions: 32
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00093
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00094,data/benchmarks/exact_cover_set/sts15-blk-00094.ec,HybridDXD,HybridDXD,1,1,success,0.000521,0.018414,8,,1,,76,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00094
+启用HybridDXD算法求解: sts15-blk-00094
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000521 s
+Solutions: 8
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00094
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00095,data/benchmarks/exact_cover_set/sts15-blk-00095.ec,HybridDXD,HybridDXD,1,1,success,0.000514,0.018661,16,,2,,75,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00095
+启用HybridDXD算法求解: sts15-blk-00095
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000514 s
+Solutions: 16
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00095
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00096,data/benchmarks/exact_cover_set/sts15-blk-00096.ec,HybridDXD,HybridDXD,1,1,success,0.000548,0.018139,24,,2,,75,48,0,,2026-11-15T16:03:21,"Instance: sts15-blk-00096
+启用HybridDXD算法求解: sts15-blk-00096
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000548 s
+Solutions: 24
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00096
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00097,data/benchmarks/exact_cover_set/sts15-blk-00097.ec,HybridDXD,HybridDXD,1,1,success,0.000555,0.018333,12,,2,,74,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00097
+启用HybridDXD算法求解: sts15-blk-00097
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000555 s
+Solutions: 12
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00097
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00098,data/benchmarks/exact_cover_set/sts15-blk-00098.ec,HybridDXD,HybridDXD,1,1,success,0.000493,0.017991,24,,2,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00098
+启用HybridDXD算法求解: sts15-blk-00098
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000493 s
+Solutions: 24
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00098
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00099,data/benchmarks/exact_cover_set/sts15-blk-00099.ec,HybridDXD,HybridDXD,1,1,success,0.000543,0.018232,20,,2,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00099
+启用HybridDXD算法求解: sts15-blk-00099
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000543 s
+Solutions: 20
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00099
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00100,data/benchmarks/exact_cover_set/sts15-blk-00100.ec,HybridDXD,HybridDXD,1,1,success,0.000621,0.018316,28,,2,,75,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00100
+启用HybridDXD算法求解: sts15-blk-00100
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000621 s
+Solutions: 28
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00100
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00101,data/benchmarks/exact_cover_set/sts15-blk-00101.ec,HybridDXD,HybridDXD,1,1,success,0.000402,0.017953,20,,2,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00101
+启用HybridDXD算法求解: sts15-blk-00101
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000402 s
+Solutions: 20
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00101
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00102,data/benchmarks/exact_cover_set/sts15-blk-00102.ec,HybridDXD,HybridDXD,1,1,success,0.000684,0.018733,24,,1,,75,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00102
+启用HybridDXD算法求解: sts15-blk-00102
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000684 s
+Solutions: 24
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00102
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00103,data/benchmarks/exact_cover_set/sts15-blk-00103.ec,HybridDXD,HybridDXD,1,1,success,0.000432,0.018237,8,,1,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00103
+启用HybridDXD算法求解: sts15-blk-00103
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000432 s
+Solutions: 8
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00103
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00104,data/benchmarks/exact_cover_set/sts15-blk-00104.ec,HybridDXD,HybridDXD,1,1,success,0.000669,0.018342,20,,2,,75,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00104
+启用HybridDXD算法求解: sts15-blk-00104
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000669 s
+Solutions: 20
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00104
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00105,data/benchmarks/exact_cover_set/sts15-blk-00105.ec,HybridDXD,HybridDXD,1,1,success,0.000760,0.018328,24,,2,,75,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00105
+启用HybridDXD算法求解: sts15-blk-00105
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000760 s
+Solutions: 24
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00105
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00106,data/benchmarks/exact_cover_set/sts15-blk-00106.ec,HybridDXD,HybridDXD,1,1,success,0.000651,0.019188,20,,2,,75,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00106
+启用HybridDXD算法求解: sts15-blk-00106
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000651 s
+Solutions: 20
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00106
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00107,data/benchmarks/exact_cover_set/sts15-blk-00107.ec,HybridDXD,HybridDXD,1,1,success,0.000720,0.019139,24,,1,,75,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00107
+启用HybridDXD算法求解: sts15-blk-00107
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000720 s
+Solutions: 24
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00107
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00108,data/benchmarks/exact_cover_set/sts15-blk-00108.ec,HybridDXD,HybridDXD,1,1,success,0.000900,0.019007,64,,2,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00108
+启用HybridDXD算法求解: sts15-blk-00108
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000900 s
+Solutions: 64
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00108
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00109,data/benchmarks/exact_cover_set/sts15-blk-00109.ec,HybridDXD,HybridDXD,1,1,success,0.000706,0.018715,32,,1,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00109
+启用HybridDXD算法求解: sts15-blk-00109
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000706 s
+Solutions: 32
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00109
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00110,data/benchmarks/exact_cover_set/sts15-blk-00110.ec,HybridDXD,HybridDXD,1,1,success,0.000773,0.018973,47,,2,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00110
+启用HybridDXD算法求解: sts15-blk-00110
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000773 s
+Solutions: 47
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00110
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00111,data/benchmarks/exact_cover_set/sts15-blk-00111.ec,HybridDXD,HybridDXD,1,1,success,0.000736,0.018524,24,,2,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00111
+启用HybridDXD算法求解: sts15-blk-00111
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000736 s
+Solutions: 24
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00111
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00112,data/benchmarks/exact_cover_set/sts15-blk-00112.ec,HybridDXD,HybridDXD,1,1,success,0.000480,0.018594,16,,2,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00112
+启用HybridDXD算法求解: sts15-blk-00112
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000480 s
+Solutions: 16
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00112
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00115,data/benchmarks/exact_cover_set/sts15-blk-00115.ec,HybridDXD,HybridDXD,1,1,success,0.000676,0.018305,24,,2,,74,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00115
+启用HybridDXD算法求解: sts15-blk-00115
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000676 s
+Solutions: 24
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00115
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00116,data/benchmarks/exact_cover_set/sts15-blk-00116.ec,HybridDXD,HybridDXD,1,1,success,0.000591,0.018366,16,,1,,75,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00116
+启用HybridDXD算法求解: sts15-blk-00116
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000591 s
+Solutions: 16
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00116
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00119,data/benchmarks/exact_cover_set/sts15-blk-00119.ec,HybridDXD,HybridDXD,1,1,success,0.000472,0.018168,16,,2,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00119
+启用HybridDXD算法求解: sts15-blk-00119
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000472 s
+Solutions: 16
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00119
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00120,data/benchmarks/exact_cover_set/sts15-blk-00120.ec,HybridDXD,HybridDXD,1,1,success,0.000736,0.018476,24,,1,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00120
+启用HybridDXD算法求解: sts15-blk-00120
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000736 s
+Solutions: 24
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00120
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00121,data/benchmarks/exact_cover_set/sts15-blk-00121.ec,HybridDXD,HybridDXD,1,1,success,0.000597,0.018214,20,,2,,75,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00121
+启用HybridDXD算法求解: sts15-blk-00121
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000597 s
+Solutions: 20
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00121
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00125,data/benchmarks/exact_cover_set/sts15-blk-00125.ec,HybridDXD,HybridDXD,1,1,success,0.000504,0.018255,16,,2,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00125
+启用HybridDXD算法求解: sts15-blk-00125
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000504 s
+Solutions: 16
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00125
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00126,data/benchmarks/exact_cover_set/sts15-blk-00126.ec,HybridDXD,HybridDXD,1,1,success,0.000587,0.018219,24,,1,,74,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00126
+启用HybridDXD算法求解: sts15-blk-00126
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000587 s
+Solutions: 24
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00126
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00128,data/benchmarks/exact_cover_set/sts15-blk-00128.ec,HybridDXD,HybridDXD,1,1,success,0.000674,0.018417,24,,2,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00128
+启用HybridDXD算法求解: sts15-blk-00128
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000674 s
+Solutions: 24
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00128
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00129,data/benchmarks/exact_cover_set/sts15-blk-00129.ec,HybridDXD,HybridDXD,1,1,success,0.000780,0.018643,40,,2,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00129
+启用HybridDXD算法求解: sts15-blk-00129
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000780 s
+Solutions: 40
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00129
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00130,data/benchmarks/exact_cover_set/sts15-blk-00130.ec,HybridDXD,HybridDXD,1,1,success,0.000658,0.018477,12,,1,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00130
+启用HybridDXD算法求解: sts15-blk-00130
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000658 s
+Solutions: 12
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00130
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00131,data/benchmarks/exact_cover_set/sts15-blk-00131.ec,HybridDXD,HybridDXD,1,1,success,0.000691,0.018323,24,,2,,75,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00131
+启用HybridDXD算法求解: sts15-blk-00131
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000691 s
+Solutions: 24
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00131
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00132,data/benchmarks/exact_cover_set/sts15-blk-00132.ec,HybridDXD,HybridDXD,1,1,success,0.000765,0.018657,28,,2,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00132
+启用HybridDXD算法求解: sts15-blk-00132
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000765 s
+Solutions: 28
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00132
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00133,data/benchmarks/exact_cover_set/sts15-blk-00133.ec,HybridDXD,HybridDXD,1,1,success,0.000613,0.018005,20,,2,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00133
+启用HybridDXD算法求解: sts15-blk-00133
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000613 s
+Solutions: 20
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00133
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00134,data/benchmarks/exact_cover_set/sts15-blk-00134.ec,HybridDXD,HybridDXD,1,1,success,0.000807,0.018837,28,,2,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00134
+启用HybridDXD算法求解: sts15-blk-00134
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000807 s
+Solutions: 28
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00134
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00135,data/benchmarks/exact_cover_set/sts15-blk-00135.ec,HybridDXD,HybridDXD,1,1,success,0.000773,0.018578,28,,2,,73,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00135
+启用HybridDXD算法求解: sts15-blk-00135
+rows: 73
+cols: 48
+设置并行线程数为: 1
+Time: 0.000773 s
+Solutions: 28
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00135
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00136,data/benchmarks/exact_cover_set/sts15-blk-00136.ec,HybridDXD,HybridDXD,1,1,success,0.000514,0.018206,16,,1,,74,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00136
+启用HybridDXD算法求解: sts15-blk-00136
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000514 s
+Solutions: 16
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00136
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00137,data/benchmarks/exact_cover_set/sts15-blk-00137.ec,HybridDXD,HybridDXD,1,1,success,0.000698,0.018918,16,,2,,74,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00137
+启用HybridDXD算法求解: sts15-blk-00137
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000698 s
+Solutions: 16
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00137
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00138,data/benchmarks/exact_cover_set/sts15-blk-00138.ec,HybridDXD,HybridDXD,1,1,success,0.000676,0.018443,20,,1,,74,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00138
+启用HybridDXD算法求解: sts15-blk-00138
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000676 s
+Solutions: 20
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00138
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00140,data/benchmarks/exact_cover_set/sts15-blk-00140.ec,HybridDXD,HybridDXD,1,1,success,0.000892,0.018857,48,,2,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00140
+启用HybridDXD算法求解: sts15-blk-00140
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000892 s
+Solutions: 48
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00140
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00141,data/benchmarks/exact_cover_set/sts15-blk-00141.ec,HybridDXD,HybridDXD,1,1,success,0.000682,0.018088,20,,2,,75,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00141
+启用HybridDXD算法求解: sts15-blk-00141
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000682 s
+Solutions: 20
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00141
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00142,data/benchmarks/exact_cover_set/sts15-blk-00142.ec,HybridDXD,HybridDXD,1,1,success,0.000676,0.018156,20,,2,,74,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00142
+启用HybridDXD算法求解: sts15-blk-00142
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000676 s
+Solutions: 20
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00142
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00143,data/benchmarks/exact_cover_set/sts15-blk-00143.ec,HybridDXD,HybridDXD,1,1,success,0.000708,0.018449,16,,1,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00143
+启用HybridDXD算法求解: sts15-blk-00143
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000708 s
+Solutions: 16
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00143
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00144,data/benchmarks/exact_cover_set/sts15-blk-00144.ec,HybridDXD,HybridDXD,1,1,success,0.000698,0.018630,16,,2,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00144
+启用HybridDXD算法求解: sts15-blk-00144
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000698 s
+Solutions: 16
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00144
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00145,data/benchmarks/exact_cover_set/sts15-blk-00145.ec,HybridDXD,HybridDXD,1,1,success,0.000708,0.018923,24,,1,,74,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00145
+启用HybridDXD算法求解: sts15-blk-00145
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000708 s
+Solutions: 24
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00145
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00146,data/benchmarks/exact_cover_set/sts15-blk-00146.ec,HybridDXD,HybridDXD,1,1,success,0.000619,0.018317,28,,1,,75,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00146
+启用HybridDXD算法求解: sts15-blk-00146
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000619 s
+Solutions: 28
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00146
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00147,data/benchmarks/exact_cover_set/sts15-blk-00147.ec,HybridDXD,HybridDXD,1,1,success,0.000693,0.018820,28,,2,,74,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00147
+启用HybridDXD算法求解: sts15-blk-00147
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000693 s
+Solutions: 28
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00147
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00148,data/benchmarks/exact_cover_set/sts15-blk-00148.ec,HybridDXD,HybridDXD,1,1,success,0.000685,0.018817,28,,2,,74,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00148
+启用HybridDXD算法求解: sts15-blk-00148
+rows: 74
+cols: 48
+设置并行线程数为: 1
+Time: 0.000685 s
+Solutions: 28
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00148
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00149,data/benchmarks/exact_cover_set/sts15-blk-00149.ec,HybridDXD,HybridDXD,1,1,success,0.000682,0.018633,24,,2,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00149
+启用HybridDXD算法求解: sts15-blk-00149
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000682 s
+Solutions: 24
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00149
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00150,data/benchmarks/exact_cover_set/sts15-blk-00150.ec,HybridDXD,HybridDXD,1,1,success,0.000635,0.018508,16,,1,,73,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00150
+启用HybridDXD算法求解: sts15-blk-00150
+rows: 73
+cols: 48
+设置并行线程数为: 1
+Time: 0.000635 s
+Solutions: 16
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00150
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00151,data/benchmarks/exact_cover_set/sts15-blk-00151.ec,HybridDXD,HybridDXD,1,1,success,0.000626,0.018519,28,,1,,75,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00151
+启用HybridDXD算法求解: sts15-blk-00151
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000626 s
+Solutions: 28
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00151
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00152,data/benchmarks/exact_cover_set/sts15-blk-00152.ec,HybridDXD,HybridDXD,1,1,success,0.000700,0.018665,24,,2,,75,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00152
+启用HybridDXD算法求解: sts15-blk-00152
+rows: 75
+cols: 48
+设置并行线程数为: 1
+Time: 0.000700 s
+Solutions: 24
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00152
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00153,data/benchmarks/exact_cover_set/sts15-blk-00153.ec,HybridDXD,HybridDXD,1,1,success,0.001035,0.019148,64,,2,,72,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00153
+启用HybridDXD算法求解: sts15-blk-00153
+rows: 72
+cols: 48
+设置并行线程数为: 1
+Time: 0.001035 s
+Solutions: 64
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00153
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00154,data/benchmarks/exact_cover_set/sts15-blk-00154.ec,HybridDXD,HybridDXD,1,1,success,0.000957,0.018815,40,,2,,72,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00154
+启用HybridDXD算法求解: sts15-blk-00154
+rows: 72
+cols: 48
+设置并行线程数为: 1
+Time: 0.000957 s
+Solutions: 40
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00154
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00155,data/benchmarks/exact_cover_set/sts15-blk-00155.ec,HybridDXD,HybridDXD,1,1,success,0.000739,0.018869,40,,2,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00155
+启用HybridDXD算法求解: sts15-blk-00155
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000739 s
+Solutions: 40
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00155
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00156,data/benchmarks/exact_cover_set/sts15-blk-00156.ec,HybridDXD,HybridDXD,1,1,success,0.000479,0.018441,8,,1,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00156
+启用HybridDXD算法求解: sts15-blk-00156
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000479 s
+Solutions: 8
+Max Blocks: 1
+HybridDXD算法求解结束: sts15-blk-00156
+"
+20261115_115128,dxd-versions,old,exact_cover,sts15-blk-00157,data/benchmarks/exact_cover_set/sts15-blk-00157.ec,HybridDXD,HybridDXD,1,1,success,0.000649,0.018774,24,,2,,76,48,0,,2026-11-15T16:03:22,"Instance: sts15-blk-00157
+启用HybridDXD算法求解: sts15-blk-00157
+rows: 76
+cols: 48
+设置并行线程数为: 1
+Time: 0.000649 s
+Solutions: 24
+Max Blocks: 2
+HybridDXD算法求解结束: sts15-blk-00157
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00009,data/benchmarks/exact_cover_set/sts19-blk-00009.ec,HybridDXD,HybridDXD,1,1,timeout,1500.863271,1506.140611,,,,,262,96,0,exit=0; tail=Time: 1500.863271 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: sts19-blk-00009,2026-11-15T16:03:22,"Instance: sts19-blk-00009
+启用HybridDXD算法求解: sts19-blk-00009
+rows: 262
+cols: 96
+设置并行线程数为: 1
+Time: 1500.863271 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: sts19-blk-00009
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00033,data/benchmarks/exact_cover_set/sts19-blk-00033.ec,HybridDXD,HybridDXD,1,1,timeout,1500.866153,1506.313863,,,,,264,96,0,exit=0; tail=Time: 1500.866153 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: sts19-blk-00033,2026-11-15T16:28:29,"Instance: sts19-blk-00033
+启用HybridDXD算法求解: sts19-blk-00033
+rows: 264
+cols: 96
+设置并行线程数为: 1
+Time: 1500.866153 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: sts19-blk-00033
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00043,data/benchmarks/exact_cover_set/sts19-blk-00043.ec,HybridDXD,HybridDXD,1,1,timeout,1500.986325,1507.033065,,,,,270,96,0,exit=0; tail=Time: 1500.986325 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: sts19-blk-00043,2026-11-15T16:53:35,"Instance: sts19-blk-00043
+启用HybridDXD算法求解: sts19-blk-00043
+rows: 270
+cols: 96
+设置并行线程数为: 1
+Time: 1500.986325 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: sts19-blk-00043
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00044,data/benchmarks/exact_cover_set/sts19-blk-00044.ec,HybridDXD,HybridDXD,1,1,timeout,1501.096182,1507.179745,,,,,264,96,0,exit=0; tail=Time: 1501.096182 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: sts19-blk-00044,2026-11-15T17:18:42,"Instance: sts19-blk-00044
+启用HybridDXD算法求解: sts19-blk-00044
+rows: 264
+cols: 96
+设置并行线程数为: 1
+Time: 1501.096182 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: sts19-blk-00044
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00058,data/benchmarks/exact_cover_set/sts19-blk-00058.ec,HybridDXD,HybridDXD,1,1,timeout,1500.931230,1506.747470,,,,,268,96,0,exit=0; tail=Time: 1500.931230 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: sts19-blk-00058,2026-11-15T17:43:49,"Instance: sts19-blk-00058
+启用HybridDXD算法求解: sts19-blk-00058
+rows: 268
+cols: 96
+设置并行线程数为: 1
+Time: 1500.931230 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: sts19-blk-00058
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00060,data/benchmarks/exact_cover_set/sts19-blk-00060.ec,HybridDXD,HybridDXD,1,1,timeout,1501.045824,1507.195347,,,,,268,96,0,exit=0; tail=Time: 1501.045824 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: sts19-blk-00060,2026-11-15T18:08:56,"Instance: sts19-blk-00060
+启用HybridDXD算法求解: sts19-blk-00060
+rows: 268
+cols: 96
+设置并行线程数为: 1
+Time: 1501.045824 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: sts19-blk-00060
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00070,data/benchmarks/exact_cover_set/sts19-blk-00070.ec,HybridDXD,HybridDXD,1,1,timeout,1500.930296,1506.680081,,,,,270,96,0,exit=0; tail=Time: 1500.930296 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: sts19-blk-00070,2026-11-15T18:34:03,"Instance: sts19-blk-00070
+启用HybridDXD算法求解: sts19-blk-00070
+rows: 270
+cols: 96
+设置并行线程数为: 1
+Time: 1500.930296 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: sts19-blk-00070
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00075,data/benchmarks/exact_cover_set/sts19-blk-00075.ec,HybridDXD,HybridDXD,1,1,timeout,1501.155150,1506.982584,,,,,272,96,0,exit=0; tail=Time: 1501.155150 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: sts19-blk-00075,2026-11-15T18:59:10,"Instance: sts19-blk-00075
+启用HybridDXD算法求解: sts19-blk-00075
+rows: 272
+cols: 96
+设置并行线程数为: 1
+Time: 1501.155150 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: sts19-blk-00075
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00076,data/benchmarks/exact_cover_set/sts19-blk-00076.ec,HybridDXD,HybridDXD,1,1,timeout,1501.129063,1507.140062,,,,,272,96,0,exit=0; tail=Time: 1501.129063 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: sts19-blk-00076,2026-11-15T19:24:17,"Instance: sts19-blk-00076
+启用HybridDXD算法求解: sts19-blk-00076
+rows: 272
+cols: 96
+设置并行线程数为: 1
+Time: 1501.129063 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: sts19-blk-00076
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00077,data/benchmarks/exact_cover_set/sts19-blk-00077.ec,HybridDXD,HybridDXD,1,1,timeout,1500.942556,1506.705463,,,,,272,96,0,exit=0; tail=Time: 1500.942556 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: sts19-blk-00077,2026-11-15T19:49:24,"Instance: sts19-blk-00077
+启用HybridDXD算法求解: sts19-blk-00077
+rows: 272
+cols: 96
+设置并行线程数为: 1
+Time: 1500.942556 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: sts19-blk-00077
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00078,data/benchmarks/exact_cover_set/sts19-blk-00078.ec,HybridDXD,HybridDXD,1,1,timeout,1501.290271,1508.098668,,,,,272,96,0,exit=0; tail=Time: 1501.290271 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: sts19-blk-00078,2026-11-15T20:14:31,"Instance: sts19-blk-00078
+启用HybridDXD算法求解: sts19-blk-00078
+rows: 272
+cols: 96
+设置并行线程数为: 1
+Time: 1501.290271 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: sts19-blk-00078
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00108,data/benchmarks/exact_cover_set/sts19-blk-00108.ec,HybridDXD,HybridDXD,1,1,timeout,1501.287140,1508.218761,,,,,272,96,0,exit=0; tail=Time: 1501.287140 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: sts19-blk-00108,2026-11-15T20:39:39,"Instance: sts19-blk-00108
+启用HybridDXD算法求解: sts19-blk-00108
+rows: 272
+cols: 96
+设置并行线程数为: 1
+Time: 1501.287140 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: sts19-blk-00108
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00120,data/benchmarks/exact_cover_set/sts19-blk-00120.ec,HybridDXD,HybridDXD,1,1,timeout,1501.327979,1508.267750,,,,,272,96,0,exit=0; tail=Time: 1501.327979 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: sts19-blk-00120,2026-11-15T21:04:47,"Instance: sts19-blk-00120
+启用HybridDXD算法求解: sts19-blk-00120
+rows: 272
+cols: 96
+设置并行线程数为: 1
+Time: 1501.327979 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: sts19-blk-00120
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00140,data/benchmarks/exact_cover_set/sts19-blk-00140.ec,HybridDXD,HybridDXD,1,1,timeout,1501.100257,1508.297014,,,,,272,96,0,exit=0; tail=Time: 1501.100257 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: sts19-blk-00140,2026-11-15T21:29:55,"Instance: sts19-blk-00140
+启用HybridDXD算法求解: sts19-blk-00140
+rows: 272
+cols: 96
+设置并行线程数为: 1
+Time: 1501.100257 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: sts19-blk-00140
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00150,data/benchmarks/exact_cover_set/sts19-blk-00150.ec,HybridDXD,HybridDXD,1,1,timeout,1501.433091,1508.219018,,,,,272,96,0,exit=0; tail=Time: 1501.433091 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: sts19-blk-00150,2026-11-15T21:55:03,"Instance: sts19-blk-00150
+启用HybridDXD算法求解: sts19-blk-00150
+rows: 272
+cols: 96
+设置并行线程数为: 1
+Time: 1501.433091 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: sts19-blk-00150
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00162,data/benchmarks/exact_cover_set/sts19-blk-00162.ec,HybridDXD,HybridDXD,1,1,timeout,1500.948844,1506.863986,,,,,272,96,0,exit=0; tail=Time: 1500.948844 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: sts19-blk-00162,2026-11-15T22:20:12,"Instance: sts19-blk-00162
+启用HybridDXD算法求解: sts19-blk-00162
+rows: 272
+cols: 96
+设置并行线程数为: 1
+Time: 1500.948844 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: sts19-blk-00162
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00165,data/benchmarks/exact_cover_set/sts19-blk-00165.ec,HybridDXD,HybridDXD,1,1,timeout,1501.074366,1507.980467,,,,,272,96,0,exit=0; tail=Time: 1501.074366 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: sts19-blk-00165,2026-11-15T22:45:19,"Instance: sts19-blk-00165
+启用HybridDXD算法求解: sts19-blk-00165
+rows: 272
+cols: 96
+设置并行线程数为: 1
+Time: 1501.074366 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: sts19-blk-00165
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00184,data/benchmarks/exact_cover_set/sts19-blk-00184.ec,HybridDXD,HybridDXD,1,1,timeout,1501.045971,1507.703403,,,,,264,96,0,exit=0; tail=Time: 1501.045971 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: sts19-blk-00184,2026-11-15T23:10:27,"Instance: sts19-blk-00184
+启用HybridDXD算法求解: sts19-blk-00184
+rows: 264
+cols: 96
+设置并行线程数为: 1
+Time: 1501.045971 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: sts19-blk-00184
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00190,data/benchmarks/exact_cover_set/sts19-blk-00190.ec,HybridDXD,HybridDXD,1,1,timeout,1501.281072,1506.784963,,,,,268,96,0,exit=0; tail=Time: 1501.281072 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: sts19-blk-00190,2026-11-15T23:35:34,"Instance: sts19-blk-00190
+启用HybridDXD算法求解: sts19-blk-00190
+rows: 268
+cols: 96
+设置并行线程数为: 1
+Time: 1501.281072 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: sts19-blk-00190
+"
+20261115_115128,dxd-versions,old,exact_cover,sts19-blk-00199,data/benchmarks/exact_cover_set/sts19-blk-00199.ec,HybridDXD,HybridDXD,1,1,timeout,1501.036836,1507.491701,,,,,268,96,0,exit=0; tail=Time: 1501.036836 s HybridDXD搜索超时: Time bound broken HybridDXD算法求解结束: sts19-blk-00199,2026-11-16T00:00:41,"Instance: sts19-blk-00199
+启用HybridDXD算法求解: sts19-blk-00199
+rows: 268
+cols: 96
+设置并行线程数为: 1
+Time: 1501.036836 s
+HybridDXD搜索超时: Time bound broken
+HybridDXD算法求解结束: sts19-blk-00199
+"
+20261115_115128,dxd-versions,new,rome3,grafo10028.96,data/benchmarks/rome3_matrices/matrices/grafo10028.96.txt,HybridDXD,HybridDXD,1,1,success,537.121233,549.194753,0,,54,,194268,852,0,,2026-11-16T00:25:49,"Instance: grafo10028.96
+启用HybridDXD算法求解: grafo10028.96
+rows: 194268
+cols: 852
+设置并行线程数为: 1
+Time: 537.121233 s
+Solutions: 0
+Max Blocks: 54
+HybridDXD算法求解结束: grafo10028.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10050.97,data/benchmarks/rome3_matrices/matrices/grafo10050.97.txt,HybridDXD,HybridDXD,1,1,memout,,640.047844,,,,,179230,785,1,exit=1; tail=cols: 785 设置并行线程数为: 1 错误：std::bad_alloc,2026-11-16T00:34:58,"Instance: grafo10050.97
+启用HybridDXD算法求解: grafo10050.97
+rows: 179230
+cols: 785
+设置并行线程数为: 1
+错误：std::bad_alloc
+"
+20261115_115128,dxd-versions,new,rome3,grafo10061.99,data/benchmarks/rome3_matrices/matrices/grafo10061.99.txt,HybridDXD,HybridDXD,1,1,success,626.824970,636.942279,0,,50,,188650,805,0,,2026-11-16T00:45:38,"Instance: grafo10061.99
+启用HybridDXD算法求解: grafo10061.99
+rows: 188650
+cols: 805
+设置并行线程数为: 1
+Time: 626.824970 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10061.99
+"
+20261115_115128,dxd-versions,new,rome3,grafo10091.96,data/benchmarks/rome3_matrices/matrices/grafo10091.96.txt,HybridDXD,HybridDXD,1,1,memout,,600.567947,,,,,185145,790,1,exit=1; tail=cols: 790 设置并行线程数为: 1 错误：std::bad_alloc,2026-11-16T00:56:15,"Instance: grafo10091.96
+启用HybridDXD算法求解: grafo10091.96
+rows: 185145
+cols: 790
+设置并行线程数为: 1
+错误：std::bad_alloc
+"
+20261115_115128,dxd-versions,new,rome3,grafo10092.97,data/benchmarks/rome3_matrices/matrices/grafo10092.97.txt,HybridDXD,HybridDXD,1,1,success,633.860441,643.558719,0,,50,,171575,770,0,,2026-11-16T01:06:15,"Instance: grafo10092.97
+启用HybridDXD算法求解: grafo10092.97
+rows: 171575
+cols: 770
+设置并行线程数为: 1
+Time: 633.860441 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10092.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10095.93,data/benchmarks/rome3_matrices/matrices/grafo10095.93.txt,HybridDXD,HybridDXD,1,1,success,317.528453,322.350650,6.747e+514,,60,,188100,882,0,,2026-11-16T01:16:59,"Instance: grafo10095.93
+启用HybridDXD算法求解: grafo10095.93
+rows: 188100
+cols: 882
+设置并行线程数为: 1
+Time: 317.528453 s
+Solutions (scientific): 6.747e+514
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10095.93
+"
+20261115_115128,dxd-versions,new,rome3,grafo10098.95,data/benchmarks/rome3_matrices/matrices/grafo10098.95.txt,HybridDXD,HybridDXD,1,1,success,616.562287,626.505216,0,,60,,196782,894,0,,2026-11-16T01:22:21,"Instance: grafo10098.95
+启用HybridDXD算法求解: grafo10098.95
+rows: 196782
+cols: 894
+设置并行线程数为: 1
+Time: 616.562287 s
+Solutions: 0
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10098.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10101.92,data/benchmarks/rome3_matrices/matrices/grafo10101.92.txt,HybridDXD,HybridDXD,1,1,error,,630.199979,,,,,190218,888,-11,exit=-11; tail=rows: 190218 cols: 888 设置并行线程数为: 1,2026-11-16T01:32:48,"Instance: grafo10101.92
+启用HybridDXD算法求解: grafo10101.92
+rows: 190218
+cols: 888
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10102.97,data/benchmarks/rome3_matrices/matrices/grafo10102.97.txt,HybridDXD,HybridDXD,1,1,success,461.212359,471.131407,0,,50,,182410,795,0,,2026-11-16T01:43:18,"Instance: grafo10102.97
+启用HybridDXD算法求解: grafo10102.97
+rows: 182410
+cols: 795
+设置并行线程数为: 1
+Time: 461.212359 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10102.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10103.98,data/benchmarks/rome3_matrices/matrices/grafo10103.98.txt,HybridDXD,HybridDXD,1,1,success,246.833282,250.688892,1.989e+440,,50,,162180,750,0,,2026-11-16T01:51:09,"Instance: grafo10103.98
+启用HybridDXD算法求解: grafo10103.98
+rows: 162180
+cols: 750
+设置并行线程数为: 1
+Time: 246.833282 s
+Solutions (scientific): 1.989e+440
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10103.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10104.96,data/benchmarks/rome3_matrices/matrices/grafo10104.96.txt,HybridDXD,HybridDXD,1,1,success,656.522887,666.136836,0,,50,,161585,750,0,,2026-11-16T01:55:20,"Instance: grafo10104.96
+启用HybridDXD算法求解: grafo10104.96
+rows: 161585
+cols: 750
+设置并行线程数为: 1
+Time: 656.522887 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10104.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10106.100,data/benchmarks/rome3_matrices/matrices/grafo10106.100.txt,HybridDXD,HybridDXD,1,1,success,635.967657,645.258512,0,,50,,187770,805,0,,2026-11-16T02:06:26,"Instance: grafo10106.100
+启用HybridDXD算法求解: grafo10106.100
+rows: 187770
+cols: 805
+设置并行线程数为: 1
+Time: 635.967657 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10106.100
+"
+20261115_115128,dxd-versions,new,rome3,grafo10107.93,data/benchmarks/rome3_matrices/matrices/grafo10107.93.txt,HybridDXD,HybridDXD,1,1,success,624.411349,634.187652,0,,50,,165340,755,0,,2026-11-16T02:17:11,"Instance: grafo10107.93
+启用HybridDXD算法求解: grafo10107.93
+rows: 165340
+cols: 755
+设置并行线程数为: 1
+Time: 624.411349 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10107.93
+"
+20261115_115128,dxd-versions,new,rome3,grafo10111.96,data/benchmarks/rome3_matrices/matrices/grafo10111.96.txt,HybridDXD,HybridDXD,1,1,success,306.160283,310.555721,1.951e+440,,50,,166835,750,0,,2026-11-16T02:27:45,"Instance: grafo10111.96
+启用HybridDXD算法求解: grafo10111.96
+rows: 166835
+cols: 750
+设置并行线程数为: 1
+Time: 306.160283 s
+Solutions (scientific): 1.951e+440
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10111.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10117.98,data/benchmarks/rome3_matrices/matrices/grafo10117.98.txt,HybridDXD,HybridDXD,1,1,success,496.693073,503.295158,2.316e+444,,50,,163690,755,0,,2026-11-16T02:32:56,"Instance: grafo10117.98
+启用HybridDXD算法求解: grafo10117.98
+rows: 163690
+cols: 755
+设置并行线程数为: 1
+Time: 496.693073 s
+Solutions (scientific): 2.316e+444
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10117.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10120.96,data/benchmarks/rome3_matrices/matrices/grafo10120.96.txt,HybridDXD,HybridDXD,1,1,success,599.346537,609.719076,0,,50,,168040,760,0,,2026-11-16T02:41:19,"Instance: grafo10120.96
+启用HybridDXD算法求解: grafo10120.96
+rows: 168040
+cols: 760
+设置并行线程数为: 1
+Time: 599.346537 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10120.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10121.95,data/benchmarks/rome3_matrices/matrices/grafo10121.95.txt,HybridDXD,HybridDXD,1,1,success,608.617083,618.263564,0,,50,,185910,795,0,,2026-11-16T02:51:29,"Instance: grafo10121.95
+启用HybridDXD算法求解: grafo10121.95
+rows: 185910
+cols: 795
+设置并行线程数为: 1
+Time: 608.617083 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10121.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10128.98,data/benchmarks/rome3_matrices/matrices/grafo10128.98.txt,HybridDXD,HybridDXD,1,1,success,612.422665,622.018996,0,,50,,186075,800,0,,2026-11-16T03:01:47,"Instance: grafo10128.98
+启用HybridDXD算法求解: grafo10128.98
+rows: 186075
+cols: 800
+设置并行线程数为: 1
+Time: 612.422665 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10128.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10132.97,data/benchmarks/rome3_matrices/matrices/grafo10132.97.txt,HybridDXD,HybridDXD,1,1,success,462.805887,469.436625,2.092e+448,,50,,167505,760,0,,2026-11-16T03:12:09,"Instance: grafo10132.97
+启用HybridDXD算法求解: grafo10132.97
+rows: 167505
+cols: 760
+设置并行线程数为: 1
+Time: 462.805887 s
+Solutions (scientific): 2.092e+448
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10132.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10144.98,data/benchmarks/rome3_matrices/matrices/grafo10144.98.txt,HybridDXD,HybridDXD,1,1,success,404.717389,410.448856,9.161e+451,,50,,169965,765,0,,2026-11-16T03:19:59,"Instance: grafo10144.98
+启用HybridDXD算法求解: grafo10144.98
+rows: 169965
+cols: 765
+设置并行线程数为: 1
+Time: 404.717389 s
+Solutions (scientific): 9.161e+451
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10144.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10145.94,data/benchmarks/rome3_matrices/matrices/grafo10145.94.txt,HybridDXD,HybridDXD,1,1,memout,,606.179213,,,,,178540,785,1,exit=1; tail=cols: 785 设置并行线程数为: 1 错误：std::bad_alloc,2026-11-16T03:26:49,"Instance: grafo10145.94
+启用HybridDXD算法求解: grafo10145.94
+rows: 178540
+cols: 785
+设置并行线程数为: 1
+错误：std::bad_alloc
+"
+20261115_115128,dxd-versions,new,rome3,grafo10148.97,data/benchmarks/rome3_matrices/matrices/grafo10148.97.txt,HybridDXD,HybridDXD,1,1,error,,628.792193,,,,,169835,765,-11,exit=-11; tail=rows: 169835 cols: 765 设置并行线程数为: 1,2026-11-16T03:36:55,"Instance: grafo10148.97
+启用HybridDXD算法求解: grafo10148.97
+rows: 169835
+cols: 765
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10149.95,data/benchmarks/rome3_matrices/matrices/grafo10149.95.txt,HybridDXD,HybridDXD,1,1,success,586.783020,596.891766,0,,60,,184488,870,0,,2026-11-16T03:47:24,"Instance: grafo10149.95
+启用HybridDXD算法求解: grafo10149.95
+rows: 184488
+cols: 870
+设置并行线程数为: 1
+Time: 586.783020 s
+Solutions: 0
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10149.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10150.95,data/benchmarks/rome3_matrices/matrices/grafo10150.95.txt,HybridDXD,HybridDXD,1,1,success,630.972126,640.630469,0,,50,,162895,750,0,,2026-11-16T03:57:21,"Instance: grafo10150.95
+启用HybridDXD算法求解: grafo10150.95
+rows: 162895
+cols: 750
+设置并行线程数为: 1
+Time: 630.972126 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10150.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10166.98,data/benchmarks/rome3_matrices/matrices/grafo10166.98.txt,HybridDXD,HybridDXD,1,1,success,256.369718,260.454673,4.232e+500,,60,,184728,864,0,,2026-11-16T04:08:02,"Instance: grafo10166.98
+启用HybridDXD算法求解: grafo10166.98
+rows: 184728
+cols: 864
+设置并行线程数为: 1
+Time: 256.369718 s
+Solutions (scientific): 4.232e+500
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10166.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10167.96,data/benchmarks/rome3_matrices/matrices/grafo10167.96.txt,HybridDXD,HybridDXD,1,1,success,563.759447,574.053176,0,,50,,189110,805,0,,2026-11-16T04:12:22,"Instance: grafo10167.96
+启用HybridDXD算法求解: grafo10167.96
+rows: 189110
+cols: 805
+设置并行线程数为: 1
+Time: 563.759447 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10167.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10172.99,data/benchmarks/rome3_matrices/matrices/grafo10172.99.txt,HybridDXD,HybridDXD,1,1,success,633.523761,643.300728,0,,54,,205308,870,0,,2026-11-16T04:21:56,"Instance: grafo10172.99
+启用HybridDXD算法求解: grafo10172.99
+rows: 205308
+cols: 870
+设置并行线程数为: 1
+Time: 633.523761 s
+Solutions: 0
+Max Blocks: 54
+HybridDXD算法求解结束: grafo10172.99
+"
+20261115_115128,dxd-versions,new,rome3,grafo10174.95,data/benchmarks/rome3_matrices/matrices/grafo10174.95.txt,HybridDXD,HybridDXD,1,1,success,532.802820,544.768379,0,,50,,165790,760,0,,2026-11-16T04:32:39,"Instance: grafo10174.95
+启用HybridDXD算法求解: grafo10174.95
+rows: 165790
+cols: 760
+设置并行线程数为: 1
+Time: 532.802820 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10174.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10180.98,data/benchmarks/rome3_matrices/matrices/grafo10180.98.txt,HybridDXD,HybridDXD,1,1,success,575.130281,583.032962,1.682e+471,,50,,179810,790,0,,2026-11-16T04:41:44,"Instance: grafo10180.98
+启用HybridDXD算法求解: grafo10180.98
+rows: 179810
+cols: 790
+设置并行线程数为: 1
+Time: 575.130281 s
+Solutions (scientific): 1.682e+471
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10180.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10183.100,data/benchmarks/rome3_matrices/matrices/grafo10183.100.txt,HybridDXD,HybridDXD,1,1,success,619.179255,628.738468,0,,50,,193950,815,0,,2026-11-16T04:51:27,"Instance: grafo10183.100
+启用HybridDXD算法求解: grafo10183.100
+rows: 193950
+cols: 815
+设置并行线程数为: 1
+Time: 619.179255 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10183.100
+"
+20261115_115128,dxd-versions,new,rome3,grafo10194.97,data/benchmarks/rome3_matrices/matrices/grafo10194.97.txt,HybridDXD,HybridDXD,1,1,success,588.125953,595.937307,3.101e+444,,50,,163720,755,0,,2026-11-16T05:01:56,"Instance: grafo10194.97
+启用HybridDXD算法求解: grafo10194.97
+rows: 163720
+cols: 755
+设置并行线程数为: 1
+Time: 588.125953 s
+Solutions (scientific): 3.101e+444
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10194.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10197.96,data/benchmarks/rome3_matrices/matrices/grafo10197.96.txt,HybridDXD,HybridDXD,1,1,success,410.408273,416.292547,4.520e+514,,60,,193482,882,0,,2026-11-16T05:11:52,"Instance: grafo10197.96
+启用HybridDXD算法求解: grafo10197.96
+rows: 193482
+cols: 882
+设置并行线程数为: 1
+Time: 410.408273 s
+Solutions (scientific): 4.520e+514
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10197.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10206.97,data/benchmarks/rome3_matrices/matrices/grafo10206.97.txt,HybridDXD,HybridDXD,1,1,success,588.345805,598.785809,0,,50,,183945,800,0,,2026-11-16T05:18:48,"Instance: grafo10206.97
+启用HybridDXD算法求解: grafo10206.97
+rows: 183945
+cols: 800
+设置并行线程数为: 1
+Time: 588.345805 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10206.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10208.98,data/benchmarks/rome3_matrices/matrices/grafo10208.98.txt,HybridDXD,HybridDXD,1,1,success,597.187469,606.791311,0,,50,,176110,785,0,,2026-11-16T05:28:47,"Instance: grafo10208.98
+启用HybridDXD算法求解: grafo10208.98
+rows: 176110
+cols: 785
+设置并行线程数为: 1
+Time: 597.187469 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10208.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10213.99,data/benchmarks/rome3_matrices/matrices/grafo10213.99.txt,HybridDXD,HybridDXD,1,1,success,323.898645,328.734471,1.242e+444,,50,,166975,755,0,,2026-11-16T05:38:54,"Instance: grafo10213.99
+启用HybridDXD算法求解: grafo10213.99
+rows: 166975
+cols: 755
+设置并行线程数为: 1
+Time: 323.898645 s
+Solutions (scientific): 1.242e+444
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10213.99
+"
+20261115_115128,dxd-versions,new,rome3,grafo10217.99,data/benchmarks/rome3_matrices/matrices/grafo10217.99.txt,HybridDXD,HybridDXD,1,1,success,565.279550,575.465158,0,,50,,185925,800,0,,2026-11-16T05:44:22,"Instance: grafo10217.99
+启用HybridDXD算法求解: grafo10217.99
+rows: 185925
+cols: 800
+设置并行线程数为: 1
+Time: 565.279550 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10217.99
+"
+20261115_115128,dxd-versions,new,rome3,grafo10224.95,data/benchmarks/rome3_matrices/matrices/grafo10224.95.txt,HybridDXD,HybridDXD,1,1,success,596.226249,606.225054,0,,50,,186985,795,0,,2026-11-16T05:53:58,"Instance: grafo10224.95
+启用HybridDXD算法求解: grafo10224.95
+rows: 186985
+cols: 795
+设置并行线程数为: 1
+Time: 596.226249 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10224.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10225.99,data/benchmarks/rome3_matrices/matrices/grafo10225.99.txt,HybridDXD,HybridDXD,1,1,error,,622.901134,,,,,178000,775,-11,exit=-11; tail=rows: 178000 cols: 775 设置并行线程数为: 1,2026-11-16T06:04:04,"Instance: grafo10225.99
+启用HybridDXD算法求解: grafo10225.99
+rows: 178000
+cols: 775
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10227.96,data/benchmarks/rome3_matrices/matrices/grafo10227.96.txt,HybridDXD,HybridDXD,1,1,success,586.876954,597.107114,0,,50,,170575,765,0,,2026-11-16T06:14:27,"Instance: grafo10227.96
+启用HybridDXD算法求解: grafo10227.96
+rows: 170575
+cols: 765
+设置并行线程数为: 1
+Time: 586.876954 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10227.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10228.95,data/benchmarks/rome3_matrices/matrices/grafo10228.95.txt,HybridDXD,HybridDXD,1,1,success,490.494681,497.217288,2.269e+471,,50,,180790,790,0,,2026-11-16T06:24:24,"Instance: grafo10228.95
+启用HybridDXD算法求解: grafo10228.95
+rows: 180790
+cols: 790
+设置并行线程数为: 1
+Time: 490.494681 s
+Solutions (scientific): 2.269e+471
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10228.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10240.97,data/benchmarks/rome3_matrices/matrices/grafo10240.97.txt,HybridDXD,HybridDXD,1,1,success,300.842034,305.330763,1.348e+483,,60,,170148,840,0,,2026-11-16T06:32:41,"Instance: grafo10240.97
+启用HybridDXD算法求解: grafo10240.97
+rows: 170148
+cols: 840
+设置并行线程数为: 1
+Time: 300.842034 s
+Solutions (scientific): 1.348e+483
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10240.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10243.95,data/benchmarks/rome3_matrices/matrices/grafo10243.95.txt,HybridDXD,HybridDXD,1,1,success,417.814515,423.698815,5.177e+514,,60,,192816,882,0,,2026-11-16T06:37:47,"Instance: grafo10243.95
+启用HybridDXD算法求解: grafo10243.95
+rows: 192816
+cols: 882
+设置并行线程数为: 1
+Time: 417.814515 s
+Solutions (scientific): 5.177e+514
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10243.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10246.96,data/benchmarks/rome3_matrices/matrices/grafo10246.96.txt,HybridDXD,HybridDXD,1,1,success,358.578524,363.975283,3.956e+523,,60,,195966,894,0,,2026-11-16T06:44:50,"Instance: grafo10246.96
+启用HybridDXD算法求解: grafo10246.96
+rows: 195966
+cols: 894
+设置并行线程数为: 1
+Time: 358.578524 s
+Solutions (scientific): 3.956e+523
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10246.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10248.100,data/benchmarks/rome3_matrices/matrices/grafo10248.100.txt,HybridDXD,HybridDXD,1,1,memout,,637.115522,,,,,210180,855,1,exit=1; tail=cols: 855 设置并行线程数为: 1 错误：std::bad_alloc,2026-11-16T06:50:54,"Instance: grafo10248.100
+启用HybridDXD算法求解: grafo10248.100
+rows: 210180
+cols: 855
+设置并行线程数为: 1
+错误：std::bad_alloc
+"
+20261115_115128,dxd-versions,new,rome3,grafo10249.94,data/benchmarks/rome3_matrices/matrices/grafo10249.94.txt,HybridDXD,HybridDXD,1,1,success,473.706699,480.328882,5.550e+514,,60,,189978,882,0,,2026-11-16T07:01:31,"Instance: grafo10249.94
+启用HybridDXD算法求解: grafo10249.94
+rows: 189978
+cols: 882
+设置并行线程数为: 1
+Time: 473.706699 s
+Solutions (scientific): 5.550e+514
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10249.94
+"
+20261115_115128,dxd-versions,new,rome3,grafo10252.96,data/benchmarks/rome3_matrices/matrices/grafo10252.96.txt,HybridDXD,HybridDXD,1,1,error,,503.750313,,,,,194690,820,-11,exit=-11; tail=rows: 194690 cols: 820 设置并行线程数为: 1,2026-11-16T07:09:32,"Instance: grafo10252.96
+启用HybridDXD算法求解: grafo10252.96
+rows: 194690
+cols: 820
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10257.100,data/benchmarks/rome3_matrices/matrices/grafo10257.100.txt,HybridDXD,HybridDXD,1,1,success,613.208714,623.247160,0,,50,,168610,755,0,,2026-11-16T07:17:56,"Instance: grafo10257.100
+启用HybridDXD算法求解: grafo10257.100
+rows: 168610
+cols: 755
+设置并行线程数为: 1
+Time: 613.208714 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10257.100
+"
+20261115_115128,dxd-versions,new,rome3,grafo10258.96,data/benchmarks/rome3_matrices/matrices/grafo10258.96.txt,HybridDXD,HybridDXD,1,1,success,605.307158,614.974459,0,,60,,196572,894,0,,2026-11-16T07:28:19,"Instance: grafo10258.96
+启用HybridDXD算法求解: grafo10258.96
+rows: 196572
+cols: 894
+设置并行线程数为: 1
+Time: 605.307158 s
+Solutions: 0
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10258.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10268.97,data/benchmarks/rome3_matrices/matrices/grafo10268.97.txt,HybridDXD,HybridDXD,1,1,success,592.246463,601.413534,0,,60,,189240,894,0,,2026-11-16T07:38:34,"Instance: grafo10268.97
+启用HybridDXD算法求解: grafo10268.97
+rows: 189240
+cols: 894
+设置并行线程数为: 1
+Time: 592.246463 s
+Solutions: 0
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10268.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10271.100,data/benchmarks/rome3_matrices/matrices/grafo10271.100.txt,HybridDXD,HybridDXD,1,1,success,620.345699,630.036175,0,,50,,184045,795,0,,2026-11-16T07:48:35,"Instance: grafo10271.100
+启用HybridDXD算法求解: grafo10271.100
+rows: 184045
+cols: 795
+设置并行线程数为: 1
+Time: 620.345699 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10271.100
+"
+20261115_115128,dxd-versions,new,rome3,grafo10274.99,data/benchmarks/rome3_matrices/matrices/grafo10274.99.txt,HybridDXD,HybridDXD,1,1,error,,614.075382,,,,,182985,790,-11,exit=-11; tail=rows: 182985 cols: 790 设置并行线程数为: 1,2026-11-16T07:59:05,"Instance: grafo10274.99
+启用HybridDXD算法求解: grafo10274.99
+rows: 182985
+cols: 790
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10287.92,data/benchmarks/rome3_matrices/matrices/grafo10287.92.txt,HybridDXD,HybridDXD,1,1,success,252.734586,256.670779,2.568e+496,,60,,177570,858,0,,2026-11-16T08:09:19,"Instance: grafo10287.92
+启用HybridDXD算法求解: grafo10287.92
+rows: 177570
+cols: 858
+设置并行线程数为: 1
+Time: 252.734586 s
+Solutions (scientific): 2.568e+496
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10287.92
+"
+20261115_115128,dxd-versions,new,rome3,grafo10294.100,data/benchmarks/rome3_matrices/matrices/grafo10294.100.txt,HybridDXD,HybridDXD,1,1,success,596.860138,607.598963,0,,50,,199405,830,0,,2026-11-16T08:13:36,"Instance: grafo10294.100
+启用HybridDXD算法求解: grafo10294.100
+rows: 199405
+cols: 830
+设置并行线程数为: 1
+Time: 596.860138 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10294.100
+"
+20261115_115128,dxd-versions,new,rome3,grafo10295.95,data/benchmarks/rome3_matrices/matrices/grafo10295.95.txt,HybridDXD,HybridDXD,1,1,success,638.239323,647.999893,0,,50,,183495,790,0,,2026-11-16T08:23:44,"Instance: grafo10295.95
+启用HybridDXD算法求解: grafo10295.95
+rows: 183495
+cols: 790
+设置并行线程数为: 1
+Time: 638.239323 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10295.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10308.96,data/benchmarks/rome3_matrices/matrices/grafo10308.96.txt,HybridDXD,HybridDXD,1,1,success,535.915766,543.170806,1.681e+448,,50,,165595,760,0,,2026-11-16T08:34:32,"Instance: grafo10308.96
+启用HybridDXD算法求解: grafo10308.96
+rows: 165595
+cols: 760
+设置并行线程数为: 1
+Time: 535.915766 s
+Solutions (scientific): 1.681e+448
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10308.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10311.91,data/benchmarks/rome3_matrices/matrices/grafo10311.91.txt,HybridDXD,HybridDXD,1,1,success,358.657590,363.799918,2.343e+542,,70,,180761,952,0,,2026-11-16T08:43:35,"Instance: grafo10311.91
+启用HybridDXD算法求解: grafo10311.91
+rows: 180761
+cols: 952
+设置并行线程数为: 1
+Time: 358.657590 s
+Solutions (scientific): 2.343e+542
+Max Blocks: 70
+HybridDXD算法求解结束: grafo10311.91
+"
+20261115_115128,dxd-versions,new,rome3,grafo10316.100,data/benchmarks/rome3_matrices/matrices/grafo10316.100.txt,HybridDXD,HybridDXD,1,1,success,612.008604,621.860500,0,,50,,192125,815,0,,2026-11-16T08:49:39,"Instance: grafo10316.100
+启用HybridDXD算法求解: grafo10316.100
+rows: 192125
+cols: 815
+设置并行线程数为: 1
+Time: 612.008604 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10316.100
+"
+20261115_115128,dxd-versions,new,rome3,grafo10321.97,data/benchmarks/rome3_matrices/matrices/grafo10321.97.txt,HybridDXD,HybridDXD,1,1,error,,642.320745,,,,,164630,750,-11,exit=-11; tail=rows: 164630 cols: 750 设置并行线程数为: 1,2026-11-16T09:00:00,"Instance: grafo10321.97
+启用HybridDXD算法求解: grafo10321.97
+rows: 164630
+cols: 750
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10322.97,data/benchmarks/rome3_matrices/matrices/grafo10322.97.txt,HybridDXD,HybridDXD,1,1,error,,619.340138,,,,,180035,790,-11,exit=-11; tail=rows: 180035 cols: 790 设置并行线程数为: 1,2026-11-16T09:10:43,"Instance: grafo10322.97
+启用HybridDXD算法求解: grafo10322.97
+rows: 180035
+cols: 790
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10323.97,data/benchmarks/rome3_matrices/matrices/grafo10323.97.txt,HybridDXD,HybridDXD,1,1,success,257.929848,261.969231,6.121e+514,,60,,188886,882,0,,2026-11-16T09:21:02,"Instance: grafo10323.97
+启用HybridDXD算法求解: grafo10323.97
+rows: 188886
+cols: 882
+设置并行线程数为: 1
+Time: 257.929848 s
+Solutions (scientific): 6.121e+514
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10323.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10329.97,data/benchmarks/rome3_matrices/matrices/grafo10329.97.txt,HybridDXD,HybridDXD,1,1,success,407.391424,413.110391,1.464e+448,,50,,167230,760,0,,2026-11-16T09:25:24,"Instance: grafo10329.97
+启用HybridDXD算法求解: grafo10329.97
+rows: 167230
+cols: 760
+设置并行线程数为: 1
+Time: 407.391424 s
+Solutions (scientific): 1.464e+448
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10329.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10331.100,data/benchmarks/rome3_matrices/matrices/grafo10331.100.txt,HybridDXD,HybridDXD,1,1,success,334.995927,339.893293,1.001e+448,,50,,169270,760,0,,2026-11-16T09:32:17,"Instance: grafo10331.100
+启用HybridDXD算法求解: grafo10331.100
+rows: 169270
+cols: 760
+设置并行线程数为: 1
+Time: 334.995927 s
+Solutions (scientific): 1.001e+448
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10331.100
+"
+20261115_115128,dxd-versions,new,rome3,grafo10348.99,data/benchmarks/rome3_matrices/matrices/grafo10348.99.txt,HybridDXD,HybridDXD,1,1,success,603.318134,613.227128,0,,50,,189230,810,0,,2026-11-16T09:37:57,"Instance: grafo10348.99
+启用HybridDXD算法求解: grafo10348.99
+rows: 189230
+cols: 810
+设置并行线程数为: 1
+Time: 603.318134 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10348.99
+"
+20261115_115128,dxd-versions,new,rome3,grafo10349.94,data/benchmarks/rome3_matrices/matrices/grafo10349.94.txt,HybridDXD,HybridDXD,1,1,success,603.874342,614.345005,0,,50,,186800,800,0,,2026-11-16T09:48:10,"Instance: grafo10349.94
+启用HybridDXD算法求解: grafo10349.94
+rows: 186800
+cols: 800
+设置并行线程数为: 1
+Time: 603.874342 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10349.94
+"
+20261115_115128,dxd-versions,new,rome3,grafo10358.95,data/benchmarks/rome3_matrices/matrices/grafo10358.95.txt,HybridDXD,HybridDXD,1,1,success,481.962227,488.863632,5.815e+514,,60,,189618,882,0,,2026-11-16T09:58:25,"Instance: grafo10358.95
+启用HybridDXD算法求解: grafo10358.95
+rows: 189618
+cols: 882
+设置并行线程数为: 1
+Time: 481.962227 s
+Solutions (scientific): 5.815e+514
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10358.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10360.93,data/benchmarks/rome3_matrices/matrices/grafo10360.93.txt,HybridDXD,HybridDXD,1,1,success,615.106031,624.896938,0,,60,,188754,870,0,,2026-11-16T10:06:33,"Instance: grafo10360.93
+启用HybridDXD算法求解: grafo10360.93
+rows: 188754
+cols: 870
+设置并行线程数为: 1
+Time: 615.106031 s
+Solutions: 0
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10360.93
+"
+20261115_115128,dxd-versions,new,rome3,grafo10361.97,data/benchmarks/rome3_matrices/matrices/grafo10361.97.txt,HybridDXD,HybridDXD,1,1,error,,625.755441,,,,,182334,870,-11,exit=-11; tail=rows: 182334 cols: 870 设置并行线程数为: 1,2026-11-16T10:16:58,"Instance: grafo10361.97
+启用HybridDXD算法求解: grafo10361.97
+rows: 182334
+cols: 870
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10363.98,data/benchmarks/rome3_matrices/matrices/grafo10363.98.txt,HybridDXD,HybridDXD,1,1,error,,636.966136,,,,,174535,780,-11,exit=-11; tail=rows: 174535 cols: 780 设置并行线程数为: 1,2026-11-16T10:27:24,"Instance: grafo10363.98
+启用HybridDXD算法求解: grafo10363.98
+rows: 174535
+cols: 780
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10366.99,data/benchmarks/rome3_matrices/matrices/grafo10366.99.txt,HybridDXD,HybridDXD,1,1,success,389.445772,394.975628,1.852e+444,,50,,167780,755,0,,2026-11-16T10:38:01,"Instance: grafo10366.99
+启用HybridDXD算法求解: grafo10366.99
+rows: 167780
+cols: 755
+设置并行线程数为: 1
+Time: 389.445772 s
+Solutions (scientific): 1.852e+444
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10366.99
+"
+20261115_115128,dxd-versions,new,rome3,grafo10379.95,data/benchmarks/rome3_matrices/matrices/grafo10379.95.txt,HybridDXD,HybridDXD,1,1,error,,641.938610,,,,,166455,760,-11,exit=-11; tail=rows: 166455 cols: 760 设置并行线程数为: 1,2026-11-16T10:44:36,"Instance: grafo10379.95
+启用HybridDXD算法求解: grafo10379.95
+rows: 166455
+cols: 760
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10380.98,data/benchmarks/rome3_matrices/matrices/grafo10380.98.txt,HybridDXD,HybridDXD,1,1,success,622.568409,632.617127,0,,54,,191622,846,0,,2026-11-16T10:55:18,"Instance: grafo10380.98
+启用HybridDXD算法求解: grafo10380.98
+rows: 191622
+cols: 846
+设置并行线程数为: 1
+Time: 622.568409 s
+Solutions: 0
+Max Blocks: 54
+HybridDXD算法求解结束: grafo10380.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10386.99,data/benchmarks/rome3_matrices/matrices/grafo10386.99.txt,HybridDXD,HybridDXD,1,1,success,464.769769,471.332248,5.118e+459,,50,,175495,775,0,,2026-11-16T11:05:51,"Instance: grafo10386.99
+启用HybridDXD算法求解: grafo10386.99
+rows: 175495
+cols: 775
+设置并行线程数为: 1
+Time: 464.769769 s
+Solutions (scientific): 5.118e+459
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10386.99
+"
+20261115_115128,dxd-versions,new,rome3,grafo10390.95,data/benchmarks/rome3_matrices/matrices/grafo10390.95.txt,HybridDXD,HybridDXD,1,1,success,353.844096,359.194571,1.297e+510,,60,,182982,876,0,,2026-11-16T11:13:42,"Instance: grafo10390.95
+启用HybridDXD算法求解: grafo10390.95
+rows: 182982
+cols: 876
+设置并行线程数为: 1
+Time: 353.844096 s
+Solutions (scientific): 1.297e+510
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10390.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10411.98,data/benchmarks/rome3_matrices/matrices/grafo10411.98.txt,HybridDXD,HybridDXD,1,1,success,615.418225,625.223363,0,,50,,174950,780,0,,2026-11-16T11:19:41,"Instance: grafo10411.98
+启用HybridDXD算法求解: grafo10411.98
+rows: 174950
+cols: 780
+设置并行线程数为: 1
+Time: 615.418225 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10411.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10413.93,data/benchmarks/rome3_matrices/matrices/grafo10413.93.txt,HybridDXD,HybridDXD,1,1,success,330.302465,335.061518,2.132e+440,,50,,164715,750,0,,2026-11-16T11:30:06,"Instance: grafo10413.93
+启用HybridDXD算法求解: grafo10413.93
+rows: 164715
+cols: 750
+设置并行线程数为: 1
+Time: 330.302465 s
+Solutions (scientific): 2.132e+440
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10413.93
+"
+20261115_115128,dxd-versions,new,rome3,grafo10414.98,data/benchmarks/rome3_matrices/matrices/grafo10414.98.txt,HybridDXD,HybridDXD,1,1,success,597.566090,605.432648,1.428e+456,,50,,171975,770,0,,2026-11-16T11:35:41,"Instance: grafo10414.98
+启用HybridDXD算法求解: grafo10414.98
+rows: 171975
+cols: 770
+设置并行线程数为: 1
+Time: 597.566090 s
+Solutions (scientific): 1.428e+456
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10414.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10422.97,data/benchmarks/rome3_matrices/matrices/grafo10422.97.txt,HybridDXD,HybridDXD,1,1,success,122.169580,124.385511,5.029e+477,,60,,172740,834,0,,2026-11-16T11:45:47,"Instance: grafo10422.97
+启用HybridDXD算法求解: grafo10422.97
+rows: 172740
+cols: 834
+设置并行线程数为: 1
+Time: 122.169580 s
+Solutions (scientific): 5.029e+477
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10422.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10427.95,data/benchmarks/rome3_matrices/matrices/grafo10427.95.txt,HybridDXD,HybridDXD,1,1,memout,,647.025573,,,,,163850,755,1,exit=1; tail=cols: 755 设置并行线程数为: 1 错误：std::bad_alloc,2026-11-16T11:47:51,"Instance: grafo10427.95
+启用HybridDXD算法求解: grafo10427.95
+rows: 163850
+cols: 755
+设置并行线程数为: 1
+错误：std::bad_alloc
+"
+20261115_115128,dxd-versions,new,rome3,grafo10429.100,data/benchmarks/rome3_matrices/matrices/grafo10429.100.txt,HybridDXD,HybridDXD,1,1,success,452.231004,458.742961,1.887e+467,,50,,178540,785,0,,2026-11-16T11:58:38,"Instance: grafo10429.100
+启用HybridDXD算法求解: grafo10429.100
+rows: 178540
+cols: 785
+设置并行线程数为: 1
+Time: 452.231004 s
+Solutions (scientific): 1.887e+467
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10429.100
+"
+20261115_115128,dxd-versions,new,rome3,grafo10431.95,data/benchmarks/rome3_matrices/matrices/grafo10431.95.txt,HybridDXD,HybridDXD,1,1,success,402.443599,408.214067,3.166e+440,,50,,162600,750,0,,2026-11-16T12:06:17,"Instance: grafo10431.95
+启用HybridDXD算法求解: grafo10431.95
+rows: 162600
+cols: 750
+设置并行线程数为: 1
+Time: 402.443599 s
+Solutions (scientific): 3.166e+440
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10431.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10433.97,data/benchmarks/rome3_matrices/matrices/grafo10433.97.txt,HybridDXD,HybridDXD,1,1,error,,601.686893,,,,,189654,888,-11,exit=-11; tail=rows: 189654 cols: 888 设置并行线程数为: 1,2026-11-16T12:13:05,"Instance: grafo10433.97
+启用HybridDXD算法求解: grafo10433.97
+rows: 189654
+cols: 888
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10437.97,data/benchmarks/rome3_matrices/matrices/grafo10437.97.txt,HybridDXD,HybridDXD,1,1,success,511.725994,518.826581,5.258e+459,,50,,174565,775,0,,2026-11-16T12:23:07,"Instance: grafo10437.97
+启用HybridDXD算法求解: grafo10437.97
+rows: 174565
+cols: 775
+设置并行线程数为: 1
+Time: 511.725994 s
+Solutions (scientific): 5.258e+459
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10437.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10440.93,data/benchmarks/rome3_matrices/matrices/grafo10440.93.txt,HybridDXD,HybridDXD,1,1,success,350.489968,355.773520,1.299e+510,,60,,184812,876,0,,2026-11-16T12:31:46,"Instance: grafo10440.93
+启用HybridDXD算法求解: grafo10440.93
+rows: 184812
+cols: 876
+设置并行线程数为: 1
+Time: 350.489968 s
+Solutions (scientific): 1.299e+510
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10440.93
+"
+20261115_115128,dxd-versions,new,rome3,grafo10448.98,data/benchmarks/rome3_matrices/matrices/grafo10448.98.txt,HybridDXD,HybridDXD,1,1,success,558.688703,566.112125,4.729e+463,,50,,176405,780,0,,2026-11-16T12:37:42,"Instance: grafo10448.98
+启用HybridDXD算法求解: grafo10448.98
+rows: 176405
+cols: 780
+设置并行线程数为: 1
+Time: 558.688703 s
+Solutions (scientific): 4.729e+463
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10448.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10451.95,data/benchmarks/rome3_matrices/matrices/grafo10451.95.txt,HybridDXD,HybridDXD,1,1,success,620.857295,630.861319,0,,50,,165225,750,0,,2026-11-16T12:47:08,"Instance: grafo10451.95
+启用HybridDXD算法求解: grafo10451.95
+rows: 165225
+cols: 750
+设置并行线程数为: 1
+Time: 620.857295 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10451.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10464.96,data/benchmarks/rome3_matrices/matrices/grafo10464.96.txt,HybridDXD,HybridDXD,1,1,success,597.928992,608.557284,0,,50,,178345,785,0,,2026-11-16T12:57:39,"Instance: grafo10464.96
+启用HybridDXD算法求解: grafo10464.96
+rows: 178345
+cols: 785
+设置并行线程数为: 1
+Time: 597.928992 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10464.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10481.95,data/benchmarks/rome3_matrices/matrices/grafo10481.95.txt,HybridDXD,HybridDXD,1,1,success,533.455666,540.584207,1.496e+452,,50,,170270,765,0,,2026-11-16T13:07:47,"Instance: grafo10481.95
+启用HybridDXD算法求解: grafo10481.95
+rows: 170270
+cols: 765
+设置并行线程数为: 1
+Time: 533.455666 s
+Solutions (scientific): 1.496e+452
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10481.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10490.99,data/benchmarks/rome3_matrices/matrices/grafo10490.99.txt,HybridDXD,HybridDXD,1,1,success,610.662906,620.370417,0,,50,,188670,810,0,,2026-11-16T13:16:48,"Instance: grafo10490.99
+启用HybridDXD算法求解: grafo10490.99
+rows: 188670
+cols: 810
+设置并行线程数为: 1
+Time: 610.662906 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10490.99
+"
+20261115_115128,dxd-versions,new,rome3,grafo10495.97,data/benchmarks/rome3_matrices/matrices/grafo10495.97.txt,HybridDXD,HybridDXD,1,1,success,624.942961,634.970293,0,,50,,165665,750,0,,2026-11-16T13:27:08,"Instance: grafo10495.97
+启用HybridDXD算法求解: grafo10495.97
+rows: 165665
+cols: 750
+设置并行线程数为: 1
+Time: 624.942961 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10495.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10503.100,data/benchmarks/rome3_matrices/matrices/grafo10503.100.txt,HybridDXD,HybridDXD,1,1,success,603.279941,613.333971,0,,50,,198120,830,0,,2026-11-16T13:37:43,"Instance: grafo10503.100
+启用HybridDXD算法求解: grafo10503.100
+rows: 198120
+cols: 830
+设置并行线程数为: 1
+Time: 603.279941 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10503.100
+"
+20261115_115128,dxd-versions,new,rome3,grafo10506.98,data/benchmarks/rome3_matrices/matrices/grafo10506.98.txt,HybridDXD,HybridDXD,1,1,success,619.761345,629.703050,0,,50,,183245,800,0,,2026-11-16T13:47:56,"Instance: grafo10506.98
+启用HybridDXD算法求解: grafo10506.98
+rows: 183245
+cols: 800
+设置并行线程数为: 1
+Time: 619.761345 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10506.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10507.93,data/benchmarks/rome3_matrices/matrices/grafo10507.93.txt,HybridDXD,HybridDXD,1,1,success,219.627017,223.070274,3.414e+443,,54,,160014,768,0,,2026-11-16T13:58:26,"Instance: grafo10507.93
+启用HybridDXD算法求解: grafo10507.93
+rows: 160014
+cols: 768
+设置并行线程数为: 1
+Time: 219.627017 s
+Solutions (scientific): 3.414e+443
+Max Blocks: 54
+HybridDXD算法求解结束: grafo10507.93
+"
+20261115_115128,dxd-versions,new,rome3,grafo10517.93,data/benchmarks/rome3_matrices/matrices/grafo10517.93.txt,HybridDXD,HybridDXD,1,1,success,500.881176,512.271710,0,,60,,195648,894,0,,2026-11-16T14:02:09,"Instance: grafo10517.93
+启用HybridDXD算法求解: grafo10517.93
+rows: 195648
+cols: 894
+设置并行线程数为: 1
+Time: 500.881176 s
+Solutions: 0
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10517.93
+"
+20261115_115128,dxd-versions,new,rome3,grafo10518.94,data/benchmarks/rome3_matrices/matrices/grafo10518.94.txt,HybridDXD,HybridDXD,1,1,success,452.842885,459.226800,1.359e+524,,60,,191706,894,0,,2026-11-16T14:10:41,"Instance: grafo10518.94
+启用HybridDXD算法求解: grafo10518.94
+rows: 191706
+cols: 894
+设置并行线程数为: 1
+Time: 452.842885 s
+Solutions (scientific): 1.359e+524
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10518.94
+"
+20261115_115128,dxd-versions,new,rome3,grafo10520.99,data/benchmarks/rome3_matrices/matrices/grafo10520.99.txt,HybridDXD,HybridDXD,1,1,error,,643.478735,,,,,200045,835,-11,exit=-11; tail=rows: 200045 cols: 835 设置并行线程数为: 1,2026-11-16T14:18:21,"Instance: grafo10520.99
+启用HybridDXD算法求解: grafo10520.99
+rows: 200045
+cols: 835
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10524.97,data/benchmarks/rome3_matrices/matrices/grafo10524.97.txt,HybridDXD,HybridDXD,1,1,success,611.149916,621.077824,0,,50,,196910,825,0,,2026-11-16T14:29:04,"Instance: grafo10524.97
+启用HybridDXD算法求解: grafo10524.97
+rows: 196910
+cols: 825
+设置并行线程数为: 1
+Time: 611.149916 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10524.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10526.97,data/benchmarks/rome3_matrices/matrices/grafo10526.97.txt,HybridDXD,HybridDXD,1,1,success,349.572125,354.696280,4.663e+514,,60,,189552,882,0,,2026-11-16T14:39:25,"Instance: grafo10526.97
+启用HybridDXD算法求解: grafo10526.97
+rows: 189552
+cols: 882
+设置并行线程数为: 1
+Time: 349.572125 s
+Solutions (scientific): 4.663e+514
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10526.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10528.98,data/benchmarks/rome3_matrices/matrices/grafo10528.98.txt,HybridDXD,HybridDXD,1,1,success,532.609441,539.528595,2.139e+440,,50,,167500,750,0,,2026-11-16T14:45:20,"Instance: grafo10528.98
+启用HybridDXD算法求解: grafo10528.98
+rows: 167500
+cols: 750
+设置并行线程数为: 1
+Time: 532.609441 s
+Solutions (scientific): 2.139e+440
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10528.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10529.98,data/benchmarks/rome3_matrices/matrices/grafo10529.98.txt,HybridDXD,HybridDXD,1,1,error,,640.447928,,,,,172155,765,-11,exit=-11; tail=rows: 172155 cols: 765 设置并行线程数为: 1,2026-11-16T14:54:19,"Instance: grafo10529.98
+启用HybridDXD算法求解: grafo10529.98
+rows: 172155
+cols: 765
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10542.100,data/benchmarks/rome3_matrices/matrices/grafo10542.100.txt,HybridDXD,HybridDXD,1,1,memout,,858.646786,,,,,185690,800,1,exit=1; tail=cols: 800 设置并行线程数为: 1 错误：std::bad_alloc,2026-11-16T15:05:00,"Instance: grafo10542.100
+启用HybridDXD算法求解: grafo10542.100
+rows: 185690
+cols: 800
+设置并行线程数为: 1
+错误：std::bad_alloc
+"
+20261115_115128,dxd-versions,new,rome3,grafo10557.98,data/benchmarks/rome3_matrices/matrices/grafo10557.98.txt,HybridDXD,HybridDXD,1,1,success,764.002494,780.616845,0,,60,,189786,888,0,,2026-11-16T15:19:18,"Instance: grafo10557.98
+启用HybridDXD算法求解: grafo10557.98
+rows: 189786
+cols: 888
+设置并行线程数为: 1
+Time: 764.002494 s
+Solutions: 0
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10557.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10558.97,data/benchmarks/rome3_matrices/matrices/grafo10558.97.txt,HybridDXD,HybridDXD,1,1,success,517.441124,524.031418,1.568e+510,,60,,186438,876,0,,2026-11-16T15:32:19,"Instance: grafo10558.97
+启用HybridDXD算法求解: grafo10558.97
+rows: 186438
+cols: 876
+设置并行线程数为: 1
+Time: 517.441124 s
+Solutions (scientific): 1.568e+510
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10558.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10559.98,data/benchmarks/rome3_matrices/matrices/grafo10559.98.txt,HybridDXD,HybridDXD,1,1,error,,937.314051,,,,,165290,760,-11,exit=-11; tail=rows: 165290 cols: 760 设置并行线程数为: 1,2026-11-16T15:41:03,"Instance: grafo10559.98
+启用HybridDXD算法求解: grafo10559.98
+rows: 165290
+cols: 760
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10561.97,data/benchmarks/rome3_matrices/matrices/grafo10561.97.txt,HybridDXD,HybridDXD,1,1,success,618.450689,626.120625,5.434e+505,,60,,181134,870,0,,2026-11-16T15:56:40,"Instance: grafo10561.97
+启用HybridDXD算法求解: grafo10561.97
+rows: 181134
+cols: 870
+设置并行线程数为: 1
+Time: 618.450689 s
+Solutions (scientific): 5.434e+505
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10561.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10571.93,data/benchmarks/rome3_matrices/matrices/grafo10571.93.txt,HybridDXD,HybridDXD,1,1,success,943.012452,960.896367,0,,50,,177380,785,0,,2026-11-16T16:07:07,"Instance: grafo10571.93
+启用HybridDXD算法求解: grafo10571.93
+rows: 177380
+cols: 785
+设置并行线程数为: 1
+Time: 943.012452 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10571.93
+"
+20261115_115128,dxd-versions,new,rome3,grafo10573.93,data/benchmarks/rome3_matrices/matrices/grafo10573.93.txt,HybridDXD,HybridDXD,1,1,success,352.842251,359.365508,4.739e+482,,60,,173766,840,0,,2026-11-16T16:23:07,"Instance: grafo10573.93
+启用HybridDXD算法求解: grafo10573.93
+rows: 173766
+cols: 840
+设置并行线程数为: 1
+Time: 352.842251 s
+Solutions (scientific): 4.739e+482
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10573.93
+"
+20261115_115128,dxd-versions,new,rome3,grafo10580.98,data/benchmarks/rome3_matrices/matrices/grafo10580.98.txt,HybridDXD,HybridDXD,1,1,success,779.617917,790.440416,3.254e+444,,50,,167040,755,0,,2026-11-16T16:29:07,"Instance: grafo10580.98
+启用HybridDXD算法求解: grafo10580.98
+rows: 167040
+cols: 755
+设置并行线程数为: 1
+Time: 779.617917 s
+Solutions (scientific): 3.254e+444
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10580.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10594.94,data/benchmarks/rome3_matrices/matrices/grafo10594.94.txt,HybridDXD,HybridDXD,1,1,success,856.281409,873.760773,0,,50,,166730,755,0,,2026-11-16T16:42:17,"Instance: grafo10594.94
+启用HybridDXD算法求解: grafo10594.94
+rows: 166730
+cols: 755
+设置并行线程数为: 1
+Time: 856.281409 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10594.94
+"
+20261115_115128,dxd-versions,new,rome3,grafo10607.94,data/benchmarks/rome3_matrices/matrices/grafo10607.94.txt,HybridDXD,HybridDXD,1,1,success,740.865986,748.937584,1.758e+444,,50,,169995,755,0,,2026-11-16T16:56:51,"Instance: grafo10607.94
+启用HybridDXD算法求解: grafo10607.94
+rows: 169995
+cols: 755
+设置并行线程数为: 1
+Time: 740.865986 s
+Solutions (scientific): 1.758e+444
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10607.94
+"
+20261115_115128,dxd-versions,new,rome3,grafo10609.100,data/benchmarks/rome3_matrices/matrices/grafo10609.100.txt,HybridDXD,HybridDXD,1,1,error,,897.326884,,,,,187310,805,-11,exit=-11; tail=rows: 187310 cols: 805 设置并行线程数为: 1,2026-11-16T17:09:20,"Instance: grafo10609.100
+启用HybridDXD算法求解: grafo10609.100
+rows: 187310
+cols: 805
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10610.95,data/benchmarks/rome3_matrices/matrices/grafo10610.95.txt,HybridDXD,HybridDXD,1,1,success,753.263475,761.182477,1.772e+510,,60,,182562,876,0,,2026-11-16T17:24:17,"Instance: grafo10610.95
+启用HybridDXD算法求解: grafo10610.95
+rows: 182562
+cols: 876
+设置并行线程数为: 1
+Time: 753.263475 s
+Solutions (scientific): 1.772e+510
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10610.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10611.94,data/benchmarks/rome3_matrices/matrices/grafo10611.94.txt,HybridDXD,HybridDXD,1,1,success,358.763210,363.795793,7.849e+514,,60,,188370,882,0,,2026-11-16T17:36:58,"Instance: grafo10611.94
+启用HybridDXD算法求解: grafo10611.94
+rows: 188370
+cols: 882
+设置并行线程数为: 1
+Time: 358.763210 s
+Solutions (scientific): 7.849e+514
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10611.94
+"
+20261115_115128,dxd-versions,new,rome3,grafo10613.96,data/benchmarks/rome3_matrices/matrices/grafo10613.96.txt,HybridDXD,HybridDXD,1,1,success,551.201071,562.575517,0,,50,,176010,780,0,,2026-11-16T17:43:02,"Instance: grafo10613.96
+启用HybridDXD算法求解: grafo10613.96
+rows: 176010
+cols: 780
+设置并行线程数为: 1
+Time: 551.201071 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10613.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10614.92,data/benchmarks/rome3_matrices/matrices/grafo10614.92.txt,HybridDXD,HybridDXD,1,1,success,234.768381,238.076822,6.385e+495,,60,,181596,858,0,,2026-11-16T17:52:25,"Instance: grafo10614.92
+启用HybridDXD算法求解: grafo10614.92
+rows: 181596
+cols: 858
+设置并行线程数为: 1
+Time: 234.768381 s
+Solutions (scientific): 6.385e+495
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10614.92
+"
+20261115_115128,dxd-versions,new,rome3,grafo10627.96,data/benchmarks/rome3_matrices/matrices/grafo10627.96.txt,HybridDXD,HybridDXD,1,1,success,884.840298,895.756118,2.969e+440,,50,,166430,750,0,,2026-11-16T17:56:23,"Instance: grafo10627.96
+启用HybridDXD算法求解: grafo10627.96
+rows: 166430
+cols: 750
+设置并行线程数为: 1
+Time: 884.840298 s
+Solutions (scientific): 2.969e+440
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10627.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10629.100,data/benchmarks/rome3_matrices/matrices/grafo10629.100.txt,HybridDXD,HybridDXD,1,1,error,,848.634812,,,,,213685,865,-11,exit=-11; tail=rows: 213685 cols: 865 设置并行线程数为: 1,2026-11-16T18:11:19,"Instance: grafo10629.100
+启用HybridDXD算法求解: grafo10629.100
+rows: 213685
+cols: 865
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10631.98,data/benchmarks/rome3_matrices/matrices/grafo10631.98.txt,HybridDXD,HybridDXD,1,1,success,547.955318,554.527427,1.055e+456,,50,,173610,770,0,,2026-11-16T18:25:27,"Instance: grafo10631.98
+启用HybridDXD算法求解: grafo10631.98
+rows: 173610
+cols: 770
+设置并行线程数为: 1
+Time: 547.955318 s
+Solutions (scientific): 1.055e+456
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10631.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10636.95,data/benchmarks/rome3_matrices/matrices/grafo10636.95.txt,HybridDXD,HybridDXD,1,1,success,615.487306,624.998027,2.556e+459,,50,,175810,775,0,,2026-11-16T18:34:42,"Instance: grafo10636.95
+启用HybridDXD算法求解: grafo10636.95
+rows: 175810
+cols: 775
+设置并行线程数为: 1
+Time: 615.487306 s
+Solutions (scientific): 2.556e+459
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10636.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10641.99,data/benchmarks/rome3_matrices/matrices/grafo10641.99.txt,HybridDXD,HybridDXD,1,1,memout,,1007.626354,,,,,176115,780,1,exit=1; tail=cols: 780 设置并行线程数为: 1 错误：std::bad_alloc,2026-11-16T18:45:07,"Instance: grafo10641.99
+启用HybridDXD算法求解: grafo10641.99
+rows: 176115
+cols: 780
+设置并行线程数为: 1
+错误：std::bad_alloc
+"
+20261115_115128,dxd-versions,new,rome3,grafo10645.95,data/benchmarks/rome3_matrices/matrices/grafo10645.95.txt,HybridDXD,HybridDXD,1,1,success,240.677405,244.570676,7.396e+477,,60,,169506,834,0,,2026-11-16T19:01:54,"Instance: grafo10645.95
+启用HybridDXD算法求解: grafo10645.95
+rows: 169506
+cols: 834
+设置并行线程数为: 1
+Time: 240.677405 s
+Solutions (scientific): 7.396e+477
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10645.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10647.98,data/benchmarks/rome3_matrices/matrices/grafo10647.98.txt,HybridDXD,HybridDXD,1,1,memout,,720.285572,,,,,178675,785,1,exit=1; tail=cols: 785 设置并行线程数为: 1 错误：std::bad_alloc,2026-11-16T19:05:59,"Instance: grafo10647.98
+启用HybridDXD算法求解: grafo10647.98
+rows: 178675
+cols: 785
+设置并行线程数为: 1
+错误：std::bad_alloc
+"
+20261115_115128,dxd-versions,new,rome3,grafo10672.98,data/benchmarks/rome3_matrices/matrices/grafo10672.98.txt,HybridDXD,HybridDXD,1,1,success,618.564446,628.999435,0,,60,,189636,888,0,,2026-11-16T19:17:59,"Instance: grafo10672.98
+启用HybridDXD算法求解: grafo10672.98
+rows: 189636
+cols: 888
+设置并行线程数为: 1
+Time: 618.564446 s
+Solutions: 0
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10672.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10673.93,data/benchmarks/rome3_matrices/matrices/grafo10673.93.txt,HybridDXD,HybridDXD,1,1,success,583.995289,591.839413,1.924e+444,,50,,165395,755,0,,2026-11-16T19:28:28,"Instance: grafo10673.93
+启用HybridDXD算法求解: grafo10673.93
+rows: 165395
+cols: 755
+设置并行线程数为: 1
+Time: 583.995289 s
+Solutions (scientific): 1.924e+444
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10673.93
+"
+20261115_115128,dxd-versions,new,rome3,grafo10675.95,data/benchmarks/rome3_matrices/matrices/grafo10675.95.txt,HybridDXD,HybridDXD,1,1,success,609.024652,618.857749,0,,50,,164670,755,0,,2026-11-16T19:38:20,"Instance: grafo10675.95
+启用HybridDXD算法求解: grafo10675.95
+rows: 164670
+cols: 755
+设置并行线程数为: 1
+Time: 609.024652 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10675.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10679.100,data/benchmarks/rome3_matrices/matrices/grafo10679.100.txt,HybridDXD,HybridDXD,1,1,error,,617.527984,,,,,169635,765,-11,exit=-11; tail=rows: 169635 cols: 765 设置并行线程数为: 1,2026-11-16T19:48:39,"Instance: grafo10679.100
+启用HybridDXD算法求解: grafo10679.100
+rows: 169635
+cols: 765
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10680.95,data/benchmarks/rome3_matrices/matrices/grafo10680.95.txt,HybridDXD,HybridDXD,1,1,success,176.943042,179.939556,1.339e+542,,70,,184345,952,0,,2026-11-16T19:58:57,"Instance: grafo10680.95
+启用HybridDXD算法求解: grafo10680.95
+rows: 184345
+cols: 952
+设置并行线程数为: 1
+Time: 176.943042 s
+Solutions (scientific): 1.339e+542
+Max Blocks: 70
+HybridDXD算法求解结束: grafo10680.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10687.96,data/benchmarks/rome3_matrices/matrices/grafo10687.96.txt,HybridDXD,HybridDXD,1,1,success,619.628310,629.573654,0,,60,,179286,858,0,,2026-11-16T20:01:56,"Instance: grafo10687.96
+启用HybridDXD算法求解: grafo10687.96
+rows: 179286
+cols: 858
+设置并行线程数为: 1
+Time: 619.628310 s
+Solutions: 0
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10687.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10705.97,data/benchmarks/rome3_matrices/matrices/grafo10705.97.txt,HybridDXD,HybridDXD,1,1,success,543.036565,550.610232,1.313e+494,,54,,186780,834,0,,2026-11-16T20:12:26,"Instance: grafo10705.97
+启用HybridDXD算法求解: grafo10705.97
+rows: 186780
+cols: 834
+设置并行线程数为: 1
+Time: 543.036565 s
+Solutions (scientific): 1.313e+494
+Max Blocks: 54
+HybridDXD算法求解结束: grafo10705.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10709.98,data/benchmarks/rome3_matrices/matrices/grafo10709.98.txt,HybridDXD,HybridDXD,1,1,success,591.148202,601.432108,0,,50,,183095,790,0,,2026-11-16T20:21:37,"Instance: grafo10709.98
+启用HybridDXD算法求解: grafo10709.98
+rows: 183095
+cols: 790
+设置并行线程数为: 1
+Time: 591.148202 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10709.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10718.98,data/benchmarks/rome3_matrices/matrices/grafo10718.98.txt,HybridDXD,HybridDXD,1,1,memout,,636.024170,,,,,192465,810,1,exit=1; tail=cols: 810 设置并行线程数为: 1 错误：std::bad_alloc,2026-11-16T20:31:38,"Instance: grafo10718.98
+启用HybridDXD算法求解: grafo10718.98
+rows: 192465
+cols: 810
+设置并行线程数为: 1
+错误：std::bad_alloc
+"
+20261115_115128,dxd-versions,new,rome3,grafo10719.96,data/benchmarks/rome3_matrices/matrices/grafo10719.96.txt,HybridDXD,HybridDXD,1,1,success,486.923748,493.718804,2.748e+523,,60,,198828,894,0,,2026-11-16T20:42:14,"Instance: grafo10719.96
+启用HybridDXD算法求解: grafo10719.96
+rows: 198828
+cols: 894
+设置并行线程数为: 1
+Time: 486.923748 s
+Solutions (scientific): 2.748e+523
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10719.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10720.96,data/benchmarks/rome3_matrices/matrices/grafo10720.96.txt,HybridDXD,HybridDXD,1,1,success,612.914134,622.658993,0,,60,,188802,882,0,,2026-11-16T20:50:28,"Instance: grafo10720.96
+启用HybridDXD算法求解: grafo10720.96
+rows: 188802
+cols: 882
+设置并行线程数为: 1
+Time: 612.914134 s
+Solutions: 0
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10720.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10725.99,data/benchmarks/rome3_matrices/matrices/grafo10725.99.txt,HybridDXD,HybridDXD,1,1,success,473.605177,480.043481,3.276e+448,,50,,165635,760,0,,2026-11-16T21:00:51,"Instance: grafo10725.99
+启用HybridDXD算法求解: grafo10725.99
+rows: 165635
+cols: 760
+设置并行线程数为: 1
+Time: 473.605177 s
+Solutions (scientific): 3.276e+448
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10725.99
+"
+20261115_115128,dxd-versions,new,rome3,grafo10738.96,data/benchmarks/rome3_matrices/matrices/grafo10738.96.txt,HybridDXD,HybridDXD,1,1,memout,,648.103737,,,,,175285,775,1,exit=1; tail=cols: 775 设置并行线程数为: 1 错误：std::bad_alloc,2026-11-16T21:08:51,"Instance: grafo10738.96
+启用HybridDXD算法求解: grafo10738.96
+rows: 175285
+cols: 775
+设置并行线程数为: 1
+错误：std::bad_alloc
+"
+20261115_115128,dxd-versions,new,rome3,grafo10741.92,data/benchmarks/rome3_matrices/matrices/grafo10741.92.txt,HybridDXD,HybridDXD,1,1,success,622.590866,632.595572,0,,50,,165815,750,0,,2026-11-16T21:19:39,"Instance: grafo10741.92
+启用HybridDXD算法求解: grafo10741.92
+rows: 165815
+cols: 750
+设置并行线程数为: 1
+Time: 622.590866 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10741.92
+"
+20261115_115128,dxd-versions,new,rome3,grafo10744.96,data/benchmarks/rome3_matrices/matrices/grafo10744.96.txt,HybridDXD,HybridDXD,1,1,memout,,657.125156,,,,,164650,755,1,exit=1; tail=cols: 755 设置并行线程数为: 1 错误：std::bad_alloc,2026-11-16T21:30:11,"Instance: grafo10744.96
+启用HybridDXD算法求解: grafo10744.96
+rows: 164650
+cols: 755
+设置并行线程数为: 1
+错误：std::bad_alloc
+"
+20261115_115128,dxd-versions,new,rome3,grafo10757.96,data/benchmarks/rome3_matrices/matrices/grafo10757.96.txt,HybridDXD,HybridDXD,1,1,success,472.493793,478.915175,1.373e+452,,50,,170760,765,0,,2026-11-16T21:41:08,"Instance: grafo10757.96
+启用HybridDXD算法求解: grafo10757.96
+rows: 170760
+cols: 765
+设置并行线程数为: 1
+Time: 472.493793 s
+Solutions (scientific): 1.373e+452
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10757.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10762.99,data/benchmarks/rome3_matrices/matrices/grafo10762.99.txt,HybridDXD,HybridDXD,1,1,success,451.013825,457.404186,3.217e+440,,50,,164120,750,0,,2026-11-16T21:49:07,"Instance: grafo10762.99
+启用HybridDXD算法求解: grafo10762.99
+rows: 164120
+cols: 750
+设置并行线程数为: 1
+Time: 451.013825 s
+Solutions (scientific): 3.217e+440
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10762.99
+"
+20261115_115128,dxd-versions,new,rome3,grafo10764.96,data/benchmarks/rome3_matrices/matrices/grafo10764.96.txt,HybridDXD,HybridDXD,1,1,memout,,650.367096,,,,,167185,765,1,exit=1; tail=cols: 765 设置并行线程数为: 1 错误：std::bad_alloc,2026-11-16T21:56:45,"Instance: grafo10764.96
+启用HybridDXD算法求解: grafo10764.96
+rows: 167185
+cols: 765
+设置并行线程数为: 1
+错误：std::bad_alloc
+"
+20261115_115128,dxd-versions,new,rome3,grafo10777.100,data/benchmarks/rome3_matrices/matrices/grafo10777.100.txt,HybridDXD,HybridDXD,1,1,error,,611.812990,,,,,165730,755,-11,exit=-11; tail=rows: 165730 cols: 755 设置并行线程数为: 1,2026-11-16T22:07:35,"Instance: grafo10777.100
+启用HybridDXD算法求解: grafo10777.100
+rows: 165730
+cols: 755
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10786.100,data/benchmarks/rome3_matrices/matrices/grafo10786.100.txt,HybridDXD,HybridDXD,1,1,success,600.307319,610.348619,0,,50,,176720,780,0,,2026-11-16T22:17:47,"Instance: grafo10786.100
+启用HybridDXD算法求解: grafo10786.100
+rows: 176720
+cols: 780
+设置并行线程数为: 1
+Time: 600.307319 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10786.100
+"
+20261115_115128,dxd-versions,new,rome3,grafo10788.98,data/benchmarks/rome3_matrices/matrices/grafo10788.98.txt,HybridDXD,HybridDXD,1,1,success,634.190415,644.008794,0,,50,,190785,810,0,,2026-11-16T22:27:57,"Instance: grafo10788.98
+启用HybridDXD算法求解: grafo10788.98
+rows: 190785
+cols: 810
+设置并行线程数为: 1
+Time: 634.190415 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10788.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10793.95,data/benchmarks/rome3_matrices/matrices/grafo10793.95.txt,HybridDXD,HybridDXD,1,1,success,628.441943,637.305511,2.128e+510,,60,,186396,876,0,,2026-11-16T22:38:41,"Instance: grafo10793.95
+启用HybridDXD算法求解: grafo10793.95
+rows: 186396
+cols: 876
+设置并行线程数为: 1
+Time: 628.441943 s
+Solutions (scientific): 2.128e+510
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10793.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10794.100,data/benchmarks/rome3_matrices/matrices/grafo10794.100.txt,HybridDXD,HybridDXD,1,1,success,653.273889,663.424722,0,,50,,182630,790,0,,2026-11-16T22:49:19,"Instance: grafo10794.100
+启用HybridDXD算法求解: grafo10794.100
+rows: 182630
+cols: 790
+设置并行线程数为: 1
+Time: 653.273889 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10794.100
+"
+20261115_115128,dxd-versions,new,rome3,grafo10803.99,data/benchmarks/rome3_matrices/matrices/grafo10803.99.txt,HybridDXD,HybridDXD,1,1,success,652.306308,664.274495,0,,50,,180200,785,0,,2026-11-16T23:00:22,"Instance: grafo10803.99
+启用HybridDXD算法求解: grafo10803.99
+rows: 180200
+cols: 785
+设置并行线程数为: 1
+Time: 652.306308 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10803.99
+"
+20261115_115128,dxd-versions,new,rome3,grafo10805.98,data/benchmarks/rome3_matrices/matrices/grafo10805.98.txt,HybridDXD,HybridDXD,1,1,success,688.566997,698.752188,2.188e+467,,50,,179105,785,0,,2026-11-16T23:11:26,"Instance: grafo10805.98
+启用HybridDXD算法求解: grafo10805.98
+rows: 179105
+cols: 785
+设置并行线程数为: 1
+Time: 688.566997 s
+Solutions (scientific): 2.188e+467
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10805.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10809.99,data/benchmarks/rome3_matrices/matrices/grafo10809.99.txt,HybridDXD,HybridDXD,1,1,success,751.601034,761.783026,0,,50,,180500,790,0,,2026-11-16T23:23:05,"Instance: grafo10809.99
+启用HybridDXD算法求解: grafo10809.99
+rows: 180500
+cols: 790
+设置并行线程数为: 1
+Time: 751.601034 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10809.99
+"
+20261115_115128,dxd-versions,new,rome3,grafo10813.93,data/benchmarks/rome3_matrices/matrices/grafo10813.93.txt,HybridDXD,HybridDXD,1,1,error,,636.679077,,,,,186624,876,-11,exit=-11; tail=rows: 186624 cols: 876 设置并行线程数为: 1,2026-11-16T23:35:47,"Instance: grafo10813.93
+启用HybridDXD算法求解: grafo10813.93
+rows: 186624
+cols: 876
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10815.97,data/benchmarks/rome3_matrices/matrices/grafo10815.97.txt,HybridDXD,HybridDXD,1,1,success,591.518083,599.503285,1.486e+452,,50,,169390,765,0,,2026-11-16T23:46:23,"Instance: grafo10815.97
+启用HybridDXD算法求解: grafo10815.97
+rows: 169390
+cols: 765
+设置并行线程数为: 1
+Time: 591.518083 s
+Solutions (scientific): 1.486e+452
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10815.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10817.96,data/benchmarks/rome3_matrices/matrices/grafo10817.96.txt,HybridDXD,HybridDXD,1,1,success,609.147812,617.155327,1.492e+515,,60,,188040,882,0,,2026-11-16T23:56:23,"Instance: grafo10817.96
+启用HybridDXD算法求解: grafo10817.96
+rows: 188040
+cols: 882
+设置并行线程数为: 1
+Time: 609.147812 s
+Solutions (scientific): 1.492e+515
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10817.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10822.97,data/benchmarks/rome3_matrices/matrices/grafo10822.97.txt,HybridDXD,HybridDXD,1,1,success,704.233719,718.845829,0,,50,,174700,775,0,,2026-11-17T00:06:40,"Instance: grafo10822.97
+启用HybridDXD算法求解: grafo10822.97
+rows: 174700
+cols: 775
+设置并行线程数为: 1
+Time: 704.233719 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10822.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10823.96,data/benchmarks/rome3_matrices/matrices/grafo10823.96.txt,HybridDXD,HybridDXD,1,1,success,594.661780,601.473816,1.074e+506,,60,,181080,870,0,,2026-11-17T00:18:39,"Instance: grafo10823.96
+启用HybridDXD算法求解: grafo10823.96
+rows: 181080
+cols: 870
+设置并行线程数为: 1
+Time: 594.661780 s
+Solutions (scientific): 1.074e+506
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10823.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10828.97,data/benchmarks/rome3_matrices/matrices/grafo10828.97.txt,HybridDXD,HybridDXD,1,1,memout,,848.769543,,,,,169895,765,1,exit=1; tail=cols: 765 设置并行线程数为: 1 错误：std::bad_alloc,2026-11-17T00:28:40,"Instance: grafo10828.97
+启用HybridDXD算法求解: grafo10828.97
+rows: 169895
+cols: 765
+设置并行线程数为: 1
+错误：std::bad_alloc
+"
+20261115_115128,dxd-versions,new,rome3,grafo10833.98,data/benchmarks/rome3_matrices/matrices/grafo10833.98.txt,HybridDXD,HybridDXD,1,1,success,901.946428,912.081701,0,,60,,190410,894,0,,2026-11-17T00:42:49,"Instance: grafo10833.98
+启用HybridDXD算法求解: grafo10833.98
+rows: 190410
+cols: 894
+设置并行线程数为: 1
+Time: 901.946428 s
+Solutions: 0
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10833.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10837.95,data/benchmarks/rome3_matrices/matrices/grafo10837.95.txt,HybridDXD,HybridDXD,1,1,success,652.400656,662.383019,0,,60,,190458,888,0,,2026-11-17T00:58:01,"Instance: grafo10837.95
+启用HybridDXD算法求解: grafo10837.95
+rows: 190458
+cols: 888
+设置并行线程数为: 1
+Time: 652.400656 s
+Solutions: 0
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10837.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10848.94,data/benchmarks/rome3_matrices/matrices/grafo10848.94.txt,HybridDXD,HybridDXD,1,1,success,411.291738,417.131842,1.298e+524,,60,,195072,894,0,,2026-11-17T01:09:04,"Instance: grafo10848.94
+启用HybridDXD算法求解: grafo10848.94
+rows: 195072
+cols: 894
+设置并行线程数为: 1
+Time: 411.291738 s
+Solutions (scientific): 1.298e+524
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10848.94
+"
+20261115_115128,dxd-versions,new,rome3,grafo10851.95,data/benchmarks/rome3_matrices/matrices/grafo10851.95.txt,HybridDXD,HybridDXD,1,1,success,465.090775,473.931073,7.610e+509,,60,,189282,876,0,,2026-11-17T01:16:01,"Instance: grafo10851.95
+启用HybridDXD算法求解: grafo10851.95
+rows: 189282
+cols: 876
+设置并行线程数为: 1
+Time: 465.090775 s
+Solutions (scientific): 7.610e+509
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10851.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10867.95,data/benchmarks/rome3_matrices/matrices/grafo10867.95.txt,HybridDXD,HybridDXD,1,1,success,733.629980,743.593716,4.203e+440,,50,,160060,750,0,,2026-11-17T01:23:55,"Instance: grafo10867.95
+启用HybridDXD算法求解: grafo10867.95
+rows: 160060
+cols: 750
+设置并行线程数为: 1
+Time: 733.629980 s
+Solutions (scientific): 4.203e+440
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10867.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10869.96,data/benchmarks/rome3_matrices/matrices/grafo10869.96.txt,HybridDXD,HybridDXD,1,1,success,781.057381,789.172765,2.966e+510,,60,,186840,876,0,,2026-11-17T01:36:18,"Instance: grafo10869.96
+启用HybridDXD算法求解: grafo10869.96
+rows: 186840
+cols: 876
+设置并行线程数为: 1
+Time: 781.057381 s
+Solutions (scientific): 2.966e+510
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10869.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10871.95,data/benchmarks/rome3_matrices/matrices/grafo10871.95.txt,HybridDXD,HybridDXD,1,1,error,,939.496067,,,,,184120,795,-11,exit=-11; tail=rows: 184120 cols: 795 设置并行线程数为: 1,2026-11-17T01:49:27,"Instance: grafo10871.95
+启用HybridDXD算法求解: grafo10871.95
+rows: 184120
+cols: 795
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10873.97,data/benchmarks/rome3_matrices/matrices/grafo10873.97.txt,HybridDXD,HybridDXD,1,1,success,801.159109,809.390555,8.025e+451,,50,,171935,765,0,,2026-11-17T02:05:07,"Instance: grafo10873.97
+启用HybridDXD算法求解: grafo10873.97
+rows: 171935
+cols: 765
+设置并行线程数为: 1
+Time: 801.159109 s
+Solutions (scientific): 8.025e+451
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10873.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10894.97,data/benchmarks/rome3_matrices/matrices/grafo10894.97.txt,HybridDXD,HybridDXD,1,1,success,443.678381,449.896655,1.528e+524,,60,,191526,894,0,,2026-11-17T02:18:36,"Instance: grafo10894.97
+启用HybridDXD算法求解: grafo10894.97
+rows: 191526
+cols: 894
+设置并行线程数为: 1
+Time: 443.678381 s
+Solutions (scientific): 1.528e+524
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10894.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10895.98,data/benchmarks/rome3_matrices/matrices/grafo10895.98.txt,HybridDXD,HybridDXD,1,1,success,632.879341,643.246732,0,,50,,195095,825,0,,2026-11-17T02:26:06,"Instance: grafo10895.98
+启用HybridDXD算法求解: grafo10895.98
+rows: 195095
+cols: 825
+设置并行线程数为: 1
+Time: 632.879341 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10895.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10899.96,data/benchmarks/rome3_matrices/matrices/grafo10899.96.txt,HybridDXD,HybridDXD,1,1,success,632.005839,644.538025,0,,50,,173985,770,0,,2026-11-17T02:36:50,"Instance: grafo10899.96
+启用HybridDXD算法求解: grafo10899.96
+rows: 173985
+cols: 770
+设置并行线程数为: 1
+Time: 632.005839 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10899.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10900.93,data/benchmarks/rome3_matrices/matrices/grafo10900.93.txt,HybridDXD,HybridDXD,1,1,success,512.411840,518.802054,3.753e+505,,60,,186132,870,0,,2026-11-17T02:47:34,"Instance: grafo10900.93
+启用HybridDXD算法求解: grafo10900.93
+rows: 186132
+cols: 870
+设置并行线程数为: 1
+Time: 512.411840 s
+Solutions (scientific): 3.753e+505
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10900.93
+"
+20261115_115128,dxd-versions,new,rome3,grafo10913.97,data/benchmarks/rome3_matrices/matrices/grafo10913.97.txt,HybridDXD,HybridDXD,1,1,success,672.332090,689.486371,0,,54,,195642,852,0,,2026-11-17T02:56:13,"Instance: grafo10913.97
+启用HybridDXD算法求解: grafo10913.97
+rows: 195642
+cols: 852
+设置并行线程数为: 1
+Time: 672.332090 s
+Solutions: 0
+Max Blocks: 54
+HybridDXD算法求解结束: grafo10913.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10915.97,data/benchmarks/rome3_matrices/matrices/grafo10915.97.txt,HybridDXD,HybridDXD,1,1,success,791.770594,804.366244,1.343e+448,,50,,167100,760,0,,2026-11-17T03:07:42,"Instance: grafo10915.97
+启用HybridDXD算法求解: grafo10915.97
+rows: 167100
+cols: 760
+设置并行线程数为: 1
+Time: 791.770594 s
+Solutions (scientific): 1.343e+448
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10915.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10916.95,data/benchmarks/rome3_matrices/matrices/grafo10916.95.txt,HybridDXD,HybridDXD,1,1,success,742.874948,753.431664,0,,50,,173840,770,0,,2026-11-17T03:21:07,"Instance: grafo10916.95
+启用HybridDXD算法求解: grafo10916.95
+rows: 173840
+cols: 770
+设置并行线程数为: 1
+Time: 742.874948 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10916.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10923.97,data/benchmarks/rome3_matrices/matrices/grafo10923.97.txt,HybridDXD,HybridDXD,1,1,success,660.155444,670.337073,0,,50,,161485,750,0,,2026-11-17T03:33:40,"Instance: grafo10923.97
+启用HybridDXD算法求解: grafo10923.97
+rows: 161485
+cols: 750
+设置并行线程数为: 1
+Time: 660.155444 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10923.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10925.95,data/benchmarks/rome3_matrices/matrices/grafo10925.95.txt,HybridDXD,HybridDXD,1,1,success,329.225776,334.141669,1.023e+515,,60,,188718,882,0,,2026-11-17T03:44:50,"Instance: grafo10925.95
+启用HybridDXD算法求解: grafo10925.95
+rows: 188718
+cols: 882
+设置并行线程数为: 1
+Time: 329.225776 s
+Solutions (scientific): 1.023e+515
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10925.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10927.95,data/benchmarks/rome3_matrices/matrices/grafo10927.95.txt,HybridDXD,HybridDXD,1,1,success,430.010133,437.281296,8.971e+509,,60,,187554,876,0,,2026-11-17T03:50:25,"Instance: grafo10927.95
+启用HybridDXD算法求解: grafo10927.95
+rows: 187554
+cols: 876
+设置并行线程数为: 1
+Time: 430.010133 s
+Solutions (scientific): 8.971e+509
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10927.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10934.95,data/benchmarks/rome3_matrices/matrices/grafo10934.95.txt,HybridDXD,HybridDXD,1,1,success,844.589585,855.209067,0,,50,,172760,770,0,,2026-11-17T03:57:42,"Instance: grafo10934.95
+启用HybridDXD算法求解: grafo10934.95
+rows: 172760
+cols: 770
+设置并行线程数为: 1
+Time: 844.589585 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10934.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10935.94,data/benchmarks/rome3_matrices/matrices/grafo10935.94.txt,HybridDXD,HybridDXD,1,1,success,882.732596,895.495153,0,,50,,166535,750,0,,2026-11-17T04:11:57,"Instance: grafo10935.94
+启用HybridDXD算法求解: grafo10935.94
+rows: 166535
+cols: 750
+设置并行线程数为: 1
+Time: 882.732596 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10935.94
+"
+20261115_115128,dxd-versions,new,rome3,grafo10936.98,data/benchmarks/rome3_matrices/matrices/grafo10936.98.txt,HybridDXD,HybridDXD,1,1,success,658.657218,665.982328,2.912e+463,,50,,176990,780,0,,2026-11-17T04:26:53,"Instance: grafo10936.98
+启用HybridDXD算法求解: grafo10936.98
+rows: 176990
+cols: 780
+设置并行线程数为: 1
+Time: 658.657218 s
+Solutions (scientific): 2.912e+463
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10936.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10944.96,data/benchmarks/rome3_matrices/matrices/grafo10944.96.txt,HybridDXD,HybridDXD,1,1,success,668.012753,677.854984,0,,50,,172580,770,0,,2026-11-17T04:37:59,"Instance: grafo10944.96
+启用HybridDXD算法求解: grafo10944.96
+rows: 172580
+cols: 770
+设置并行线程数为: 1
+Time: 668.012753 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10944.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10949.95,data/benchmarks/rome3_matrices/matrices/grafo10949.95.txt,HybridDXD,HybridDXD,1,1,success,510.392476,517.349207,9.842e+455,,50,,171755,770,0,,2026-11-17T04:49:16,"Instance: grafo10949.95
+启用HybridDXD算法求解: grafo10949.95
+rows: 171755
+cols: 770
+设置并行线程数为: 1
+Time: 510.392476 s
+Solutions (scientific): 9.842e+455
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10949.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10951.97,data/benchmarks/rome3_matrices/matrices/grafo10951.97.txt,HybridDXD,HybridDXD,1,1,error,,851.799255,,,,,171405,770,-11,exit=-11; tail=rows: 171405 cols: 770 设置并行线程数为: 1,2026-11-17T04:57:54,"Instance: grafo10951.97
+启用HybridDXD算法求解: grafo10951.97
+rows: 171405
+cols: 770
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10955.94,data/benchmarks/rome3_matrices/matrices/grafo10955.94.txt,HybridDXD,HybridDXD,1,1,error,,768.751480,,,,,167475,755,-11,exit=-11; tail=rows: 167475 cols: 755 设置并行线程数为: 1,2026-11-17T05:12:06,"Instance: grafo10955.94
+启用HybridDXD算法求解: grafo10955.94
+rows: 167475
+cols: 755
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10959.97,data/benchmarks/rome3_matrices/matrices/grafo10959.97.txt,HybridDXD,HybridDXD,1,1,success,667.760326,678.936468,6.354e+505,,60,,184074,870,0,,2026-11-17T05:24:54,"Instance: grafo10959.97
+启用HybridDXD算法求解: grafo10959.97
+rows: 184074
+cols: 870
+设置并行线程数为: 1
+Time: 667.760326 s
+Solutions (scientific): 6.354e+505
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10959.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10960.98,data/benchmarks/rome3_matrices/matrices/grafo10960.98.txt,HybridDXD,HybridDXD,1,1,success,658.876651,667.205762,1.971e+455,,50,,176095,770,0,,2026-11-17T05:36:13,"Instance: grafo10960.98
+启用HybridDXD算法求解: grafo10960.98
+rows: 176095
+cols: 770
+设置并行线程数为: 1
+Time: 658.876651 s
+Solutions (scientific): 1.971e+455
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10960.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10966.96,data/benchmarks/rome3_matrices/matrices/grafo10966.96.txt,HybridDXD,HybridDXD,1,1,success,146.239451,148.771842,1.987e+482,,60,,172968,840,0,,2026-11-17T05:47:21,"Instance: grafo10966.96
+启用HybridDXD算法求解: grafo10966.96
+rows: 172968
+cols: 840
+设置并行线程数为: 1
+Time: 146.239451 s
+Solutions (scientific): 1.987e+482
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10966.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10969.98,data/benchmarks/rome3_matrices/matrices/grafo10969.98.txt,HybridDXD,HybridDXD,1,1,success,648.391139,658.299391,0,,50,,190315,805,0,,2026-11-17T05:49:49,"Instance: grafo10969.98
+启用HybridDXD算法求解: grafo10969.98
+rows: 190315
+cols: 805
+设置并行线程数为: 1
+Time: 648.391139 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10969.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10980.95,data/benchmarks/rome3_matrices/matrices/grafo10980.95.txt,HybridDXD,HybridDXD,1,1,success,688.379707,699.608768,6.360e+459,,50,,172880,775,0,,2026-11-17T06:00:48,"Instance: grafo10980.95
+启用HybridDXD算法求解: grafo10980.95
+rows: 172880
+cols: 775
+设置并行线程数为: 1
+Time: 688.379707 s
+Solutions (scientific): 6.360e+459
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10980.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo10984.98,data/benchmarks/rome3_matrices/matrices/grafo10984.98.txt,HybridDXD,HybridDXD,1,1,success,856.942221,868.315586,0,,50,,186010,800,0,,2026-11-17T06:12:27,"Instance: grafo10984.98
+启用HybridDXD算法求解: grafo10984.98
+rows: 186010
+cols: 800
+设置并行线程数为: 1
+Time: 856.942221 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10984.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo10987.96,data/benchmarks/rome3_matrices/matrices/grafo10987.96.txt,HybridDXD,HybridDXD,1,1,success,719.001604,731.190900,8.041e+523,,60,,192804,894,0,,2026-11-17T06:26:55,"Instance: grafo10987.96
+启用HybridDXD算法求解: grafo10987.96
+rows: 192804
+cols: 894
+设置并行线程数为: 1
+Time: 719.001604 s
+Solutions (scientific): 8.041e+523
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10987.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10990.96,data/benchmarks/rome3_matrices/matrices/grafo10990.96.txt,HybridDXD,HybridDXD,1,1,success,927.155349,943.998802,0,,50,,178000,775,0,,2026-11-17T06:39:07,"Instance: grafo10990.96
+启用HybridDXD算法求解: grafo10990.96
+rows: 178000
+cols: 775
+设置并行线程数为: 1
+Time: 927.155349 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10990.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo10991.97,data/benchmarks/rome3_matrices/matrices/grafo10991.97.txt,HybridDXD,HybridDXD,1,1,success,759.074595,769.178941,0,,50,,185755,805,0,,2026-11-17T06:54:51,"Instance: grafo10991.97
+启用HybridDXD算法求解: grafo10991.97
+rows: 185755
+cols: 805
+设置并行线程数为: 1
+Time: 759.074595 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo10991.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo10996.97,data/benchmarks/rome3_matrices/matrices/grafo10996.97.txt,HybridDXD,HybridDXD,1,1,error,,662.268527,,,,,172590,770,-11,exit=-11; tail=rows: 172590 cols: 770 设置并行线程数为: 1,2026-11-17T07:07:40,"Instance: grafo10996.97
+启用HybridDXD算法求解: grafo10996.97
+rows: 172590
+cols: 770
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo10999.92,data/benchmarks/rome3_matrices/matrices/grafo10999.92.txt,HybridDXD,HybridDXD,1,1,success,435.841502,441.983210,2.729e+505,,60,,185178,870,0,,2026-11-17T07:18:42,"Instance: grafo10999.92
+启用HybridDXD算法求解: grafo10999.92
+rows: 185178
+cols: 870
+设置并行线程数为: 1
+Time: 435.841502 s
+Solutions (scientific): 2.729e+505
+Max Blocks: 60
+HybridDXD算法求解结束: grafo10999.92
+"
+20261115_115128,dxd-versions,new,rome3,grafo11002.96,data/benchmarks/rome3_matrices/matrices/grafo11002.96.txt,HybridDXD,HybridDXD,1,1,error,,813.260407,,,,,175960,780,-11,exit=-11; tail=rows: 175960 cols: 780 设置并行线程数为: 1,2026-11-17T07:26:04,"Instance: grafo11002.96
+启用HybridDXD算法求解: grafo11002.96
+rows: 175960
+cols: 780
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo11006.97,data/benchmarks/rome3_matrices/matrices/grafo11006.97.txt,HybridDXD,HybridDXD,1,1,error,,821.216197,,,,,189276,876,-11,exit=-11; tail=rows: 189276 cols: 876 设置并行线程数为: 1,2026-11-17T07:39:37,"Instance: grafo11006.97
+启用HybridDXD算法求解: grafo11006.97
+rows: 189276
+cols: 876
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo11012.96,data/benchmarks/rome3_matrices/matrices/grafo11012.96.txt,HybridDXD,HybridDXD,1,1,success,808.724742,819.292859,0,,60,,187362,882,0,,2026-11-17T07:53:19,"Instance: grafo11012.96
+启用HybridDXD算法求解: grafo11012.96
+rows: 187362
+cols: 882
+设置并行线程数为: 1
+Time: 808.724742 s
+Solutions: 0
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11012.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo11017.97,data/benchmarks/rome3_matrices/matrices/grafo11017.97.txt,HybridDXD,HybridDXD,1,1,success,607.384820,618.262976,0,,50,,172180,770,0,,2026-11-17T08:06:58,"Instance: grafo11017.97
+启用HybridDXD算法求解: grafo11017.97
+rows: 172180
+cols: 770
+设置并行线程数为: 1
+Time: 607.384820 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11017.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo11021.96,data/benchmarks/rome3_matrices/matrices/grafo11021.96.txt,HybridDXD,HybridDXD,1,1,success,482.906554,489.481160,8.273e+451,,50,,171795,765,0,,2026-11-17T08:17:16,"Instance: grafo11021.96
+启用HybridDXD算法求解: grafo11021.96
+rows: 171795
+cols: 765
+设置并行线程数为: 1
+Time: 482.906554 s
+Solutions (scientific): 8.273e+451
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11021.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo11033.94,data/benchmarks/rome3_matrices/matrices/grafo11033.94.txt,HybridDXD,HybridDXD,1,1,success,675.243110,684.285517,7.668e+474,,50,,183890,795,0,,2026-11-17T08:25:26,"Instance: grafo11033.94
+启用HybridDXD算法求解: grafo11033.94
+rows: 183890
+cols: 795
+设置并行线程数为: 1
+Time: 675.243110 s
+Solutions (scientific): 7.668e+474
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11033.94
+"
+20261115_115128,dxd-versions,new,rome3,grafo11034.95,data/benchmarks/rome3_matrices/matrices/grafo11034.95.txt,HybridDXD,HybridDXD,1,1,success,725.181905,733.473729,1.097e+524,,60,,193788,894,0,,2026-11-17T08:36:50,"Instance: grafo11034.95
+启用HybridDXD算法求解: grafo11034.95
+rows: 193788
+cols: 894
+设置并行线程数为: 1
+Time: 725.181905 s
+Solutions (scientific): 1.097e+524
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11034.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo11038.100,data/benchmarks/rome3_matrices/matrices/grafo11038.100.txt,HybridDXD,HybridDXD,1,1,success,689.914553,702.178523,0,,50,,194495,820,0,,2026-11-17T08:49:03,"Instance: grafo11038.100
+启用HybridDXD算法求解: grafo11038.100
+rows: 194495
+cols: 820
+设置并行线程数为: 1
+Time: 689.914553 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11038.100
+"
+20261115_115128,dxd-versions,new,rome3,grafo11040.95,data/benchmarks/rome3_matrices/matrices/grafo11040.95.txt,HybridDXD,HybridDXD,1,1,success,688.097535,699.781812,3.793e+514,,60,,189948,882,0,,2026-11-17T09:00:46,"Instance: grafo11040.95
+启用HybridDXD算法求解: grafo11040.95
+rows: 189948
+cols: 882
+设置并行线程数为: 1
+Time: 688.097535 s
+Solutions (scientific): 3.793e+514
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11040.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo11051.100,data/benchmarks/rome3_matrices/matrices/grafo11051.100.txt,HybridDXD,HybridDXD,1,1,success,933.122230,943.873780,0,,50,,186595,800,0,,2026-11-17T09:12:25,"Instance: grafo11051.100
+启用HybridDXD算法求解: grafo11051.100
+rows: 186595
+cols: 800
+设置并行线程数为: 1
+Time: 933.122230 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11051.100
+"
+20261115_115128,dxd-versions,new,rome3,grafo11052.97,data/benchmarks/rome3_matrices/matrices/grafo11052.97.txt,HybridDXD,HybridDXD,1,1,success,651.375753,661.406656,0,,60,,178068,858,0,,2026-11-17T09:28:09,"Instance: grafo11052.97
+启用HybridDXD算法求解: grafo11052.97
+rows: 178068
+cols: 858
+设置并行线程数为: 1
+Time: 651.375753 s
+Solutions: 0
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11052.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo11057.96,data/benchmarks/rome3_matrices/matrices/grafo11057.96.txt,HybridDXD,HybridDXD,1,1,success,267.087176,271.240282,2.403e+505,,60,,186102,870,0,,2026-11-17T09:39:11,"Instance: grafo11057.96
+启用HybridDXD算法求解: grafo11057.96
+rows: 186102
+cols: 870
+设置并行线程数为: 1
+Time: 267.087176 s
+Solutions (scientific): 2.403e+505
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11057.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo11062.99,data/benchmarks/rome3_matrices/matrices/grafo11062.99.txt,HybridDXD,HybridDXD,1,1,success,414.444374,420.050878,1.520e+448,,50,,167395,760,0,,2026-11-17T09:43:42,"Instance: grafo11062.99
+启用HybridDXD算法求解: grafo11062.99
+rows: 167395
+cols: 760
+设置并行线程数为: 1
+Time: 414.444374 s
+Solutions (scientific): 1.520e+448
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11062.99
+"
+20261115_115128,dxd-versions,new,rome3,grafo11066.96,data/benchmarks/rome3_matrices/matrices/grafo11066.96.txt,HybridDXD,HybridDXD,1,1,success,918.042548,928.898888,0,,50,,172930,770,0,,2026-11-17T09:50:42,"Instance: grafo11066.96
+启用HybridDXD算法求解: grafo11066.96
+rows: 172930
+cols: 770
+设置并行线程数为: 1
+Time: 918.042548 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11066.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo11090.93,data/benchmarks/rome3_matrices/matrices/grafo11090.93.txt,HybridDXD,HybridDXD,1,1,success,596.301049,607.916389,3.192e+510,,60,,183966,876,0,,2026-11-17T10:06:11,"Instance: grafo11090.93
+启用HybridDXD算法求解: grafo11090.93
+rows: 183966
+cols: 876
+设置并行线程数为: 1
+Time: 596.301049 s
+Solutions (scientific): 3.192e+510
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11090.93
+"
+20261115_115128,dxd-versions,new,rome3,grafo11092.97,data/benchmarks/rome3_matrices/matrices/grafo11092.97.txt,HybridDXD,HybridDXD,1,1,success,979.303919,991.856129,4.827e+487,,60,,172992,846,0,,2026-11-17T10:16:19,"Instance: grafo11092.97
+启用HybridDXD算法求解: grafo11092.97
+rows: 172992
+cols: 846
+设置并行线程数为: 1
+Time: 979.303919 s
+Solutions (scientific): 4.827e+487
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11092.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo11094.98,data/benchmarks/rome3_matrices/matrices/grafo11094.98.txt,HybridDXD,HybridDXD,1,1,success,704.634700,715.310325,0,,50,,198500,830,0,,2026-11-17T10:32:51,"Instance: grafo11094.98
+启用HybridDXD算法求解: grafo11094.98
+rows: 198500
+cols: 830
+设置并行线程数为: 1
+Time: 704.634700 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11094.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo11097.96,data/benchmarks/rome3_matrices/matrices/grafo11097.96.txt,HybridDXD,HybridDXD,1,1,success,636.546755,646.437196,0,,60,,195024,894,0,,2026-11-17T10:44:46,"Instance: grafo11097.96
+启用HybridDXD算法求解: grafo11097.96
+rows: 195024
+cols: 894
+设置并行线程数为: 1
+Time: 636.546755 s
+Solutions: 0
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11097.96
+"
+20261115_115128,dxd-versions,new,rome3,grafo11098.96,data/benchmarks/rome3_matrices/matrices/grafo11098.96.txt,HybridDXD,HybridDXD,1,1,error,,830.439266,,,,,171350,765,-11,exit=-11; tail=rows: 171350 cols: 765 设置并行线程数为: 1,2026-11-17T10:55:32,"Instance: grafo11098.96
+启用HybridDXD算法求解: grafo11098.96
+rows: 171350
+cols: 765
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo11104.95,data/benchmarks/rome3_matrices/matrices/grafo11104.95.txt,HybridDXD,HybridDXD,1,1,success,409.248068,415.241979,3.072e+523,,60,,199302,894,0,,2026-11-17T11:09:23,"Instance: grafo11104.95
+启用HybridDXD算法求解: grafo11104.95
+rows: 199302
+cols: 894
+设置并行线程数为: 1
+Time: 409.248068 s
+Solutions (scientific): 3.072e+523
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11104.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo11118.99,data/benchmarks/rome3_matrices/matrices/grafo11118.99.txt,HybridDXD,HybridDXD,1,1,memout,,796.892725,,,,,173760,775,1,exit=1; tail=cols: 775 设置并行线程数为: 1 错误：std::bad_alloc,2026-11-17T11:16:18,"Instance: grafo11118.99
+启用HybridDXD算法求解: grafo11118.99
+rows: 173760
+cols: 775
+设置并行线程数为: 1
+错误：std::bad_alloc
+"
+20261115_115128,dxd-versions,new,rome3,grafo11132.95,data/benchmarks/rome3_matrices/matrices/grafo11132.95.txt,HybridDXD,HybridDXD,1,1,success,761.833168,772.326976,0,,60,,195078,894,0,,2026-11-17T11:29:35,"Instance: grafo11132.95
+启用HybridDXD算法求解: grafo11132.95
+rows: 195078
+cols: 894
+设置并行线程数为: 1
+Time: 761.833168 s
+Solutions: 0
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11132.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo11135.95,data/benchmarks/rome3_matrices/matrices/grafo11135.95.txt,HybridDXD,HybridDXD,1,1,success,646.940863,657.214687,0,,50,,174315,775,0,,2026-11-17T11:42:27,"Instance: grafo11135.95
+启用HybridDXD算法求解: grafo11135.95
+rows: 174315
+cols: 775
+设置并行线程数为: 1
+Time: 646.940863 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11135.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo11141.95,data/benchmarks/rome3_matrices/matrices/grafo11141.95.txt,HybridDXD,HybridDXD,1,1,success,478.472168,485.312062,3.330e+440,,50,,162340,750,0,,2026-11-17T11:53:24,"Instance: grafo11141.95
+启用HybridDXD算法求解: grafo11141.95
+rows: 162340
+cols: 750
+设置并行线程数为: 1
+Time: 478.472168 s
+Solutions (scientific): 3.330e+440
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11141.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo11150.99,data/benchmarks/rome3_matrices/matrices/grafo11150.99.txt,HybridDXD,HybridDXD,1,1,success,390.663522,398.244009,6.987e+451,,50,,170605,765,0,,2026-11-17T12:01:30,"Instance: grafo11150.99
+启用HybridDXD算法求解: grafo11150.99
+rows: 170605
+cols: 765
+设置并行线程数为: 1
+Time: 390.663522 s
+Solutions (scientific): 6.987e+451
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11150.99
+"
+20261115_115128,dxd-versions,new,rome3,grafo11152.98,data/benchmarks/rome3_matrices/matrices/grafo11152.98.txt,HybridDXD,HybridDXD,1,1,success,877.257377,894.479423,0,,50,,184040,790,0,,2026-11-17T12:08:08,"Instance: grafo11152.98
+启用HybridDXD算法求解: grafo11152.98
+rows: 184040
+cols: 790
+设置并行线程数为: 1
+Time: 877.257377 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11152.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo11154.95,data/benchmarks/rome3_matrices/matrices/grafo11154.95.txt,HybridDXD,HybridDXD,1,1,success,759.751214,772.410257,0,,50,,173765,770,0,,2026-11-17T12:23:03,"Instance: grafo11154.95
+启用HybridDXD算法求解: grafo11154.95
+rows: 173765
+cols: 770
+设置并行线程数为: 1
+Time: 759.751214 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11154.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo11174.91,data/benchmarks/rome3_matrices/matrices/grafo11174.91.txt,HybridDXD,HybridDXD,1,1,success,741.123356,751.781253,8.788e+514,,60,,190086,882,0,,2026-11-17T12:35:55,"Instance: grafo11174.91
+启用HybridDXD算法求解: grafo11174.91
+rows: 190086
+cols: 882
+设置并行线程数为: 1
+Time: 741.123356 s
+Solutions (scientific): 8.788e+514
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11174.91
+"
+20261115_115128,dxd-versions,new,rome3,grafo11177.98,data/benchmarks/rome3_matrices/matrices/grafo11177.98.txt,HybridDXD,HybridDXD,1,1,success,828.071466,838.664940,0,,50,,187090,800,0,,2026-11-17T12:48:27,"Instance: grafo11177.98
+启用HybridDXD算法求解: grafo11177.98
+rows: 187090
+cols: 800
+设置并行线程数为: 1
+Time: 828.071466 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11177.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo11184.93,data/benchmarks/rome3_matrices/matrices/grafo11184.93.txt,HybridDXD,HybridDXD,1,1,success,348.308876,353.450355,3.333e+491,,60,,178362,852,0,,2026-11-17T13:02:25,"Instance: grafo11184.93
+启用HybridDXD算法求解: grafo11184.93
+rows: 178362
+cols: 852
+设置并行线程数为: 1
+Time: 348.308876 s
+Solutions (scientific): 3.333e+491
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11184.93
+"
+20261115_115128,dxd-versions,new,rome3,grafo11186.93,data/benchmarks/rome3_matrices/matrices/grafo11186.93.txt,HybridDXD,HybridDXD,1,1,success,403.558660,409.239613,1.378e+444,,50,,167380,755,0,,2026-11-17T13:08:19,"Instance: grafo11186.93
+启用HybridDXD算法求解: grafo11186.93
+rows: 167380
+cols: 755
+设置并行线程数为: 1
+Time: 403.558660 s
+Solutions (scientific): 1.378e+444
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11186.93
+"
+20261115_115128,dxd-versions,new,rome3,grafo11188.99,data/benchmarks/rome3_matrices/matrices/grafo11188.99.txt,HybridDXD,HybridDXD,1,1,memout,,743.148621,,,,,183250,795,1,exit=1; tail=cols: 795 设置并行线程数为: 1 错误：std::bad_alloc,2026-11-17T13:15:08,"Instance: grafo11188.99
+启用HybridDXD算法求解: grafo11188.99
+rows: 183250
+cols: 795
+设置并行线程数为: 1
+错误：std::bad_alloc
+"
+20261115_115128,dxd-versions,new,rome3,grafo11203.100,data/benchmarks/rome3_matrices/matrices/grafo11203.100.txt,HybridDXD,HybridDXD,1,1,memout,,835.960899,,,,,174525,775,1,exit=1; tail=cols: 775 设置并行线程数为: 1 错误：std::bad_alloc,2026-11-17T13:27:31,"Instance: grafo11203.100
+启用HybridDXD算法求解: grafo11203.100
+rows: 174525
+cols: 775
+设置并行线程数为: 1
+错误：std::bad_alloc
+"
+20261115_115128,dxd-versions,new,rome3,grafo11217.95,data/benchmarks/rome3_matrices/matrices/grafo11217.95.txt,HybridDXD,HybridDXD,1,1,memout,,1008.360263,,,,,180035,780,1,exit=1; tail=cols: 780 设置并行线程数为: 1 错误：std::bad_alloc,2026-11-17T13:41:27,"Instance: grafo11217.95
+启用HybridDXD算法求解: grafo11217.95
+rows: 180035
+cols: 780
+设置并行线程数为: 1
+错误：std::bad_alloc
+"
+20261115_115128,dxd-versions,new,rome3,grafo11219.94,data/benchmarks/rome3_matrices/matrices/grafo11219.94.txt,HybridDXD,HybridDXD,1,1,success,637.024858,646.928400,0,,60,,172938,846,0,,2026-11-17T13:58:16,"Instance: grafo11219.94
+启用HybridDXD算法求解: grafo11219.94
+rows: 172938
+cols: 846
+设置并行线程数为: 1
+Time: 637.024858 s
+Solutions: 0
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11219.94
+"
+20261115_115128,dxd-versions,new,rome3,grafo11222.93,data/benchmarks/rome3_matrices/matrices/grafo11222.93.txt,HybridDXD,HybridDXD,1,1,success,364.238795,369.351960,2.988e+542,,70,,185087,952,0,,2026-11-17T14:09:02,"Instance: grafo11222.93
+启用HybridDXD算法求解: grafo11222.93
+rows: 185087
+cols: 952
+设置并行线程数为: 1
+Time: 364.238795 s
+Solutions (scientific): 2.988e+542
+Max Blocks: 70
+HybridDXD算法求解结束: grafo11222.93
+"
+20261115_115128,dxd-versions,new,rome3,grafo11232.92,data/benchmarks/rome3_matrices/matrices/grafo11232.92.txt,HybridDXD,HybridDXD,1,1,success,775.044843,790.395119,0,,60,,187536,876,0,,2026-11-17T14:15:12,"Instance: grafo11232.92
+启用HybridDXD算法求解: grafo11232.92
+rows: 187536
+cols: 876
+设置并行线程数为: 1
+Time: 775.044843 s
+Solutions: 0
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11232.92
+"
+20261115_115128,dxd-versions,new,rome3,grafo11233.93,data/benchmarks/rome3_matrices/matrices/grafo11233.93.txt,HybridDXD,HybridDXD,1,1,success,760.675695,772.695276,0,,50,,167360,760,0,,2026-11-17T14:28:22,"Instance: grafo11233.93
+启用HybridDXD算法求解: grafo11233.93
+rows: 167360
+cols: 760
+设置并行线程数为: 1
+Time: 760.675695 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11233.93
+"
+20261115_115128,dxd-versions,new,rome3,grafo11248.99,data/benchmarks/rome3_matrices/matrices/grafo11248.99.txt,HybridDXD,HybridDXD,1,1,success,900.024129,915.681180,0,,50,,179195,785,0,,2026-11-17T14:41:15,"Instance: grafo11248.99
+启用HybridDXD算法求解: grafo11248.99
+rows: 179195
+cols: 785
+设置并行线程数为: 1
+Time: 900.024129 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11248.99
+"
+20261115_115128,dxd-versions,new,rome3,grafo11270.93,data/benchmarks/rome3_matrices/matrices/grafo11270.93.txt,HybridDXD,HybridDXD,1,1,success,710.554681,718.814270,9.415e+500,,60,,181818,864,0,,2026-11-17T14:56:31,"Instance: grafo11270.93
+启用HybridDXD算法求解: grafo11270.93
+rows: 181818
+cols: 864
+设置并行线程数为: 1
+Time: 710.554681 s
+Solutions (scientific): 9.415e+500
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11270.93
+"
+20261115_115128,dxd-versions,new,rome3,grafo11272.99,data/benchmarks/rome3_matrices/matrices/grafo11272.99.txt,HybridDXD,HybridDXD,1,1,success,604.537667,615.231379,0,,50,,197295,825,0,,2026-11-17T15:08:29,"Instance: grafo11272.99
+启用HybridDXD算法求解: grafo11272.99
+rows: 197295
+cols: 825
+设置并行线程数为: 1
+Time: 604.537667 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11272.99
+"
+20261115_115128,dxd-versions,new,rome3,grafo11287.93,data/benchmarks/rome3_matrices/matrices/grafo11287.93.txt,HybridDXD,HybridDXD,1,1,success,411.796838,417.759269,3.789e+509,,60,,188562,876,0,,2026-11-17T15:18:45,"Instance: grafo11287.93
+启用HybridDXD算法求解: grafo11287.93
+rows: 188562
+cols: 876
+设置并行线程数为: 1
+Time: 411.796838 s
+Solutions (scientific): 3.789e+509
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11287.93
+"
+20261115_115128,dxd-versions,new,rome3,grafo11305.99,data/benchmarks/rome3_matrices/matrices/grafo11305.99.txt,HybridDXD,HybridDXD,1,1,error,,832.450882,,,,,172060,765,-11,exit=-11; tail=rows: 172060 cols: 765 设置并行线程数为: 1,2026-11-17T15:25:42,"Instance: grafo11305.99
+启用HybridDXD算法求解: grafo11305.99
+rows: 172060
+cols: 765
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo11316.99,data/benchmarks/rome3_matrices/matrices/grafo11316.99.txt,HybridDXD,HybridDXD,1,1,success,540.483111,547.458988,2.079e+444,,50,,166115,755,0,,2026-11-17T15:39:35,"Instance: grafo11316.99
+启用HybridDXD算法求解: grafo11316.99
+rows: 166115
+cols: 755
+设置并行线程数为: 1
+Time: 540.483111 s
+Solutions (scientific): 2.079e+444
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11316.99
+"
+20261115_115128,dxd-versions,new,rome3,grafo11355.92,data/benchmarks/rome3_matrices/matrices/grafo11355.92.txt,HybridDXD,HybridDXD,1,1,success,477.224566,483.802989,2.180e+440,,50,,165940,750,0,,2026-11-17T15:48:42,"Instance: grafo11355.92
+启用HybridDXD算法求解: grafo11355.92
+rows: 165940
+cols: 750
+设置并行线程数为: 1
+Time: 477.224566 s
+Solutions (scientific): 2.180e+440
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11355.92
+"
+20261115_115128,dxd-versions,new,rome3,grafo11367.92,data/benchmarks/rome3_matrices/matrices/grafo11367.92.txt,HybridDXD,HybridDXD,1,1,success,450.935992,458.223957,1.119e+510,,60,,189120,876,0,,2026-11-17T15:56:46,"Instance: grafo11367.92
+启用HybridDXD算法求解: grafo11367.92
+rows: 189120
+cols: 876
+设置并行线程数为: 1
+Time: 450.935992 s
+Solutions (scientific): 1.119e+510
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11367.92
+"
+20261115_115128,dxd-versions,new,rome3,grafo11380.97,data/benchmarks/rome3_matrices/matrices/grafo11380.97.txt,HybridDXD,HybridDXD,1,1,success,822.465447,835.029053,0,,50,,165670,760,0,,2026-11-17T16:04:24,"Instance: grafo11380.97
+启用HybridDXD算法求解: grafo11380.97
+rows: 165670
+cols: 760
+设置并行线程数为: 1
+Time: 822.465447 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11380.97
+"
+20261115_115128,dxd-versions,new,rome3,grafo11381.92,data/benchmarks/rome3_matrices/matrices/grafo11381.92.txt,HybridDXD,HybridDXD,1,1,success,385.481457,390.009157,2.564e+478,,60,,166356,834,0,,2026-11-17T16:18:19,"Instance: grafo11381.92
+启用HybridDXD算法求解: grafo11381.92
+rows: 166356
+cols: 834
+设置并行线程数为: 1
+Time: 385.481457 s
+Solutions (scientific): 2.564e+478
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11381.92
+"
+20261115_115128,dxd-versions,new,rome3,grafo11390.90,data/benchmarks/rome3_matrices/matrices/grafo11390.90.txt,HybridDXD,HybridDXD,1,1,success,236.984209,240.653019,1.354e+496,,60,,181932,858,0,,2026-11-17T16:24:49,"Instance: grafo11390.90
+启用HybridDXD算法求解: grafo11390.90
+rows: 181932
+cols: 858
+设置并行线程数为: 1
+Time: 236.984209 s
+Solutions (scientific): 1.354e+496
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11390.90
+"
+20261115_115128,dxd-versions,new,rome3,grafo11393.92,data/benchmarks/rome3_matrices/matrices/grafo11393.92.txt,HybridDXD,HybridDXD,1,1,success,401.338170,407.195428,1.790e+524,,60,,192090,894,0,,2026-11-17T16:28:50,"Instance: grafo11393.92
+启用HybridDXD算法求解: grafo11393.92
+rows: 192090
+cols: 894
+设置并行线程数为: 1
+Time: 401.338170 s
+Solutions (scientific): 1.790e+524
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11393.92
+"
+20261115_115128,dxd-versions,new,rome3,grafo11404.92,data/benchmarks/rome3_matrices/matrices/grafo11404.92.txt,HybridDXD,HybridDXD,1,1,success,664.629874,674.580004,0,,60,,192126,882,0,,2026-11-17T16:35:37,"Instance: grafo11404.92
+启用HybridDXD算法求解: grafo11404.92
+rows: 192126
+cols: 882
+设置并行线程数为: 1
+Time: 664.629874 s
+Solutions: 0
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11404.92
+"
+20261115_115128,dxd-versions,new,rome3,grafo11419.92,data/benchmarks/rome3_matrices/matrices/grafo11419.92.txt,HybridDXD,HybridDXD,1,1,success,862.494965,878.926115,0,,60,,188328,876,0,,2026-11-17T16:46:52,"Instance: grafo11419.92
+启用HybridDXD算法求解: grafo11419.92
+rows: 188328
+cols: 876
+设置并行线程数为: 1
+Time: 862.494965 s
+Solutions: 0
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11419.92
+"
+20261115_115128,dxd-versions,new,rome3,grafo11433.92,data/benchmarks/rome3_matrices/matrices/grafo11433.92.txt,HybridDXD,HybridDXD,1,1,success,158.396949,161.373738,5.433e+468,,60,,163548,822,0,,2026-11-17T17:01:31,"Instance: grafo11433.92
+启用HybridDXD算法求解: grafo11433.92
+rows: 163548
+cols: 822
+设置并行线程数为: 1
+Time: 158.396949 s
+Solutions (scientific): 5.433e+468
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11433.92
+"
+20261115_115128,dxd-versions,new,rome3,grafo11453.91,data/benchmarks/rome3_matrices/matrices/grafo11453.91.txt,HybridDXD,HybridDXD,1,1,success,444.924840,450.811441,4.870e+491,,60,,179706,852,0,,2026-11-17T17:04:12,"Instance: grafo11453.91
+启用HybridDXD算法求解: grafo11453.91
+rows: 179706
+cols: 852
+设置并行线程数为: 1
+Time: 444.924840 s
+Solutions (scientific): 4.870e+491
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11453.91
+"
+20261115_115128,dxd-versions,new,rome3,grafo11471.91,data/benchmarks/rome3_matrices/matrices/grafo11471.91.txt,HybridDXD,HybridDXD,1,1,success,301.773110,306.267329,1.663e+469,,60,,160758,822,0,,2026-11-17T17:11:43,"Instance: grafo11471.91
+启用HybridDXD算法求解: grafo11471.91
+rows: 160758
+cols: 822
+设置并行线程数为: 1
+Time: 301.773110 s
+Solutions (scientific): 1.663e+469
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11471.91
+"
+20261115_115128,dxd-versions,new,rome3,grafo11506.91,data/benchmarks/rome3_matrices/matrices/grafo11506.91.txt,HybridDXD,HybridDXD,1,1,success,817.641485,830.601443,0,,50,,168550,755,0,,2026-11-17T17:16:49,"Instance: grafo11506.91
+启用HybridDXD算法求解: grafo11506.91
+rows: 168550
+cols: 755
+设置并行线程数为: 1
+Time: 817.641485 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11506.91
+"
+20261115_115128,dxd-versions,new,rome3,grafo11557.95,data/benchmarks/rome3_matrices/matrices/grafo11557.95.txt,HybridDXD,HybridDXD,1,1,success,436.795666,444.310056,3.718e+505,,60,,180726,870,0,,2026-11-17T17:30:40,"Instance: grafo11557.95
+启用HybridDXD算法求解: grafo11557.95
+rows: 180726
+cols: 870
+设置并行线程数为: 1
+Time: 436.795666 s
+Solutions (scientific): 3.718e+505
+Max Blocks: 60
+HybridDXD算法求解结束: grafo11557.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo11602.95,data/benchmarks/rome3_matrices/matrices/grafo11602.95.txt,HybridDXD,HybridDXD,1,1,success,763.658540,772.142725,3.233e+440,,50,,166085,750,0,,2026-11-17T17:38:04,"Instance: grafo11602.95
+启用HybridDXD算法求解: grafo11602.95
+rows: 166085
+cols: 750
+设置并行线程数为: 1
+Time: 763.658540 s
+Solutions (scientific): 3.233e+440
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11602.95
+"
+20261115_115128,dxd-versions,new,rome3,grafo11624.96,data/benchmarks/rome3_matrices/matrices/grafo11624.96.txt,HybridDXD,HybridDXD,1,1,error,,663.922155,,,,,172540,765,-11,exit=-11; tail=rows: 172540 cols: 765 设置并行线程数为: 1,2026-11-17T17:50:56,"Instance: grafo11624.96
+启用HybridDXD算法求解: grafo11624.96
+rows: 172540
+cols: 765
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo11657.100,data/benchmarks/rome3_matrices/matrices/grafo11657.100.txt,HybridDXD,HybridDXD,1,1,success,757.983215,772.192142,0,,50,,169785,765,0,,2026-11-17T18:02:00,"Instance: grafo11657.100
+启用HybridDXD算法求解: grafo11657.100
+rows: 169785
+cols: 765
+设置并行线程数为: 1
+Time: 757.983215 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo11657.100
+"
+20261115_115128,dxd-versions,new,rome3,grafo3158.98,data/benchmarks/rome3_matrices/matrices/grafo3158.98.txt,HybridDXD,HybridDXD,1,1,success,785.329451,804.604209,0,,50,,173500,765,0,,2026-11-17T18:14:52,"Instance: grafo3158.98
+启用HybridDXD算法求解: grafo3158.98
+rows: 173500
+cols: 765
+设置并行线程数为: 1
+Time: 785.329451 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo3158.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo3184.91,data/benchmarks/rome3_matrices/matrices/grafo3184.91.txt,HybridDXD,HybridDXD,1,1,success,651.638438,661.341173,7.545e+475,,54,,179100,810,0,,2026-11-17T18:28:17,"Instance: grafo3184.91
+启用HybridDXD算法求解: grafo3184.91
+rows: 179100
+cols: 810
+设置并行线程数为: 1
+Time: 651.638438 s
+Solutions (scientific): 7.545e+475
+Max Blocks: 54
+HybridDXD算法求解结束: grafo3184.91
+"
+20261115_115128,dxd-versions,new,rome3,grafo3482.98,data/benchmarks/rome3_matrices/matrices/grafo3482.98.txt,HybridDXD,HybridDXD,1,1,success,789.611001,800.767824,0,,50,,184265,800,0,,2026-11-17T18:39:18,"Instance: grafo3482.98
+启用HybridDXD算法求解: grafo3482.98
+rows: 184265
+cols: 800
+设置并行线程数为: 1
+Time: 789.611001 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo3482.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo3699.99,data/benchmarks/rome3_matrices/matrices/grafo3699.99.txt,HybridDXD,HybridDXD,1,1,success,418.783055,424.391691,1.030e+448,,50,,170000,760,0,,2026-11-17T18:52:39,"Instance: grafo3699.99
+启用HybridDXD算法求解: grafo3699.99
+rows: 170000
+cols: 760
+设置并行线程数为: 1
+Time: 418.783055 s
+Solutions (scientific): 1.030e+448
+Max Blocks: 50
+HybridDXD算法求解结束: grafo3699.99
+"
+20261115_115128,dxd-versions,new,rome3,grafo6278.98,data/benchmarks/rome3_matrices/matrices/grafo6278.98.txt,HybridDXD,HybridDXD,1,1,success,621.177053,632.115616,0,,50,,174750,780,0,,2026-11-17T18:59:43,"Instance: grafo6278.98
+启用HybridDXD算法求解: grafo6278.98
+rows: 174750
+cols: 780
+设置并行线程数为: 1
+Time: 621.177053 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo6278.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo6585.97,data/benchmarks/rome3_matrices/matrices/grafo6585.97.txt,HybridDXD,HybridDXD,1,1,error,,929.504675,,,,,183155,800,-11,exit=-11; tail=rows: 183155 cols: 800 设置并行线程数为: 1,2026-11-17T19:10:16,"Instance: grafo6585.97
+启用HybridDXD算法求解: grafo6585.97
+rows: 183155
+cols: 800
+设置并行线程数为: 1
+"
+20261115_115128,dxd-versions,new,rome3,grafo6654.87,data/benchmarks/rome3_matrices/matrices/grafo6654.87.txt,HybridDXD,HybridDXD,1,1,success,218.251029,221.288290,2.710e+515,,70,,168546,917,0,,2026-11-17T19:25:45,"Instance: grafo6654.87
+启用HybridDXD算法求解: grafo6654.87
+rows: 168546
+cols: 917
+设置并行线程数为: 1
+Time: 218.251029 s
+Solutions (scientific): 2.710e+515
+Max Blocks: 70
+HybridDXD算法求解结束: grafo6654.87
+"
+20261115_115128,dxd-versions,new,rome3,grafo6660.98,data/benchmarks/rome3_matrices/matrices/grafo6660.98.txt,HybridDXD,HybridDXD,1,1,success,701.105606,717.131809,0,,50,,163330,750,0,,2026-11-17T19:29:26,"Instance: grafo6660.98
+启用HybridDXD算法求解: grafo6660.98
+rows: 163330
+cols: 750
+设置并行线程数为: 1
+Time: 701.105606 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo6660.98
+"
+20261115_115128,dxd-versions,new,rome3,grafo6999.94,data/benchmarks/rome3_matrices/matrices/grafo6999.94.txt,HybridDXD,HybridDXD,1,1,success,863.757526,881.598573,0,,50,,179855,785,0,,2026-11-17T19:41:23,"Instance: grafo6999.94
+启用HybridDXD算法求解: grafo6999.94
+rows: 179855
+cols: 785
+设置并行线程数为: 1
+Time: 863.757526 s
+Solutions: 0
+Max Blocks: 50
+HybridDXD算法求解结束: grafo6999.94
+"
+20261115_115128,dxd-versions,new,rome3,grafo7101.86,data/benchmarks/rome3_matrices/matrices/grafo7101.86.txt,HybridDXD,HybridDXD,1,1,error,,804.451937,,,,,167718,840,-11,exit=-11; tail=rows: 167718 cols: 840 设置并行线程数为: 1,2026-11-17T19:56:05,"Instance: grafo7101.86
+启用HybridDXD算法求解: grafo7101.86
+rows: 167718
+cols: 840
+设置并行线程数为: 1
+"

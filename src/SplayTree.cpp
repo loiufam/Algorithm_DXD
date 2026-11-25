@@ -308,10 +308,21 @@ void EulerTourTree::link(int u, int v, EulerTourTree* otherTree) {
 }
 
 Node* EulerTourTree::joinTreesViaEdge(Node* root1, Node* root2, int u, int v) {
+    // cutWithReplacement() temporarily has two disconnected roots.  The
+    // endpoints of the replacement edge can belong to either side, so reroot
+    // each endpoint relative to its own subtree before joining them.
+    Node* nodeU = getRepresentative(u);
+    Node* nodeV = getRepresentative(v);
+    if (!nodeU || !nodeV) return nullptr;
+
+    root1 = findRoot(nodeU);
+    root = root1;
     reroot(u);
-    reroot(v);
-   
     root1 = findRoot(getRepresentative(u));
+
+    root2 = findRoot(getRepresentative(v));
+    root = root2;
+    reroot(v);
     root2 = findRoot(getRepresentative(v));
 
     Node* edgeUV = new Node(u, v);
@@ -591,9 +602,8 @@ Edge EulerTourTree::findReplacementEdge(Node* rootU, Node* rootV,
             candidates = &adjacency->second;
         }
         for (int to : *candidates) {
-
-            if (smallerVertices.count(to)) continue;
             if (metrics) ++metrics->scanSteps;
+            if (smallerVertices.count(to)) continue;
             Edge e(from, to);
             Node* nodeU = getRepresentative(e.u);
             Node* nodeV = getRepresentative(e.v);
@@ -604,7 +614,11 @@ Edge EulerTourTree::findReplacementEdge(Node* rootU, Node* rootV,
             Node* rV = findRoot(nodeV);
         
             if ((rU == rootU && rV == rootV) || (rU == rootV && rV == rootU)) {
-                if (metrics) metrics->found = true;
+                if (metrics) {
+                    metrics->found = true;
+                    metrics->replacementU = e.u;
+                    metrics->replacementV = e.v;
+                }
                 return e;
             }
         }
@@ -635,7 +649,6 @@ std::unique_ptr<EulerTourTree> EulerTourTree::cutWithReplacement(
         return nullptr; // 没有产生新分量
     } else {
         auto newTree = std::make_unique<EulerTourTree>(-1);
-        newTree->replacementNeighborProvider = replacementNeighborProvider;
 
         Node* T_small = (getSize(treeU) < getSize(treeV)) ? treeU : treeV;
         Node* T_large = (T_small == treeU) ? treeV : treeU;
@@ -671,20 +684,27 @@ std::unique_ptr<EulerTourTree> EulerTourTree::cutWithReplacement(
             }
         }
 
-        auto it = nonTreeEdges.begin();
-        while (it != nonTreeEdges.end()) {
-            bool inSmallU = newTree->vertices.count(it->u);
-            bool inSmallV = newTree->vertices.count(it->v);
-
-            if (inSmallU && inSmallV) {
-                const Edge edge = *it;
-                ++it;
-                removeNonTreeEdge(edge);
-                newTree->addNonTreeEdge(edge);
-            } else {
-                ++it;
+        // Only edges incident to the smaller side can change ownership.
+        // Scanning the global non-tree set here would make each cut O(E_N).
+        std::unordered_set<Edge, EdgeHash> incidentNonTreeEdges;
+        incidentNonTreeEdges.reserve(newTree->vertices.size());
+        for (int vertex : newTree->vertices) {
+            auto adjacency = nonTreeNeighbors.find(vertex);
+            if (adjacency == nonTreeNeighbors.end()) continue;
+            for (int neighbor : adjacency->second) {
+                incidentNonTreeEdges.emplace(vertex, neighbor);
             }
         }
+        for (const Edge& edge : incidentNonTreeEdges) {
+            if (!hasNonTreeEdge(edge)) continue;
+            const bool inSmallU = newTree->vertices.count(edge.u);
+            const bool inSmallV = newTree->vertices.count(edge.v);
+            removeNonTreeEdge(edge);
+            if (inSmallU && inSmallV) {
+                newTree->addNonTreeEdge(edge);
+            }
+        }
+        newTree->replacementNeighborProvider = replacementNeighborProvider;
 
         newTree->root = T_small;
         root = T_large;

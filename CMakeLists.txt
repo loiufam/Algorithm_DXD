@@ -48,6 +48,7 @@ set(COMMON_SOURCES
     src/DXZSolver.cpp
     src/DXDSolver.cpp
     src/HybridDXD.cpp
+    src/LegacyHybridDXD.cpp
     # DynamicGraph.cpp 通过 #include 在 DancingMatrix.cpp 中引入，故不再单独参与编译
     # src/TreapETT.cpp
     src/DXDTime.cpp
@@ -64,11 +65,13 @@ add_executable(main src/main.cpp ${COMMON_SOURCES})
 target_compile_definitions(main PRIVATE
     ALGORITHM_DXD_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
 )
+set(ALGORITHM_DXD_BIN_DIR "${PROJECT_SOURCE_DIR}/bin"
+    CACHE PATH "Directory where scripts expect the main executable")
 add_custom_command(TARGET main POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_SOURCE_DIR}/bin"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${ALGORITHM_DXD_BIN_DIR}"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "$<TARGET_FILE:main>" "${PROJECT_SOURCE_DIR}/bin/main"
-    COMMENT "Mirroring main to ${PROJECT_SOURCE_DIR}/bin/main"
+            "$<TARGET_FILE:main>" "${ALGORITHM_DXD_BIN_DIR}/main"
+    COMMENT "Mirroring main to ${ALGORITHM_DXD_BIN_DIR}/main"
 )
 
 # ==========================================
@@ -122,6 +125,51 @@ endif()
 # ==========================================
 # 4. P1 修复回归测试
 # ==========================================
+add_executable(
+    test_improved_bfs
+    test/test_improved_bfs.cpp
+    test/improved_bfs.cpp
+)
+enable_testing()
+add_test(
+    NAME improved_bfs_unit
+    COMMAND test_improved_bfs
+)
+
+find_package(Python3 COMPONENTS Interpreter QUIET)
+if(Python3_Interpreter_FOUND)
+    add_test(
+        NAME hybrid_runtime_small
+        COMMAND ${Python3_EXECUTABLE}
+                ${PROJECT_SOURCE_DIR}/test/test_hybrid_runtime.py
+    )
+endif()
+
+add_executable(
+    test_ett_invariants
+    test/test_ett_invariants.cpp
+    ${COMMON_SOURCES}
+)
+target_compile_definitions(test_ett_invariants PRIVATE
+    ALGORITHM_DXD_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
+)
+target_link_libraries(
+    test_ett_invariants PUBLIC ${GMPXX_LIB} ${GMP_LIB}
+)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(
+        test_ett_invariants PUBLIC OpenMP::OpenMP_CXX
+    )
+endif()
+if(TBB_FOUND)
+    target_link_libraries(test_ett_invariants PUBLIC TBB::tbb)
+endif()
+add_test(
+    NAME ett_invariants
+    COMMAND test_ett_invariants
+            ${PROJECT_SOURCE_DIR}/test/parallel_components.ec
+)
+
 # add_executable(test_p1_fixes test/test_p1_fixes.cpp ${COMMON_SOURCES})
 # if(GMP_LIB AND GMPXX_LIB)
 #     target_link_libraries(test_p1_fixes PUBLIC ${GMPXX_LIB} ${GMP_LIB})

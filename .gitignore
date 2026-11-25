@@ -20,3 +20,30 @@ docs
 test
 utils
 visualize
+proc_tools
+
+# Keep the standalone improved-BFS design and tests visible.
+!test/
+test/*
+!test/improved_bfs.h
+!test/improved_bfs.cpp
+!test/test_improved_bfs.cpp
+!test/test_hybrid_runtime.py
+!test/IMPROVED_BFS_REPORT.md
+
+# Keep the experiment runbook and benchmark manifests visible while the
+# benchmark inputs and generated outputs remain ignored.
+data/*
+!data/benchmarks/
+data/benchmarks/*
+!data/benchmarks/README.md
+!data/benchmarks/benchmark_manifest.csv
+!data/benchmarks/benchmark_manifest.json
+!data/benchmarks/manifests/
+data/benchmarks/manifests/*
+!data/benchmarks/manifests/*.txt
+
+!docs/
+docs/*
+!docs/EXPERIMENT_RUNBOOK.md
+!docs/EXPERIMENT_PROGRESS.md

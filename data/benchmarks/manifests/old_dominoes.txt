@@ -1,0 +1,10 @@
+dominoes_10x10
+dominoes_10x12
+dominoes_12x12
+dominoes_8x10
+dominoes_8x8
+tetrominoes_4x5
+tetrominoes_4x7
+tetrominoes_6x6
+tetrominoes_6x8
+tetrominoes_8x8

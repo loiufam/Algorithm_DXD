@@ -12,6 +12,7 @@ using namespace std;
 
 enum class NodeType { OR, Decision, Decomposed, Variable, Terminal };
 enum class DecomMode { Dynamic, Static };
+enum class DXDBfsPolicy { Always, Threshold };
 
 class HybridDXD;
 
@@ -70,6 +71,7 @@ class DanceDNNF : protected DancingMatrix {
 
     public:
         friend class HybridDXD;
+        friend class LegacyHybridDXD;
 
         DanceDNNF(int rows, int cols, int** matrix, Logger& l,
                   bool verbose = false, int pool_size = 8)
@@ -120,6 +122,7 @@ class DanceDNNF : protected DancingMatrix {
         std::atomic<std::clock_t> ccBfsCpuTicks{0};
         std::atomic<std::clock_t> ccDecrementCpuTicks{0};
         std::atomic<std::clock_t> ccIncrementCpuTicks{0};
+        std::atomic<uint64_t> ccBfsWallNanoseconds{0};
         bool collectCCTime = false;
         bool debug = false;
         bool skipDNNFSize = false;
@@ -144,10 +147,17 @@ class DanceDNNF : protected DancingMatrix {
         // Initial-split target selection: choose the smallest component when
         // the full instance area exceeds this value, otherwise the largest.
         size_t bfs_area_threshold = 100000;
+        DXDBfsPolicy dxdBfsPolicy = DXDBfsPolicy::Always;
+        long double dxdBfsThresholdRatio = 0.5L;
         size_t ccEttMaxCalls = 0;
         std::atomic<size_t> ccEttCallsUsed{0};
         size_t ccBfsMaxCalls = 10;
         std::atomic<size_t> ccBfsCallsUsed{0};
+        std::atomic<uint64_t> dxdBfsCalls{0};
+        std::atomic<uint64_t> dxdMultiSplits{0};
+        std::atomic<uint64_t> dxdThresholdStops{0};
+        std::atomic<uint64_t>* bfsCallCounter = nullptr;
+        std::atomic<uint64_t>* componentQueryCallCounter = nullptr;
         size_t quickStatsUpdateLimit = 0;
         bool pureDynDXD = false;
 
@@ -322,6 +332,12 @@ class DanceDNNF : protected DancingMatrix {
         void setBFSAreaThreshold(size_t area) {
             bfs_area_threshold = area == 0 ? size_t{100000} : area;
         }
+        void setDXDBfsPolicy(DXDBfsPolicy policy) {
+            dxdBfsPolicy = policy;
+        }
+        void setDXDBfsThresholdRatio(long double ratio) {
+            dxdBfsThresholdRatio = ratio;
+        }
 
         void setTimeLimit(long seconds) { timer.setTimeBound(seconds); }
         void logCCExperimentStats(bool complete, bool quick = false);
@@ -394,6 +410,64 @@ class DanceDNNF : protected DancingMatrix {
         static double ticksToSeconds(const std::atomic<std::clock_t>& ticks) {
             return static_cast<double>(ticks.load(std::memory_order_relaxed)) / CLOCKS_PER_SEC;
         }
+
+        double ccBfsWallSeconds() const {
+            return static_cast<double>(
+                       ccBfsWallNanoseconds.load(
+                           std::memory_order_relaxed)) /
+                   1e9;
+        }
+
+    private:
+        void beginCCBfsWallTime() {
+            std::lock_guard<std::mutex> lock(ccBfsWallMutex_);
+            if (ccBfsActiveCalls_++ == 0) {
+                ccBfsWallStart_ = std::chrono::steady_clock::now();
+            }
+        }
+
+        void endCCBfsWallTime() {
+            std::lock_guard<std::mutex> lock(ccBfsWallMutex_);
+            if (ccBfsActiveCalls_ == 0) return;
+            if (--ccBfsActiveCalls_ != 0) return;
+            const uint64_t elapsed =
+                static_cast<uint64_t>(
+                    std::chrono::duration_cast<
+                        std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() -
+                        ccBfsWallStart_)
+                        .count());
+            ccBfsWallNanoseconds.fetch_add(
+                elapsed, std::memory_order_relaxed);
+        }
+
+        void resetCCBfsWallTime() {
+            std::lock_guard<std::mutex> lock(ccBfsWallMutex_);
+            ccBfsActiveCalls_ = 0;
+            ccBfsWallNanoseconds.store(0, std::memory_order_relaxed);
+        }
+
+        class CCBfsWallTimeScope {
+        public:
+            CCBfsWallTimeScope(DanceDNNF& owner, bool enabled)
+                : owner_(owner), enabled_(enabled) {
+                if (enabled_) owner_.beginCCBfsWallTime();
+            }
+
+            ~CCBfsWallTimeScope() {
+                if (enabled_) owner_.endCCBfsWallTime();
+            }
+
+        private:
+            DanceDNNF& owner_;
+            bool enabled_;
+        };
+
+        std::mutex ccBfsWallMutex_;
+        int ccBfsActiveCalls_ = 0;
+        std::chrono::steady_clock::time_point ccBfsWallStart_{};
+
+    public:
 
 
     private:

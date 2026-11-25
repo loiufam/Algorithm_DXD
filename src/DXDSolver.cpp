@@ -288,8 +288,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(
     std::atomic<bool> has_timeout(false);
 
     std::vector<std::unique_ptr<splaytree::EulerTourTree>> extracted(n);
-    std::vector<std::vector<std::unique_ptr<splaytree::EulerTourTree>>>
-        returned(n);
     
     auto& comps = getComponents();
     bool manageTrees = isDynDXD() && componentTreesAvailable;
@@ -331,9 +329,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(
     for (int i = 0; i < n; i++) {
         if (has_failure.load(std::memory_order_acquire) || 
             has_timeout.load(std::memory_order_acquire)) {
-            if (manageTrees && extracted[i]) {
-                returned[i].push_back(std::move(extracted[i]));
-            }
             continue;
         }
 
@@ -349,13 +344,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(
         activeSearchState = &taskState;
         const auto taskStart = std::chrono::steady_clock::now();
         const int ompThread = omp_get_thread_num();
-        auto returnTaskComponents = [&]() {
-            if (!manageTrees || !tlsState) return;
-            for (auto& tree : tlsState->components) {
-                if (tree) returned[i].push_back(std::move(tree));
-            }
-            tlsState->components.clear();
-        };
 
         try {
             // === 初始化线程局部状态 ===
@@ -386,8 +374,6 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(
                 results[i] = result;
                 nodes[i] = node;
             }
-
-            returnTaskComponents();
         } catch (const std::runtime_error& e) {
             std::string msg = e.what();
             if (msg.find("Time bound") != std::string::npos) {
@@ -397,23 +383,17 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(
                 std::cerr << "Thread " << omp_get_thread_num() 
                          << " error: " << msg << "\n";
             }
-            returnTaskComponents();
         } catch (const std::exception& e) {
             has_failure.store(true, std::memory_order_release);
             std::cerr << "Thread " << omp_get_thread_num() 
                      << " exception: " << e.what() << "\n";
-            returnTaskComponents();
         } catch (...) {
             has_failure.store(true, std::memory_order_release);
             std::cerr << "Thread " << omp_get_thread_num() 
                      << " unknown error\n";
-            returnTaskComponents();
         }
 
         if (manageThreadState) {
-            for (auto& tree : returned[i]) {
-                rebindTreeReplacementProvider(tree.get(), outerTls.get());
-            }
             cleanupThreadLocalState();
             tlsState = std::move(outerTls);
         }
@@ -467,11 +447,16 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::parallelSearchUseOmp(
     }
 
     if (manageTrees) {
-        comps.clear();
-        for (auto& forest : returned) {
-            for (auto& tree : forest) {
-                if (tree) comps.push_back(std::move(tree));
+        if (!has_failure.load(std::memory_order_acquire) &&
+            !has_timeout.load(std::memory_order_acquire)) {
+            // Task-local graphs cannot be joined into the caller's graph.
+            // Reconstruct the parent forest from its restored active block.
+            Block activeBlock;
+            for (const Block& block : blocks) {
+                activeBlock.rows.insert(block.rows.begin(), block.rows.end());
+                activeBlock.cols.insert(block.cols.begin(), block.cols.end());
             }
+            rebuildGlobalDynamicCCForActiveBlock(activeBlock);
         }
     }
 
@@ -659,6 +644,21 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         return {DNNFResult(0), F};
     }
 
+    if (block.bfsStopArea > 0 && bfsCallCounter) {
+        const uint64_t activeRows = block.trackBfsRows
+            ? block.activeRowCount
+            : static_cast<uint64_t>(block.rows.size());
+        const uint64_t area =
+            activeRows *
+            static_cast<uint64_t>(block.cols.size());
+        if (area > block.bfsStopArea) {
+            bfsCallCounter->fetch_add(1, std::memory_order_relaxed);
+            if (componentQueryCallCounter) {
+                componentQueryCallCounter->fetch_add(
+                    1, std::memory_order_relaxed);
+            }
+        }
+    }
 
     // 是否分解查询
     bool shouldProbe = false;
@@ -668,7 +668,26 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
     const bool initialProbe = depth == 1 && isDynDXD();
 
     if (isDXDMode()) {
-        shouldProbe = true;
+        if (dxdBfsPolicy == DXDBfsPolicy::Always) {
+            shouldProbe = true;
+        } else if (!block.decompositionStopped) {
+            const uint64_t area =
+                static_cast<uint64_t>(block.rows.size()) *
+                static_cast<uint64_t>(block.cols.size());
+            if (block.decompositionThreshold > 0 &&
+                area <= block.decompositionThreshold) {
+                if (block.decompositionProbeCredit > 0) {
+                    --block.decompositionProbeCredit;
+                    shouldProbe = true;
+                } else {
+                    block.decompositionStopped = true;
+                    dxdThresholdStops.fetch_add(
+                        1, std::memory_order_relaxed);
+                }
+            } else {
+                shouldProbe = true;
+            }
+        }
     } else if (isDynDXD()) {
         auto& policy = currentDecompositionPolicy();
         if (initialProbe) {
@@ -733,14 +752,24 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
             curBlock = getComponentsByETT(block.cols);
         } else {
             // DXD BFS 搜索并记录 CPU 时间
+            CCBfsWallTimeScope bfsWallTimer(
+                *this,
+                isDXDMode() &&
+                    (collectCCTime || collectCCExperimentStats));
             const std::clock_t bfsStart =
                 isDXDMode() && (collectCCTime || collectCCExperimentStats)
                     ? std::clock()
                     : std::clock_t{0};
-            curBlock = getComponentsByBFS(
-                block.cols,
-                collectCCExperimentStats && isDXDMode() ? &bfsMetrics
-                                                        : nullptr);
+            if (isDXDMode()) {
+                dxdBfsCalls.fetch_add(1, std::memory_order_relaxed);
+                IncidenceBfsResult incidence =
+                    getComponentsByIncidenceBFS(block.cols);
+                curBlock = std::move(incidence.components);
+                bfsMetrics = incidence.metrics;
+            } else {
+                curBlock = getComponentsByBFS(
+                    block.cols, nullptr);
+            }
             if (isDXDMode() &&
                 (collectCCTime || collectCCExperimentStats)) {
                 addCCCpuTicks(bfsStart, ccBfsCpuTicks);
@@ -771,6 +800,33 @@ std::pair<DNNFResult, shared_ptr<DNNFNode>> DanceDNNF::DXD(Block& block, int dep
         }
 
         if (int(curBlock.size()) > 1) {
+            if (isDXDMode()) {
+                dxdMultiSplits.fetch_add(1, std::memory_order_relaxed);
+            }
+            if (isDXDMode() &&
+                dxdBfsPolicy == DXDBfsPolicy::Threshold) {
+                const uint8_t probeCredit = static_cast<uint8_t>(
+                    std::max<size_t>(
+                        1,
+                        static_cast<size_t>(std::ceil(
+                            1.0L /
+                            std::max<long double>(
+                                dxdBfsThresholdRatio, 0.01L)))));
+                for (Block& child : curBlock) {
+                    const uint64_t childArea =
+                        static_cast<uint64_t>(child.rows.size()) *
+                        static_cast<uint64_t>(child.cols.size());
+                    child.decompositionThreshold =
+                        std::max<uint64_t>(
+                            1,
+                            static_cast<uint64_t>(
+                                static_cast<long double>(childArea) *
+                                dxdBfsThresholdRatio));
+                    child.decompositionStopped =
+                        childArea <= child.decompositionThreshold;
+                    child.decompositionProbeCredit = probeCredit;
+                }
+            }
             if (pureDynDXD && initialProbe) {
                 // Root discovery remains BFS, but every resulting block keeps
                 // its ETT forest for the rest of the search.
@@ -956,6 +1012,8 @@ void DanceDNNF::logCCExperimentStats(bool complete, bool quick) {
                        std::to_string(stats.bfsEdgeSum));
         logger.logLine("CC Stats DXD BFS CPU: " +
                        std::to_string(ticksToSeconds(ccBfsCpuTicks)));
+        logger.logLine("CC Stats DXD BFS Time: " +
+                       std::to_string(ccBfsWallSeconds()));
         return;
     }
 
@@ -965,12 +1023,46 @@ void DanceDNNF::logCCExperimentStats(bool complete, bool quick) {
     const double avgReplacementChecks = stats.decCalls == 0
         ? 0.0
         : static_cast<double>(stats.replacementCheckSum) / stats.decCalls;
+    const long double erToEdgeRatio = stats.activeEdgeSum == 0
+        ? 0.0L
+        : static_cast<long double>(stats.replacementCheckSum) /
+              static_cast<long double>(stats.activeEdgeSum);
     logger.logLine("CC Stats Dyn Dec Calls: " +
                    std::to_string(stats.decCalls));
+    logger.logLine("CC Stats Dyn Deleted Edges: " +
+                   std::to_string(stats.deletedEdgeSum));
     logger.logLine("CC Stats Dyn Deleted Tree Edges: " +
                    std::to_string(stats.deletedTreeEdgeSum));
+    logger.logLine("CC Stats Dyn Deleted Non Tree Edges: " +
+                   std::to_string(stats.deletedNonTreeEdgeSum));
+    logger.logLine("CC Stats Dyn Tree Edge Cuts: " +
+                   std::to_string(stats.treeEdgeCutSum));
+    logger.logLine("CC Stats Dyn Tree Edge Links: " +
+                   std::to_string(stats.treeEdgeLinkSum));
     logger.logLine("CC Stats Dyn Deleted Vertices: " +
                    std::to_string(stats.deletedVertexSum));
+    logger.logLine("CC Stats Dyn Active Vertex Sum: " +
+                   std::to_string(stats.activeVertexSum));
+    logger.logLine("CC Stats Dyn Active Edge Sum: " +
+                   std::to_string(stats.activeEdgeSum));
+    logger.logLine("CC Stats Dyn Replacement Scan Steps: " +
+                   std::to_string(stats.replacementCheckSum));
+    logger.logLine("CC Stats Dyn V Sum: " +
+                   std::to_string(stats.activeVertexSum));
+    logger.logLine("CC Stats Dyn E Sum: " +
+                   std::to_string(stats.activeEdgeSum));
+    logger.logLine("CC Stats Dyn Ed Sum: " +
+                   std::to_string(stats.deletedEdgeSum));
+    logger.logLine("CC Stats Dyn ETd Sum: " +
+                   std::to_string(stats.deletedTreeEdgeSum));
+    logger.logLine("CC Stats Dyn ENd Sum: " +
+                   std::to_string(stats.deletedNonTreeEdgeSum));
+    logger.logLine("CC Stats Dyn Vd Sum: " +
+                   std::to_string(stats.deletedVertexSum));
+    logger.logLine("CC Stats Dyn Er Sum: " +
+                   std::to_string(stats.replacementCheckSum));
+    logger.logLine("CC Stats Dyn Er/E Ratio: " +
+                   std::to_string(static_cast<double>(erToEdgeRatio)));
     logger.logLine("CC Stats Dyn Avg Vertices: " +
                    std::to_string(avgVertices));
     logger.logLine("CC Stats Dyn Avg Replacement Checks: " +
@@ -1035,6 +1127,12 @@ void DanceDNNF::startDXD() {
     ccBfsCpuTicks.store(0, std::memory_order_relaxed);
     ccDecrementCpuTicks.store(0, std::memory_order_relaxed);
     ccIncrementCpuTicks.store(0, std::memory_order_relaxed);
+    resetCCBfsWallTime();
+    dxdBfsCalls.store(0, std::memory_order_relaxed);
+    bfsCallCounter = nullptr;
+    componentQueryCallCounter = nullptr;
+    dxdMultiSplits.store(0, std::memory_order_relaxed);
+    dxdThresholdStops.store(0, std::memory_order_relaxed);
     if (collectCCExperimentStats) ccExperimentStats.reset();
     resetAdaptiveDecompositionState();
 
@@ -1061,6 +1159,12 @@ void DanceDNNF::startDXD() {
         if (!isDXZMode() && collectCCTime) {
             logger.logLine("DXD CC BFS CPU: " + std::to_string(ticksToSeconds(ccBfsCpuTicks)) + " s");
         }
+        if (!isDXZMode() &&
+            (collectCCTime || collectCCExperimentStats)) {
+            logger.logLine(
+                "DXD BFS Time: " +
+                std::to_string(ccBfsWallSeconds()) + " s");
+        }
         if (!isDXZMode()) {
             logCCExperimentStats(true);
         }
@@ -1076,6 +1180,20 @@ void DanceDNNF::startDXD() {
 
         logger.logLine("Max Blocks: " +
                        std::to_string(MAX_B_COUNT.load(std::memory_order_relaxed)));
+        if (isDXDMode()) {
+            logger.logLine(
+                "DXD BFS Calls: " +
+                std::to_string(dxdBfsCalls.load(
+                    std::memory_order_relaxed)));
+            logger.logLine(
+                "DXD Multi Splits: " +
+                std::to_string(dxdMultiSplits.load(
+                    std::memory_order_relaxed)));
+            logger.logLine(
+                "DXD Threshold Stops: " +
+                std::to_string(dxdThresholdStops.load(
+                    std::memory_order_relaxed)));
+        }
 
 
 
@@ -1104,6 +1222,11 @@ void DanceDNNF::startDXD() {
                     "DXD CC BFS CPU: " +
                     std::to_string(ticksToSeconds(ccBfsCpuTicks)) + " s");
             }
+            if (collectCCTime || collectCCExperimentStats) {
+                logger.logLine(
+                    "DXD BFS Time: " +
+                    std::to_string(ccBfsWallSeconds()) + " s");
+            }
             logCCExperimentStats(false);
             logger.logLine("DXD搜索超时: " + message);
         }
@@ -1127,6 +1250,7 @@ void DanceDNNF::startMultiThreadDXD() {
     ccBfsCpuTicks.store(0, std::memory_order_relaxed);
     ccDecrementCpuTicks.store(0, std::memory_order_relaxed);
     ccIncrementCpuTicks.store(0, std::memory_order_relaxed);
+    resetCCBfsWallTime();
     if (collectCCExperimentStats) ccExperimentStats.reset();
     resetAdaptiveDecompositionState();
 

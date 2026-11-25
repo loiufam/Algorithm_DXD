@@ -1,0 +1,19 @@
+{
+  "counts": {
+    "all_current": 716,
+    "new_rome3": 350,
+    "old_all": 366,
+    "old_dominoes": 10,
+    "old_exact_cover": 217,
+    "old_set_partition": 52,
+    "old_topology": 87
+  },
+  "new_rome_root": "data/benchmarks/rome3_matrices/matrices",
+  "report": "data/benchmarks/Final_Experiment_Report.xlsx",
+  "rules": {
+    "new_rome3": "all .txt files in rome3_matrices/matrices",
+    "old_exact_cover": "exact_cover_set files listed in the report",
+    "old_set_partition": "set_partition_set files listed in the report",
+    "old_topology": "graphs_set files listed in the report, excluding grafo*"
+  }
+}

@@ -1,9 +1,35 @@
 #include "../include/main.h"
 #include "../include/HybridDXD.h"
+#include "../include/LegacyHybridDXD.h"
+
+#include <cctype>
 
 static Logger logger("");  // 全局日志
 // const string muti_thread_dxd_log_file = "../muti_thread_dxd_log.csv";
 static const int DEFAULT_THREADS = 8;  // 线程数
+
+static std::string defaultHybridDecisionLogPath(
+    const std::string& instance) {
+    std::string safeInstance = instance;
+    std::replace_if(
+        safeInstance.begin(), safeInstance.end(),
+        [](unsigned char ch) {
+            return !std::isalnum(ch) && ch != '-' && ch != '_';
+        },
+        '_');
+    const long long stamp =
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch())
+            .count();
+    const fs::path directory =
+        fs::path(ALGORITHM_DXD_SOURCE_DIR) / "logs";
+    fs::create_directories(directory);
+    return (
+        directory /
+        ("hybrid_" + safeInstance + "_" +
+         std::to_string(stamp) + ".log"))
+        .string();
+}
 
 static DecomMode toMDLXMode(const std::string& s) {
     if (s == "d") return DecomMode::Dynamic;
@@ -54,7 +80,8 @@ int main(int argc, char *argv[]){
                 {
                     logger.logLine("启用DXZ算法求解: " + filename);
                     DanceDNNF danceDNNF(
-                        args.input, logger, AlgorithmMode::DXZ, 1,
+                        args.input, logger, AlgorithmMode::DXZ,
+                        args.threads > 0 ? args.threads : 1,
                         args.debug);
                     danceDNNF.runDXZ();
                     logger.logLine("DXZ算法求解结束: " + filename);
@@ -70,6 +97,12 @@ int main(int argc, char *argv[]){
                         args.debug);
                     if (args.enable_cc_stats) danceDNNF.enableCCStatistics();
                     if (args.enable_cc_time) danceDNNF.enableCCTiming();
+                    danceDNNF.setDXDBfsPolicy(
+                        args.dxd_threshold
+                            ? DXDBfsPolicy::Threshold
+                            : DXDBfsPolicy::Always);
+                    danceDNNF.setDXDBfsThresholdRatio(
+                        args.threshold_ratio);
                     danceDNNF.setSkipDNNFSize(args.skip_dnnf_size);
                     danceDNNF.setTimeLimit(args.time_limit);
                     danceDNNF.startDXD();
@@ -108,10 +141,49 @@ int main(int argc, char *argv[]){
                     logger.logLine("Instance: " + filename);
                     logger.logLine(
                         "启用HybridDXD算法求解: " + filename);
+                    if (args.hybrid_engine == "legacy") {
+                        logger.logLine(
+                            "Hybrid Engine: legacy min-ETT/max-BFS");
+                        LegacyHybridDXD hybrid(
+                            args.input, logger, args.threads, args.debug);
+                        if (args.enable_cc_stats) {
+                            hybrid.enableCCStatistics();
+                        }
+                        hybrid.setEttAreaDivisor(
+                            args.hybrid_ett_area_divisor);
+                        hybrid.setDecisionLog(
+                            args.hybrid_decision_log);
+                        hybrid.setSkipDNNFSize(args.skip_dnnf_size);
+                        hybrid.setTimeLimit(args.time_limit);
+                        hybrid.startHybridDXD();
+                        logger.logLine(
+                            "HybridDXD算法求解结束: " + filename);
+                        break;
+                    }
+                    logger.logLine("Hybrid Engine: runtime");
+                    std::string decisionLogPath =
+                        args.hybrid_decision_log;
+                    if (decisionLogPath.empty() && args.debug) {
+                        decisionLogPath =
+                            defaultHybridDecisionLogPath(filename);
+                    }
                     HybridDXD hybrid(
                         args.input, logger, args.threads, args.debug);
-                    hybrid.setEttAreaDivisor(
-                        args.hybrid_ett_area_divisor);
+                    if (args.enable_cc_stats) {
+                        hybrid.enableCCStatistics();
+                    }
+                    hybrid.setThresholdRatio(args.threshold_ratio);
+                    hybrid.setEttStopRatio(args.hybrid_stop_ratio);
+                    hybrid.setEttAlwaysOn(args.hybrid_ett_always);
+                    hybrid.setAdaptiveDecomposition(
+                        args.hybrid_adaptive);
+                    if (args.hybrid_runtime_policy) {
+                        hybrid.setRuntimePolicy(true);
+                    }
+                    hybrid.setMaxSeedBlock(args.hybrid_max_seed);
+                    hybrid.setDecisionLog(decisionLogPath);
+                    hybrid.setTreeOperationProbability(
+                        args.hybrid_tree_op_ratio);
                     hybrid.setSkipDNNFSize(args.skip_dnnf_size);
                     hybrid.setTimeLimit(args.time_limit);
                     hybrid.startHybridDXD();

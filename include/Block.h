@@ -4,10 +4,12 @@
 
 // portable replacement for GCC-only <bits/stdc++.h>
 #include <algorithm>
+#include <cstdint>
 #include <iostream>
 #include <set>
 #include <vector>
 #include <string>
+#include <unordered_map>
 #include <utility>
 using namespace std;
 
@@ -15,6 +17,15 @@ struct Block {
     set<int> rows;  // 舞蹈链行id集合 
     set<int> cols;  // 从1开始编号,对应舞蹈链列数id
     bool is_spilited = false;
+    uint64_t activeEntries = 0;
+    bool activeEntriesValid = false;
+    uint64_t decompositionThreshold = 0;
+    bool decompositionStopped = false;
+    uint8_t decompositionProbeCredit = 0;
+    uint64_t bfsStopArea = 0;
+    uint64_t activeRowCount = 0;
+    bool trackBfsRows = false;
+    std::unordered_map<int, uint32_t> rowCoverCounts;
     
     Block() = default;
 
@@ -29,6 +40,16 @@ struct Block {
     Block(const Block& other) {
         cols = other.cols;
         rows = other.rows;
+        is_spilited = other.is_spilited;
+        activeEntries = other.activeEntries;
+        activeEntriesValid = other.activeEntriesValid;
+        decompositionThreshold = other.decompositionThreshold;
+        decompositionStopped = other.decompositionStopped;
+        decompositionProbeCredit = other.decompositionProbeCredit;
+        bfsStopArea = other.bfsStopArea;
+        activeRowCount = other.activeRowCount;
+        trackBfsRows = other.trackBfsRows;
+        rowCoverCounts = other.rowCoverCounts;
     };
 
     void printBlock(int block_id) {

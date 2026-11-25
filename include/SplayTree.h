@@ -53,6 +53,8 @@ struct EdgeHash {
 struct ReplacementSearchMetrics {
     size_t nonTreeEdges = 0;
     size_t scanSteps = 0;
+    int replacementU = -1;
+    int replacementV = -1;
     bool searched = false;
     bool found = false;
 };

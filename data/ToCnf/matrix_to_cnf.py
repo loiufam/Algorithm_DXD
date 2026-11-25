@@ -9,6 +9,7 @@ import time
 import math
 import argparse
 import csv
+import os
 from pathlib import Path
 from typing import List, Tuple, Set
 
@@ -65,11 +66,12 @@ def read_exact_cover_matrix(filepath: str) -> Tuple[List[Set[int]], int, int]:
                 
             # 探测第一行有效数据以区分模式 2 和模式 3
             if read_mode == -1:
-                # 模式 3: [count] [col1] [col2] ... (总 token 数等于 count + 1)
+                # This repository's matrix files use [count] [col1] ... .
+                # Prefer mode 3 when a one-column row is ambiguous because
+                # "1 1 2" satisfies both the mode-2 and mode-3 token counts.
                 if len(tokens) == int(tokens[0]) + 1:
                     read_mode = 3
                     start_idx = 1
-                # 模式 2: [id] [count] [col1] [col2] ... (总 token 数等于 count + 2)
                 elif len(tokens) >= 2 and len(tokens) == int(tokens[1]) + 2:
                     read_mode = 2
                     start_idx = 2
@@ -164,27 +166,33 @@ def encode_exactly_one(vars: List[int], current_aux: int, encoding: str) -> Tupl
                 clauses.append([-vars[i], -vars[j]])
 
     elif encoding == 'ladder':
+        # Sequential "ladder" exactly-one encoding:
+        # s_i <-> (s_{i-1} or x_i), with at-most-one clauses
+        # -s_{i-1} or -x_i. Auxiliary variables are functionally determined,
+        # so the model count remains equal to the exact-cover count.
+        clauses.append(list(vars))
         aux_vars = list(range(current_aux, current_aux + n - 1))
         current_aux += n - 1
-        
-        clauses.append([-aux_vars[0], vars[0], vars[1]])
-        clauses.append([aux_vars[0], -vars[0]])
-        clauses.append([aux_vars[0], -vars[1]])
-        
-        for i in range(2, n):
-            if i < n - 1:
-                clauses.append([-aux_vars[i-1], aux_vars[i-2], vars[i]])
-                clauses.append([aux_vars[i-1], -aux_vars[i-2]])
-                clauses.append([aux_vars[i-1], -vars[i]])
-            else:
-                clauses.append([aux_vars[i-2], vars[i]])
-        
-        clauses.append([-vars[0], -vars[1]])
-        for i in range(2, n):
-            clauses.append([-aux_vars[i-2], -vars[i]])
-            
-        if n > 2:
-            clauses.append([aux_vars[-1]])
+        first_aux = aux_vars[0]
+        clauses.extend(
+            [
+                [-vars[0], first_aux],
+                [-vars[1], first_aux],
+                [-first_aux, vars[0], vars[1]],
+                [-vars[0], -vars[1]],
+            ]
+        )
+        for index in range(2, n):
+            previous_aux = aux_vars[index - 2]
+            current = aux_vars[index - 1]
+            clauses.extend(
+                [
+                    [-previous_aux, current],
+                    [-vars[index], current],
+                    [-current, previous_aux, vars[index]],
+                    [-previous_aux, -vars[index]],
+                ]
+            )
 
     elif encoding == 'bitwise':
         k = math.ceil(math.log2(n))
@@ -243,6 +251,73 @@ def write_dimacs_cnf(clauses: List[List[int]], num_vars: int, output_file: str):
             else:
                 f.write('0\n')  # 空子句
 
+
+def write_cnf_to_stream(
+    sets: List[Set[int]],
+    num_points: int,
+    encoding: str,
+    stream,
+) -> Tuple[int, int]:
+    """Stream one exact-cover CNF to a seekable binary stream.
+
+    The header is patched after encoding, so auxiliary variables and clauses do
+    not need to be retained as a second in-memory object graph. This function is
+    used with Linux memfd for model-counting experiments.
+    """
+    header_bytes = 64
+    stream.seek(0)
+    stream.truncate(0)
+    stream.write(b" " * header_bytes)
+
+    current_aux = len(sets) + 1
+    clause_count = 0
+    for point in range(1, num_points + 1):
+        covering_vars = [
+            index + 1
+            for index, row_set in enumerate(sets)
+            if point in row_set
+        ]
+        clauses, current_aux = encode_exactly_one(
+            covering_vars, current_aux, encoding
+        )
+        for clause in clauses:
+            clause_count += 1
+            if clause:
+                stream.write(
+                    (" ".join(map(str, clause)) + " 0\n").encode("ascii")
+                )
+            else:
+                stream.write(b"0\n")
+
+    total_vars = current_aux - 1
+    header = f"p cnf {total_vars} {clause_count}\n".encode("ascii")
+    if len(header) > header_bytes:
+        raise ValueError("DIMACS header exceeds reserved space")
+    stream.seek(0)
+    stream.write(header + b" " * (header_bytes - len(header)))
+    stream.flush()
+    stream.seek(0)
+    return total_vars, clause_count
+
+
+def encode_exact_cover_to_memfd(
+    sets: List[Set[int]],
+    num_points: int,
+    encoding: str,
+) -> Tuple[int, int, int]:
+    """Encode one exact-cover CNF into a Linux memory file descriptor."""
+    if not hasattr(os, "memfd_create"):
+        raise RuntimeError("os.memfd_create is required for in-memory encoding")
+    fd = os.memfd_create(f"{encoding}.cnf", flags=0)
+    stream = os.fdopen(fd, "w+b", closefd=False)
+    try:
+        total_vars, clauses = write_cnf_to_stream(
+            sets, num_points, encoding, stream
+        )
+    finally:
+        stream.close()
+    return fd, total_vars, clauses
+
 def main():
     parser = argparse.ArgumentParser(description="精确覆盖问题到SAT(CNF)转换器 - 支持单文件与批量四种编码")
     parser.add_argument('-i', '--input', type=str, required=True, help="输入路径 (单个文件或包含多个实例的文件夹)")
@@ -272,8 +347,7 @@ def main():
         else:
             print(f"警告：指定的排除列表文件 '{args.exclude}' 不存在，将被忽略。\n")
         
-    # encodings = ['pairwise', 'ladder', 'bitwise', 'matrix']
-    encodings = ['pairwise', 'ladder', 'bitwise']
+    encodings = ['pairwise', 'ladder', 'bitwise', 'matrix']
     
     # 创建各编码的子目录
     for enc in encodings:

@@ -1,374 +1,309 @@
 #!/usr/bin/env python3
-"""Run single-thread DynDXD/DXD CC timing experiments selected from the report."""
+"""Run single-thread DXD and Hybrid connectivity timing experiments."""
+
+from __future__ import annotations
 
 import argparse
 import csv
 import json
+import os
 import re
+import signal
 import subprocess
 import sys
-import xml.etree.ElementTree as ET
-import zipfile
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
+from datetime import datetime
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_REPORT = ROOT / "data/batch_2/Final_Experiment_Report.xlsx"
-DEFAULT_OUTPUT = ROOT / "results/cc_cpu_experiment.csv"
-DEFAULT_INPUT_DIRS = (
-    ROOT / "data/batch_2/dominoes_set",
-    ROOT / "data/batch_2/exact_cover_benchmarks",
-    ROOT / "data/batch_2/set_partition_benchmarks",
-    ROOT / "data/batch_2/graphs_set",
+EXECUTABLE = ROOT / "bin" / "main"
+MANIFEST = ROOT / "data" / "benchmarks" / "benchmark_manifest.csv"
+RESULTS = ROOT / "results"
+
+TIME_RE = re.compile(r"^Time:\s*([\d.eE+-]+)\s*s", re.MULTILINE)
+SOL_RE = re.compile(r"^Solutions(?: \(scientific\))?:\s*(\S+)", re.MULTILINE)
+BLOCKS_RE = re.compile(r"^Max Blocks:\s*(\d+)", re.MULTILINE)
+DXD_CPU_RE = re.compile(r"^DXD CC BFS CPU:\s*([\d.eE+-]+)", re.MULTILINE)
+DXD_BFS_TIME_RE = re.compile(
+    r"^(?:CC Stats )?DXD BFS Time:\s*([\d.eE+-]+)", re.MULTILINE
 )
-NS = {"x": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+HYBRID_METRIC_RE = re.compile(
+    r"^Hybrid ([^:]+):\s*([\d.eE+-]+)(?:\s*s)?\s*$", re.MULTILINE
+)
 
-TIME_RE = re.compile(r"^Time:\s*([\d.]+)\s*s", re.MULTILINE)
-CC_RE = re.compile(r"^(?:Dyn|DXD) CC CPU:\s*([\d.]+)\s*s", re.MULTILINE)
-DYN_DEC_RE = re.compile(r"^Dyn CC Decrement CPU:\s*([\d.]+)\s*s", re.MULTILINE)
-DXD_BFS_RE = re.compile(r"^DXD CC BFS CPU:\s*([\d.]+)\s*s", re.MULTILINE)
-SOL_RE = re.compile(r"^Solutions:\s*(\S+)", re.MULTILINE)
-
-
-def column_index(cell_ref):
-    result = 0
-    for char in re.match(r"[A-Z]+", cell_ref).group(0):
-        result = result * 26 + ord(char) - ord("A") + 1
-    return result - 1
-
-
-def read_xlsx_rows(path):
-    """Read the first XLSX worksheet using only the Python standard library."""
-    with zipfile.ZipFile(path) as archive:
-        strings = []
-        if "xl/sharedStrings.xml" in archive.namelist():
-            root = ET.fromstring(archive.read("xl/sharedStrings.xml"))
-            for item in root.findall("x:si", NS):
-                strings.append("".join(node.text or "" for node in item.iterfind(".//x:t", NS)))
-
-        sheet = ET.fromstring(archive.read("xl/worksheets/sheet1.xml"))
-        for row in sheet.findall(".//x:sheetData/x:row", NS):
-            values = {}
-            for cell in row.findall("x:c", NS):
-                value = cell.find("x:v", NS)
-                text = "" if value is None else value.text or ""
-                if cell.get("t") == "s" and text:
-                    text = strings[int(text)]
-                values[column_index(cell.get("r"))] = text
-            width = max(values, default=-1) + 1
-            yield [values.get(index, "") for index in range(width)]
+FIELDS = (
+    "run_id",
+    "dataset",
+    "category",
+    "instance",
+    "input",
+    "algorithm",
+    "threads",
+    "status",
+    "time_s",
+    "cc_time_s",
+    "bfs_time_s",
+    "ett_build_time_s",
+    "ett_decrement_time_s",
+    "ett_extraction_time_s",
+    "ett_release_time_s",
+    "bfs_queries",
+    "ett_decrement_updates",
+    "solutions",
+    "max_blocks",
+    "solutions_match",
+    "walk_time_s",
+    "exit_code",
+    "error",
+)
 
 
-def eligible_instances(report):
-    rows = iter(read_xlsx_rows(report))
-    header = next(rows)
-    required = ("Instance", "#cols", "#rows", "DXD-T1", "DynDXD-T1")
-    missing = [name for name in required if name not in header]
-    if missing:
-        raise ValueError(f"report is missing columns: {', '.join(missing)}")
-    columns = {name: header.index(name) for name in required}
-
-    selected = []
-    for row in rows:
-        row += [""] * (len(header) - len(row))
-        dxd = row[columns["DXD-T1"]].strip()
-        dyn = row[columns["DynDXD-T1"]].strip()
-        try:
-            float(dxd)
-            float(dyn)
-        except ValueError:
-            continue
-        else:
-            selected.append({
-                "instance": row[columns["Instance"]].strip(),
-                "cols": row[columns["#cols"]].strip(),
-                "rows": row[columns["#rows"]].strip(),
-                "report_dxd_time_s": dxd,
-                "report_dyndxd_time_s": dyn,
-            })
-    return selected
-
-def read_case_names(path):
-    """Read instance names separated by newlines or commas, preserving order."""
-    names = []
-    seen = set()
-    for name in re.split(r"[,\r\n]+", path.read_text(encoding="utf-8")):
-        name = name.strip()
-        if name and name not in seen:
-            names.append(name)
-            seen.add(name)
-    if not names:
-        raise ValueError(f"case file is empty: {path}")
-    return names
-
-
-def instances_from_case_file(path, report):
-    """Build rows for explicitly requested cases, adding report data when present."""
-    report_rows = iter(read_xlsx_rows(report))
-    header = next(report_rows)
-    required = ("Instance", "#cols", "#rows", "DXD-T1", "DynDXD-T1")
-    missing = [name for name in required if name not in header]
-    if missing:
-        raise ValueError(f"report is missing columns: {', '.join(missing)}")
-    columns = {name: header.index(name) for name in required}
-    metadata = {}
-    for row in report_rows:
-        row += [""] * (len(header) - len(row))
-        name = row[columns["Instance"]].strip()
-        metadata[name] = {
-            "instance": name,
-            "cols": row[columns["#cols"]].strip(),
-            "rows": row[columns["#rows"]].strip(),
-            "report_dxd_time_s": row[columns["DXD-T1"]].strip(),
-            "report_dyndxd_time_s": row[columns["DynDXD-T1"]].strip(),
-        }
-
-    blank = {"cols": "", "rows": "", "report_dxd_time_s": "",
-             "report_dyndxd_time_s": ""}
-    return [{"instance": name, **blank, **metadata.get(name, {})}
-            for name in read_case_names(path)]
-
-
-def input_index(input_dirs):
-    index = {}
-    for folder in input_dirs:
-        # Keep this consistent with batch_runner.get_input_files(): benchmark
-        # inputs include both graph/set-partition .txt files and exact-cover
-        # .ec files.
-        for path in sorted(candidate for candidate in folder.rglob("*") if candidate.is_file()):
-            previous = index.setdefault(path.stem, path)
-            if previous != path:
-                raise ValueError(
-                    f"duplicate instance name {path.stem!r}: {previous} and {path}"
-                )
-    return index
-
-
-def run_solver(executable, algorithm, input_path, timeout, cc_ett_max_calls=3):
-    command = [
-        str(executable), "-a", algorithm, "-i", str(input_path), "-t", "1",
-        "--enable-cc-time",
-        "--cc-ett-max-calls", str(cc_ett_max_calls),
-    ]
-    try:
-        process = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
-    except subprocess.TimeoutExpired:
-        return {"status": "timeout", "time_s": "", "cc_cpu_s": "",
-                "bfs_cpu_s": "", "update_cpu_s": "", "solutions": ""}
-
-    output = process.stdout + process.stderr
-    if process.returncode != 0 or "超时" in output:
-        status = "timeout" if "超时" in output else f"error({process.returncode})"
-    else:
-        status = "success"
-
-    def match(pattern):
-        found = pattern.search(output)
-        return found.group(1) if found else ""
-
-    bfs = match(DXD_BFS_RE) if algorithm == "dxd" else ""
-    update = match(DYN_DEC_RE) if algorithm == "ddxd" else ""
-    cc_cpu = update if algorithm == "ddxd" and update else bfs
-    if not cc_cpu:
-        cc_cpu = match(CC_RE)
-
-    return {
-        "status": status,
-        "time_s": match(TIME_RE),
-        "cc_cpu_s": cc_cpu,
-        "bfs_cpu_s": bfs,
-        "update_cpu_s": update,
-        # Retained in memory only to validate that both algorithms agree.
-        "solutions": match(SOL_RE),
-    }
-
-
-def write_results(path, rows):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fields = (
-        "instance",
-        "Dyn_time", "Dyn_cc_cpu_time", "DXD_time", "DXD_cc_cpu_time",
-    )
-    with path.open("w", encoding="utf-8", newline="") as output:
-        writer = csv.DictWriter(output, fieldnames=fields)
-        writer.writeheader()
-        writer.writerows(rows)
-
-
-def read_results(path):
-    if not path.is_file():
-        return []
-    with path.open(encoding="utf-8", newline="") as stream:
+def read_manifest() -> list[dict[str, str]]:
+    with MANIFEST.open(encoding="utf-8", newline="") as stream:
         return list(csv.DictReader(stream))
 
 
-def dataset_output(output_dir, dataset):
-    return output_dir / f"cc_cpu_{dataset}.csv"
+def read_case_names(path: Path) -> set[str]:
+    return {
+        token
+        for line in path.read_text(encoding="utf-8").splitlines()
+        for token in re.split(r"[,\s]+", line)
+        if token
+    }
 
 
-def dataset_state_output(output_dir, dataset):
-    return output_dir / f"cc_cpu_{dataset}.state.json"
+def select_cases(
+    benchmark_set: str,
+    case_file: Path | None,
+    limit: int,
+) -> list[dict[str, str]]:
+    rows = read_manifest()
+    if benchmark_set != "all":
+        rows = [row for row in rows if row["dataset"] == benchmark_set]
+    if case_file is not None:
+        names = read_case_names(case_file)
+        rows = [row for row in rows if row["instance"] in names]
+        missing = sorted(names - {row["instance"] for row in rows})
+        if missing:
+            raise ValueError(
+                "case file includes instances outside the selected set: "
+                + ", ".join(missing[:20])
+            )
+    rows.sort(key=lambda row: (row["category"], row["instance"]))
+    if len({row["instance"] for row in rows}) != len(rows):
+        raise ValueError("duplicate instance names in benchmark manifest")
+    return rows[:limit] if limit > 0 else rows
 
 
-def write_state(path, state):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(state, indent=2, sort_keys=True), encoding="utf-8")
+def first(pattern: re.Pattern[str], text: str) -> str:
+    match = pattern.search(text)
+    return match.group(1) if match else ""
 
 
-def read_state(path):
-    if not path.is_file():
-        return {}
+def parse_output(algorithm: str, output: str) -> dict[str, str]:
+    metrics = {
+        name.strip().lower().replace(" ", "_"): value
+        for name, value in HYBRID_METRIC_RE.findall(output)
+    }
+    bfs = (
+        first(DXD_BFS_TIME_RE, output)
+        or first(DXD_CPU_RE, output)
+        if algorithm == "dxd"
+        else metrics.get("bfs_time", "")
+    )
+    build = metrics.get("ett_build_time", "")
+    decrement = metrics.get("ett_decrement_time", "")
+    extraction = metrics.get("ett_extraction_time", "")
+    release = metrics.get("ett_release_time", "")
+    if algorithm == "dxd":
+        cc_time = bfs
+    else:
+        values = [build, decrement, extraction, release]
+        cc_time = f"{sum(float(value) for value in values):.9f}" if all(values) else ""
+    return {
+        "time_s": first(TIME_RE, output),
+        "cc_time_s": cc_time,
+        "bfs_time_s": bfs,
+        "ett_build_time_s": build,
+        "ett_decrement_time_s": decrement,
+        "ett_extraction_time_s": extraction,
+        "ett_release_time_s": release,
+        "bfs_queries": metrics.get("bfs_queries", ""),
+        "ett_decrement_updates": metrics.get("ett_decrement_updates", ""),
+        "solutions": first(SOL_RE, output),
+        "max_blocks": first(BLOCKS_RE, output),
+    }
+
+
+def run_case(
+    case: dict[str, str],
+    algorithm: str,
+    timeout: int,
+) -> tuple[dict[str, str], str]:
+    command = [
+        str(EXECUTABLE),
+        "-a",
+        algorithm,
+        "-i",
+        str(ROOT / case["path"]),
+        "-t",
+        "1",
+        "--time-limit",
+        str(timeout),
+        "--skip-dnnf-size",
+    ]
+    if algorithm == "dxd":
+        command.append("--enable-cc-time")
+    else:
+        command.append("--debug")
+    started = time.perf_counter()
+    process = subprocess.Popen(
+        command,
+        cwd=str(ROOT),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        start_new_session=True,
+    )
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
-    return value if isinstance(value, dict) else {}
+        output, _ = process.communicate(timeout=timeout + 30)
+        exit_code: int | None = process.returncode
+    except subprocess.TimeoutExpired:
+        os.killpg(process.pid, signal.SIGKILL)
+        output, _ = process.communicate()
+        exit_code = None
+        output += f"\n[experiment] process timeout after {timeout + 30}s\n"
+    wall_time = time.perf_counter() - started
+    parsed = parse_output(algorithm, output)
+    if exit_code is None or "搜索超时" in output or "Time bound" in output:
+        status = "timeout"
+    elif exit_code != 0:
+        status = "error"
+    elif parsed["time_s"] and parsed["solutions"]:
+        status = "success"
+    else:
+        status = "incomplete"
+    row = {
+        "dataset": case["dataset"],
+        "category": case["category"],
+        "instance": case["instance"],
+        "input": case["path"],
+        "algorithm": algorithm,
+        "threads": "1",
+        "status": status,
+        "solutions_match": "",
+        "walk_time_s": f"{wall_time:.6f}",
+        "exit_code": "" if exit_code is None else str(exit_code),
+        "error": (
+            ""
+            if status == "success"
+            else " | ".join(output.strip().splitlines()[-3:])[:1000]
+        ),
+        **parsed,
+    }
+    return row, output
 
 
-def run_dataset(dataset, entries, args):
-    """Run one dataset sequentially; the four datasets run concurrently."""
-    output = dataset_output(args.output_dir, dataset)
-    state_path = dataset_state_output(args.output_dir, dataset)
-    rows = read_results(output) if args.resume else []
-    rows_by_name = {row["instance"]: row for row in rows}
-    state = read_state(state_path) if args.resume else {}
-
-    for number, (item, path) in enumerate(entries, 1):
-        name = item["instance"]
-        old_row = rows_by_name.get(name, {})
-        old_state = state.get(name, {})
-        # Old checkpoints predate the state sidecar. Infer success only when
-        # both corresponding timing fields are present; otherwise retry it.
-        dyn_status = old_state.get("dyn_status") or (
-            "success" if old_row.get("Dyn_time") and old_row.get("Dyn_cc_cpu_time") else "timeout"
-        )
-        dxd_status = old_state.get("dxd_status") or (
-            "success" if old_row.get("DXD_time") and old_row.get("DXD_cc_cpu_time") else "timeout"
-        )
-        run_dyn = not args.resume or dyn_status == "timeout"
-        run_dxd = not args.resume or dxd_status == "timeout"
-        if not run_dyn and not run_dxd:
-            print(f"[{dataset} {number}/{len(entries)}] {name} (already recorded)", flush=True)
-            continue
-
-        retrying = []
-        if run_dyn:
-            retrying.append("Dyn")
-        if run_dxd:
-            retrying.append("DXD")
-        print(f"[{dataset} {number}/{len(entries)}] {name} ({'+'.join(retrying)})", flush=True)
-        dyn = (run_solver(args.executable, "ddxd", path, args.timeout,
-                          args.cc_ett_max_calls) if run_dyn else None)
-        dxd = run_solver(args.executable, "dxd", path, args.timeout) if run_dxd else None
-        row = dict(old_row) if old_row else {"instance": name}
-        if dyn is not None:
-            row.update(Dyn_time=dyn["time_s"], Dyn_cc_cpu_time=dyn["cc_cpu_s"])
-            dyn_status = dyn["status"]
-        if dxd is not None:
-            row.update(DXD_time=dxd["time_s"], DXD_cc_cpu_time=dxd["cc_cpu_s"])
-            dxd_status = dxd["status"]
-        if dyn and dxd and dyn["solutions"] and dxd["solutions"] and dyn["solutions"] != dxd["solutions"]:
-            print(f"warning: solution mismatch for {name}", file=sys.stderr, flush=True)
-        rows_by_name[name] = row
-        state[name] = {"dyn_status": dyn_status, "dxd_status": dxd_status}
-        rows = sorted(rows_by_name.values(), key=lambda value: value["instance"])
-        write_results(output, rows)
-        write_state(state_path, state)
-    print(f"[{dataset}] wrote {len(rows)} rows to {output}", flush=True)
-    return rows
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        description="Run single-thread DynDXD and DXD on cases that did not time out in the final report."
-    )
-    parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
-    parser.add_argument("--executable", type=Path, default=ROOT / "bin/main")
-    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--output-dir", type=Path, default=ROOT / "results/cc_cpu_datasets",
-        help="directory for per-dataset checkpoint CSV files",
+        "--benchmark-set", choices=("old", "new", "all"), default="all"
     )
+    parser.add_argument("--case-file", type=Path)
+    parser.add_argument("--timeout", type=int, default=1500)
+    parser.add_argument("--limit", type=int, default=0)
+    parser.add_argument("--output-dir", type=Path)
+    parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
-        "--case-file", type=Path,
-        help="run only names in this UTF-8 text file (one per line; commas also accepted)",
+        "--resume",
+        action="store_true",
+        help="resume the latest cc_cpu_experiment CSV in --output-dir",
     )
-    parser.add_argument("--input-dir", action="append", type=Path, dest="input_dirs")
-    parser.add_argument("--timeout", type=int, default=600)
-    parser.add_argument("--workers", type=int, default=4,
-                        help="number of datasets to run concurrently (default: 4)")
-    parser.add_argument("--dataset", action="append", dest="datasets",
-                        help="run only this dataset directory; may be repeated")
-    parser.add_argument("--cc-ett-max-calls", type=int, default=3,
-                        help="stop Dyn CC work after N ETT queries (default: 3; 0: unlimited)")
-    parser.add_argument("--limit", type=int, help="run only the first N selected cases")
-    parser.add_argument("--dry-run", action="store_true", help="only list selected inputs")
-    parser.add_argument("--resume", action="store_true",
-                        help="keep completed timings and rerun only timed-out algorithms")
     args = parser.parse_args()
-    if args.workers < 1:
-        parser.error("--workers must be at least 1")
-    if args.cc_ett_max_calls < 0:
-        parser.error("--cc-ett-max-calls must be non-negative")
+    if not EXECUTABLE.is_file():
+        parser.error(f"solver executable not found: {EXECUTABLE}")
+    try:
+        cases = select_cases(args.benchmark_set, args.case_file, args.limit)
+    except (OSError, ValueError) as error:
+        parser.error(str(error))
+    print(f"cases={len(cases)} algorithms=DXD,Hybrid threads=1")
+    if args.dry_run:
+        for case in cases:
+            print(
+                f"{case['dataset']}/{case['category']}/"
+                f"{case['instance']} <- {case['path']}"
+            )
+        return 0
 
-    if args.case_file:
-        try:
-            selected = instances_from_case_file(args.case_file, args.report)
-        except (OSError, ValueError, zipfile.BadZipFile) as error:
-            parser.error(str(error))
-        output = args.output or (
-            ROOT / "results" / f"cc_cpu_experiment_{args.case_file.stem}.csv"
+    output_dir = args.output_dir.resolve() if args.output_dir else RESULTS
+    output_dir.mkdir(parents=True, exist_ok=True)
+    existing_rows: list[dict[str, str]] = []
+    if args.resume:
+        candidates = sorted(output_dir.glob("cc_cpu_experiment_*.csv"))
+        if not candidates:
+            parser.error(f"no cc_cpu_experiment CSV found in {output_dir}")
+        result_path = candidates[-1]
+        with result_path.open(encoding="utf-8", newline="") as stream:
+            existing_rows = list(csv.DictReader(stream))
+        run_id = (
+            existing_rows[0]["run_id"]
+            if existing_rows
+            else datetime.now().strftime("%Y%m%d_%H%M%S")
         )
     else:
-        selected = eligible_instances(args.report)
-        output = args.output or DEFAULT_OUTPUT
-    if args.limit is not None:
-        selected = selected[:args.limit]
-    inputs = input_index(args.input_dirs or DEFAULT_INPUT_DIRS)
+        run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+        result_path = output_dir / f"cc_cpu_experiment_{run_id}.csv"
 
-    missing = [item["instance"] for item in selected if item["instance"] not in inputs]
-    if missing:
-        print(f"warning: {len(missing)} selected instances have no input file", file=sys.stderr)
-
-    runnable = [item for item in selected if item["instance"] in inputs]
-    grouped = {folder.name: [] for folder in (args.input_dirs or DEFAULT_INPUT_DIRS)}
-    for item in runnable:
-        path = inputs[item["instance"]]
-        grouped.setdefault(path.parent.name, []).append((item, path))
-    requested = set(args.datasets or grouped)
-    unknown = requested - set(grouped)
-    if unknown:
-        parser.error("unknown --dataset value(s): " + ", ".join(sorted(unknown)))
-    grouped = {name: entries for name, entries in grouped.items()
-               if name in requested and entries}
-    source = "case file" if args.case_file else "report"
-    print(f"{source} selected {len(selected)} cases; {len(runnable)} input files found")
-    if args.dry_run:
-        for dataset, entries in grouped.items():
-            print(f"[{dataset}] {len(entries)} cases")
-            for _, path in entries:
-                print(path)
-        return 0
-    if not args.executable.is_file():
-        parser.error(f"executable not found: {args.executable}; build the project first")
-    if not grouped:
-        write_results(output, [])
-        print(f"wrote 0 rows to {output}")
-        return 0
-
-    results = []
-    with ThreadPoolExecutor(max_workers=min(args.workers, len(grouped))) as executor:
-        futures = {
-            executor.submit(run_dataset, dataset, entries, args): dataset
-            for dataset, entries in grouped.items()
-        }
-        for future in as_completed(futures):
-            results.extend(future.result())
-
-    results.sort(key=lambda row: row["instance"])
-    write_results(output, results)
-    print(f"wrote {len(results)} rows to {output}")
+    all_rows = list(existing_rows)
+    completed = {
+        (row["instance"], row["algorithm"])
+        for row in existing_rows
+        if row["status"] == "success"
+    }
+    for index, case in enumerate(cases, 1):
+        print(f"[{index}/{len(cases)}] {case['instance']}", flush=True)
+        for algorithm in ("dxd", "hybrid"):
+            if (case["instance"], algorithm) in completed:
+                continue
+            row, _ = run_case(case, algorithm, args.timeout)
+            row["run_id"] = run_id
+            all_rows.append(row)
+        case_rows = [
+            row for row in all_rows if row["instance"] == case["instance"]
+        ]
+        successful = [row for row in case_rows if row["solutions"]]
+        if len(successful) == 2:
+            matches = successful[0]["solutions"] == successful[1]["solutions"]
+            for row in case_rows:
+                row["solutions_match"] = (
+                    str(matches) if row["solutions"] else ""
+                )
+                if row["solutions"] and not matches:
+                    row["status"] = "solution_mismatch"
+        with result_path.open("w", encoding="utf-8", newline="") as stream:
+            writer = csv.DictWriter(
+                stream, fieldnames=FIELDS, extrasaction="ignore"
+            )
+            writer.writeheader()
+            writer.writerows(all_rows)
+    (output_dir / f"cc_cpu_experiment_{run_id}.json").write_text(
+        json.dumps(
+            {
+                "run_id": run_id,
+                "cases": len(cases),
+                "algorithms": ["dxd", "hybrid"],
+                "threads": 1,
+                "timeout_s": args.timeout,
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    print(f"results: {result_path}")
     return 0
 
 

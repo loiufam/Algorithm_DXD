@@ -1,621 +1,897 @@
+#!/usr/bin/env python3
+"""Run exact-cover, DXD-variant, and repeatable thread experiments."""
 
-from html import parser
-import os
-import subprocess
-import resource
-import csv
-import re
-import sys
-import logging
+from __future__ import annotations
+
 import argparse
-from pathlib import Path
+import csv
+import json
+import os
+import re
+import shutil
+import signal
+import statistics
+import subprocess
+import sys
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
 from datetime import datetime
-
-# =========================
-# 配置
-# =========================
-MAIN_EXECUTABLE = "./main"
-INPUT_FOLDERS = [
-"../data/batch_2/dominoes_set",
-"../data/batch_2/exact_cover_benchmarks",
-"../data/batch_2/set_partition_benchmarks",
-"../data/batch_2/graphs_set"
-]
-RESULTS_FOLDER = "../results/batch_results_" + datetime.now().strftime("%Y%m%d")
-THREADS_FOLDER = "../results/Threads"
-
-WRITE_INTERVAL = 2  # 每2个写一次CSV
-
-# =========================
-# 算法分组配置
-# =========================
-# 分组 1: ddxd-t8, ddxd-t1
-GROUP1_ALGORITHMS = [
-    # ("DynDXD_T8", ["ddxd", "8"], True, "DynDXD_t8_results.csv"),
-    ("DynDXD_T1", ["ddxd", "1"], True, "DynDXD_t1_results.csv"),
-]
-
-# 分组 2: dxd-t8, dxd-t1
-GROUP2_ALGORITHMS = [
-    # ("DXD_T8", ["dxd", "8"], True, "DXD_t8_results.csv"),
-    ("DXD_T1", ["dxd", "1"], True, "DXD_t1_results.csv"),
-]
-
-# 分组 3: dxz, dlx
-GROUP3_ALGORITHMS = [
-    # ("DXZ", ["dxz"], False, "DXZ_results.csv"),
-    ("DLX", ["dlx"], False, "DLX_results.csv"),
-]
-
-GROUP4_ALGORITHMS = [
-    # ("MDLX", ["mdlx", "d", "1"], True, "MDLX_D_results_T1.csv"),
-    ("MDLX", ["mdlx", "s", "1"], True, "MDLX_S_results_T1.csv"),
-    # ("MDLX", ["mdlx", "d", "8"], True, "MDLX_D_results_T8.csv"),
-    ("MDLX", ["mdlx", "s", "8"], True, "MDLX_S_results_T8.csv"),
-]
-
-# 默认全部算法 (合并以上所有组)
-ALGORITHMS = GROUP1_ALGORITHMS + GROUP2_ALGORITHMS + GROUP3_ALGORITHMS + GROUP4_ALGORITHMS
-# ALGORITHMS = GROUP4_ALGORITHMS
+from pathlib import Path
 
 
-# 多线程算法配置：(算法名, 命令参数, 支持多线程, 线程数列表, 输出文件名)
-THREAD_ALGORITHMS = [
-    # ("DXD_M", ["dxd"], True, [1, 2, 4, 8], "DXD_threads.csv"),
-    # ("DynDXD_M", ["ddxd"], True, [1, 2, 4, 8], "DynDXD_threads.csv"),
-    ("MDLX", ["mdlx"], True, [1, 2, 4, 8], "MDLX_threads.csv"),
-]
+ROOT = Path(__file__).resolve().parents[1]
+MAIN_EXECUTABLE = ROOT / "bin" / "main"
+MANIFEST_PATH = ROOT / "data" / "benchmarks" / "benchmark_manifest.csv"
+DEFAULT_RESULTS_ROOT = ROOT / "results" / "runs"
 
-# =========================
-# logging
-# =========================
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s"
+TIME_RE = re.compile(r"^Time:\s*([\d.eE+-]+)\s*s\s*$", re.MULTILINE)
+SOL_RE = re.compile(r"^Solutions:\s*(\S+)\s*$", re.MULTILINE)
+SOL_SCI_RE = re.compile(r"^Solutions \(scientific\):\s*(\S+)\s*$", re.MULTILINE)
+BLOCKS_RE = re.compile(r"^Max Blocks:\s*(\d+)\s*$", re.MULTILINE)
+ROWS_RE = re.compile(r"^rows:\s*(\d+)\s*$", re.MULTILINE)
+COLS_RE = re.compile(r"^cols:\s*(\d+)\s*$", re.MULTILINE)
+DNNF_RE = re.compile(r"^DNNF Size:\s*(\d+)\s*$", re.MULTILINE)
+INTERNAL_TIMEOUT_MARKERS = ("搜索超时", "Time bound", "timeout")
+MEMORY_MARKERS = ("bad_alloc", "Memory", "out of memory", "内存")
+
+FIELDS = (
+    "run_id",
+    "suite",
+    "dataset",
+    "category",
+    "instance",
+    "input",
+    "solver",
+    "variant",
+    "threads",
+    "repeat",
+    "status",
+    "time_s",
+    "wall_time_s",
+    "solutions",
+    "solutions_match",
+    "max_blocks",
+    "dnnf_size",
+    "rows",
+    "cols",
+    "exit_code",
+    "error",
+    "started_at",
 )
 
-# =========================
-# 正则预编译
-# =========================
-COLS_PATTERN = re.compile(r'cols:\s*(\d+)')
-ROWS_PATTERN = re.compile(r'rows:\s*(\d+)')
-TIME_PATTERN = re.compile(r'Time:\s*([\d.]+)\s*s')
-SOL_PATTERN = re.compile(r'Solutions:\s*([\d.eE+\-]+)')
-SOL_SCI_PATTERN = re.compile(r'Solutions (scientific):\s*([\d.eE+\-]+)')
-BLOCK_PATTERN = re.compile(r'Max Blocks:\s*(\d+)')
-ZDD_PATTERN = re.compile(r'ZDD Size:\s*(\d+)')
-DNNF_PATTERN = re.compile(r'DNNF Size:\s*(\d+)')
 
-# =========================
-# 解析输出
-# =========================
-def parse_log_output(output, memo_out = False):
-    """解析算法输出的日志信息"""
-    result = {
-        'rows': None,
-        'cols': None,
-        'time': None,
-        'solutions': None,
-        'max_blocks': None,
-        'zdd_size': None,
-        'dnnf_size': None,
-        'status': 'success',
-        'timeout': False
+@dataclass(frozen=True)
+class Benchmark:
+    dataset: str
+    category: str
+    instance: str
+    path: Path
+
+
+@dataclass(frozen=True)
+class Variant:
+    solver: str
+    variant: str
+    algorithm: str
+    threads: int | None
+    extra_args: tuple[str, ...] = ()
+    performance_mode: bool = False
+
+
+def read_manifest() -> list[Benchmark]:
+    if not MANIFEST_PATH.is_file():
+        raise FileNotFoundError(
+            f"missing {MANIFEST_PATH}; run bin/benchmark_catalog.py --write"
+        )
+    entries: list[Benchmark] = []
+    with MANIFEST_PATH.open(encoding="utf-8", newline="") as stream:
+        for row in csv.DictReader(stream):
+            entries.append(
+                Benchmark(
+                    dataset=row["dataset"],
+                    category=row["category"],
+                    instance=row["instance"],
+                    path=(ROOT / row["path"]).resolve(),
+                )
+            )
+    return entries
+
+
+def read_case_names(path: Path) -> set[str]:
+    names = {
+        name.strip()
+        for line in path.read_text(encoding="utf-8").splitlines()
+        for name in re.split(r"[,\s]+", line)
+        if name.strip()
     }
+    if not names:
+        raise ValueError(f"case list is empty: {path}")
+    return names
 
-    if memo_out:
-        result['timeout'] = True
-        result['status'] = 'memory_out'
-        return result
 
-    if m := COLS_PATTERN.search(output):
-        result['cols'] = int(m.group(1))
-    if m := ROWS_PATTERN.search(output):
-        result['rows'] = int(m.group(1))
+def select_benchmarks(
+    entries: list[Benchmark],
+    benchmark_set: str,
+    case_list: Path | None,
+) -> list[Benchmark]:
+    selected = entries if benchmark_set == "all" else [
+        entry for entry in entries if entry.dataset == benchmark_set
+    ]
+    if case_list is not None:
+        names = read_case_names(case_list)
+        selected = [entry for entry in selected if entry.instance in names]
+        found = {entry.instance for entry in selected}
+        missing = sorted(names - found)
+        if missing:
+            raise ValueError(
+                "case list contains names outside the selected benchmark set: "
+                + ", ".join(missing[:20])
+            )
+    if not selected:
+        raise ValueError("no benchmarks selected")
+    selected_names = [entry.instance for entry in selected]
+    if len(selected_names) != len(set(selected_names)):
+        raise ValueError("selected benchmarks contain duplicate instance names")
+    return sorted(selected, key=lambda entry: (entry.category, entry.instance))
 
-    # 检测是否包含“超时”
-    if '超时' in output:
-        result['timeout'] = True
-        result['status'] = 'timeout'
-        return result
 
-    if m := TIME_PATTERN.search(output):
-        result['time'] = float(m.group(1))
+def variants_for(suite: str, dxd_group: str = "all") -> list[Variant]:
+    if suite == "exact":
+        return [
+            Variant("DLX", "DLX", "dlx", None),
+            Variant("DXZ", "DXZ", "dxz", None),
+        ]
+    if suite == "dxd-versions":
+        thread_groups = {
+            "single-thread": (1,),
+            "multi-thread": (8,),
+            "all": (1, 8),
+        }
+        variants = []
+        for threads in thread_groups[dxd_group]:
+            variants.extend(
+                [
+                    Variant("DXD", "DXD", "dxd", threads, performance_mode=True),
+                    Variant(
+                        "DynDXD",
+                        "pureDynDXD",
+                        "ddxd",
+                        threads,
+                        ("--pure-dyndxd", "--cc-ett-max-calls", "0",
+                         "--cc-bfs-max-calls", "0"),
+                        True,
+                    ),
+                    Variant(
+                        "HybridDXD",
+                        "HybridDXD",
+                        "hybrid",
+                        threads,
+                        performance_mode=True,
+                    ),
+                ]
+            )
+        return variants
+    if suite == "thread-compare":
+        return [
+            Variant(
+                solver,
+                solver,
+                algorithm,
+                threads,
+                performance_mode=True,
+            )
+            for solver, algorithm in (
+                ("DXD", "dxd"),
+                ("HybridDXD", "hybrid"),
+            )
+            for threads in (1, 2, 4, 8)
+        ]
+    raise ValueError(f"unknown suite: {suite}")
 
-    if m := SOL_PATTERN.search(output):
-        result['solutions'] = m.group(1)
 
-    if m := SOL_SCI_PATTERN.search(output):
-        result['solutions'] = m.group(1)
-
-    if m := BLOCK_PATTERN.search(output):
-        result['max_blocks'] = int(m.group(1))
-
-    if m := ZDD_PATTERN.search(output):
-        result['zdd_size'] = int(m.group(1))
-
-    if m := DNNF_PATTERN.search(output):
-        result['dnnf_size'] = int(m.group(1))
-
-    # 检查是否有求解结果为0的情况
-    try:
-        if result['solutions'] and float(result['solutions']) == 0:
-            result['status'] = 'warning'
-    except:
-        pass
-
+def parse_output(output: str) -> dict[str, object]:
+    result: dict[str, object] = {
+        "time_s": "",
+        "solutions": "",
+        "max_blocks": "",
+        "dnnf_size": "",
+        "rows": "",
+        "cols": "",
+    }
+    matches = TIME_RE.findall(output)
+    if matches:
+        result["time_s"] = matches[-1]
+    matches = SOL_RE.findall(output)
+    if matches:
+        result["solutions"] = matches[-1]
+    else:
+        matches = SOL_SCI_RE.findall(output)
+        if matches:
+            result["solutions"] = matches[-1]
+    for field, pattern in (
+        ("max_blocks", BLOCKS_RE),
+        ("dnnf_size", DNNF_RE),
+        ("rows", ROWS_RE),
+        ("cols", COLS_RE),
+    ):
+        matches = pattern.findall(output)
+        if matches:
+            result[field] = matches[-1]
     return result
 
-def limit_memory():
-    """设置子进程虚拟内存上限为 20GB"""
-    # 20 GB 转换为 Bytes
-    max_memory_bytes = 20 * 1024 * 1024 * 1024
-    # 设置虚拟内存地址空间大小限制 (软限制, 硬限制)
-    resource.setrlimit(resource.RLIMIT_AS, (max_memory_bytes, max_memory_bytes))
 
-# =========================
-# 运行算法
-# =========================
-def run_algorithm(alg_name, algo_params, input_file, supports_thread, num_threads = 1, timeout = 1500):
-    """运行单个算法"""
+def run_variant(
+    benchmark: Benchmark,
+    variant: Variant,
+    timeout: int,
+    memory_gb: int,
+) -> tuple[dict[str, object], str]:
+    command = [
+        str(MAIN_EXECUTABLE),
+        "-a",
+        variant.algorithm,
+        "-i",
+        str(benchmark.path),
+    ]
+    if variant.threads is not None:
+        command.extend(["-t", str(variant.threads)])
+    command.extend(["--time-limit", str(timeout)])
+    if variant.performance_mode:
+        command.append("--skip-dnnf-size")
+    command.extend(variant.extra_args)
+    if memory_gb > 0:
+        prlimit = shutil.which("prlimit")
+        if prlimit is None:
+            raise RuntimeError("prlimit is required when --memory-gb is positive")
+        command = [
+            prlimit,
+            f"--as={memory_gb * 1024 * 1024 * 1024}",
+            "--",
+            *command,
+        ]
 
-    cmd = [MAIN_EXECUTABLE] + ["-a", algo_params[0], "-i", input_file]
-
-    if (alg_name == "MDLX"):
-        cmd += ["-m", algo_params[1]]
-    
-    if supports_thread:
-        cmd += ["-t", str(num_threads)]
-
-    logging.info(f"运行: {' '.join(cmd)}")
-
+    started_wall = time.perf_counter()
+    started_at = datetime.now().isoformat(timespec="seconds")
+    process = subprocess.Popen(
+        command,
+        cwd=str(ROOT),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        start_new_session=True,
+    )
     try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            encoding='utf-8',
-            errors='replace',
-            preexec_fn=limit_memory
+        output, _ = process.communicate(timeout=timeout + 30)
+        exit_code: int | None = process.returncode
+    except subprocess.TimeoutExpired:
+        os.killpg(process.pid, signal.SIGKILL)
+        output, _ = process.communicate()
+        exit_code = None
+        output += f"\n[experiment] process timeout after {timeout + 30}s\n"
+
+    wall_time = time.perf_counter() - started_wall
+    parsed = parse_output(output)
+    lower_output = output.lower()
+    if exit_code is None or any(marker.lower() in lower_output for marker in INTERNAL_TIMEOUT_MARKERS):
+        status = "timeout"
+    elif any(marker.lower() in lower_output for marker in MEMORY_MARKERS):
+        status = "memout"
+    elif exit_code != 0:
+        status = "error"
+    elif parsed["time_s"] and parsed["solutions"]:
+        status = "success"
+    else:
+        status = "incomplete"
+
+    row: dict[str, object] = {
+        "dataset": benchmark.dataset,
+        "category": benchmark.category,
+        "instance": benchmark.instance,
+        "input": str(benchmark.path.relative_to(ROOT)),
+        "solver": variant.solver,
+        "variant": variant.variant,
+        "threads": variant.threads if variant.threads is not None else "",
+        "status": status,
+        "wall_time_s": f"{wall_time:.6f}",
+        "exit_code": "" if exit_code is None else exit_code,
+        "stdout_tail": output[-4000:],
+        "started_at": started_at,
+        **parsed,
+    }
+    if status != "success" and not row.get("error"):
+        row["error"] = (
+            f"exit={exit_code}; "
+            f"tail={' '.join(output.strip().splitlines()[-3:])[:800]}"
         )
-
-        output = result.stdout + result.stderr
-
-        memo_out = False
-        if result.returncode != 0:
-            if "Memory" in output or "bad_alloc" in output or result.returncode < 0:
-                print(f"  [内存超出或崩溃] returncode={result.returncode}，可能超出了 20GB 限制。")
-                memo_out = True
-        print(f"  输出: {output[:200]}...")  # 打印前200字符
-
-        return parse_log_output(output, memo_out)
-
-    except subprocess.TimeoutExpired as e:
-        print(f"  [超时] 超过 {timeout} 秒限制。")
-        
-        # 安全解码函数：处理可能返回的 bytes 或 None
-        def safe_decode(out_data):
-            if out_data is None:
-                return ""
-            if isinstance(out_data, bytes):
-                return out_data.decode('utf-8', errors='replace')
-            return str(out_data)
-
-        stdout_part = safe_decode(e.stdout)
-        stderr_part = safe_decode(e.stderr)
-        output = stdout_part + stderr_part
-        
-        print(f"  超时前输出: {output[:200]}...")  # 打印超时前捕获的内容供调试
-        
-        result = parse_log_output(output)
-        
-        result['timeout'] = True
-        result['status'] = 'timeout'
-        
-        return result
-    except Exception as e:
-        logging.error(e)
-        return {'status': 'error'}
+    return row, output
 
 
-# =========================
-# 文件
-# =========================
-def get_input_files(folder):
-    return sorted([str(f) for f in Path(folder).rglob('*') if f.is_file()])
-
-def filter_input_files(input_files, list_file):
-
-    # 读取指定的文件名（无扩展名）
-    with open(list_file, 'r', encoding='utf-8') as f:
-        # specified = set(line.strip() for line in f if line.strip())
-        specified = set(os.path.splitext(line.strip().split(',')[0])[0] for line in f if line.strip())
-
-    matched = []
-    for file in input_files:
-        base = os.path.basename(file)
-        name_no_ext, _ = os.path.splitext(base)   # → 去掉扩展名
-        if name_no_ext in specified:
-            matched.append(file)
-
-    return sorted(matched)
-
-def get_skip_set(skip_file):
-    """读取黑名单txt，返回需要跳过的文件名集合"""
-    if not skip_file or not os.path.exists(skip_file):
-        return set()
-
-    with open(skip_file, 'r', encoding='utf-8') as f:
-        # 提取文件名，确保带有后缀，去除两端空格
-        return set(line.strip() for line in f if line.strip())
-
-def read_existing_csv(csv_path):
-    """读取已有的CSV文件，返回字典格式"""
-    if not os.path.exists(csv_path):
-        return {}
-
-    data = {}
-    with open(csv_path, 'r', encoding='utf-8') as f:
-        reader = csv.reader(f)
-        rows = list(reader)
-        if len(rows) > 0:
-            for row in rows[1:]:  # 跳过表头
-                if len(row) > 0:
-                    instanceName = row[0]
-                    data[instanceName] = row
-
-    return data
-
-def write_csv_results(csv_path, results_data, alg_name):
-    """将结果写入CSV文件"""
-    # 读取现有数据
-    existing_data = read_existing_csv(csv_path)
-
-    # 确定列数
-    max_cols = 8
-
-    # 合并新结果
-    for filename, result in results_data.items():
-        if filename not in existing_data:
-            existing_data[filename] = [''] * max_cols
-            existing_data[filename][0] = filename
-
-        # 确保行有足够的列
-        while len(existing_data[filename]) < max_cols:
-            existing_data[filename].append('')
-
-        if result.get('cols') is not None:
-            existing_data[filename][1] = str(result.get('cols'))
-        if result.get('rows') is not None:
-            existing_data[filename][2] = str(result.get('rows'))
-
-        # 写入时间结果
-        if result.get('timeout'):
-            existing_data[filename][3] = 'TO'
-        elif result.get('time') is not None:
-            existing_data[filename][3] = f"{result.get('time'):.4f}"
-
-        # 写入 Solutions 和 Max Blocks
-        if result.get('solutions') is not None:
-            existing_data[filename][4] = result.get('solutions')
-        if result.get('max_blocks') is not None:
-            existing_data[filename][5] = str(result.get('max_blocks'))
-
-        # 添加警告标记
-        if result.get('status') == 'warning':
-            existing_data[filename][3] = f"{existing_data[filename][3]} (WARNING: 0 solutions)"
-
-        if result.get('zdd_size') is not None:
-            existing_data[filename][6] = result.get('zdd_size')
-
-        if result.get('dnnf_size') is not None:
-            existing_data[filename][7] = result.get('dnnf_size')
-
-    # 写入文件
-    with open(csv_path, 'w', encoding='utf-8', newline='') as f:
-        writer = csv.writer(f)
-
-        # 写表头
-        header = ['Instance', '#cols', '#rows', alg_name, 'Solutions', 'Max Blocks', '|ZDD|', '|DNNF|']
-        writer.writerow(header)
-
-        # 写数据行
-        for filename in sorted(existing_data.keys()):
-            writer.writerow(existing_data[filename])
-
-def write_thread_csv_results(csv_path, results_data, thread_nums):
-    """将多线程结果写入CSV文件"""
-    # 读取现有数据
-    existing_data = read_existing_csv(csv_path)
-
-    # 确定列数：Instance + 每个线程数1列(Time)
-    num_cols = 1 + len(thread_nums) * 3  # 每个线程数占3列(Time, Solutions, Max Blocks)
-
-    # 合并新结果
-    for filename, thread_results in results_data.items():
-        if filename not in existing_data:
-            existing_data[filename] = [''] * num_cols
-            existing_data[filename][0] = filename
-
-        # 确保行有足够的列
-        while len(existing_data[filename]) < num_cols:
-            existing_data[filename].append('')
-
-        # 写入每个线程数的结果
-        for idx, num_threads in enumerate(thread_nums):
-            if num_threads in thread_results:
-                result = thread_results[num_threads]
-                col = 1 + idx * 3  # 每个线程数占1列
-
-                # Time列
-                if result.get('timeout'):
-                    existing_data[filename][col] = 'timeout'
-                elif result.get('time') is not None:
-                    time_str = f"{result.get('time'):.4f}"
-                    existing_data[filename][col] = time_str
-
-                # Solutions列
-                if result.get('solutions') is not None:
-                    existing_data[filename][col + 1] = result.get('solutions')
-
-                # Max Blocks列
-                if result.get('max_blocks') is not None:
-                    existing_data[filename][col + 2] = str(result.get('max_blocks'))
-
-    # 写入文件
-    with open(csv_path, 'w', encoding='utf-8', newline='') as f:
-        writer = csv.writer(f)
-
-        # 写表头
-        header = ['Instance']
-        for num_threads in thread_nums:
-            header.extend([
-                f'{num_threads}_threads_time',
-                f'{num_threads}_threads_solutions',
-                f'{num_threads}_threads_max_blocks'
-            ])
-        writer.writerow(header)
-
-        # 写数据行
-        for filename in sorted(existing_data.keys()):
-            writer.writerow(existing_data[filename])
+def variant_result_path(output_dir: Path, variant: Variant) -> Path:
+    return output_dir / f"runs_{variant.variant}.csv"
 
 
+def run_variant_benchmarks(
+    benchmarks: list[Benchmark],
+    variant: Variant,
+    output_dir: Path,
+    run_id: str,
+    suite: str,
+    rounds: int,
+    timeout: int,
+    memory_gb: int,
+    resume: bool,
+    save_logs: bool,
+    raw_path: Path,
+    truncate_file: bool,
+) -> Path:
+    jobs_per_variant = len(benchmarks) * rounds
+    if resume and raw_path.is_file():
+        completed = read_existing_keys(raw_path)
+        file_mode = "a"
+    elif truncate_file or not raw_path.is_file():
+        completed = set()
+        file_mode = "w"
+    else:
+        completed = set()
+        file_mode = "a"
 
-def main():
-    """主函数"""
-    # 解析命令行参数
-    parser = argparse.ArgumentParser(
-        description='批量运行算法测试脚本（支持并行）',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog='''
+    fieldnames = (*FIELDS, "stdout_tail")
+    with raw_path.open(file_mode, encoding="utf-8", newline="") as stream:
+        writer = csv.DictWriter(
+            stream,
+            fieldnames=fieldnames,
+            extrasaction="ignore",
+        )
+        if file_mode == "w":
+            writer.writeheader()
+        stream.flush()
 
-        '''
+        job_index = 0
+        for benchmark in benchmarks:
+            for repeat in range(1, rounds + 1):
+                job_index += 1
+                key = (
+                    benchmark.instance,
+                    variant.variant,
+                    str(variant.threads or ""),
+                    str(repeat),
+                )
+                if key in completed:
+                    continue
+                print(
+                    f"[{variant.variant} T{variant.threads or '-'} "
+                    f"{job_index}/{jobs_per_variant}] {benchmark.instance} "
+                    f"repeat={repeat}",
+                    flush=True,
+                )
+                row, output = run_variant(
+                    benchmark,
+                    variant,
+                    timeout,
+                    memory_gb,
+                )
+                row.update(
+                    {
+                        "run_id": run_id,
+                        "suite": suite,
+                        "repeat": repeat,
+                    }
+                )
+                if save_logs:
+                    log_path = output_dir / "logs" / (
+                        f"{benchmark.instance}.{variant.variant}."
+                        f"t{variant.threads or '-'}.r{repeat}.log"
+                    )
+                    log_path.write_text(output, encoding="utf-8")
+                writer.writerow(row)
+                stream.flush()
+    return raw_path
+
+
+def finalize_result_files(raw_paths: list[Path], summary_path: Path) -> None:
+    rows_by_path: dict[Path, list[dict[str, object]]] = {}
+    all_rows: list[dict[str, object]] = []
+    for raw_path in raw_paths:
+        with raw_path.open(encoding="utf-8", newline="") as stream:
+            rows = list(csv.DictReader(stream))
+        rows_by_path[raw_path] = rows
+        all_rows.extend(rows)
+
+    apply_solution_checks(all_rows)
+    fieldnames = (*FIELDS, "stdout_tail")
+    for raw_path, rows in rows_by_path.items():
+        with raw_path.open("w", encoding="utf-8", newline="") as stream:
+            writer = csv.DictWriter(
+                stream,
+                fieldnames=fieldnames,
+                extrasaction="ignore",
+            )
+            writer.writeheader()
+            writer.writerows(rows)
+    write_summary(raw_paths, summary_path)
+
+
+def write_combined_results(raw_paths: list[Path], output_path: Path) -> None:
+    fieldnames = (*FIELDS, "stdout_tail")
+    with output_path.open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.DictWriter(
+            stream,
+            fieldnames=fieldnames,
+            extrasaction="ignore",
+        )
+        writer.writeheader()
+        for raw_path in raw_paths:
+            with raw_path.open(encoding="utf-8", newline="") as raw_stream:
+                writer.writerows(csv.DictReader(raw_stream))
+
+
+def migrate_legacy_exact_results(
+    output_dir: Path,
+    variants: list[Variant],
+) -> None:
+    legacy_path = output_dir / "runs.csv"
+    if not legacy_path.is_file():
+        return
+
+    fieldnames = (*FIELDS, "stdout_tail")
+    with legacy_path.open(encoding="utf-8", newline="") as stream:
+        legacy_rows = list(csv.DictReader(stream))
+    for variant in variants:
+        target_path = variant_result_path(output_dir, variant)
+        existing_rows: list[dict[str, str]] = []
+        if target_path.is_file():
+            with target_path.open(encoding="utf-8", newline="") as stream:
+                existing_rows = list(csv.DictReader(stream))
+        existing_keys = {row_key(row) for row in existing_rows}
+        matching_rows: list[dict[str, str]] = []
+        for row in legacy_rows:
+            if (
+                row.get("solver") != variant.solver
+                or row.get("variant") != variant.variant
+            ):
+                continue
+            key = row_key(row)
+            if key in existing_keys:
+                continue
+            existing_keys.add(key)
+            matching_rows.append(row)
+        if not matching_rows:
+            continue
+        with target_path.open("w", encoding="utf-8", newline="") as stream:
+            writer = csv.DictWriter(
+                stream,
+                fieldnames=fieldnames,
+                extrasaction="ignore",
+            )
+            writer.writeheader()
+            writer.writerows([*existing_rows, *matching_rows])
+
+
+def run_parallel_variants(
+    benchmarks: list[Benchmark],
+    variants: list[Variant],
+    output_dir: Path,
+    run_id: str,
+    suite: str,
+    rounds: int,
+    timeout: int,
+    memory_gb: int,
+    resume: bool,
+    save_logs: bool,
+) -> list[Path]:
+    raw_paths = [
+        variant_result_path(output_dir, variant) for variant in variants
+    ]
+    with ThreadPoolExecutor(max_workers=len(variants)) as executor:
+        futures = {
+            executor.submit(
+                run_variant_benchmarks,
+                benchmarks,
+                variant,
+                output_dir,
+                run_id,
+                suite,
+                rounds,
+                timeout,
+                memory_gb,
+                resume,
+                save_logs,
+                variant_result_path(output_dir, variant),
+                True,
+            ): variant
+            for variant in variants
+        }
+        failures: list[BaseException] = []
+        for future in as_completed(futures):
+            variant = futures[future]
+            try:
+                future.result()
+            except BaseException as error:
+                failures.append(error)
+                print(
+                    f"[error] {variant.variant} "
+                    f"T{variant.threads or '-'} worker failed: {error}",
+                    file=sys.stderr,
+                    flush=True,
+                )
+    if failures:
+        raise RuntimeError(
+            f"{len(failures)} parallel worker(s) failed"
+        ) from failures[0]
+    return raw_paths
+
+
+def run_exact(
+    benchmarks: list[Benchmark],
+    variants: list[Variant],
+    output_dir: Path,
+    run_id: str,
+    args: argparse.Namespace,
+) -> list[Path]:
+    if args.resume:
+        migrate_legacy_exact_results(output_dir, variants)
+    return run_parallel_variants(
+        benchmarks,
+        variants,
+        output_dir,
+        run_id,
+        args.suite,
+        args.rounds,
+        args.timeout,
+        args.memory_gb,
+        args.resume,
+        args.save_logs,
     )
 
-    parser.add_argument('-f', '--list_file', type=str, default='',
-                        help='包含要处理的特定文件列表的文本文件路径（可选）')
-    parser.add_argument('-s', '--skip_file', type=str, default='',
-                        help='包含要跳过的文件列表（带后缀，一行一个）的文本文件路径（黑名单模式）') # 新增
-    parser.add_argument('-r', '--rounds', type=int, default=1,
-                        help='多线程实验中每个实例运行的轮数，取平均时间写入CSV（默认1）') # 新增
-    parser.add_argument('-G', '--group', type=int, choices=[1, 2, 3, 4],
-                        help='指定运行的算法分组(1: ddxd-t8/t1, 2: dxd-t8/t1, 3: dxz/dlx), 4: MDLX variants)')
-    parser.add_argument('-p', '--parallel', action='store_true',
-                        help='开启多线程对比实验')
-    parser.add_argument('-a', '--append', action='store_true',
-                        help='追加模式：寻找最新结果目录并跳过已存在的实例')
-    parser.add_argument('-t', '--timeout', type=int, default=1500,
-                        help="单次求解的超时时间（秒），默认 1500")
+
+def run_dxd_versions(
+    benchmarks: list[Benchmark],
+    variants: list[Variant],
+    output_dir: Path,
+    run_id: str,
+    args: argparse.Namespace,
+) -> list[Path]:
+    thread_1_variants = [variant for variant in variants if variant.threads == 1]
+    thread_8_variants = [variant for variant in variants if variant.threads == 8]
+
+    if thread_1_variants:
+        run_parallel_variants(
+            benchmarks,
+            thread_1_variants,
+            output_dir,
+            run_id,
+            args.suite,
+            args.rounds,
+            args.timeout,
+            args.memory_gb,
+            args.resume,
+            args.save_logs,
+        )
+
+    truncate_thread_8_files = not thread_1_variants
+    for variant in thread_8_variants:
+        run_variant_benchmarks(
+            benchmarks,
+            variant,
+            output_dir,
+            run_id,
+            args.suite,
+            args.rounds,
+            args.timeout,
+            args.memory_gb,
+            args.resume,
+            args.save_logs,
+            variant_result_path(output_dir, variant),
+            truncate_thread_8_files,
+        )
+
+    return [variant_result_path(output_dir, variant) for variant in variants]
 
 
+def row_key(row: dict[str, object]) -> tuple[str, str, str, str]:
+    return (
+        str(row["instance"]),
+        str(row["variant"]),
+        str(row["threads"]),
+        str(row["repeat"]),
+    )
+
+
+def read_existing_keys(path: Path) -> set[tuple[str, str, str, str]]:
+    if not path.is_file():
+        return set()
+    with path.open(encoding="utf-8", newline="") as stream:
+        return {row_key(row) for row in csv.DictReader(stream)}
+
+
+def apply_solution_checks(rows: list[dict[str, object]]) -> None:
+    by_instance: dict[str, list[dict[str, object]]] = {}
+    for row in rows:
+        by_instance.setdefault(str(row["instance"]), []).append(row)
+    for group in by_instance.values():
+        successful = [
+            row
+            for row in group
+            if row.get("status") == "success" and row.get("solutions")
+        ]
+        if not successful:
+            for row in group:
+                row["solutions_match"] = ""
+            continue
+        reference = next(
+            (
+                row
+                for row in successful
+                if row.get("variant") == "DXD" and str(row.get("threads")) == "1"
+            ),
+            successful[0],
+        )
+        reference_count = str(reference["solutions"])
+        for row in group:
+            if row.get("status") != "success" or not row.get("solutions"):
+                row["solutions_match"] = ""
+                continue
+            matches = str(row["solutions"]) == reference_count
+            row["solutions_match"] = str(matches)
+            if not matches:
+                row["status"] = "solution_mismatch"
+                row["error"] = (
+                    f"reference solutions={reference_count}; "
+                    f"observed={row['solutions']}"
+                )
+
+
+def write_summary(raw_paths: list[Path], summary_path: Path) -> None:
+    grouped: dict[tuple[str, str, str], list[dict[str, str]]] = {}
+    for raw_path in raw_paths:
+        with raw_path.open(encoding="utf-8", newline="") as stream:
+            for row in csv.DictReader(stream):
+                grouped.setdefault(
+                    (row["solver"], row["variant"], row["threads"]), []
+                ).append(row)
+
+    with summary_path.open("w", encoding="utf-8", newline="") as stream:
+        fields = (
+            "solver",
+            "variant",
+            "threads",
+            "runs",
+            "success",
+            "timeout",
+            "errors",
+            "min_time_s",
+            "median_time_s",
+            "max_time_s",
+        )
+        writer = csv.DictWriter(stream, fieldnames=fields)
+        writer.writeheader()
+        for (solver, variant, threads), rows in sorted(grouped.items()):
+            times = [
+                float(row["time_s"])
+                for row in rows
+                if row["status"] == "success" and row["time_s"]
+            ]
+            writer.writerow(
+                {
+                    "solver": solver,
+                    "variant": variant,
+                    "threads": threads,
+                    "runs": len(rows),
+                    "success": sum(row["status"] == "success" for row in rows),
+                    "timeout": sum(row["status"] == "timeout" for row in rows),
+                    "errors": sum(
+                        row["status"] not in ("success", "timeout") for row in rows
+                    ),
+                    "min_time_s": f"{min(times):.6f}" if times else "",
+                    "median_time_s": (
+                        f"{statistics.median(times):.6f}" if times else ""
+                    ),
+                    "max_time_s": f"{max(times):.6f}" if times else "",
+                }
+            )
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--suite",
+        required=True,
+        choices=("exact", "dxd-versions", "thread-compare"),
+    )
+    parser.add_argument(
+        "--benchmark-set",
+        choices=("old", "new", "all"),
+        default="all",
+    )
+    parser.add_argument(
+        "--group",
+        choices=("single-thread", "multi-thread", "all"),
+        default="all",
+        help=(
+            "DXD thread group; all runs the concurrent single-thread group "
+            "first, then the serial multi-thread (T8) group"
+        ),
+    )
+    parser.add_argument("--case-list", type=Path)
+    parser.add_argument("--output-dir", type=Path)
+    parser.add_argument("--timeout", type=int, default=1500)
+    parser.add_argument(
+        "--rounds",
+        type=int,
+        help="repeat count; defaults to 10 for thread-compare and 1 otherwise",
+    )
+    parser.add_argument("--memory-gb", type=int, default=12)
+    parser.add_argument("--limit", type=int, default=0)
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="resume using --output-dir and skip completed run keys",
+    )
+    parser.add_argument(
+        "--save-logs",
+        action="store_true",
+        help="store every solver stdout under the run directory",
+    )
     args = parser.parse_args()
 
-    list_file = args.list_file
+    if args.timeout < 1:
+        parser.error("--timeout must be >= 1")
+    if args.memory_gb < 0:
+        parser.error("--memory-gb must be >= 0")
+    if args.rounds is None:
+        args.rounds = 10 if args.suite == "thread-compare" else 1
+    if args.rounds < 1:
+        parser.error("--rounds must be >= 1")
+    if args.suite == "exact" and args.benchmark_set == "old":
+        parser.error("the exact suite is intentionally limited to the new ROME set")
+    if args.group != "all" and args.suite != "dxd-versions":
+        parser.error("--group single-thread/multi-thread requires --suite dxd-versions")
+    if not MAIN_EXECUTABLE.is_file():
+        parser.error(f"solver executable not found: {MAIN_EXECUTABLE}")
 
-    print("=" * 60)
-    print("批量算法实验脚本")
-    print("=" * 60)
+    try:
+        benchmarks = select_benchmarks(
+            read_manifest(), args.benchmark_set, args.case_list
+        )
+    except (OSError, ValueError) as error:
+        parser.error(str(error))
+    if args.suite == "exact":
+        benchmarks = [entry for entry in benchmarks if entry.dataset == "new"]
+        if not benchmarks:
+            parser.error("the exact suite requires at least one new ROME instance")
+    if args.limit:
+        benchmarks = benchmarks[: args.limit]
+    variants = variants_for(args.suite, args.group)
 
-    global RESULTS_FOLDER
-    if args.append:
-        if not args.parallel:
-            # 单线程追加：去寻找最新的 batch_results 目录
-            base_dir = Path("../results")
-            if base_dir.exists():
-                dirs = [d for d in base_dir.glob("batch_results_*") if d.is_dir()]
-                if dirs:
-                    RESULTS_FOLDER = str(max(dirs, key=lambda d: d.stat().st_mtime))
-                    print(f"[*] 追加模式开启，单线程结果将追加至最新目录: {RESULTS_FOLDER}")
-        else:
-            # 多线程追加：直接提示使用 Threads 目录
-            print(f"[*] 追加模式开启，多线程结果将追加至: {THREADS_FOLDER}")
-
+    run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+    if args.output_dir is None:
+        output_dir = DEFAULT_RESULTS_ROOT / (
+            f"{run_id}_{args.suite}_{args.benchmark_set}"
+        )
     else:
-        # 创建结果文件夹
-        os.makedirs(RESULTS_FOLDER, exist_ok=True)
-    
-    os.makedirs(THREADS_FOLDER, exist_ok=True)
+        output_dir = args.output_dir.resolve()
+    summary_path = output_dir / "summary.csv"
+    log_dir = output_dir / "logs"
 
-    # 获取输入文件
-    input_files = []
-    for input_folder in INPUT_FOLDERS:
-        input_files.extend(get_input_files(input_folder))
-    if not input_files:
-        print("错误：没有找到输入文件")
-        return
+    planned = len(benchmarks) * len(variants) * args.rounds
+    print(
+        f"suite={args.suite} benchmarks={len(benchmarks)} "
+        f"variants={len(variants)} rounds={args.rounds} planned_runs={planned}"
+    )
+    if args.suite == "dxd-versions":
+        schedules = []
+        if args.group in ("single-thread", "all"):
+            schedules.append("threads_1_three_workers_concurrent")
+        if args.group in ("multi-thread", "all"):
+            schedules.append("threads_8_three_workers_serial")
+        print(f"schedule={';'.join(schedules)}")
+    elif args.suite == "exact":
+        print(
+            "schedule=DLX_DXZ_two_workers_concurrent;"
+            "outputs=runs_DLX.csv,runs_DXZ.csv"
+        )
+    if args.dry_run:
+        for benchmark in benchmarks:
+            print(
+                f"{benchmark.dataset}/{benchmark.category}/"
+                f"{benchmark.instance} -> {benchmark.path}"
+            )
+        for variant in variants:
+            print(
+                f"variant={variant.variant} solver={variant.solver} "
+                f"threads={variant.threads or '-'}"
+            )
+        return 0
+    if args.resume and not args.output_dir:
+        parser.error("--resume requires --output-dir")
 
-    print(f"\n找到 {len(input_files)} 个输入文件\n")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    if args.save_logs:
+        log_dir.mkdir(parents=True, exist_ok=True)
 
-    # 从列表文件中过滤输入文件（如果提供）
-    if list_file:
-        input_files = filter_input_files(input_files, list_file)
-        print(f"\n过滤后找到 {len(input_files)} 个输入文件\n")
-
-    # 加载需要跳过但需要记为超时的黑名单文件
-    skip_set = get_skip_set(args.skip_file)
-    if skip_set:
-        print(f"\n加载了 {len(skip_set)} 个黑名单文件（将直接记为超时）\n")
-
-    # 检查可执行文件
-    if not os.path.exists(MAIN_EXECUTABLE):
-        print(f"错误：可执行文件不存在: {MAIN_EXECUTABLE}")
-        return
-
-    start_time = datetime.now()
-
-    if not args.parallel:
-
-        # 决定运行哪个算法组
-        if args.group == 1:
-            print("\n=== 运行分组 1 (DynDXD_T8, DynDXD_T1) ===")
-            algorithms_to_run = GROUP1_ALGORITHMS
-        elif args.group == 2:
-            print("\n=== 运行分组 2 (DXD_T8, DXD_T1) ===")
-            algorithms_to_run = GROUP2_ALGORITHMS
-        elif args.group == 3:
-            print("\n=== 运行分组 3 (DXZ, DLX) ===")
-            algorithms_to_run = GROUP3_ALGORITHMS
-        elif args.group == 4:
-            print("\n=== 运行分组 4 (MDLX variants) ===")
-            algorithms_to_run = GROUP4_ALGORITHMS
-        else:
-            print("\n=== 运行全部算法 ===")
-            algorithms_to_run = ALGORITHMS
-
-        # 不同求解器对比实验
-        for algo_name, algo_params, supports_thread, output_file in algorithms_to_run:
-            print(f"\n{'=' * 60}")
-            print(f"运行算法: {algo_name}")
-
-            print(f"{'=' * 60}")
-
-            results_data = {}
-            csv_path = os.path.join(RESULTS_FOLDER, output_file)
-
-            existing_data = read_existing_csv(csv_path) if args.append else {}
-
-            for i, input_file in enumerate(input_files, 1):
-                filename = os.path.basename(input_file)
-
-                if args.append and filename in existing_data:
-                    print(f"\n[{i}/{len(input_files)}] (追加模式) 跳过已有文件: {filename}")
-                    continue
-
-                if filename in skip_set:
-                    print(f"\n[{i}/{len(input_files)}] (黑名单) 跳过运行，直接记为超时: {filename}")
-                    # 伪造一个超时的结果写入
-                    results_data[filename] = {'timeout': True, 'status': 'timeout'}
-                else:
-                    print(f"\n[{i}/{len(input_files)}] 处理文件: {filename}")
-                    if algo_name != "MDLX":
-                        threads = int(algo_params[1]) if len(algo_params) > 1 else 1
-                    else:
-                        threads = int(algo_params[2]) if len(algo_params) > 2 else 1
-                    result = run_algorithm(algo_name, algo_params, input_file, supports_thread, threads, args.timeout)
-                    results_data[filename] = result
-
-                if i % WRITE_INTERVAL == 0 or i == len(input_files):
-                    write_csv_results(csv_path, results_data, algo_name)
-                    results_data = {}  # 清空已写入的数据，继续收集新的结果
-
+    if args.suite == "exact":
+        raw_paths = run_exact(
+            benchmarks,
+            variants,
+            output_dir,
+            run_id,
+            args,
+        )
+    elif args.suite == "dxd-versions":
+        raw_paths = run_dxd_versions(
+            benchmarks,
+            variants,
+            output_dir,
+            run_id,
+            args,
+        )
     else:
-        # =====================
-        # 多线程实验
-        # =====================
-        for algo_name, algo_params, supports_thread, thread_nums, output_file in THREAD_ALGORITHMS:
-            print(f"\n{'=' * 60}")
-            print(f"运行算法: {algo_name} (线程数: {thread_nums})")
-            print(f"{'=' * 60}")
+        raw_path = output_dir / "runs.csv"
+        for index, variant in enumerate(variants):
+            run_variant_benchmarks(
+                benchmarks,
+                variant,
+                output_dir,
+                run_id,
+                args.suite,
+                args.rounds,
+                args.timeout,
+                args.memory_gb,
+                args.resume,
+                args.save_logs,
+                raw_path,
+                index == 0,
+            )
+        raw_paths = [raw_path]
 
-            results_data = {}
-            csv_path = os.path.join(THREADS_FOLDER, output_file)
+    finalize_result_files(raw_paths, summary_path)
+    if args.suite == "exact":
+        write_combined_results(raw_paths, output_dir / "runs.csv")
+    config = {
+        "run_id": run_id,
+        "suite": args.suite,
+        "benchmark_set": args.benchmark_set,
+        "group": args.group,
+        "benchmarks": len(benchmarks),
+        "variants": [variant.__dict__ for variant in variants],
+        "rounds": args.rounds,
+        "timeout_s": args.timeout,
+        "memory_gb": args.memory_gb,
+        "solver": str(MAIN_EXECUTABLE),
+        "result_files": [str(path) for path in raw_paths],
+    }
+    if args.suite == "exact":
+        config["schedule"] = {
+            "execution": "DLX_and_DXZ_concurrent",
+            "result_files": "one_csv_per_algorithm",
+        }
+    elif args.suite == "dxd-versions":
+        config["schedule"] = {
+            "selected_group": args.group,
+            "threads_1": (
+                "three_algorithm_workers_concurrent"
+                if args.group in ("single-thread", "all")
+                else "not_selected"
+            ),
+            "threads_8": (
+                "three_algorithm_workers_serial"
+                if args.group in ("multi-thread", "all")
+                else "not_selected"
+            ),
+        }
+    (output_dir / "config.json").write_text(
+        json.dumps(config, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    for raw_path in raw_paths:
+        print(f"raw results: {raw_path}")
+    print(f"summary: {summary_path}")
+    return 0
 
-            existing_data = read_existing_csv(csv_path) if args.append else {}
-
-            for i, input_file in enumerate(input_files, 1):
-                filename = os.path.basename(input_file)
-
-                if args.append and filename in existing_data:
-                    print(f"\n[{i}/{len(input_files)}] (追加模式) 跳过已有文件: {filename}")
-                    continue
-
-                if filename in skip_set:
-                    print(f"\n[{i}/{len(input_files)}] (黑名单) 跳过运行，所有线程数均记为超时: {filename}")
-                    results_data[filename] = {}
-                    for num_threads in thread_nums:
-                        results_data[filename][num_threads] = {'timeout': True, 'status': 'timeout'}
-                else:
-                    print(f"\n[{i}/{len(input_files)}] 处理文件: {filename}")
-                    results_data[filename] = {}
-
-                    # 标识高线程是否已经超时
-                    higher_thread_timeout = False
-
-                    for num_threads in sorted(thread_nums, reverse=True):
-
-                        # 如果高线程已经超时，直接将剩余的低线程计为超时并跳过执行
-                        if higher_thread_timeout:
-                            print(f"  -> 高并发已超时，直接跳过 {num_threads} 线程计为超时")
-                            results_data[filename][num_threads] = {'timeout': True, 'status': 'timeout'}
-                            continue
-
-                        if args.rounds > 1:
-                            times = []
-                            last_result = None
-                            print(f"  测试 {num_threads} 线程 (共 {args.rounds} 轮): ", end="", flush=True)
-                            
-                            for r in range(args.rounds):
-                                result = run_algorithm(
-                                    algo_name, algo_params, input_file, supports_thread, num_threads, args.timeout
-                                )
-                                
-                                # 如果遇到超时或内存溢出，直接终止后续轮次，节省时间
-                                if result.get('timeout') or result.get('status') != 'success':
-                                    last_result = result
-                                    print("[失败/超时中断]", end=" ")
-                                    if result.get('timeout'):
-                                        higher_thread_timeout = True
-                                    break
-                                    
-                                if result.get('time') is not None:
-                                    times.append(result['time'])
-                                last_result = result
-                                print(f"{r+1}✓ ", end="", flush=True)
-                            
-                            print() # 换行
-                            
-                            # 汇总结果：如果完整跑完了，计算平均时间覆盖回去
-                            if times and len(times) == args.rounds:
-                                avg_time = sum(times) / len(times)
-                                last_result['time'] = avg_time
-                                results_data[filename][num_threads] = last_result
-                            else:
-                                # 跑失败了或者被中断，直接存最后一次的异常状态
-                                results_data[filename][num_threads] = last_result
-
-                        else:
-                            # 跑单轮的逻辑
-                            result = run_algorithm(
-                                algo_name, algo_params, input_file, supports_thread, num_threads, args.timeout
-                            )
-                            results_data[filename][num_threads] = result
-
-                            if result.get('timeout'):
-                                higher_thread_timeout = True
-
-                if i % WRITE_INTERVAL == 0 or i == len(input_files):
-                    write_thread_csv_results(csv_path, results_data, thread_nums)
-                    results_data = {}  # 清空已写入的数据，继续收集新的结果
-
-    end_time = datetime.now()
-    elapsed = (end_time - start_time).total_seconds()
-
-    print("\n" + "=" * 60)
-    print("所有算法运行完成！")
-    print(f"总耗时: {elapsed:.2f} 秒")
-    print("=" * 60)
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

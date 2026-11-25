@@ -104,13 +104,32 @@ class DancingMatrix
         struct CCExperimentStats {
             uint64_t bfsVertexSum = 0;
             uint64_t bfsEdgeSum = 0;
+            // Decrement aggregates over every actual DecUpdateCC call:
+            // N, cumulative pre-update V/E, deleted V/E, replacement
+            // search scan steps, and ETT tree-edge cut/link events.
             uint64_t decCalls = 0;
             uint64_t activeVertexSum = 0;
+            uint64_t activeEdgeSum = 0;
+            uint64_t deletedEdgeSum = 0;
             uint64_t deletedTreeEdgeSum = 0;
+            uint64_t deletedNonTreeEdgeSum = 0;
+            uint64_t treeEdgeCutSum = 0;
+            uint64_t treeEdgeLinkSum = 0;
             uint64_t deletedVertexSum = 0;
             uint64_t replacementCheckSum = 0;
 
             void reset() { *this = {}; }
+        };
+
+        struct CCUpdateStats {
+            uint64_t activeVertices = 0;
+            uint64_t activeEdges = 0;
+            uint64_t deletedVertices = 0;
+            uint64_t deletedEdges = 0;
+            uint64_t deletedTreeEdges = 0;
+            uint64_t deletedNonTreeEdges = 0;
+            uint64_t treeEdgeLinks = 0;
+            uint64_t replacementScanSteps = 0;
         };
 
         bool collectCCExperimentStats = false;
@@ -192,8 +211,22 @@ class DancingMatrix
             uint64_t vertices = 0;
             uint64_t graphEdges = 0;
         };
+        struct IncidenceEdge {
+            int row = -1;
+            int column = -1;
+        };
+        struct IncidenceBfsResult {
+            vector<Block> components;
+            vector<IncidenceEdge> treeEdges;
+            vector<IncidenceEdge> nonTreeEdges;
+            std::vector<int> activeRows;
+            std::vector<int> activeColumns;
+            BFSScanMetrics metrics;
+        };
         vector<Block> getComponentsByBFS(
             const set<int>& target_cols, BFSScanMetrics* metrics = nullptr);
+        IncidenceBfsResult getComponentsByIncidenceBFS(
+            const set<int>& target_cols);
         vector<Block> getComponentsByETT(const set<int>& target_cols);
 
         void turnOnGraphSync() {
@@ -214,9 +247,11 @@ class DancingMatrix
         void initialize();
         void buildGraphFromMatrix();
         void prepareDynamicCCForBlock(const Block& block);
+        void rebuildGlobalDynamicCCForActiveBlock(const Block& block);
         void releaseDynamicCCStorage();
         void prepareThreadLocalDynamicCCForBlock(
-            const Block& block, bool explicitProjectedEdges = false);
+            const Block& block, bool explicitProjectedEdges = false,
+            bool initializeProjectedMetrics = false);
         void releaseThreadLocalDynamicCCStorage();
         std::vector<std::unique_ptr<splaytree::EulerTourTree>>
         cloneThreadLocalDynamicCCForest() const;
@@ -229,7 +264,10 @@ class DancingMatrix
         }
         
         // 动态更新接口
-        void DecUpdateCC(const std::set<int>& deletedVertices);
+        void DecUpdateCC(
+            const std::set<int>& deletedVertices,
+            const uint64_t* deletedEntries = nullptr,
+            CCUpdateStats* updateStats = nullptr);
         void IncUpdateCC(const std::set<int>& restoredVertices);
         
         // 获取连通分量
@@ -286,6 +324,9 @@ class DancingMatrix
             int decompose_depth = 0;
             DecompositionPolicy decompositionPolicy;
             std::set<int> ettEligibleRows;
+            uint64_t dynamicActiveVertices = 0;
+            uint64_t dynamicActiveEdges = 0;
+            bool dynamicMetricsValid = false;
             bool initialized = false;
             
             ThreadLocalState() = default;
