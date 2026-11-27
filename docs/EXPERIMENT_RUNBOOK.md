@@ -7,7 +7,7 @@
 | 集合 | 数量 | 内容 |
 | --- | ---: | --- |
 | 旧测例 | 366 | dominoes 10、旧 exact-cover 217、旧 set-partition 52、Topology Zoo 87 |
-| 新 ROME | 350 | `data/benchmarks/rome3_matrices/matrices/*.txt` |
+| 新 ROME | 350 | `data/benchmarks/rome3_350/*.txt` |
 | 当前全部 | 716 | 旧 366 + 新 ROME 350 |
 
 旧集合从 `Final_Experiment_Report.xlsx` 选名，并排除 xlsx 中将被新 ROME 替换的旧 `grafo*`。具体名单位于：
@@ -49,64 +49,56 @@
 
 ## 3. 首次准备与检查
 
-以下命令均从仓库根目录执行：
-
+1. 生成新测例：
 ```bash
-cd /home/lyh/projects/lyh/Alg_DXD
+cd /home/lyh/projects/lyh/Alg_DXD/GMLToMat
+
+python3 generate_hybrid_matrix.py \
+  --graph-dir graphs_graphml/rome_3 \
+  --output-dir ../Algorithm_DXD/data/benchmarks/rome3_350 \
+  --count 0 \
+  --seed 20261127 \
+  --min-blocks 20 --max-blocks 25 \
+  --hard-blocks 1 \
+  --pivot \
+  --max-row-width 3 \
+  --hard-min-rows-per-block 1350 --hard-max-rows-per-block 1400 \
+  --hard-min-cols-per-block 23 --hard-max-cols-per-block 24 \
+  --filler-min-rows-per-block 3600 --filler-max-rows-per-block 3700 \
+  --filler-min-cols-per-block 13 --filler-max-cols-per-block 14 \
+  --filler-max-row-width 8
 ```
 
-重新生成并验证清单：
-
+2. 生成清单、构建并预检
 ```bash
-cd Algorithm_DXD
+cd /home/lyh/projects/lyh/Alg_DXD/Algorithm_DXD
+
 python3 bin/benchmark_catalog.py --write
-```
-
-构建主求解器、ZDD 编译器和 D3X：
-
-```bash
-cd /home/lyh/projects/lyh/Alg_DXD/Algorithm_DXD
 cmake --build build -j 16
-make -C data/ToZdd
+make -C data/ToZdd -j 16
 cmake --build ../D3X/build -j 16
-```
-
-快速预检清单、四种 CNF 编码和 D3X：
-
-```bash
-cd /home/lyh/projects/lyh/Alg_DXD/Algorithm_DXD
-python3 bin/check_experiment_setup.py
-```
-
-DisCount 的单独运行命令为：
-
-```bash
-cd /home/lyh/projects/lyh/Alg_DXD/MC_BINS
-mpirun -np 4 ./discount/build/discount -m counter -i data/bitwise/bell-10.cnf
-```
-
-该配置启动 1 个 Master 和 3 个 Worker。DisCount 默认只输出 `s <模型数>`，不输出总求解时间；实验结果中的 `time_s` 留空，汇总排名回退使用 `wall_time_s`。
-
-在普通实机终端继续验证七种模型计数器。DeMoniaC 和 DisCount 需要启动本地 MPI/PMIx，不能在限制 socket 的沙箱内运行：
-
-```bash
-cd /home/lyh/projects/lyh/Alg_DXD/Algorithm_DXD
 python3 bin/check_experiment_setup.py --all-counters --memory-gb 8
 ```
 
-预期最后输出 `preflight checks passed`。任何清单路径缺失、编码解数不一致、D3X 探针失败或计数器解析失败都必须先处理。
+必须看到清单为 350 个新 ROME 测例，且最后输出 preflight checks passed。
 
-## 4. 新 ROME 精确覆盖：DLX、DXZ
+## 4. 新 ROME 精确覆盖：DLX、DXZ 并行执行
 
 ```bash
 cd /home/lyh/projects/lyh/Alg_DXD/Algorithm_DXD
+
 python3 bin/batch_runner.py \
   --suite exact \
   --benchmark-set new \
-  --timeout 1500
+  --timeout 1500 \
+  --output-dir results/runs/20261127_exact_new \
+  --dxz-stats \
+  --save-logs
 ```
 
 调度方式为两个 worker 同时启动：DLX、DXZ 各占一个并发任务，并分别写入独立文件。只有两个算法都结束后，脚本才执行解数一致性检查和汇总。
+`--dxz-stats` 仅对 DXZ 追加 `--enable-cc-stats`；命中率写入
+`runs_DXZ.csv` 的 `cache_reads`、`cache_hits`、`cache_hit_rate` 列，完整输出保存在 `logs/`。
 
 输出目录为 `results/runs/<时间>_exact_new/`：
 
@@ -120,27 +112,21 @@ python3 bin/batch_runner.py \
 
 续跑时指定原输出目录并加 `--resume`：
 
-```bash
-cd /home/lyh/projects/lyh/Alg_DXD/Algorithm_DXD
-python3 bin/batch_runner.py \
-  --suite exact \
-  --benchmark-set new \
-  --timeout 1500 \
-  --output-dir results/runs/20261117_120000_exact_new \
-  --resume
-```
-
 脚本按 `instance + variant + threads + repeat` 判断已有结果，不会重新执行已经记录的测例。旧版 exact 运行目录只有合并的 `runs.csv` 时也可以直接续跑：脚本会先把其中记录拆分到 `runs_DLX.csv` 和 `runs_DXZ.csv`，再只补缺失项。
 
-## 5. 新 ROME ZDD 与 D3X
+## 5. 编译新 ROME ZDD 与 D3X 启动
 
 先将 350 个新矩阵逐个编译为 ZDD。已存在且非空的 ZDD 会跳过；单个失败不会终止整批：
 
 ```bash
 cd /home/lyh/projects/lyh/Alg_DXD/Algorithm_DXD
+
 python3 bin/prepare_rome_zdd.py \
   --case-file data/benchmarks/manifests/new_rome3.txt \
   --timeout 1500
+
+awk -F, 'NR>1 && $5!="success"{n++} END{print "failures=" n+0}' \
+  data/ToZdd/rome3_output/compile_results.csv
 ```
 
 输出：
@@ -148,10 +134,11 @@ python3 bin/prepare_rome_zdd.py \
 - ZDD：`data/ToZdd/rome3_output/<instance>.zdd`
 - 编译状态：`data/ToZdd/rome3_output/compile_results.csv`
 
-检查失败数为 0 后运行 D3X：
+确认failures = 0 后运行 D3X：
 
 ```bash
 cd /home/lyh/projects/lyh/Alg_DXD
+
 python3 D3X/bin/run_D3X.py \
   --case-file Algorithm_DXD/data/benchmarks/manifests/new_rome3.txt \
   --input-dir Algorithm_DXD/data/ToZdd/rome3_output \
@@ -160,19 +147,21 @@ python3 D3X/bin/run_D3X.py \
 
 预期规模：350 次。DLX/DXZ/D3X 都完成后核对三份结果中的 `solutions`；成功记录必须一致。
 
-## 6. 新 ROME 模型计数器
+## 6. 新 ROME 七个模型求解器并行跑四种 CNF 编码
 
 默认父进程一次处理一个 worker，workerd 内每个计数器一个线程，四种编码并行提交，同时最多运行 4 个求解子进程。这个配置兼顾 16 核机器上的吞吐和 62 GiB 内存：
 
 ```bash
 cd /home/lyh/projects/lyh/Alg_DXD/MC_BINS
+
 python3 run_counters.py \
   --case-file ../Algorithm_DXD/data/benchmarks/manifests/new_rome3.txt \
   --workers 1 \
-  --batch-size 4 \
-  --solver-jobs 4 \
-  --memory-gb 12 \
-  --timeout 1500
+  --batch-size 1 \
+  --solver-jobs 7 \
+  --memory-gb 8 \
+  --timeout 1500 \
+  --output-dir results/rome3_counters_20261127
 ```
 
 输出位于 `MC_BINS/results/rome3_counters_<时间>/`：
@@ -182,7 +171,8 @@ python3 run_counters.py \
 - `mc_summary.csv`：每个计数器的成功、超时、错误及获胜编码次数
 - `config.json`：并行度和内存配置
 
-预期规模：350 个测例 × 7 个当前计数器 × 4 种编码 = 9,800 次。
+`--solver-jobs 7` 让 7 个模型求解子进程同时处于活动状态，每个求解器
+依次覆盖 4 种编码；预期规模仍为 350 × 7 × 4 = 9,800 次。
 
 并行度不要只看 CPU 核数。建议总并发满足：
 
@@ -190,7 +180,21 @@ python3 run_counters.py \
 workers × solver_jobs × memory_gb <= 可用内存的安全范围
 ```
 
-例如 62 GiB 机器建议保持默认 `workers=1, solver_jobs=4, memory_gb=12`。确认单测例内存占用较低后，再提高 `--workers` 或 `--solver-jobs`。
+例如 62 GiB 机器可用 `workers=1, solver_jobs=7, memory_gb=8`。
+若要 7 个求解器 × 4 种编码共 28 个进程同时展开，将
+`--batch-size 1 --solver-jobs 28`，但 62 GiB 机器不建议直接使用该配置。
+
+最终一致性检查
+```bash
+cd /home/lyh/projects/lyh/Alg_DXD/Algorithm_DXD
+
+python3 bin/validate_results.py exact \
+  --batch-runs results/runs/20261127_exact_new/runs.csv \
+  --d3x-runs ../D3X/output/rome3_20261127/D3X_results.csv
+
+python3 bin/validate_results.py mc \
+  --best ../MC_BINS/results/rome3_counters_20261127/mc_best.csv
+```
 
 ## 7. 全部 716 个测例的 DXD 三版本分组
 

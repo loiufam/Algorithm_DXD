@@ -83,6 +83,9 @@ int main(int argc, char *argv[]){
                         args.input, logger, AlgorithmMode::DXZ,
                         args.threads > 0 ? args.threads : 1,
                         args.debug);
+                    if (args.enable_cc_stats) {
+                        danceDNNF.enableCCStatistics();
+                    }
                     danceDNNF.runDXZ();
                     logger.logLine("DXZ算法求解结束: " + filename);
                     break;

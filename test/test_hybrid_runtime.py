@@ -44,6 +44,35 @@ HYBRID_TREE_CUTS = re.compile(
 HYBRID_TREE_LINKS = re.compile(
     r"^Hybrid Tree Edge Links:\s*(\d+)", re.MULTILINE
 )
+CACHE_HITS = re.compile(
+    r"^CC Stats Cache Hits:\s*(\d+)", re.MULTILINE
+)
+CACHE_QUERIES = re.compile(
+    r"^CC Stats Cache Queries:\s*(\d+)", re.MULTILINE
+)
+CACHE_HIT_RATE = re.compile(
+    r"^CC Stats Cache Hit Rate:\s*([\d.eE+-]+)", re.MULTILINE
+)
+ROWS = re.compile(r"^rows:\s*(\d+)", re.MULTILINE)
+COLS = re.compile(r"^cols:\s*(\d+)", re.MULTILINE)
+DXD_INITIAL_BLOCKS = re.compile(
+    r"^DXD Initial Blocks:\s*(\d+)", re.MULTILINE
+)
+DXD_STOP_THRESHOLD = re.compile(
+    r"^DXD Stop Threshold:\s*(\d+)", re.MULTILINE
+)
+DXD_MINIMUM_BLOCK_AREA = re.compile(
+    r"^DXD Minimum Block Area:\s*(\d+)", re.MULTILINE
+)
+HYBRID_INITIAL_BLOCKS = re.compile(
+    r"^Hybrid Initial Blocks:\s*(\d+)", re.MULTILINE
+)
+HYBRID_STOP_THRESHOLD = re.compile(
+    r"^Hybrid Stop Threshold:\s*(\d+)", re.MULTILINE
+)
+HYBRID_MINIMUM_BLOCK_AREA = re.compile(
+    r"^Hybrid Minimum Block Area:\s*(\d+)", re.MULTILINE
+)
 
 CASES = (
     "data/benchmarks/graphs_set/AttMpls.txt",
@@ -55,7 +84,12 @@ CASES = (
 )
 
 
-def run(algorithm: str, case: str, extra: list[str]) -> str:
+def run(
+    algorithm: str,
+    case: str,
+    extra: list[str],
+    threads: int = 1,
+) -> str:
     command = [
         str(EXECUTABLE),
         "-a",
@@ -63,7 +97,7 @@ def run(algorithm: str, case: str, extra: list[str]) -> str:
         "-i",
         str(ROOT / case),
         "-t",
-        "1",
+        str(threads),
         "--time-limit",
         "60",
         "--skip-dnnf-size",
@@ -92,13 +126,39 @@ def run(algorithm: str, case: str, extra: list[str]) -> str:
     return output
 
 
+def assert_cache_statistics(output: str, label: str) -> None:
+    hits_match = CACHE_HITS.search(output)
+    queries_match = CACHE_QUERIES.search(output)
+    rate_match = CACHE_HIT_RATE.search(output)
+    assert hits_match is not None, label
+    assert queries_match is not None, label
+    assert rate_match is not None, label
+    hits = int(hits_match.group(1))
+    queries = int(queries_match.group(1))
+    expected_rate = hits / queries if queries else 0.0
+    assert hits <= queries, label
+    assert abs(float(rate_match.group(1)) - expected_rate) <= 1e-6, label
+    assert output.rfind("CC Stats Cache Hit Rate:") > output.find("Time:"), label
+
+
+def expected_stop_threshold(minimum_block_area: int, ratio: float) -> int:
+    return int(minimum_block_area * ratio)
+
+
 def main() -> int:
     for case in CASES:
         dxd_output = run("dxd", case, [])
+        dxd_parallel_output = run("dxd", case, [], threads=8)
         dxd_threshold_output = run(
             "dxd",
             case,
             ["--dxd-threshold", "--threshold-ratio", "0.5"],
+        )
+        dxd_threshold_parallel_output = run(
+            "dxd",
+            case,
+            ["--dxd-threshold", "--threshold-ratio", "0.5"],
+            threads=8,
         )
         with tempfile.TemporaryDirectory() as temp_dir:
             decision_log = Path(temp_dir) / "decisions.log"
@@ -138,12 +198,24 @@ def main() -> int:
             SOLUTIONS.search(output).group(1)
             for output in (
                 dxd_output,
+                dxd_parallel_output,
                 dxd_threshold_output,
+                dxd_threshold_parallel_output,
                 hybrid_output,
                 legacy_output,
             )
         ]
         assert len(set(counts)) == 1, (case, counts)
+        for normal_output in (
+            dxd_output,
+            dxd_parallel_output,
+            dxd_threshold_output,
+            dxd_threshold_parallel_output,
+        ):
+            assert "Max Blocks:" not in normal_output, case
+            assert "DXD BFS Calls:" not in normal_output, case
+            assert "DXD Multi Splits:" not in normal_output, case
+            assert "DXD Threshold Stops:" not in normal_output, case
         assert "Hybrid Runtime Policy: 1" in hybrid_output
         assert (
             "Hybrid Decomposition Strategy: "
@@ -167,7 +239,9 @@ def main() -> int:
             decision for decision in decisions
             if decision["decision_kind"] == "cost"
         ]
-        assert cost_decisions, case
+        # Initial blocks below the new global stop threshold go directly to
+        # ordinary DXD, so no per-cover Hybrid cost decision is emitted.
+        assert cost_decisions or case == "test/parallel_components.ec", case
         decrement_match = DYN_DECREMENTS.search(hybrid_output)
         assert decrement_match is not None, case
         if any(
@@ -272,12 +346,213 @@ def main() -> int:
             ), case
             choices = {row["choice"] for row in legacy_decisions}
             assert choices == {"Dyn", "BFS"}, case
-        no_threshold_calls = DXD_BFS_CALLS.search(dxd_output)
-        threshold_calls = DXD_BFS_CALLS.search(dxd_threshold_output)
-        if no_threshold_calls and threshold_calls:
-            assert int(no_threshold_calls.group(1)) >= int(
-                threshold_calls.group(1)
+        if case == "test/parallel_components.ec":
+            dxd_stats_serial_output = run(
+                "dxd",
+                case,
+                ["--enable-cc-stats"],
+            )
+            dxd_stats_parallel_output = run(
+                "dxd",
+                case,
+                ["--enable-cc-stats"],
+                threads=8,
+            )
+            threshold_stats_serial_output = run(
+                "dxd",
+                case,
+                [
+                    "--dxd-threshold",
+                    "--threshold-ratio",
+                    "0.5",
+                    "--enable-cc-stats",
+                ],
+            )
+            threshold_stats_parallel_output = run(
+                "dxd",
+                case,
+                [
+                    "--dxd-threshold",
+                    "--threshold-ratio",
+                    "0.5",
+                    "--enable-cc-stats",
+                ],
+                threads=8,
+            )
+            dxd_normal_parallel_output = run(
+                "dxd",
+                case,
+                [
+                    "--dxd-threshold",
+                    "--threshold-ratio",
+                    "0.5",
+                    "--debug",
+                ],
+                threads=8,
+            )
+            assert (
+                {
+                    SOLUTIONS.search(output).group(1)
+                    for output in (
+                        dxd_stats_serial_output,
+                        dxd_stats_parallel_output,
+                        threshold_stats_serial_output,
+                        threshold_stats_parallel_output,
+                    )
+                }
+                == {counts[0]}
             ), case
+            serial_calls = int(
+                DXD_BFS_CALLS.search(dxd_stats_serial_output).group(1)
+            )
+            stats_parallel_calls = int(
+                DXD_BFS_CALLS.search(dxd_stats_parallel_output).group(1)
+            )
+            assert stats_parallel_calls == serial_calls, case
+            threshold_serial_calls = int(
+                DXD_BFS_CALLS.search(
+                    threshold_stats_serial_output).group(1)
+            )
+            threshold_parallel_calls = int(
+                DXD_BFS_CALLS.search(
+                    threshold_stats_parallel_output).group(1)
+            )
+            assert threshold_parallel_calls == threshold_serial_calls, case
+            normal_parallel_calls = int(
+                DXD_BFS_CALLS.search(
+                    dxd_normal_parallel_output
+                ).group(1)
+            )
+            assert normal_parallel_calls < threshold_serial_calls, case
+            for output in (
+                threshold_stats_serial_output,
+                threshold_stats_parallel_output,
+            ):
+                initial_blocks = int(
+                    DXD_INITIAL_BLOCKS.search(output).group(1)
+                )
+                stop_threshold = int(
+                    DXD_STOP_THRESHOLD.search(output).group(1)
+                )
+                minimum_block_area = int(
+                    DXD_MINIMUM_BLOCK_AREA.search(output).group(1)
+                )
+                assert stop_threshold == expected_stop_threshold(
+                    minimum_block_area, 0.5
+                ), case
+            hybrid_initial_blocks = int(
+                HYBRID_INITIAL_BLOCKS.search(hybrid_output).group(1)
+            )
+            hybrid_stop_threshold = int(
+                HYBRID_STOP_THRESHOLD.search(hybrid_output).group(1)
+            )
+            hybrid_minimum_block_area = int(
+                HYBRID_MINIMUM_BLOCK_AREA.search(
+                    hybrid_output
+                ).group(1)
+            )
+            assert hybrid_stop_threshold == expected_stop_threshold(
+                hybrid_minimum_block_area, 0.5
+            ), case
+            if decisions:
+                assert {
+                    int(decision["stop_area"])
+                    for decision in decisions
+                } == {hybrid_stop_threshold}, case
+            else:
+                assert case == "test/parallel_components.ec", case
+            with tempfile.TemporaryDirectory() as temp_dir:
+                normal_log = Path(temp_dir) / "normal.log"
+                stats_log = Path(temp_dir) / "stats.log"
+                normal_output = run(
+                    "hybrid",
+                    case,
+                    [
+                        "--threshold-ratio",
+                        "0.125",
+                        "--hybrid-decision-log",
+                        str(normal_log),
+                    ],
+                    threads=8,
+                )
+                stats_output = run(
+                    "hybrid",
+                    case,
+                    [
+                        "--threshold-ratio",
+                        "0.125",
+                        "--enable-cc-stats",
+                        "--hybrid-decision-log",
+                        str(stats_log),
+                    ],
+                    threads=8,
+                )
+                with normal_log.open(
+                    encoding="utf-8", newline=""
+                ) as stream:
+                    normal_decisions = list(csv.DictReader(stream))
+                with stats_log.open(
+                    encoding="utf-8", newline=""
+                ) as stream:
+                    stats_decisions = list(csv.DictReader(stream))
+            assert normal_decisions, case
+            assert len(stats_decisions) > len(normal_decisions), case
+            assert (
+                SOLUTIONS.search(normal_output).group(1)
+                == SOLUTIONS.search(stats_output).group(1)
+            ), case
+        if case == "data/benchmarks/dominoes_set/dominoes_8x8.txt":
+            no_threshold_stats = run(
+                "dxd",
+                case,
+                ["--enable-cc-stats"],
+            )
+            threshold_stats = run(
+                "dxd",
+                case,
+                [
+                    "--dxd-threshold",
+                    "--threshold-ratio",
+                    "0.5",
+                    "--enable-cc-stats",
+                ],
+            )
+            threshold_stats_parallel = run(
+                "dxd",
+                case,
+                [
+                    "--dxd-threshold",
+                    "--threshold-ratio",
+                    "0.5",
+                    "--enable-cc-stats",
+                ],
+                threads=8,
+            )
+            assert (
+                {
+                    SOLUTIONS.search(output).group(1)
+                    for output in (
+                        no_threshold_stats,
+                        threshold_stats,
+                        threshold_stats_parallel,
+                    )
+                }
+                == {counts[0]}
+            ), case
+            no_threshold_calls = int(
+                DXD_BFS_CALLS.search(no_threshold_stats).group(1)
+            )
+            threshold_calls = int(
+                DXD_BFS_CALLS.search(threshold_stats).group(1)
+            )
+            threshold_parallel_calls = int(
+                DXD_BFS_CALLS.search(
+                    threshold_stats_parallel).group(1)
+            )
+            assert threshold_calls < no_threshold_calls, case
+            assert threshold_parallel_calls == threshold_calls, case
+        assert "[thread-task]" not in dxd_parallel_output, case
+        assert "[thread-task]" not in dxd_threshold_parallel_output, case
         print(f"PASS {case} solutions={counts[0]}")
 
     switching_case = (
@@ -312,6 +587,57 @@ def main() -> int:
         int(bfs_match.group(1)) + int(dyn_match.group(1))
     ), switching_case
     print(f"PASS dynamic switching {switching_case}")
+
+    cache_stats_case = "test/dyn_path.ec"
+    for algorithm in ("dxz", "dxd", "hybrid"):
+        output = run(
+            algorithm,
+            cache_stats_case,
+            ["--enable-cc-stats"],
+            threads=8,
+        )
+        assert_cache_statistics(output, algorithm)
+    legacy_output = run(
+        "hybrid",
+        cache_stats_case,
+        ["--enable-cc-stats", "--hybrid-engine", "legacy"],
+        threads=8,
+    )
+    assert_cache_statistics(legacy_output, "hybrid-legacy")
+    dxd_single_output = run(
+        "dxd",
+        cache_stats_case,
+        [
+            "--dxd-threshold",
+            "--threshold-ratio",
+            "0.8",
+            "--enable-cc-stats",
+        ],
+    )
+    hybrid_single_output = run(
+        "hybrid",
+        cache_stats_case,
+        ["--threshold-ratio", "0.8", "--enable-cc-stats"],
+    )
+    rows = int(ROWS.search(dxd_single_output).group(1))
+    cols = int(COLS.search(dxd_single_output).group(1))
+    single_threshold = int(rows * cols * 0.25)
+    assert int(
+        DXD_STOP_THRESHOLD.search(dxd_single_output).group(1)
+    ) == single_threshold
+    assert int(
+        HYBRID_STOP_THRESHOLD.search(hybrid_single_output).group(1)
+    ) == single_threshold
+    assert int(
+        DXD_MINIMUM_BLOCK_AREA.search(dxd_single_output).group(1)
+    ) == 0
+    assert int(
+        HYBRID_MINIMUM_BLOCK_AREA.search(
+            hybrid_single_output
+        ).group(1)
+    ) == 0
+    print(f"PASS singleton threshold {cache_stats_case}")
+    print(f"PASS cache statistics {cache_stats_case}")
     return 0
 
 

@@ -1,7 +1,7 @@
 #include "../include/HybridDXD.h"
+#include "../include/ParallelTaskQueue.h"
 
 #include <algorithm>
-#include <condition_variable>
 #include <ctime>
 #include <stdexcept>
 #include <thread>
@@ -10,38 +10,24 @@ class HybridDXD::TaskScheduler {
 public:
     TaskScheduler(HybridDXD& owner, int threadCount)
         : owner_(owner),
-          threadCount_(threadCount),
-          capacity_(nextPowerOfTwo(1u << 14)),
-          mask_(capacity_ - 1),
-          buffer_(std::make_unique<Cell[]>(capacity_)) {
-        for (size_t i = 0; i < capacity_; ++i) {
-            buffer_[i].sequence.store(i, std::memory_order_relaxed);
-        }
-        const int workers = std::max(0, threadCount - 1);
-        workers_.reserve(static_cast<size_t>(workers));
-        for (int i = 0; i < workers; ++i) {
-            workers_.emplace_back([this] { workerLoop(); });
-        }
-    }
-
-    ~TaskScheduler() {
-        stop_.store(true, std::memory_order_release);
-        workCondition_.notify_all();
-        for (std::thread& worker : workers_) {
-            if (worker.joinable()) worker.join();
-        }
-    }
+          queue_(
+              threadCount,
+              [this](Task& task) { execute(task); }) {}
+    ~TaskScheduler() = default;
 
     HybridDXD::SearchResult runGroup(
         vector<Block>& blocks,
         const vector<HybridSearchState>& states,
         int depth, bool nested) {
-        if (nested) {
-            owner_.hybridStats_.innerParallelLaunches.fetch_add(
-                1, std::memory_order_relaxed);
-        } else {
-            owner_.hybridStats_.outerParallelLaunches.fetch_add(
-                1, std::memory_order_relaxed);
+        const bool collectStats = owner_.statisticsEnabled();
+        if (collectStats) {
+            if (nested) {
+                owner_.hybridStats_.innerParallelLaunches.fetch_add(
+                    1, std::memory_order_relaxed);
+            } else {
+                owner_.hybridStats_.outerParallelLaunches.fetch_add(
+                    1, std::memory_order_relaxed);
+            }
         }
         const int count = static_cast<int>(blocks.size());
         if (count <= 1) {
@@ -54,19 +40,24 @@ public:
                 blocks.front(), taskState, depth + 1);
         }
 
-        vector<uint64_t> blockRows(static_cast<size_t>(count));
-        vector<uint64_t> blockCols(static_cast<size_t>(count));
-        vector<HybridDXD::SearchMode> blockModes(
-            static_cast<size_t>(count));
-        vector<bool> blockSeeded(static_cast<size_t>(count), false);
-        for (int i = 0; i < count; ++i) {
-            blockRows[i] = blocks[i].rows.size();
-            blockCols[i] = blocks[i].cols.size();
-            blockModes[i] = states[i].mode;
-            blockSeeded[i] = states[i].seed != nullptr;
+        vector<uint64_t> blockRows;
+        vector<uint64_t> blockCols;
+        vector<HybridDXD::SearchMode> blockModes;
+        vector<bool> blockSeeded;
+        if (collectStats) {
+            blockRows.resize(static_cast<size_t>(count));
+            blockCols.resize(static_cast<size_t>(count));
+            blockModes.resize(static_cast<size_t>(count));
+            blockSeeded.resize(static_cast<size_t>(count), false);
+            for (int i = 0; i < count; ++i) {
+                blockRows[i] = blocks[i].rows.size();
+                blockCols[i] = blocks[i].cols.size();
+                blockModes[i] = states[i].mode;
+                blockSeeded[i] = states[i].seed != nullptr;
+            }
         }
 
-        auto group = std::make_shared<Group>(count);
+        auto group = std::make_shared<Group>(count, collectStats);
         vector<int> taskOrder;
         taskOrder.reserve(static_cast<size_t>(count));
         for (int i = 0; i < count; ++i) {
@@ -80,20 +71,22 @@ public:
             if (taskState.activeRows == 0) {
                 taskState.activeRows = blocks[i].rows.size();
             }
-            enqueue(Task{std::move(blocks[i]), std::move(taskState),
-                         depth + 1, i, group});
+            queue_.enqueue(
+                Task{std::move(blocks[i]), std::move(taskState),
+                     depth + 1, i, group});
         }
 
         while (group->pending.load(std::memory_order_acquire) > 0) {
             Task task;
-            if (tryPop(task)) {
+            if (queue_.tryPop(task)) {
                 execute(task);
             } else {
                 std::this_thread::yield();
             }
         }
 
-        if (owner_.statisticsEnabled()) {
+        if (collectStats) {
+            std::lock_guard<std::mutex> logLock(logMutex_);
             const bool timedOut =
                 group->timeout.load(std::memory_order_acquire);
             const bool failed =
@@ -154,16 +147,20 @@ public:
 
 private:
     struct Group {
-        explicit Group(int n)
+        Group(int n, bool collectStats)
             : pending(n), results(static_cast<size_t>(n)),
               nodes(static_cast<size_t>(n), nullptr),
-              seconds(static_cast<size_t>(n), -1.0) {}
+              collectStats(collectStats),
+              seconds(
+                  collectStats ? static_cast<size_t>(n) : size_t{0},
+                  -1.0) {}
 
         std::atomic<int> pending{0};
         std::atomic<bool> failure{false};
         std::atomic<bool> timeout{false};
         vector<DNNFResult> results;
         vector<shared_ptr<DNNFNode>> nodes;
+        bool collectStats = false;
         vector<double> seconds;
     };
 
@@ -180,17 +177,6 @@ private:
         int index = 0;
         shared_ptr<Group> group;
     };
-
-    struct Cell {
-        std::atomic<size_t> sequence{0};
-        Task task;
-    };
-
-    static size_t nextPowerOfTwo(size_t value) {
-        size_t result = 1;
-        while (result < value) result <<= 1;
-        return result;
-    }
 
     static const char* searchModeName(HybridDXD::SearchMode mode) {
         switch (mode) {
@@ -214,87 +200,16 @@ private:
         return "Unknown";
     }
 
-    void enqueue(Task task) {
-        size_t position = tail_.load(std::memory_order_relaxed);
-        for (;;) {
-            Cell& cell = buffer_[position & mask_];
-            const size_t sequence =
-                cell.sequence.load(std::memory_order_acquire);
-            const intptr_t difference =
-                static_cast<intptr_t>(sequence) -
-                static_cast<intptr_t>(position);
-            if (difference == 0) {
-                if (tail_.compare_exchange_weak(
-                        position, position + 1,
-                        std::memory_order_relaxed,
-                        std::memory_order_relaxed)) {
-                    cell.task = std::move(task);
-                    cell.sequence.store(
-                        position + 1, std::memory_order_release);
-                    workCondition_.notify_one();
-                    return;
-                }
-            } else if (difference < 0) {
-                std::this_thread::yield();
-                position = tail_.load(std::memory_order_relaxed);
-            } else {
-                position = tail_.load(std::memory_order_relaxed);
-            }
-        }
-    }
-
-    bool tryPop(Task& task) {
-        size_t position = head_.load(std::memory_order_relaxed);
-        for (;;) {
-            Cell& cell = buffer_[position & mask_];
-            const size_t sequence =
-                cell.sequence.load(std::memory_order_acquire);
-            const intptr_t difference =
-                static_cast<intptr_t>(sequence) -
-                static_cast<intptr_t>(position + 1);
-            if (difference == 0) {
-                if (head_.compare_exchange_weak(
-                        position, position + 1,
-                        std::memory_order_relaxed,
-                        std::memory_order_relaxed)) {
-                    task = std::move(cell.task);
-                    cell.sequence.store(
-                        position + capacity_,
-                        std::memory_order_release);
-                    return true;
-                }
-            } else if (difference < 0) {
-                return false;
-            } else {
-                position = head_.load(std::memory_order_relaxed);
-            }
-        }
-    }
-
-    void workerLoop() {
-        while (!stop_.load(std::memory_order_acquire)) {
-            Task task;
-            if (tryPop(task)) {
-                execute(task);
-                continue;
-            }
-            std::unique_lock<std::mutex> lock(waitMutex_);
-            workCondition_.wait_for(
-                lock, std::chrono::milliseconds(2), [this] {
-                    return stop_.load(std::memory_order_acquire);
-                });
-        }
-    }
-
     void execute(Task& task) {
-        const auto taskStart = std::chrono::steady_clock::now();
+        const auto taskStart = task.group->collectStats
+            ? std::chrono::steady_clock::now()
+            : std::chrono::steady_clock::time_point{};
         if (task.group->failure.load(std::memory_order_acquire) ||
             task.group->timeout.load(std::memory_order_acquire)) {
             task.group->pending.fetch_sub(
                 1, std::memory_order_acq_rel);
             return;
         }
-        activeTasks_.fetch_add(1, std::memory_order_relaxed);
 
         std::unique_ptr<DancingMatrix::ThreadLocalState> outerTls;
         if (owner_.isThreadLocal()) outerTls = std::move(owner_.tlsState);
@@ -326,26 +241,18 @@ private:
 
         owner_.cleanupThreadLocalState();
         owner_.tlsState = std::move(outerTls);
-        task.group->seconds[task.index] =
-            std::chrono::duration_cast<std::chrono::duration<double>>(
-                std::chrono::steady_clock::now() - taskStart)
-                .count();
-        activeTasks_.fetch_sub(1, std::memory_order_relaxed);
+        if (task.group->collectStats) {
+            task.group->seconds[task.index] =
+                std::chrono::duration_cast<std::chrono::duration<double>>(
+                    std::chrono::steady_clock::now() - taskStart)
+                    .count();
+        }
         task.group->pending.fetch_sub(1, std::memory_order_acq_rel);
     }
 
     HybridDXD& owner_;
-    const int threadCount_;
-    const size_t capacity_;
-    const size_t mask_;
-    std::unique_ptr<Cell[]> buffer_;
-    alignas(64) std::atomic<size_t> head_{0};
-    alignas(64) std::atomic<size_t> tail_{0};
-    std::atomic<bool> stop_{false};
-    std::atomic<int> activeTasks_{0};
-    std::mutex waitMutex_;
-    std::condition_variable workCondition_;
-    vector<std::thread> workers_;
+    ParallelTaskQueue<Task> queue_;
+    std::mutex logMutex_;
 };
 
 HybridDXD::HybridDXD(const string& file_path, Logger& logger,
@@ -432,6 +339,57 @@ HybridDXD::makePerBlockProbeStates(
         states.push_back(std::move(state));
     }
     return states;
+}
+
+std::vector<HybridDXD::HybridSearchState>
+HybridDXD::makeNormalSplitStates(
+    const vector<Block>& components) const {
+    vector<HybridSearchState> states(
+        components.size(),
+        HybridSearchState{SearchMode::NoDecomposition});
+    if (components.empty()) return states;
+
+    const uint64_t stopThreshold =
+        decompositionStopThresholdValue();
+    const size_t minimum = selectSeedBlock(components);
+    size_t maximum = selectMaximumBlock(components);
+    if (maximum == minimum && components.size() > 1) {
+        maximum = minimum == 0 ? 1 : 0;
+    }
+    const auto area = [](const Block& block) {
+        return static_cast<uint64_t>(block.rows.size()) *
+               static_cast<uint64_t>(block.cols.size());
+    };
+    if (area(components[minimum]) > stopThreshold) {
+        states[minimum].mode = SearchMode::BfsProbe;
+        states[minimum].probeContext =
+            std::make_shared<ProbeContext>();
+        states[minimum].probeContext->initialArea =
+            area(components[minimum]);
+        states[minimum].probeContext->stopRatio =
+            config_.thresholdRatio;
+    }
+    if (area(components[maximum]) > stopThreshold) {
+        states[maximum].mode = SearchMode::BfsThreshold;
+        states[maximum].probeContext =
+            std::make_shared<ProbeContext>();
+        states[maximum].probeContext->initialArea =
+            area(components[maximum]);
+        states[maximum].probeContext->stopRatio =
+            config_.thresholdRatio;
+    }
+    return states;
+}
+
+void HybridDXD::updateDecompositionStopThresholdForSplit(
+    const vector<Block>& components) {
+    if (components.empty()) return;
+    const Block& minimum =
+        components[selectSeedBlock(components)];
+    initializeDecompositionStopThresholdFromSplit(
+        static_cast<uint64_t>(minimum.rows.size()) *
+            static_cast<uint64_t>(minimum.cols.size()),
+        config_.thresholdRatio);
 }
 
 void HybridDXD::buildSeedEtt(
@@ -597,9 +555,9 @@ void HybridDXD::buildSeedEtt(
         }
     }
     seed->ettBuilt = true;
-    hybridStats_.ettBuildCalls.fetch_add(
-        1, std::memory_order_relaxed);
     if (collectStats) {
+        hybridStats_.ettBuildCalls.fetch_add(
+            1, std::memory_order_relaxed);
         const uint64_t elapsed = static_cast<uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - buildStart).count());
@@ -1038,12 +996,8 @@ std::vector<Block> HybridDXD::runPlainIncidenceBfs(Block& block) {
 
 std::vector<Block> HybridDXD::runDynComponentQuery(Block& block) {
     const bool collectStats = statisticsEnabled();
-    const auto start = collectStats
-        ? std::chrono::steady_clock::now()
-        : std::chrono::steady_clock::time_point{};
-    const std::clock_t cpuStart = collectStats
-        ? std::clock()
-        : std::clock_t{0};
+    const auto start = collectStats ? std::chrono::steady_clock::now() : std::chrono::steady_clock::time_point{};
+    const std::clock_t cpuStart = collectStats ? std::clock() : std::clock_t{0};
 
     vector<Block> components = extractIncidenceComponents(block.cols);
     updateMaxBlockCount(components.size());
@@ -1051,21 +1005,15 @@ std::vector<Block> HybridDXD::runDynComponentQuery(Block& block) {
     if (!collectStats) return components;
 
     const uint64_t elapsed = static_cast<uint64_t>(
-        std::chrono::duration_cast<std::chrono::nanoseconds>(
-            std::chrono::steady_clock::now() - start).count());
-    const uint64_t cpuElapsed = static_cast<uint64_t>(
-        static_cast<long double>(std::clock() - cpuStart) *
-        1e9L / static_cast<long double>(CLOCKS_PER_SEC));
+        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - start).count());
+    const uint64_t cpuElapsed = 
+        static_cast<uint64_t>(static_cast<long double>(std::clock() - cpuStart) * 1e9L / static_cast<long double>(CLOCKS_PER_SEC));
     hybridStats_.componentQueryCalls.fetch_add(1, std::memory_order_relaxed);
-    hybridStats_.componentQueryNanoseconds.fetch_add(
-        elapsed, std::memory_order_relaxed);
-    hybridStats_.componentQueryCpuNanoseconds.fetch_add(
-        cpuElapsed, std::memory_order_relaxed);
-    hybridStats_.dynCpuNanoseconds.fetch_add(
-        cpuElapsed, std::memory_order_relaxed);
+    hybridStats_.componentQueryNanoseconds.fetch_add(elapsed, std::memory_order_relaxed);
+    hybridStats_.componentQueryCpuNanoseconds.fetch_add(cpuElapsed, std::memory_order_relaxed);
+    hybridStats_.dynCpuNanoseconds.fetch_add(cpuElapsed, std::memory_order_relaxed);
     hybridStats_.dynQueryCalls.fetch_add(1, std::memory_order_relaxed);
-    hybridStats_.dynQueryNanoseconds.fetch_add(
-        elapsed, std::memory_order_relaxed);
+    hybridStats_.dynQueryNanoseconds.fetch_add(elapsed, std::memory_order_relaxed);
     return components;
 }
 
@@ -1478,6 +1426,13 @@ HybridDXD::SearchResult HybridDXD::hybridSearchRuntime(
         return {cachedCount, cachedNode};
     }
 
+    const uint64_t currentArea =
+        static_cast<uint64_t>(block.rows.size()) *
+        static_cast<uint64_t>(block.cols.size());
+    if (isBelowDecompositionStopThreshold(currentArea)) {
+        return searchWithoutHybridDecomposition(block, depth);
+    }
+
     if (state.mode == SearchMode::NoDecomposition) {
         return searchWithoutHybridDecomposition(block, depth);
     }
@@ -1491,15 +1446,23 @@ HybridDXD::SearchResult HybridDXD::hybridSearchRuntime(
             if (statisticsEnabled()) {
                 hybridStats_.splitEvents.fetch_add(1, std::memory_order_relaxed);
             }
+            updateDecompositionStopThresholdForSplit(bfs.components);
             configureBfsCounting(bfs.components);
             vector<HybridSearchState> states;
             if (usesPerBlockDecomposition()) {
                 states = makePerBlockProbeStates(
                     bfs.components, &bfs);
             } else {
-                states.assign(
-                    bfs.components.size(),
-                    HybridSearchState{SearchMode::NoDecomposition});
+                states = makeNormalSplitStates(bfs.components);
+                const size_t minimum =
+                    selectSeedBlock(bfs.components);
+                if (states[minimum].mode ==
+                    SearchMode::BfsProbe) {
+                    states[minimum].seed = makeDynamicSeed(
+                        bfs.components[minimum], bfs);
+                    states[minimum].skipInitialDecomposition =
+                        true;
+                }
             }
             auto result = searchIndependentBlocks(
                 bfs.components, states, depth, false);
@@ -1515,18 +1478,6 @@ HybridDXD::SearchResult HybridDXD::hybridSearchRuntime(
     }
 
     if (state.mode == SearchMode::BfsThreshold) {
-        if (state.probeContext) {
-            const uint64_t area =
-                static_cast<uint64_t>(block.rows.size()) *
-                static_cast<uint64_t>(block.cols.size());
-            const long double stopArea =
-                static_cast<long double>(
-                    state.probeContext->initialArea) *
-                state.probeContext->stopRatio;
-            if (static_cast<long double>(area) <= stopArea) {
-                return searchWithoutHybridDecomposition(block, depth);
-            }
-        }
         vector<Block> components = runPlainIncidenceBfs(block);
         if (components.empty()) {
             setCachedResult(stateKey, DNNFResult(0), F);
@@ -1537,14 +1488,13 @@ HybridDXD::SearchResult HybridDXD::hybridSearchRuntime(
                 hybridStats_.splitEvents.fetch_add(
                     1, std::memory_order_relaxed);
             }
+            updateDecompositionStopThresholdForSplit(components);
             configureBfsCounting(components);
             vector<HybridSearchState> states;
             if (usesPerBlockDecomposition()) {
                 states = makePerBlockProbeStates(components, nullptr);
             } else {
-                states.assign(
-                    components.size(),
-                    HybridSearchState{SearchMode::NoDecomposition});
+                states = makeNormalSplitStates(components);
             }
             auto result = searchIndependentBlocks(
                 components, states, depth, false);
@@ -1559,13 +1509,12 @@ HybridDXD::SearchResult HybridDXD::hybridSearchRuntime(
             if (statisticsEnabled()) {
                 hybridStats_.splitEvents.fetch_add(1, std::memory_order_relaxed);
             }
+            updateDecompositionStopThresholdForSplit(components);
             vector<HybridSearchState> states;
             if (usesPerBlockDecomposition()) {
                 states = makePerBlockProbeStates(components, nullptr);
             } else {
-                states.assign(
-                    components.size(),
-                    HybridSearchState{SearchMode::NoDecomposition});
+                states = makeNormalSplitStates(components);
             }
             auto result = searchIndependentBlocks(components, states, depth, true);
             setCachedResult(stateKey, result.first, result.second);
@@ -1587,11 +1536,23 @@ HybridDXD::SearchResult HybridDXD::hybridSearchRuntime(
                 setCachedResult(stateKey, DNNFResult(0), F);
                 return {DNNFResult(0), F};
             }
+            if (depth == 1) {
+                recordInitialDecompositionBlockCount(
+                    bfs.components.size());
+                if (bfs.components.size() == 1 &&
+                    !decompositionStopThresholdReady.load(
+                        std::memory_order_acquire)) {
+                    initializeSingleBlockStopThreshold(
+                        currentArea);
+                }
+            }
             if (bfs.components.size() > 1) {
                 if (statisticsEnabled()) {
                     hybridStats_.splitEvents.fetch_add(1, std::memory_order_relaxed);
                     hybridStats_.initialBfsMultiSplits.fetch_add(1, std::memory_order_relaxed);
                 }
+                updateDecompositionStopThresholdForSplit(
+                    bfs.components);
                 configureBfsCounting(bfs.components);
                 if (usesPerBlockDecomposition()) {
                     vector<HybridSearchState> states =
@@ -1607,48 +1568,25 @@ HybridDXD::SearchResult HybridDXD::hybridSearchRuntime(
                         stateKey, result.first, result.second);
                     return result;
                 }
-                vector<HybridSearchState> states(
-                    bfs.components.size(),
-                    HybridSearchState{SearchMode::NoDecomposition});
+                vector<HybridSearchState> states =
+                    makeNormalSplitStates(bfs.components);
                 const size_t selected =
                     selectSeedBlock(bfs.components);
-                auto selectedSeed =
-                    makeDynamicSeed(bfs.components[selected], bfs);
-                if (depth == 1) {
-                    recordInitialDynamicSeed(
-                        bfs.components.size(), selectedSeed);
+                if (states[selected].mode ==
+                    SearchMode::BfsProbe) {
+                    auto selectedSeed =
+                        makeDynamicSeed(
+                            bfs.components[selected], bfs);
+                    if (depth == 1) {
+                        recordInitialDynamicSeed(
+                            bfs.components.size(),
+                            selectedSeed);
+                    }
+                    states[selected].seed =
+                        std::move(selectedSeed);
+                    states[selected].skipInitialDecomposition =
+                        true;
                 }
-                states[selected].seed = std::move(selectedSeed);
-                states[selected].mode = SearchMode::BfsProbe;
-                states[selected].skipInitialDecomposition = true;
-                states[selected].probeContext =
-                    std::make_shared<ProbeContext>();
-                states[selected].probeContext->initialArea =
-                    states[selected].seed->selectedBlockInitialArea;
-                states[selected].probeContext->stopRatio =
-                    config_.thresholdRatio;
-                bfs.components[selected].bfsStopArea = 0;
-                bfs.components[selected].trackBfsRows = false;
-                bfs.components[selected].activeRowCount = 0;
-                bfs.components[selected].rowCoverCounts.clear();
-                size_t maximum = selectMaximumBlock(bfs.components);
-                if (maximum == selected) {
-                    maximum = selected == 0 ? 1 : 0;
-                }
-                bfs.components[maximum].bfsStopArea = 0;
-                bfs.components[maximum].trackBfsRows = false;
-                bfs.components[maximum].activeRowCount = 0;
-                bfs.components[maximum].rowCoverCounts.clear();
-                states[maximum].mode = SearchMode::BfsThreshold;
-                states[maximum].probeContext =
-                    std::make_shared<ProbeContext>();
-                states[maximum].probeContext->initialArea =
-                    static_cast<uint64_t>(
-                        bfs.components[maximum].rows.size()) *
-                    static_cast<uint64_t>(
-                        bfs.components[maximum].cols.size());
-                states[maximum].probeContext->stopRatio =
-                    config_.thresholdRatio;
                 auto result = searchIndependentBlocks(
                     bfs.components, states, depth, false);
                 setCachedResult(stateKey, result.first, result.second);
@@ -1691,11 +1629,8 @@ HybridDXD::SearchResult HybridDXD::hybridSearchRuntime(
         state.probeContext->stopRatio =
             state.seed->thresholdRatio;
     }
-    const long double frameStopArea = state.seed
-        ? static_cast<long double>(
-              state.seed->selectedBlockInitialArea) *
-              state.seed->thresholdRatio
-        : 0.0L;
+    const long double frameStopArea =
+        static_cast<long double>(decompositionStopThresholdValue());
     CostDecisionRecord frameDecision;
     bool frameDecisionEvaluated = false;
     if (!boundedBfs && state.seed) {
@@ -1744,8 +1679,7 @@ HybridDXD::SearchResult HybridDXD::hybridSearchRuntime(
                 static_cast<uint64_t>(block.cols.size());
             const bool thresholdStop =
                 !boundedBfs &&
-                static_cast<long double>(areaAfterCover) <=
-                    frameStopArea;
+                isBelowDecompositionStopThreshold(areaAfterCover);
 
             HybridSearchState childState = state;
             const bool chooseDyn =
@@ -1836,6 +1770,8 @@ void HybridDXD::startHybridDXD() {
     bfsCallCounter = &hybridStats_.bfsCalls;
     componentQueryCallCounter = &hybridStats_.componentQueryCalls;
     if (collectCCExperimentStats) ccExperimentStats.reset();
+    resetCCCacheStatistics();
+    resetDecompositionStopThreshold();
 
     activeSearchState = nullptr;
     mainSearchState.reset(debug);
@@ -1905,7 +1841,7 @@ void HybridDXD::startHybridDXD() {
         solutionCount = result.toString();
         logger.logLine("Time: " + std::to_string(searchTime) + " s");
         if (debug) {
-            logSearchStateStats("hybrid-main", mainSearchState);
+            logSearchStateStats("hybrid", mainSearchState);
         }
         if (solutionCount.size() > 12) {
             logger.logLine("Solutions (scientific): " +
@@ -1963,18 +1899,21 @@ HybridDXD::SearchResult HybridDXD::searchIndependentBlocks(
     if (count <= 1) {
         vector<DNNFResult> results(count);
         vector<shared_ptr<DNNFNode>> nodes(count);
+        const bool collectStats = statisticsEnabled();
         for (int i = 0; i < count; ++i) {
-            const auto taskStart = std::chrono::steady_clock::now();
+            const auto taskStart = collectStats
+                ? std::chrono::steady_clock::now()
+                : std::chrono::steady_clock::time_point{};
             auto [result, node] =
                 searchOneIndependentBlock(blocks[i], states[i], depth + 1);
-            const uint64_t elapsed =
-                static_cast<uint64_t>(
-                    std::chrono::duration_cast<std::chrono::nanoseconds>(
-                        std::chrono::steady_clock::now() - taskStart)
-                        .count());
-            recordBlockTaskTiming(
-                states[i].seed != nullptr, elapsed);
-            if (statisticsEnabled()) {
+            if (collectStats) {
+                const uint64_t elapsed =
+                    static_cast<uint64_t>(
+                        std::chrono::duration_cast<std::chrono::nanoseconds>(
+                            std::chrono::steady_clock::now() - taskStart)
+                            .count());
+                recordBlockTaskTiming(
+                    states[i].seed != nullptr, elapsed);
                 logger.logLine(
                     "[hybrid-task] group_depth=" +
                     std::to_string(depth) +
@@ -2035,13 +1974,10 @@ HybridDXD::SearchResult HybridDXD::searchOneIndependentBlock(
 }
 
 void HybridDXD::configureBfsCounting(vector<Block>& blocks) const {
+    const uint64_t stopThreshold =
+        decompositionStopThresholdValue();
     for (Block& block : blocks) {
-        const uint64_t area =
-            static_cast<uint64_t>(block.rows.size()) *
-            static_cast<uint64_t>(block.cols.size());
-        block.bfsStopArea = static_cast<uint64_t>(
-            static_cast<long double>(area) *
-            config_.thresholdRatio);
+        block.bfsStopArea = stopThreshold;
         block.activeRowCount =
             static_cast<uint64_t>(block.rows.size());
         block.trackBfsRows = true;
@@ -2093,11 +2029,17 @@ size_t HybridDXD::selectMaximumBlock(const vector<Block>& blocks) const {
 
 void HybridDXD::releaseLocalEtt() {
     if (!hasLocalEttStorage()) return;
-    const auto releaseStart = std::chrono::steady_clock::now();
+    const bool collectStats = statisticsEnabled();
+    const auto releaseStart = collectStats
+        ? std::chrono::steady_clock::now()
+        : std::chrono::steady_clock::time_point{};
     releaseThreadLocalDynamicCCStorage();
-    addElapsedNanoseconds(
-        hybridStats_.ettReleaseNanoseconds, releaseStart);
-    hybridStats_.ettReleases.fetch_add(1, std::memory_order_relaxed);
+    if (collectStats) {
+        addElapsedNanoseconds(
+            hybridStats_.ettReleaseNanoseconds, releaseStart);
+        hybridStats_.ettReleases.fetch_add(
+            1, std::memory_order_relaxed);
+    }
 }
 
 bool HybridDXD::hasLocalEttStorage() const {
@@ -2155,6 +2097,17 @@ void HybridDXD::logSummary() const {
     logMetric(
         "Threshold Ratio",
         static_cast<double>(config_.thresholdRatio));
+    logMetric(
+        "Initial Blocks",
+        initialDecompositionBlockCount.load(
+            std::memory_order_relaxed));
+    logMetric(
+        "Minimum Block Area",
+        minimumDecompositionBlockArea.load(
+            std::memory_order_relaxed));
+    logMetric(
+        "Stop Threshold",
+        decompositionStopThresholdValue());
     logMetric(
         "Initial BFS Components",
         hybridStats_.initialBfsComponents.load(std::memory_order_relaxed));

@@ -1766,14 +1766,13 @@ void DancingMatrix::uncover( int c )
 
 void DancingMatrix::coverInBlock(int c, Block& block, set<int>& removed_rows,
                                  bool maintainRows) {
-
-    ColumnHeader* col = &ColIndex[c];  
+    ColumnHeader* col = &ColIndex[c];
     if (isDXZMode()) {
         col->right->left = col->left;
         col->left->right = col->right;
     }
 
-    block.cols.erase(c); // 从块中移除列
+    block.cols.erase(c);
 
     Node* curR, *curC;  
     curC = col->down;  

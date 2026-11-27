@@ -370,7 +370,8 @@ public:
             << "  -i, --input   <path>   Path to the input test-case file (required)\n"
             << "  -t, --threads <n>      Number of threads (default: 8).\n"
             << "      --enable-cc-stats    Collect CC graph/decomposition statistics\n"
-            << "                           (dxd, ddxd, or hybrid).\n"
+            << "                           and cache hit rate (dxz, dxd, ddxd,\n"
+            << "                           or hybrid).\n"
             << "      --enable-cc-time     Measure CC operations only (single-thread DXD/DynDXD).\n"
             << "      --cc-ett-max-calls <n>      Limit ETT queries, then fall back to BFS.\n"
             << "                                  Default 3; 0 is unlimited.\n"
@@ -385,10 +386,12 @@ public:
             << "                                  smallest-area initial block as the Dyn seed.\n"
             << "      --hybrid-decision-log <p>   Write per-decision Hybrid CSV.\n"
             << "      --dxd-threshold             Enable relative BFS stop thresholds.\n"
-            << "                                  First multi-split fixes each child\n"
-            << "                                  threshold = child area * ratio.\n"
-            << "      --threshold-ratio <r>       Shared min-Dyn/max-BFS and\n"
-            << "                                  DXD-threshold area ratio.\n"
+            << "                                  A singleton starts at 0.25*A0;\n"
+            << "                                  after the first split the threshold\n"
+            << "                                  is A_min * ratio.\n"
+            << "      --threshold-ratio <r>       Global stop-area ratio for\n"
+            << "                                  split blocks in DXD-threshold and\n"
+            << "                                  Hybrid.\n"
             << "                                  Legacy max-block BFS stays at 0.5.\n"
             << "                                  (default 0.5).\n"
             << "      --time-limit <s>    Solver time limit in seconds (default: 1500).\n"
@@ -454,9 +457,10 @@ private:
             return false;
         }
         if (enable_cc_stats &&
-            alg != "ddxd" && alg != "dxd" && alg != "hybrid") {
+            alg != "dxz" && alg != "ddxd" &&
+            alg != "dxd" && alg != "hybrid") {
             std::cerr << "[error] --enable-cc-stats requires "
-                         "--alg dxd/ddxd/hybrid.\n";
+                         "--alg dxz/dxd/ddxd/hybrid.\n";
             return false;
         }
         if (enable_cc_time && ((alg != "ddxd" && alg != "dxd") || threads != 1)) {

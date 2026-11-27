@@ -307,6 +307,8 @@ void LegacyHybridDXD::startHybridDXD() {
     ccIncrementCpuTicks.store(0, std::memory_order_relaxed);
     hybridStats_.reset();
     if (collectCCExperimentStats) ccExperimentStats.reset();
+    resetCCCacheStatistics();
+    resetDecompositionStopThreshold();
     decisionSequence_.store(0, std::memory_order_relaxed);
     decisionLog_.close();
     if (!decisionLogPath_.empty()) {

@@ -104,9 +104,7 @@ class DancingMatrix
         struct CCExperimentStats {
             uint64_t bfsVertexSum = 0;
             uint64_t bfsEdgeSum = 0;
-            // Decrement aggregates over every actual DecUpdateCC call:
-            // N, cumulative pre-update V/E, deleted V/E, replacement
-            // search scan steps, and ETT tree-edge cut/link events.
+
             uint64_t decCalls = 0;
             uint64_t activeVertexSum = 0;
             uint64_t activeEdgeSum = 0;

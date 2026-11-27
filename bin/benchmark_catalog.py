@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 BENCHMARK_ROOT = ROOT / "data" / "benchmarks"
 REPORT_PATH = BENCHMARK_ROOT / "Final_Experiment_Report.xlsx"
 MANIFEST_ROOT = BENCHMARK_ROOT / "manifests"
-NEW_ROME_ROOT = BENCHMARK_ROOT / "rome3_matrices" / "matrices"
+NEW_ROME_ROOT = BENCHMARK_ROOT / "rome3_350"
 
 NS = {"x": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
 EXPECTED_COUNTS = {
@@ -81,9 +81,9 @@ def read_report_instances(path: Path) -> list[str]:
     return [row[0].strip() for row in rows[1:] if row and row[0].strip()]
 
 
-def files_by_stem(folder: Path) -> dict[str, Path]:
+def files_by_stem(folder: Path, pattern: str = "*") -> dict[str, Path]:
     result: dict[str, Path] = {}
-    for path in sorted(folder.iterdir()):
+    for path in sorted(folder.glob(pattern)):
         if not path.is_file():
             continue
         stem = path.stem
@@ -153,7 +153,7 @@ def build_catalog() -> tuple[list[BenchmarkEntry], set[str], set[str]]:
 
     if not NEW_ROME_ROOT.is_dir():
         raise FileNotFoundError(f"new ROME matrix directory not found: {NEW_ROME_ROOT}")
-    new_index = files_by_stem(NEW_ROME_ROOT)
+    new_index = files_by_stem(NEW_ROME_ROOT, "grafo*.txt")
     groups["new_rome3"] = [
         make_entry(
             "new",
@@ -235,7 +235,7 @@ def write_manifests(all_entries: list[BenchmarkEntry], groups: dict[str, list[Be
             "old_exact_cover": "exact_cover_set files listed in the report",
             "old_set_partition": "set_partition_set files listed in the report",
             "old_topology": "graphs_set files listed in the report, excluding grafo*",
-            "new_rome3": "all .txt files in rome3_matrices/matrices",
+            "new_rome3": "grafo*.txt files in rome3_350",
         },
     }
     (BENCHMARK_ROOT / "benchmark_manifest.json").write_text(

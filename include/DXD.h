@@ -103,7 +103,7 @@ class DanceDNNF : protected DancingMatrix {
             timer.setTimeBound(TIME_LIMIT_SECONDS);
         }
 
-        ~DanceDNNF() = default;
+        ~DanceDNNF();
 
         CStopWatch timer;
 
@@ -120,6 +120,7 @@ class DanceDNNF : protected DancingMatrix {
         // CC CPU timing categories.  Timing is collected only when
         // collectCCTime is enabled and is restricted to one thread.
         std::atomic<std::clock_t> ccBfsCpuTicks{0};
+        std::atomic<std::clock_t> coverCpuTicks{0};
         std::atomic<std::clock_t> ccDecrementCpuTicks{0};
         std::atomic<std::clock_t> ccIncrementCpuTicks{0};
         std::atomic<uint64_t> ccBfsWallNanoseconds{0};
@@ -127,6 +128,18 @@ class DanceDNNF : protected DancingMatrix {
         bool debug = false;
         bool skipDNNFSize = false;
         std::atomic<size_t> createdDNNFNodes{0};
+        // Logical cache lookups shared by all search threads. A lookup that
+        // finds an entry in either the local or shared cache counts as a hit.
+        std::atomic<uint64_t> cacheQueries{0};
+        std::atomic<uint64_t> cacheHits{0};
+        // Global decomposition stop area shared by all recursive search tasks.
+        // A singleton starts at 0.25 * A0; the first split replaces it with
+        // A_min * threshold_ratio.
+        std::atomic<uint64_t> decompositionStopThreshold{0};
+        std::atomic<uint64_t> initialDecompositionBlockCount{0};
+        std::atomic<uint64_t> minimumDecompositionBlockArea{0};
+        std::atomic<bool> decompositionStopThresholdReady{false};
+        std::atomic<bool> decompositionStopThresholdFromSplit{false};
 
         // Decision-ZDNNF
         shared_ptr<DNNFNode> buildDecisionNode(int r, shared_ptr<DNNFNode> lo, shared_ptr<DNNFNode> hi);
@@ -136,6 +149,9 @@ class DanceDNNF : protected DancingMatrix {
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> DXD(Block& block, int depth);
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> serialSearch(
             vector<Block>& blocks, int depth,
+            vector<DecompositionPolicy> policies);
+        std::pair<DNNFResult, std::shared_ptr<DNNFNode>> parallelScheduledSearch(
+            vector<Block>& blocks, int depth, bool componentTreesAvailable,
             vector<DecompositionPolicy> policies);
         std::pair<DNNFResult, std::shared_ptr<DNNFNode>> parallelSearchUseOmp(
             vector<Block>& blocks, int depth, bool componentTreesAvailable,
@@ -236,11 +252,13 @@ class DanceDNNF : protected DancingMatrix {
         }
 
         DecompositionPolicy& currentDecompositionPolicy() {
+            if (activeDecompositionPolicy) return *activeDecompositionPolicy;
             return isThreadLocal() ? tlsState->decompositionPolicy
                                    : decompositionPolicy;
         }
 
         const DecompositionPolicy& currentDecompositionPolicy() const {
+            if (activeDecompositionPolicy) return *activeDecompositionPolicy;
             return isThreadLocal() ? tlsState->decompositionPolicy
                                    : decompositionPolicy;
         }
@@ -299,6 +317,7 @@ class DanceDNNF : protected DancingMatrix {
         void enableCCStatistics() {
             collectCCExperimentStats = true;
             ccExperimentStats.reset();
+            resetCCCacheStatistics();
         }
 
         void enableQuickStatistics(size_t updates) {
@@ -308,6 +327,76 @@ class DanceDNNF : protected DancingMatrix {
         }
 
         void enableCCTiming() { collectCCTime = true; }
+
+        void resetCCCacheStatistics() {
+            cacheQueries.store(0, std::memory_order_relaxed);
+            cacheHits.store(0, std::memory_order_relaxed);
+        }
+
+        void resetDecompositionStopThreshold() {
+            decompositionStopThreshold.store(
+                0, std::memory_order_relaxed);
+            initialDecompositionBlockCount.store(
+                0, std::memory_order_relaxed);
+            minimumDecompositionBlockArea.store(
+                0, std::memory_order_relaxed);
+            decompositionStopThresholdReady.store(
+                false, std::memory_order_relaxed);
+            decompositionStopThresholdFromSplit.store(
+                false, std::memory_order_relaxed);
+        }
+
+        void recordInitialDecompositionBlockCount(
+            size_t initialBlockCount) {
+            initialDecompositionBlockCount.store(
+                std::max<uint64_t>(
+                    static_cast<uint64_t>(initialBlockCount), 1),
+                std::memory_order_relaxed);
+        }
+
+        void initializeSingleBlockStopThreshold(
+            uint64_t initialBlockArea) {
+            decompositionStopThreshold.store(
+                static_cast<uint64_t>(
+                    static_cast<long double>(initialBlockArea) *
+                    0.25L),
+                std::memory_order_release);
+            decompositionStopThresholdFromSplit.store(
+                false, std::memory_order_release);
+            decompositionStopThresholdReady.store(
+                true, std::memory_order_release);
+        }
+
+        void initializeDecompositionStopThresholdFromSplit(
+            uint64_t minimumBlockArea,
+            long double thresholdRatio) {
+            if (decompositionStopThresholdFromSplit.load(
+                    std::memory_order_acquire)) {
+                return;
+            }
+            const uint64_t threshold = static_cast<uint64_t>(
+                static_cast<long double>(minimumBlockArea) *
+                thresholdRatio);
+            decompositionStopThreshold.store(
+                threshold, std::memory_order_release);
+            minimumDecompositionBlockArea.store(
+                minimumBlockArea, std::memory_order_release);
+            decompositionStopThresholdFromSplit.store(
+                true, std::memory_order_release);
+            decompositionStopThresholdReady.store(
+                true, std::memory_order_release);
+        }
+
+        uint64_t decompositionStopThresholdValue() const {
+            return decompositionStopThreshold.load(
+                std::memory_order_acquire);
+        }
+
+        bool isBelowDecompositionStopThreshold(uint64_t area) const {
+            return decompositionStopThresholdReady.load(
+                       std::memory_order_acquire) &&
+                   area < decompositionStopThresholdValue();
+        }
 
         void setCCETTMaxCalls(size_t calls) {
             ccEttMaxCalls = calls;
@@ -755,6 +844,9 @@ class DanceDNNF : protected DancingMatrix {
         bool getCachedResult(const CacheKey& key, DNNFResult& count,
                              shared_ptr<DNNFNode>& node) {
             SearchState& state = currentSearchState();
+            if (collectCCExperimentStats) {
+                cacheQueries.fetch_add(1, std::memory_order_relaxed);
+            }
             const auto start = state.collectStats
                                    ? std::chrono::steady_clock::now()
                                    : std::chrono::steady_clock::time_point{};
@@ -765,6 +857,9 @@ class DanceDNNF : protected DancingMatrix {
             }
             if (it != state.cache.end()) {
                 if (state.collectStats) ++state.cacheHits;
+                if (collectCCExperimentStats) {
+                    cacheHits.fetch_add(1, std::memory_order_relaxed);
+                }
                 count = it->second.count;
                 node = it->second.node;
                 return true;
@@ -776,6 +871,9 @@ class DanceDNNF : protected DancingMatrix {
             state.cache.emplace(
                 key, CacheEntry{sharedEntry.count, sharedEntry.node});
             if (state.collectStats) ++state.cacheHits;
+            if (collectCCExperimentStats) {
+                cacheHits.fetch_add(1, std::memory_order_relaxed);
+            }
             count = sharedEntry.count;
             node = sharedEntry.node;
             return true;
@@ -823,6 +921,10 @@ class DanceDNNF : protected DancingMatrix {
         SearchState mainSearchState;
         std::shared_ptr<LockFreeDNNCache> sharedDNNCache;
         inline static thread_local SearchState* activeSearchState = nullptr;
+        inline static thread_local DecompositionPolicy*
+            activeDecompositionPolicy = nullptr;
+        class TaskScheduler;
+        std::shared_ptr<TaskScheduler> taskScheduler_;
 
         ThreadPool& getThreadPool(int poolSize) {
             return ThreadPoolManager::get_instance(poolSize);

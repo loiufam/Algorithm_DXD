@@ -287,6 +287,10 @@ private:
     std::vector<HybridSearchState> makePerBlockProbeStates(
         const vector<Block>& components,
         const IncidenceBfsResult* bfs) const;
+    std::vector<HybridSearchState> makeNormalSplitStates(
+        const vector<Block>& components) const;
+    void updateDecompositionStopThresholdForSplit(
+        const vector<Block>& components);
     void recordInitialDynamicSeed(
         size_t componentCount,
         const std::shared_ptr<DynamicSeed>& seed);

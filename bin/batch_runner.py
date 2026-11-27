@@ -32,6 +32,15 @@ BLOCKS_RE = re.compile(r"^Max Blocks:\s*(\d+)\s*$", re.MULTILINE)
 ROWS_RE = re.compile(r"^rows:\s*(\d+)\s*$", re.MULTILINE)
 COLS_RE = re.compile(r"^cols:\s*(\d+)\s*$", re.MULTILINE)
 DNNF_RE = re.compile(r"^DNNF Size:\s*(\d+)\s*$", re.MULTILINE)
+DXZ_CACHE_READS_RE = re.compile(
+    r"^dxz cache_reads\s*:\s*([\d.eE+-]+)\s*$", re.MULTILINE
+)
+DXZ_CACHE_HITS_RE = re.compile(
+    r"^dxz cache_hits\s*:\s*([\d.eE+-]+)\s*$", re.MULTILINE
+)
+DXZ_CACHE_HIT_RATE_RE = re.compile(
+    r"^dxz cache_hit_rate\s*:\s*([\d.eE+-]+)\s*$", re.MULTILINE
+)
 INTERNAL_TIMEOUT_MARKERS = ("搜索超时", "Time bound", "timeout")
 MEMORY_MARKERS = ("bad_alloc", "Memory", "out of memory", "内存")
 
@@ -53,6 +62,9 @@ FIELDS = (
     "solutions_match",
     "max_blocks",
     "dnnf_size",
+    "cache_reads",
+    "cache_hits",
+    "cache_hit_rate",
     "rows",
     "cols",
     "exit_code",
@@ -196,6 +208,9 @@ def parse_output(output: str) -> dict[str, object]:
         "solutions": "",
         "max_blocks": "",
         "dnnf_size": "",
+        "cache_reads": "",
+        "cache_hits": "",
+        "cache_hit_rate": "",
         "rows": "",
         "cols": "",
     }
@@ -212,6 +227,9 @@ def parse_output(output: str) -> dict[str, object]:
     for field, pattern in (
         ("max_blocks", BLOCKS_RE),
         ("dnnf_size", DNNF_RE),
+        ("cache_reads", DXZ_CACHE_READS_RE),
+        ("cache_hits", DXZ_CACHE_HITS_RE),
+        ("cache_hit_rate", DXZ_CACHE_HIT_RATE_RE),
         ("rows", ROWS_RE),
         ("cols", COLS_RE),
     ):
@@ -736,6 +754,14 @@ def main() -> int:
         action="store_true",
         help="store every solver stdout under the run directory",
     )
+    parser.add_argument(
+        "--dxz-stats",
+        action="store_true",
+        help=(
+            "enable DXZ cache statistics for the exact suite and record "
+            "cache_reads/cache_hits/cache_hit_rate"
+        ),
+    )
     args = parser.parse_args()
 
     if args.timeout < 1:
@@ -750,6 +776,8 @@ def main() -> int:
         parser.error("the exact suite is intentionally limited to the new ROME set")
     if args.group != "all" and args.suite != "dxd-versions":
         parser.error("--group single-thread/multi-thread requires --suite dxd-versions")
+    if args.dxz_stats and args.suite != "exact":
+        parser.error("--dxz-stats requires --suite exact")
     if not MAIN_EXECUTABLE.is_file():
         parser.error(f"solver executable not found: {MAIN_EXECUTABLE}")
 
@@ -766,6 +794,20 @@ def main() -> int:
     if args.limit:
         benchmarks = benchmarks[: args.limit]
     variants = variants_for(args.suite, args.group)
+    if args.dxz_stats:
+        variants = [
+            Variant(
+                variant.solver,
+                variant.variant,
+                variant.algorithm,
+                variant.threads,
+                (*variant.extra_args, "--enable-cc-stats"),
+                variant.performance_mode,
+            )
+            if variant.algorithm == "dxz"
+            else variant
+            for variant in variants
+        ]
 
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     if args.output_dir is None:
@@ -861,6 +903,7 @@ def main() -> int:
         "rounds": args.rounds,
         "timeout_s": args.timeout,
         "memory_gb": args.memory_gb,
+        "dxz_stats": args.dxz_stats,
         "solver": str(MAIN_EXECUTABLE),
         "result_files": [str(path) for path in raw_paths],
     }

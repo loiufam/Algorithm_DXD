@@ -21,7 +21,6 @@ struct Block {
     bool activeEntriesValid = false;
     uint64_t decompositionThreshold = 0;
     bool decompositionStopped = false;
-    uint8_t decompositionProbeCredit = 0;
     uint64_t bfsStopArea = 0;
     uint64_t activeRowCount = 0;
     bool trackBfsRows = false;
@@ -45,7 +44,6 @@ struct Block {
         activeEntriesValid = other.activeEntriesValid;
         decompositionThreshold = other.decompositionThreshold;
         decompositionStopped = other.decompositionStopped;
-        decompositionProbeCredit = other.decompositionProbeCredit;
         bfsStopArea = other.bfsStopArea;
         activeRowCount = other.activeRowCount;
         trackBfsRows = other.trackBfsRows;

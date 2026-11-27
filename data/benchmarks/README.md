@@ -11,11 +11,11 @@
 - `set_partition_set`：报告中的 52 个
 - `graphs_set` 中的非 `grafo*` topology：87 个
 
-旧 `grafo*` 共 350 个，已由 `rome3_matrices/matrices` 中的新 350 个 ROME 测例替换，不计入旧集合。
+旧 `grafo*` 共 350 个，已由 `rome3_350` 中的新 350 个 ROME 测例替换，不计入旧集合。
 
 ## 新 ROME
 
-`rome3_matrices/matrices/*.txt` 共 350 个。精确覆盖求解器和模型计数器只运行这一部分。
+`rome3_350/*.txt` 共 350 个。精确覆盖求解器和模型计数器只运行这一部分。
 
 ## Manifest
 
